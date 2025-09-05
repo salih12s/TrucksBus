@@ -20,7 +20,12 @@
     "test:server": "cd server && npm test",
     "lint": "npm run lint:client && npm run lint:server",
     "lint:client": "cd client && npm run lint",
-    "lint:server": "cd server && npm run lint"
+    "lint:server": "cd server && npm run lint",
+    "backup": "node -e \"require('child_process').execSync('backup.bat', {stdio:'inherit'})\"",
+    "safe-commit": "npm run lint && npm run build && git add . && git commit",
+    "reset-db": "cd server && npx prisma db push && npx ts-node prisma/seed.ts",
+    "full-reset": "npm run reset-db && npm run build",
+    "guard": "powershell -ExecutionPolicy Bypass -File code-guard.ps1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
