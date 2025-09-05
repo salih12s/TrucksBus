@@ -1,0 +1,10 @@
+/* Keep Tailwind for backward compatibility */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensure Material-UI takes precedence */
+#root {
+  margin: 0;
+  padding: 0;
+}
