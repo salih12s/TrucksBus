@@ -5,7 +5,6 @@ import {
   Typography,
   Button,
   Box,
-  Container,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -19,8 +18,7 @@ const Header: React.FC = () => {
         borderBottom: "1px solid #444",
       }}
     >
-      <Container maxWidth="lg">
-        <Toolbar sx={{ px: 0 }}>
+        <Toolbar sx={{ px: 3 }}>
           {/* Logo */}
           <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
             <img
@@ -32,12 +30,13 @@ const Header: React.FC = () => {
               variant="h6"
               component="div"
               sx={{
-                color: "#D34237",
                 fontWeight: "bold",
                 fontSize: "1.5rem",
               }}
             >
-              TrucksBus
+              <span style={{ color: "white" }}>Alın Satın </span>
+              <span style={{ color: "#D34237" }}>Trucksbus.com</span>
+              <span style={{ color: "white" }}> ile Mutlu Kalın</span>
             </Typography>
           </Box>
 
@@ -80,11 +79,11 @@ const Header: React.FC = () => {
               component={RouterLink}
               to="/register"
               sx={{
-                borderColor: "#D34237",
-                color: "#D34237",
+                borderColor: "white",
+                color: "white",
                 "&:hover": {
-                  backgroundColor: "#D34237",
-                  color: "white",
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                  borderColor: "white",
                 },
               }}
             >
@@ -92,7 +91,6 @@ const Header: React.FC = () => {
             </Button>
           </Box>
         </Toolbar>
-      </Container>
     </AppBar>
   );
 };

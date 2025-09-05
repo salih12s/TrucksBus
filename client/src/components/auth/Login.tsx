@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { loginUser, clearError } from '../../store/authSlice';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../hooks/redux";
+import { loginUser, clearError } from "../../store/authSlice";
 
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -9,8 +9,8 @@ const Login: React.FC = () => {
   const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,7 +19,7 @@ const Login: React.FC = () => {
       ...prev,
       [name]: value,
     }));
-    
+
     // Clear error when user starts typing
     if (error) {
       dispatch(clearError());
@@ -28,7 +28,7 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
       return;
     }
@@ -36,7 +36,7 @@ const Login: React.FC = () => {
     try {
       const result = await dispatch(loginUser(formData));
       if (loginUser.fulfilled.match(result)) {
-        navigate('/dashboard');
+        navigate("/dashboard");
       }
     } catch {
       // Error handled by Redux
@@ -48,17 +48,13 @@ const Login: React.FC = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-auto flex justify-center">
-            <img
-              className="h-12 w-auto"
-              src="/logo.svg"
-              alt="TrucksBus"
-            />
+            <img className="h-12 w-auto" src="/logo.svg" alt="TrucksBus" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Hesabınıza giriş yapın
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Hesabınız yok mu?{' '}
+            Hesabınız yok mu?{" "}
             <Link
               to="/register"
               className="font-medium text-blue-600 hover:text-blue-500"
@@ -67,14 +63,14 @@ const Login: React.FC = () => {
             </Link>
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
               {error}
             </div>
           )}
-          
+
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
@@ -118,7 +114,10 @@ const Login: React.FC = () => {
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+              <label
+                htmlFor="remember-me"
+                className="ml-2 block text-sm text-gray-900"
+              >
                 Beni hatırla
               </label>
             </div>
@@ -161,7 +160,7 @@ const Login: React.FC = () => {
                   ></path>
                 </svg>
               ) : null}
-              {isLoading ? 'Giriş yapılıyor...' : 'Giriş yap'}
+              {isLoading ? "Giriş yapılıyor..." : "Giriş yap"}
             </button>
           </div>
         </form>

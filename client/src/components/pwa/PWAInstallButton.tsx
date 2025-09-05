@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Button,
   Dialog,
@@ -12,8 +12,8 @@ import {
   ListItemIcon,
   ListItemText,
   Chip,
-  Alert
-} from '@mui/material';
+  Alert,
+} from "@mui/material";
 import {
   GetApp,
   Smartphone,
@@ -21,31 +21,31 @@ import {
   Notifications,
   Speed,
   Storage,
-  Close
-} from '@mui/icons-material';
-import { usePWA, useNetworkStatus } from '../../utils/pwa';
+  Close,
+} from "@mui/icons-material";
+import { usePWA, useNetworkStatus } from "../../utils/pwa";
 
 interface PWAInstallButtonProps {
-  variant?: 'button' | 'fab' | 'chip';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "button" | "fab" | "chip";
+  size?: "small" | "medium" | "large";
   showFeatures?: boolean;
 }
 
 const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
-  variant = 'button',
-  size = 'medium',
-  showFeatures = true
+  variant = "button",
+  size = "medium",
+  showFeatures = true,
 }) => {
   const [open, setOpen] = React.useState(false);
   const [installing, setInstalling] = React.useState(false);
-  
+
   const {
     isInstallable,
     updateAvailable,
     notificationPermission,
     installApp,
     updateApp,
-    requestNotifications
+    requestNotifications,
   } = usePWA();
 
   const { isOnline, connectionType } = useNetworkStatus();
@@ -60,7 +60,7 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         setOpen(false);
       }
     } catch (error) {
-      console.error('Installation failed:', error);
+      console.error("Installation failed:", error);
     } finally {
       setInstalling(false);
     }
@@ -70,7 +70,7 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
     try {
       await updateApp();
     } catch (error) {
-      console.error('Update failed:', error);
+      console.error("Update failed:", error);
     }
   };
 
@@ -78,7 +78,7 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
     try {
       await requestNotifications();
     } catch (error) {
-      console.error('Notification request failed:', error);
+      console.error("Notification request failed:", error);
     }
   };
 
@@ -90,24 +90,24 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   const features = [
     {
       icon: <CloudOff color="primary" />,
-      title: 'Çevrimdışı Kullanım',
-      description: 'İnternet olmadan da bazı özellikleri kullanabilirsiniz'
+      title: "Çevrimdışı Kullanım",
+      description: "İnternet olmadan da bazı özellikleri kullanabilirsiniz",
     },
     {
       icon: <Speed color="primary" />,
-      title: 'Hızlı Başlatma',
-      description: 'Uygulama anında açılır, tarayıcı gecikmesi yok'
+      title: "Hızlı Başlatma",
+      description: "Uygulama anında açılır, tarayıcı gecikmesi yok",
     },
     {
       icon: <Notifications color="primary" />,
-      title: 'Anlık Bildirimler',
-      description: 'Yeni mesajlar ve güncellemeler için bildirim alın'
+      title: "Anlık Bildirimler",
+      description: "Yeni mesajlar ve güncellemeler için bildirim alın",
     },
     {
       icon: <Storage color="primary" />,
-      title: 'Otomatik Güncelleme',
-      description: 'Uygulama kendini otomatik olarak günceller'
-    }
+      title: "Otomatik Güncelleme",
+      description: "Uygulama kendini otomatik olarak günceller",
+    },
   ];
 
   const renderButton = () => {
@@ -125,7 +125,7 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
       );
     }
 
-    if (variant === 'chip') {
+    if (variant === "chip") {
       return (
         <Chip
           label="Uygulamayı Yükle"
@@ -139,21 +139,25 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 
     return (
       <Button
-        variant={variant === 'fab' ? 'contained' : 'outlined'}
+        variant={variant === "fab" ? "contained" : "outlined"}
         color="primary"
         size={size}
         onClick={() => setOpen(true)}
         startIcon={<GetApp />}
-        sx={variant === 'fab' ? {
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          borderRadius: '50px',
-          minWidth: 'auto',
-          padding: 2
-        } : {}}
+        sx={
+          variant === "fab"
+            ? {
+                position: "fixed",
+                bottom: 16,
+                right: 16,
+                borderRadius: "50px",
+                minWidth: "auto",
+                padding: 2,
+              }
+            : {}
+        }
       >
-        {variant === 'fab' ? '' : 'Uygulamayı Yükle'}
+        {variant === "fab" ? "" : "Uygulamayı Yükle"}
       </Button>
     );
   };
@@ -161,24 +165,26 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   return (
     <>
       {renderButton()}
-      
+
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: 2 }
+          sx: { borderRadius: 2 },
         }}
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 1 }}>
+        <DialogTitle
+          sx={{ display: "flex", alignItems: "center", gap: 1, pb: 1 }}
+        >
           <Smartphone color="primary" />
           TrucksBus Uygulamasını Yükle
-          <Box sx={{ ml: 'auto' }}>
+          <Box sx={{ ml: "auto" }}>
             <Button
               onClick={() => setOpen(false)}
               size="small"
-              sx={{ minWidth: 'auto', p: 0.5 }}
+              sx={{ minWidth: "auto", p: 0.5 }}
             >
               <Close />
             </Button>
@@ -190,16 +196,18 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             <Typography variant="body1" color="text.secondary" gutterBottom>
               TrucksBus'ı cihazınıza yükleyerek daha iyi bir deneyim yaşayın!
             </Typography>
-            
+
             {!isOnline && (
               <Alert severity="warning" sx={{ mt: 2 }}>
-                Şu anda çevrimdışısınız. Uygulama yüklendikten sonra çevrimdışı özellikleri kullanabilirsiniz.
+                Şu anda çevrimdışısınız. Uygulama yüklendikten sonra çevrimdışı
+                özellikleri kullanabilirsiniz.
               </Alert>
             )}
 
-            {connectionType === 'slow-2g' || connectionType === '2g' ? (
+            {connectionType === "slow-2g" || connectionType === "2g" ? (
               <Alert severity="info" sx={{ mt: 2 }}>
-                Yavaş bağlantı tespit edildi. Uygulama yüklendikten sonra daha hızlı çalışacak.
+                Yavaş bağlantı tespit edildi. Uygulama yüklendikten sonra daha
+                hızlı çalışacak.
               </Alert>
             ) : null}
           </Box>
@@ -225,13 +233,13 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             </Box>
           )}
 
-          {notificationPermission === 'default' && (
+          {notificationPermission === "default" && (
             <Box sx={{ mt: 2 }}>
-              <Alert 
-                severity="info" 
+              <Alert
+                severity="info"
                 action={
-                  <Button 
-                    color="inherit" 
+                  <Button
+                    color="inherit"
                     size="small"
                     onClick={handleNotificationRequest}
                   >
@@ -246,10 +254,7 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         </DialogContent>
 
         <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button 
-            onClick={() => setOpen(false)}
-            color="inherit"
-          >
+          <Button onClick={() => setOpen(false)} color="inherit">
             Daha Sonra
           </Button>
           <Button
@@ -259,7 +264,7 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             startIcon={installing ? null : <GetApp />}
             sx={{ minWidth: 120 }}
           >
-            {installing ? 'Yükleniyor...' : 'Şimdi Yükle'}
+            {installing ? "Yükleniyor..." : "Şimdi Yükle"}
           </Button>
         </DialogActions>
       </Dialog>

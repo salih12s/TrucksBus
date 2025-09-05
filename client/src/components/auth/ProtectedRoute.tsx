@@ -1,17 +1,19 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAppSelector } from '../../hooks/redux';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAppSelector } from "../../hooks/redux";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: string[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requiredRole = [] 
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  requiredRole = [],
 }) => {
-  const { isAuthenticated, user, isLoading } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user, isLoading } = useAppSelector(
+    (state) => state.auth
+  );
   const location = useLocation();
 
   // Show loading spinner while checking authentication

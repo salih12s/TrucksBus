@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Box,
   Chip,
@@ -8,8 +8,8 @@ import {
   Button,
   Typography,
   IconButton,
-  Collapse
-} from '@mui/material';
+  Collapse,
+} from "@mui/material";
 import {
   Wifi,
   WifiOff,
@@ -19,19 +19,15 @@ import {
   Close,
   ExpandMore,
   ExpandLess,
-  NetworkCheck
-} from '@mui/icons-material';
-import { usePWA, useNetworkStatus } from '../../utils/pwa';
+  NetworkCheck,
+} from "@mui/icons-material";
+import { usePWA, useNetworkStatus } from "../../utils/pwa";
 
 const PWAStatus: React.FC = () => {
   const [showDetails, setShowDetails] = React.useState(false);
   const [updateDismissed, setUpdateDismissed] = React.useState(false);
-  
-  const {
-    updateAvailable,
-    notificationPermission,
-    updateApp
-  } = usePWA();
+
+  const { updateAvailable, notificationPermission, updateApp } = usePWA();
 
   const { isOnline, connectionType, isSlowConnection } = useNetworkStatus();
 
@@ -40,7 +36,7 @@ const PWAStatus: React.FC = () => {
       await updateApp();
       setUpdateDismissed(true);
     } catch (error) {
-      console.error('Update failed:', error);
+      console.error("Update failed:", error);
     }
   };
 
@@ -51,15 +47,15 @@ const PWAStatus: React.FC = () => {
   };
 
   const getConnectionText = () => {
-    if (!isOnline) return 'Çevrimdışı';
+    if (!isOnline) return "Çevrimdışı";
     if (isSlowConnection) return `Yavaş (${connectionType})`;
     return `Çevrimiçi (${connectionType})`;
   };
 
-  const getConnectionColor = (): 'error' | 'warning' | 'success' => {
-    if (!isOnline) return 'error';
-    if (isSlowConnection) return 'warning';
-    return 'success';
+  const getConnectionColor = (): "error" | "warning" | "success" => {
+    if (!isOnline) return "error";
+    if (isSlowConnection) return "warning";
+    return "success";
   };
 
   return (
@@ -67,16 +63,16 @@ const PWAStatus: React.FC = () => {
       {/* Update Available Snackbar */}
       <Snackbar
         open={updateAvailable && !updateDismissed}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         sx={{ mt: 8 }}
       >
-        <Alert 
+        <Alert
           severity="info"
           variant="filled"
           action={
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              <Button 
-                color="inherit" 
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <Button
+                color="inherit"
                 size="small"
                 onClick={handleUpdate}
                 startIcon={<Update />}
@@ -94,34 +90,35 @@ const PWAStatus: React.FC = () => {
           }
         >
           <AlertTitle>Yeni Sürüm Mevcut</AlertTitle>
-          TrucksBus uygulamasının yeni bir sürümü var. Güncellemek ister misiniz?
+          TrucksBus uygulamasının yeni bir sürümü var. Güncellemek ister
+          misiniz?
         </Alert>
       </Snackbar>
 
       {/* Connection Status - Development Only */}
-      {process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === "development" && (
         <Box
           sx={{
-            position: 'fixed',
+            position: "fixed",
             bottom: 16,
             left: 16,
             zIndex: 1300,
-            backgroundColor: 'background.paper',
+            backgroundColor: "background.paper",
             borderRadius: 2,
             boxShadow: 3,
-            overflow: 'hidden',
+            overflow: "hidden",
             border: 1,
-            borderColor: 'divider'
+            borderColor: "divider",
           }}
         >
           <Box
             sx={{
               p: 1,
-              display: 'flex',
-              alignItems: 'center',
+              display: "flex",
+              alignItems: "center",
               gap: 1,
-              cursor: 'pointer',
-              '&:hover': { bgcolor: 'action.hover' }
+              cursor: "pointer",
+              "&:hover": { bgcolor: "action.hover" },
             }}
             onClick={() => setShowDetails(!showDetails)}
           >
@@ -129,17 +126,21 @@ const PWAStatus: React.FC = () => {
             <Typography variant="body2" fontSize="0.75rem">
               {getConnectionText()}
             </Typography>
-            {showDetails ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+            {showDetails ? (
+              <ExpandLess fontSize="small" />
+            ) : (
+              <ExpandMore fontSize="small" />
+            )}
           </Box>
-          
+
           <Collapse in={showDetails}>
-            <Box sx={{ p: 2, pt: 0, borderTop: 1, borderColor: 'divider' }}>
+            <Box sx={{ p: 2, pt: 0, borderTop: 1, borderColor: "divider" }}>
               <Typography variant="body2" fontWeight="bold" gutterBottom>
                 PWA Status
               </Typography>
-              
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Chip
                     icon={getConnectionIcon()}
                     label={getConnectionText()}
@@ -148,34 +149,40 @@ const PWAStatus: React.FC = () => {
                     variant="outlined"
                   />
                 </Box>
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Chip
                     icon={isOnline ? <CloudDone /> : <CloudOff />}
-                    label={isOnline ? 'Senkron' : 'Offline Mode'}
+                    label={isOnline ? "Senkron" : "Offline Mode"}
                     size="small"
-                    color={isOnline ? 'success' : 'warning'}
+                    color={isOnline ? "success" : "warning"}
                     variant="outlined"
                   />
                 </Box>
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Chip
                     label={`Bildirimler: ${
-                      notificationPermission === 'granted' ? 'Açık' :
-                      notificationPermission === 'denied' ? 'Kapalı' : 'Bekliyor'
+                      notificationPermission === "granted"
+                        ? "Açık"
+                        : notificationPermission === "denied"
+                        ? "Kapalı"
+                        : "Bekliyor"
                     }`}
                     size="small"
                     color={
-                      notificationPermission === 'granted' ? 'success' :
-                      notificationPermission === 'denied' ? 'error' : 'warning'
+                      notificationPermission === "granted"
+                        ? "success"
+                        : notificationPermission === "denied"
+                        ? "error"
+                        : "warning"
                     }
                     variant="outlined"
                   />
                 </Box>
 
                 {updateAvailable && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Chip
                       icon={<Update />}
                       label="Güncelleme Mevcut"
@@ -188,9 +195,15 @@ const PWAStatus: React.FC = () => {
                   </Box>
                 )}
               </Box>
-              
-              <Typography variant="caption" display="block" sx={{ mt: 1, opacity: 0.7 }}>
-                {isOnline ? 'Tüm özellikler kullanılabilir' : 'Sınırlı özellikler mevcut'}
+
+              <Typography
+                variant="caption"
+                display="block"
+                sx={{ mt: 1, opacity: 0.7 }}
+              >
+                {isOnline
+                  ? "Tüm özellikler kullanılabilir"
+                  : "Sınırlı özellikler mevcut"}
               </Typography>
             </Box>
           </Collapse>
@@ -201,20 +214,20 @@ const PWAStatus: React.FC = () => {
       {!isOnline && (
         <Box
           sx={{
-            position: 'fixed',
+            position: "fixed",
             top: 0,
             left: 0,
             right: 0,
-            bgcolor: 'warning.main',
-            color: 'warning.contrastText',
+            bgcolor: "warning.main",
+            color: "warning.contrastText",
             py: 1,
             px: 2,
-            textAlign: 'center',
+            textAlign: "center",
             zIndex: 1400,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 1
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
           }}
         >
           <WifiOff fontSize="small" />

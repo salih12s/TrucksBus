@@ -1,25 +1,33 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box, CircularProgress, Typography } from '@mui/material';
-import { ProtectedRoute } from '../components/auth';
+import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { Box, CircularProgress, Typography } from "@mui/material";
+import { ProtectedRoute } from "../components/auth";
 
 // Lazy load components for better performance
-const Homepage = lazy(() => import('../pages/Homepage'));
-const Dashboard = lazy(() => import('../pages/Dashboard'));
-const AdDetail = lazy(() => import('../pages/AdDetail'));
-const Login = lazy(() => import('../components/auth').then(module => ({ default: module.Login })));
-const Register = lazy(() => import('../components/auth').then(module => ({ default: module.Register })));
+const Homepage = lazy(() => import("../pages/Homepage"));
+const Dashboard = lazy(() => import("../pages/Dashboard"));
+const AdDetail = lazy(() => import("../pages/AdDetail"));
+const Login = lazy(() =>
+  import("../components/auth").then((module) => ({ default: module.Login }))
+);
+const Register = lazy(() =>
+  import("../components/auth").then((module) => ({ default: module.Register }))
+);
 
 // Loading component for suspense fallback
-const LoadingFallback = ({ message = 'Yükleniyor...' }: { message?: string }) => (
+const LoadingFallback = ({
+  message = "Yükleniyor...",
+}: {
+  message?: string;
+}) => (
   <Box
     sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '50vh',
-      gap: 2
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "50vh",
+      gap: 2,
     }}
   >
     <CircularProgress size={40} />
@@ -38,40 +46,40 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route 
-        path="/" 
+      <Route
+        path="/"
         element={
           <Suspense fallback={<PageLoadingFallback page="Ana Sayfa" />}>
             <Homepage />
           </Suspense>
-        } 
+        }
       />
-      
-      <Route 
-        path="/login" 
+
+      <Route
+        path="/login"
         element={
           <Suspense fallback={<PageLoadingFallback page="Giriş" />}>
             <Login />
           </Suspense>
-        } 
+        }
       />
-      
-      <Route 
-        path="/register" 
+
+      <Route
+        path="/register"
         element={
           <Suspense fallback={<PageLoadingFallback page="Kayıt" />}>
             <Register />
           </Suspense>
-        } 
+        }
       />
-      
-      <Route 
-        path="/ad/:id" 
+
+      <Route
+        path="/ad/:id"
         element={
           <Suspense fallback={<PageLoadingFallback page="İlan Detayı" />}>
             <AdDetail />
           </Suspense>
-        } 
+        }
       />
 
       {/* Protected Routes */}

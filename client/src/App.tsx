@@ -6,10 +6,7 @@ import { Provider } from "react-redux";
 import { store } from "./store";
 
 // Components
-import { 
-  ErrorBoundary, 
-  PerformanceMonitor
-} from "./components/common";
+import { ErrorBoundary, PerformanceMonitor } from "./components/common";
 import { PWAStatus } from "./components/pwa";
 import { ProtectedRoute } from "./components/auth";
 
