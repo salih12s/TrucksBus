@@ -28,6 +28,8 @@
     "guard": "powershell -ExecutionPolicy Bypass -File code-guard.ps1",
     "chat-backup": "powershell -ExecutionPolicy Bypass -File chat-backup.ps1",
     "save-state": "npm run chat-backup && npm run backup && git add . && git commit -m \"Auto-save: Project state backup\"",
+    "save-github": "git add . && git commit -m \"GitHub auto-save: $(date)\" && git push origin master",
+    "safe-push": "npm run lint && npm run build && git add . && git commit && git push origin master",
     "restore-help": "echo \"RESTORE HELP: 1) Check chat-backups/ folder 2) Run 'npm run guard' 3) Use git log to find commits\""
   },
   "devDependencies": {
