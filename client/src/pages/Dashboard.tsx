@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../hooks/redux';
 import { logoutUser } from '../store/authSlice';
 import { useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import {
   AppBar,
   Toolbar,
@@ -96,7 +97,15 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <Box sx={{ flexGrow: 1 }}>
+    <>
+      <SEO 
+        title="Dashboard - TrucksBus"
+        description="TrucksBus kullanıcı paneli. İlanlarınızı yönetin, mesajlarınızı görüntüleyin, analitik verilerinizi inceleyin."
+        keywords="dashboard, kullanıcı paneli, ilan yönetimi, TrucksBus"
+        url="https://trucksbus.com/dashboard"
+        type="website"
+      />
+      <Box sx={{ flexGrow: 1 }}>
       {/* Navigation */}
       <AppBar position="static" color="default" elevation={1} sx={{ bgcolor: 'white', borderBottom: 1, borderColor: 'divider' }}>
         <Toolbar>
@@ -262,6 +271,7 @@ const Dashboard: React.FC = () => {
         </Paper>
       </Container>
     </Box>
+    </>
   );
 };
 

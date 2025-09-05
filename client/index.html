@@ -1,13 +1,75 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>TrucksBus - Türkiye'nin En Büyük Ticari Araç Platformu</title>
+    <meta name="title" content="TrucksBus - Türkiye'nin En Büyük Ticari Araç Platformu" />
+    <meta name="description" content="Kamyon, minibüs, otobüs ve ticari araç alım satımı için güvenli platform. Binlerce ilan, detaylı filtreler ve güvenli ödeme sistemi." />
+    <meta name="keywords" content="kamyon, minibüs, otobüs, ticari araç, alım satım, ikinci el araç, fiyatları, galeri" />
+    <meta name="author" content="TrucksBus Team" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#1976d2" />
+    <meta name="background-color" content="#ffffff" />
+    <meta name="display" content="standalone" />
+    <meta name="orientation" content="portrait-primary" />
+    
+    <!-- Apple PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="TrucksBus" />
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://trucksbus.com/" />
+    <meta property="og:title" content="TrucksBus - Türkiye'nin En Büyük Ticari Araç Platformu" />
+    <meta property="og:description" content="Kamyon, minibüs, otobüs ve ticari araç alım satımı için güvenli platform. Binlerce ilan, detaylı filtreler ve güvenli ödeme sistemi." />
+    <meta property="og:image" content="https://trucksbus.com/og-image.jpg" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:site_name" content="TrucksBus" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://trucksbus.com/" />
+    <meta property="twitter:title" content="TrucksBus - Türkiye'nin En Büyük Ticari Araç Platformu" />
+    <meta property="twitter:description" content="Kamyon, minibüs, otobüs ve ticari araç alım satımı için güvenli platform. Binlerce ilan, detaylı filtreler ve güvenli ödeme sistemi." />
+    <meta property="twitter:image" content="https://trucksbus.com/og-image.jpg" />
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Critical CSS - Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- PWA Install prompt handling -->
+    <script>
+      // Handle PWA install prompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        window.deferredPrompt = e;
+      });
+      
+      // Handle PWA installation
+      window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed');
+      });
+    </script>
   </body>
 </html>

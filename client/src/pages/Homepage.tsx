@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   AppBar,
@@ -13,7 +13,8 @@ import {
   TextField,
   MenuItem,
   Paper,
-  InputAdornment
+  InputAdornment,
+  CircularProgress
 } from '@mui/material';
 import {
   Search,
@@ -22,21 +23,77 @@ import {
   Build,
   Engineering
 } from '@mui/icons-material';
+import SEO from '../components/SEO';
+import apiClient from '../api/client';
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  displayOrder: number;
+}
 
 const Homepage: React.FC = () => {
-  const categories = [
-    { name: 'Çekici', slug: 'cekici', icon: <LocalShipping fontSize="large" /> },
-    { name: 'Dorse', slug: 'dorse', icon: <LocalShipping fontSize="large" /> },
-    { name: 'Kamyon & Kamyonet', slug: 'kamyon-kamyonet', icon: <LocalShipping fontSize="large" /> },
-    { name: 'Karoser & Üst Yapı', slug: 'karoser-ust-yapi', icon: <Build fontSize="large" /> },
-    { name: 'Minibüs & Midibüs', slug: 'minibus-midibus', icon: <DirectionsBus fontSize="large" /> },
-    { name: 'Otobüs', slug: 'otobus', icon: <DirectionsBus fontSize="large" /> },
-    { name: 'Oto Kurtarıcı & Taşıyıcı', slug: 'oto-kurtarici-tasiyici', icon: <Engineering fontSize="large" /> },
-    { name: 'Römork', slug: 'romork', icon: <LocalShipping fontSize="large" /> },
-  ];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await apiClient.get<Category[]>('/categories');
+        setCategories(response.data);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+        setError('Kategoriler yüklenemedi');
+        // Fallback to mock data
+        setCategories([
+          { id: '1', name: 'Çekici', slug: 'cekici', displayOrder: 1 },
+          { id: '2', name: 'Dorse', slug: 'dorse', displayOrder: 2 },
+          { id: '3', name: 'Kamyon & Kamyonet', slug: 'kamyon-kamyonet', displayOrder: 3 },
+          { id: '4', name: 'Karoser & Üst Yapı', slug: 'karoser-ust-yapi', displayOrder: 4 },
+          { id: '5', name: 'Minibüs & Midibüs', slug: 'minibus-midibus', displayOrder: 5 },
+          { id: '6', name: 'Otobüs', slug: 'otobus', displayOrder: 6 },
+          { id: '7', name: 'Oto Kurtarıcı & Taşıyıcı', slug: 'oto-kurtarici-tasiyici', displayOrder: 7 },
+          { id: '8', name: 'Römork', slug: 'romork', displayOrder: 8 },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const getCategoryIcon = (slug: string) => {
+    switch (slug) {
+      case 'cekici':
+      case 'kamyon-kamyonet':
+      case 'romork':
+        return <LocalShipping fontSize="large" />;
+      case 'minibus-midibus':
+      case 'otobus':
+        return <DirectionsBus fontSize="large" />;
+      case 'karoser-ust-yapi':
+        return <Build fontSize="large" />;
+      case 'oto-kurtarici-tasiyici':
+        return <Engineering fontSize="large" />;
+      default:
+        return <LocalShipping fontSize="large" />;
+    }
+  };
 
   return (
-    <Box>
+    <>
+      <SEO 
+        title="TrucksBus - Türkiye'nin En Büyük Ticari Araç Platformu"
+        description="Kamyon, minibüs, otobüs ve ticari araç alım satımı için güvenli platform. Binlerce ilan, detaylı filtreler ve güvenli ödeme sistemi."
+        keywords="kamyon, minibüs, otobüs, ticari araç, alım satım, ikinci el araç, fiyatları, galeri"
+        url="https://trucksbus.com"
+        type="website"
+      />
+      <Box>
       {/* Header */}
       <AppBar position="static" color="default" elevation={1} sx={{ bgcolor: 'white' }}>
         <Toolbar>
@@ -150,8 +207,18 @@ const Homepage: React.FC = () => {
         <Typography variant="h4" component="h2" gutterBottom textAlign="center" sx={{ mb: 4 }}>
           Kategoriler
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-          {categories.map((category) => (
+        
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography color="error">{error}</Typography>
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+            {categories.map((category) => (
             <Box key={category.slug} sx={{ flex: { xs: '1 1 45%', md: '1 1 23%' } }}>
               <Card 
                 component={RouterLink}
@@ -172,7 +239,7 @@ const Homepage: React.FC = () => {
               >
                 <CardContent sx={{ textAlign: 'center', pb: 1 }}>
                   <Box sx={{ color: 'primary.main', mb: 2 }}>
-                    {category.icon}
+                    {getCategoryIcon(category.slug)}
                   </Box>
                   <Typography variant="h6" component="h3" color="text.primary">
                     {category.name}
@@ -181,7 +248,8 @@ const Homepage: React.FC = () => {
               </Card>
             </Box>
           ))}
-        </Box>
+          </Box>
+        )}
       </Container>
 
       {/* Featured Ads Section */}
@@ -282,6 +350,7 @@ const Homepage: React.FC = () => {
         </Container>
       </Box>
     </Box>
+    </>
   );
 };
 

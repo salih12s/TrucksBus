@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import {
   Box,
   Container,
@@ -256,7 +257,16 @@ const AdDetail: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <>
+      <SEO 
+        title={`${ad?.title || 'İlan Detayı'} - TrucksBus`}
+        description={`${ad?.description || 'Ticari araç ilanı detayları'} - Fiyat: ${ad?.price ? `${ad.price.toLocaleString()} TL` : 'Belirtilmemiş'}`}
+        keywords={`${ad?.title}, ${ad?.category}, ${ad?.brand}, ${ad?.model}, ticari araç, alım satım`}
+        url={`https://trucksbus.com/ad/${id}`}
+        type="article"
+        image={ad?.images?.[0]?.url}
+      />
+      <Container maxWidth="lg" sx={{ py: 3 }}>
       {/* Back Button */}
       <Box sx={{ mb: 2 }}>
         <Button
@@ -625,6 +635,7 @@ const AdDetail: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Container>
+    </>
   );
 };
 
