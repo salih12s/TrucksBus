@@ -15,6 +15,9 @@ const Homepage = React.lazy(() => import("./pages/Homepage"));
 const MainLayout = React.lazy(() => import("./pages/MainLayout"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const AdDetail = React.lazy(() => import("./pages/AdDetail"));
+const Profile = React.lazy(() => import("./pages/Profile"));
+const Notifications = React.lazy(() => import("./pages/Notifications"));
+const Bookmarks = React.lazy(() => import("./pages/Bookmarks"));
 const LoginNew = React.lazy(() => import("./components/auth/LoginNew"));
 const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
 const RegisterCorporate = React.lazy(
@@ -114,6 +117,33 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/notifications"
+                    element={
+                      <ProtectedRoute>
+                        <Notifications />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/bookmarks"
+                    element={
+                      <ProtectedRoute>
+                        <Bookmarks />
                       </ProtectedRoute>
                     }
                   />
