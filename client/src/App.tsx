@@ -13,6 +13,7 @@ import PWAStatus from './components/PWAStatus';
 
 // Pages - Lazy loaded for better performance
 const Homepage = React.lazy(() => import('./pages/Homepage'));
+const MainLayout = React.lazy(() => import('./pages/MainLayout'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const AdDetail = React.lazy(() => import('./pages/AdDetail'));
 const Login = React.lazy(() => import('./components/Login'));
@@ -87,7 +88,8 @@ function App() {
               <React.Suspense fallback={<LoadingFallback />}>
                 <Routes>
                   {/* Public Routes */}
-                  <Route path="/" element={<Homepage />} />
+                  <Route path="/" element={<MainLayout />} />
+                  <Route path="/old-homepage" element={<Homepage />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route path="/ad/:id" element={<AdDetail />} />
