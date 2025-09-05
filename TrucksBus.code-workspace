@@ -1,0 +1,63 @@
+{
+  "folders": [
+    {
+      "name": "TrucksBus Platform",
+      "path": "."
+    },
+    {
+      "name": "Client (Frontend)",
+      "path": "./client"
+    },
+    {
+      "name": "Server (Backend)",
+      "path": "./server"
+    }
+  ],
+  "settings": {
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "editor.formatOnSave": true,
+    "typescript.preferences.includePackageJsonAutoImports": "auto",
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.restoreViewState": true,
+    "workbench.editor.wrapTabs": true,
+    "window.restoreWindows": "all",
+    "files.hotExit": "onExitAndWindowClose",
+    "workbench.settings.enableNaturalLanguageSearch": false,
+    "extensions.autoUpdate": false,
+    "telemetry.telemetryLevel": "off"
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-vscode.vscode-typescript-next",
+      "esbenp.prettier-vscode",
+      "ms-vscode.vscode-json",
+      "bradlc.vscode-tailwindcss",
+      "Prisma.prisma"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug Client",
+        "type": "node",
+        "request": "launch",
+        "cwd": "${workspaceFolder}/client",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"]
+      },
+      {
+        "name": "Debug Server",
+        "type": "node",
+        "request": "launch",
+        "cwd": "${workspaceFolder}/server",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"]
+      }
+    ]
+  }
+}

@@ -25,7 +25,10 @@
     "safe-commit": "npm run lint && npm run build && git add . && git commit",
     "reset-db": "cd server && npx prisma db push && npx ts-node prisma/seed.ts",
     "full-reset": "npm run reset-db && npm run build",
-    "guard": "powershell -ExecutionPolicy Bypass -File code-guard.ps1"
+    "guard": "powershell -ExecutionPolicy Bypass -File code-guard.ps1",
+    "chat-backup": "powershell -ExecutionPolicy Bypass -File chat-backup.ps1",
+    "save-state": "npm run chat-backup && npm run backup && git add . && git commit -m \"Auto-save: Project state backup\"",
+    "restore-help": "echo \"RESTORE HELP: 1) Check chat-backups/ folder 2) Run 'npm run guard' 3) Use git log to find commits\""
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
