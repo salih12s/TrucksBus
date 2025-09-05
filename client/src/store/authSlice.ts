@@ -1,5 +1,9 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import { authApi, type LoginRequest, type RegisterRequest } from '../api/auth';
+import {
+  createSlice,
+  createAsyncThunk,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
+import { authApi, type LoginRequest, type RegisterRequest } from "../api/auth";
 
 export interface User {
   id: number;
@@ -8,6 +12,12 @@ export interface User {
   lastName?: string;
   phone?: string;
   role: string;
+  companyName?: string;
+  taxId?: string;
+  tradeRegistryNo?: string;
+  address?: string;
+  city?: string;
+  country?: string;
   isVerified: boolean;
 }
 
@@ -21,46 +31,49 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem('accessToken'),
+  token: localStorage.getItem("accessToken"),
   isLoading: false,
   error: null,
-  isAuthenticated: !!localStorage.getItem('accessToken'),
+  isAuthenticated: !!localStorage.getItem("accessToken"),
 };
 
 // Async thunks
 export const loginUser = createAsyncThunk(
-  'auth/login',
+  "auth/login",
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
       const response = await authApi.login(credentials);
       return response;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed";
       return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const registerUser = createAsyncThunk(
-  'auth/register',
+  "auth/register",
   async (userData: RegisterRequest, { rejectWithValue }) => {
     try {
       const response = await authApi.register(userData);
       return response;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      const errorMessage =
+        error instanceof Error ? error.message : "Registration failed";
       return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const logoutUser = createAsyncThunk(
-  'auth/logout',
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
       await authApi.logout();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Logout failed';
+      const errorMessage =
+        error instanceof Error ? error.message : "Logout failed";
       return rejectWithValue(errorMessage);
     }
   }
@@ -68,13 +81,16 @@ export const logoutUser = createAsyncThunk(
 
 // Auth slice
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     clearError: (state) => {
       state.error = null;
     },
-    setCredentials: (state, action: PayloadAction<{ user: User; token: string }>) => {
+    setCredentials: (
+      state,
+      action: PayloadAction<{ user: User; token: string }>
+    ) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
@@ -134,5 +150,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, setCredentials, clearCredentials } = authSlice.actions;
+export const { clearError, setCredentials, clearCredentials } =
+  authSlice.actions;
 export default authSlice.reducer;

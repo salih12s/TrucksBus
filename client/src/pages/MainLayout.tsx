@@ -51,9 +51,17 @@ const MainLayout: React.FC = () => {
           apiClient.get("/categories"),
           apiClient.get("/ads"),
         ]);
-        setCategories(categoriesRes.data as Category[]);
-        setAds(adsRes.data as Ad[]);
-      } catch {
+
+        // Güvenli veri kontrolü
+        const categoriesData = Array.isArray(categoriesRes.data)
+          ? categoriesRes.data
+          : [];
+        const adsData = Array.isArray(adsRes.data) ? adsRes.data : [];
+
+        setCategories(categoriesData as Category[]);
+        setAds(adsData as Ad[]);
+      } catch (error) {
+        console.error("Data fetch error:", error);
         // Fallback data
         setCategories([
           { id: "1", name: "Çekici", slug: "cekici", displayOrder: 1 },
@@ -128,31 +136,37 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <Box sx={{ 
-      display: "flex", 
-      flexDirection: "column", 
-      minHeight: "100vh",
-      width: "100%",
-      margin: 0,
-      padding: 0 
-    }}>
-      <Header />
-
-      <Box sx={{ 
-        backgroundColor: "#f5f5f5", 
-        flex: 1, 
+    <Box
+      sx={{
         display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
         width: "100%",
         margin: 0,
-        padding: 0
-      }}>
+        padding: 0,
+      }}
+    >
+      <Header />
+
+      <Box
+        sx={{
+          backgroundColor: "#f5f5f5",
+          flex: 1,
+          display: "flex",
+          width: "100%",
+          margin: 0,
+          padding: 0,
+        }}
+      >
         {/* Left Sidebar - Categories */}
-        <Box sx={{ 
-          width: "300px", 
-          flexShrink: 0, 
-          borderRight: "1px solid #e0e0e0", 
-          backgroundColor: "white" 
-        }}>
+        <Box
+          sx={{
+            width: "300px",
+            flexShrink: 0,
+            borderRight: "1px solid #e0e0e0",
+            backgroundColor: "white",
+          }}
+        >
           <Box sx={{ p: 3 }}>
             <Typography
               variant="h6"
@@ -223,92 +237,93 @@ const MainLayout: React.FC = () => {
               gap: 3,
             }}
           >
-            {ads.map((ad) => (
-              <Card
-                key={ad.id}
-                sx={{
-                  borderRadius: 2,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  "&:hover": {
-                    boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                    transform: "translateY(-2px)",
-                  },
-                  transition: "all 0.3s ease",
-                }}
-              >
-                <CardMedia
-                  component="div"
+            {Array.isArray(ads) &&
+              ads.map((ad) => (
+                <Card
+                  key={ad.id}
                   sx={{
-                    height: 200,
-                    backgroundColor: "#f0f0f0",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#999",
-                    fontSize: "14px",
+                    borderRadius: 2,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    "&:hover": {
+                      boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                      transform: "translateY(-2px)",
+                    },
+                    transition: "all 0.3s ease",
                   }}
                 >
-                  Görsel Yok
-                </CardMedia>
-                <CardContent>
-                  <Typography
-                    variant="h6"
+                  <CardMedia
+                    component="div"
                     sx={{
-                      fontWeight: "bold",
-                      color: "#313B4C",
-                      mb: 1,
-                      textAlign: "center",
+                      height: 200,
+                      backgroundColor: "#f0f0f0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#999",
+                      fontSize: "14px",
                     }}
                   >
-                    {ad.title}
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      color: "#D34237",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      mb: 2,
-                    }}
-                  >
-                    ₺{ad.price.toLocaleString()}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#666", textAlign: "center", mb: 1 }}
-                  >
-                    Model Yılı: {ad.year}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#666", textAlign: "center", mb: 1 }}
-                  >
-                    İlan Tarihi: {ad.createdAt}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "#666", textAlign: "center", mb: 2 }}
-                  >
-                    İlan Sahibi: {ad.owner} | Tel: {ad.phone}
-                  </Typography>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "#D34237",
-                      color: "white",
-                      py: 1,
-                      borderRadius: 2,
-                      "&:hover": {
-                        backgroundColor: "#B73429",
-                      },
-                    }}
-                  >
-                    Detayları Gör
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                    Görsel Yok
+                  </CardMedia>
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: "bold",
+                        color: "#313B4C",
+                        mb: 1,
+                        textAlign: "center",
+                      }}
+                    >
+                      {ad.title}
+                    </Typography>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        color: "#D34237",
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        mb: 2,
+                      }}
+                    >
+                      ₺{ad.price.toLocaleString()}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#666", textAlign: "center", mb: 1 }}
+                    >
+                      Model Yılı: {ad.year}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#666", textAlign: "center", mb: 1 }}
+                    >
+                      İlan Tarihi: {ad.createdAt}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#666", textAlign: "center", mb: 2 }}
+                    >
+                      İlan Sahibi: {ad.owner} | Tel: {ad.phone}
+                    </Typography>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      sx={{
+                        backgroundColor: "#D34237",
+                        color: "white",
+                        py: 1,
+                        borderRadius: 2,
+                        "&:hover": {
+                          backgroundColor: "#B73429",
+                        },
+                      }}
+                    >
+                      Detayları Gör
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
           </Box>
         </Box>
       </Box>

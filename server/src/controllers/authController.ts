@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { prisma } from '../config/database';
-import { UserRole } from '@prisma/client';
-import { AuthenticatedRequest } from '../middleware/auth';
+import { Request, Response } from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { prisma } from "../config/database";
+import { UserRole } from "@prisma/client";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 interface RegisterRequest {
   email: string;
@@ -12,6 +12,12 @@ interface RegisterRequest {
   lastName?: string;
   phone?: string;
   role?: UserRole;
+  companyName?: string;
+  taxId?: string;
+  tradeRegistryNo?: string;
+  address?: string;
+  city?: string;
+  country?: string;
 }
 
 interface LoginRequest {
@@ -29,31 +35,48 @@ export class AuthController {
         firstName,
         lastName,
         phone,
-        role = UserRole.USER
+        role = UserRole.USER,
+        companyName,
+        taxId,
+        tradeRegistryNo,
+        address,
+        city,
+        country,
       }: RegisterRequest = req.body;
 
       // Validate required fields
       if (!email || !password) {
         res.status(400).json({
-          error: 'Email and password are required'
+          error: "Email and password are required",
         });
         return;
       }
 
+      // Validate corporate fields if role is CORPORATE
+      if (role === UserRole.CORPORATE) {
+        if (!companyName || !taxId) {
+          res.status(400).json({
+            error:
+              "Company name and tax ID are required for corporate registration",
+          });
+          return;
+        }
+      }
+
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
-        where: { email }
+        where: { email },
       });
 
       if (existingUser) {
         res.status(409).json({
-          error: 'User with this email already exists'
+          error: "User with this email already exists",
         });
         return;
       }
 
       // Hash password
-      const saltRounds = parseInt(process.env.BCRYPT_ROUNDS || '12');
+      const saltRounds = parseInt(process.env.BCRYPT_ROUNDS || "12");
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
       // Create user
@@ -65,6 +88,12 @@ export class AuthController {
           lastName,
           phone,
           role,
+          companyName,
+          taxId,
+          tradeRegistryNo,
+          address,
+          city,
+          country,
         },
         select: {
           id: true,
@@ -73,28 +102,36 @@ export class AuthController {
           lastName: true,
           phone: true,
           role: true,
+          companyName: true,
+          taxId: true,
+          tradeRegistryNo: true,
+          address: true,
+          city: true,
+          country: true,
           isVerified: true,
           createdAt: true,
-        }
+        },
       });
 
       // Generate JWT tokens
-      const accessToken = AuthController.generateAccessToken(user.id, user.role);
+      const accessToken = AuthController.generateAccessToken(
+        user.id,
+        user.role
+      );
       const refreshToken = AuthController.generateRefreshToken(user.id);
 
       res.status(201).json({
-        message: 'User registered successfully',
+        message: "User registered successfully",
         user,
         tokens: {
           accessToken,
-          refreshToken
-        }
+          refreshToken,
+        },
       });
-
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error("Registration error:", error);
       res.status(500).json({
-        error: 'Internal server error'
+        error: "Internal server error",
       });
     }
   }
@@ -107,7 +144,7 @@ export class AuthController {
       // Validate required fields
       if (!email || !password) {
         res.status(400).json({
-          error: 'Email and password are required'
+          error: "Email and password are required",
         });
         return;
       }
@@ -125,12 +162,12 @@ export class AuthController {
           role: true,
           isVerified: true,
           isActive: true,
-        }
+        },
       });
 
       if (!user) {
         res.status(401).json({
-          error: 'Invalid email or password'
+          error: "Invalid email or password",
         });
         return;
       }
@@ -138,7 +175,7 @@ export class AuthController {
       // Check if account is active
       if (!user.isActive) {
         res.status(403).json({
-          error: 'Account is suspended'
+          error: "Account is suspended",
         });
         return;
       }
@@ -147,31 +184,33 @@ export class AuthController {
       const isValidPassword = await bcrypt.compare(password, user.passwordHash);
       if (!isValidPassword) {
         res.status(401).json({
-          error: 'Invalid email or password'
+          error: "Invalid email or password",
         });
         return;
       }
 
       // Generate JWT tokens
-      const accessToken = AuthController.generateAccessToken(user.id, user.role);
+      const accessToken = AuthController.generateAccessToken(
+        user.id,
+        user.role
+      );
       const refreshToken = AuthController.generateRefreshToken(user.id);
 
       // Remove password from response
       const { passwordHash, ...userWithoutPassword } = user;
 
       res.json({
-        message: 'Login successful',
+        message: "Login successful",
         user: userWithoutPassword,
         tokens: {
           accessToken,
-          refreshToken
-        }
+          refreshToken,
+        },
       });
-
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       res.status(500).json({
-        error: 'Internal server error'
+        error: "Internal server error",
       });
     }
   }
@@ -180,28 +219,24 @@ export class AuthController {
   private static generateAccessToken(userId: number, role: UserRole): string {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      throw new Error('JWT_SECRET is not defined');
+      throw new Error("JWT_SECRET is not defined");
     }
-    
-    return jwt.sign(
-      { userId, role },
-      secret,
-      { expiresIn: process.env.JWT_EXPIRE || '15m' } as jwt.SignOptions
-    );
+
+    return jwt.sign({ userId, role }, secret, {
+      expiresIn: process.env.JWT_EXPIRE || "15m",
+    } as jwt.SignOptions);
   }
 
   // Generate refresh token
   private static generateRefreshToken(userId: number): string {
     const secret = process.env.JWT_REFRESH_SECRET;
     if (!secret) {
-      throw new Error('JWT_REFRESH_SECRET is not defined');
+      throw new Error("JWT_REFRESH_SECRET is not defined");
     }
-    
-    return jwt.sign(
-      { userId },
-      secret,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d' } as jwt.SignOptions
-    );
+
+    return jwt.sign({ userId }, secret, {
+      expiresIn: process.env.JWT_REFRESH_EXPIRE || "7d",
+    } as jwt.SignOptions);
   }
 
   // Refresh token
@@ -211,19 +246,19 @@ export class AuthController {
 
       if (!refreshToken) {
         res.status(401).json({
-          error: 'Refresh token is required'
+          error: "Refresh token is required",
         });
         return;
       }
 
       const secret = process.env.JWT_REFRESH_SECRET;
       if (!secret) {
-        throw new Error('JWT_REFRESH_SECRET is not defined');
+        throw new Error("JWT_REFRESH_SECRET is not defined");
       }
 
       // Verify refresh token
       const decoded = jwt.verify(refreshToken, secret) as any;
-      
+
       // Get user
       const user = await prisma.user.findUnique({
         where: { id: decoded.userId },
@@ -231,27 +266,29 @@ export class AuthController {
           id: true,
           role: true,
           isActive: true,
-        }
+        },
       });
 
       if (!user || !user.isActive) {
         res.status(401).json({
-          error: 'Invalid refresh token'
+          error: "Invalid refresh token",
         });
         return;
       }
 
       // Generate new access token
-      const accessToken = AuthController.generateAccessToken(user.id, user.role);
+      const accessToken = AuthController.generateAccessToken(
+        user.id,
+        user.role
+      );
 
       res.json({
-        accessToken
+        accessToken,
       });
-
     } catch (error) {
-      console.error('Token refresh error:', error);
+      console.error("Token refresh error:", error);
       res.status(401).json({
-        error: 'Invalid refresh token'
+        error: "Invalid refresh token",
       });
     }
   }
@@ -259,15 +296,18 @@ export class AuthController {
   // Logout (optional - mainly for clearing client-side tokens)
   static async logout(req: Request, res: Response): Promise<void> {
     res.json({
-      message: 'Logged out successfully'
+      message: "Logged out successfully",
     });
   }
 
   // Get current user
-  static async getCurrentUser(req: AuthenticatedRequest, res: Response): Promise<void> {
+  static async getCurrentUser(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
     try {
       if (!req.user) {
-        res.status(401).json({ error: 'Not authenticated' });
+        res.status(401).json({ error: "Not authenticated" });
         return;
       }
 
@@ -282,18 +322,18 @@ export class AuthController {
           role: true,
           isVerified: true,
           createdAt: true,
-        }
+        },
       });
 
       if (!user) {
-        res.status(404).json({ error: 'User not found' });
+        res.status(404).json({ error: "User not found" });
         return;
       }
 
       res.json({ user });
     } catch (error) {
-      console.error('Get current user error:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error("Get current user error:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   }
 }

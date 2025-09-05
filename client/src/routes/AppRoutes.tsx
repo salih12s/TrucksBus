@@ -7,11 +7,18 @@ import { ProtectedRoute } from "../components/auth";
 const Homepage = lazy(() => import("../pages/Homepage"));
 const Dashboard = lazy(() => import("../pages/Dashboard"));
 const AdDetail = lazy(() => import("../pages/AdDetail"));
-const Login = lazy(() =>
-  import("../components/auth").then((module) => ({ default: module.Login }))
+const LoginNew = lazy(() =>
+  import("../components/auth").then((module) => ({ default: module.LoginNew }))
 );
-const Register = lazy(() =>
-  import("../components/auth").then((module) => ({ default: module.Register }))
+const RegisterNew = lazy(() =>
+  import("../components/auth").then((module) => ({
+    default: module.RegisterNew,
+  }))
+);
+const RegisterCorporate = lazy(() =>
+  import("../components/auth").then((module) => ({
+    default: module.RegisterCorporate,
+  }))
 );
 
 // Loading component for suspense fallback
@@ -59,7 +66,7 @@ const AppRoutes = () => {
         path="/login"
         element={
           <Suspense fallback={<PageLoadingFallback page="Giriş" />}>
-            <Login />
+            <LoginNew />
           </Suspense>
         }
       />
@@ -68,7 +75,16 @@ const AppRoutes = () => {
         path="/register"
         element={
           <Suspense fallback={<PageLoadingFallback page="Kayıt" />}>
-            <Register />
+            <RegisterNew />
+          </Suspense>
+        }
+      />
+
+      <Route
+        path="/register-corporate"
+        element={
+          <Suspense fallback={<PageLoadingFallback page="Kurumsal Kayıt" />}>
+            <RegisterCorporate />
           </Suspense>
         }
       />

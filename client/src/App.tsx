@@ -15,8 +15,11 @@ const Homepage = React.lazy(() => import("./pages/Homepage"));
 const MainLayout = React.lazy(() => import("./pages/MainLayout"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const AdDetail = React.lazy(() => import("./pages/AdDetail"));
-const Login = React.lazy(() => import("./components/auth/Login"));
-const Register = React.lazy(() => import("./components/auth/Register"));
+const LoginNew = React.lazy(() => import("./components/auth/LoginNew"));
+const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
+const RegisterCorporate = React.lazy(
+  () => import("./components/auth/RegisterCorporate")
+);
 const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
 const MyAds = React.lazy(() => import("./components/ads/MyAds"));
 const MessagingSystem = React.lazy(
@@ -97,8 +100,12 @@ function App() {
                   {/* Public Routes */}
                   <Route path="/" element={<MainLayout />} />
                   <Route path="/old-homepage" element={<Homepage />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+                  <Route path="/login" element={<LoginNew />} />
+                  <Route path="/register" element={<RegisterNew />} />
+                  <Route
+                    path="/register-corporate"
+                    element={<RegisterCorporate />}
+                  />
                   <Route path="/ad/:id" element={<AdDetail />} />
 
                   {/* Protected Routes */}
