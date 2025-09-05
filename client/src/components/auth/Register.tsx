@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../hooks/redux';
-import { registerUser, clearError } from '../store/authSlice';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
+import { registerUser, clearError } from '../../store/authSlice';
 
 const Register: React.FC = () => {
   const dispatch = useAppDispatch();

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -12,18 +12,17 @@ import {
   TextField,
   InputAdornment,
   CardMedia,
-  Button
-} from '@mui/material';
+  Button,
+} from "@mui/material";
 import {
   Search,
   LocalShipping,
   DirectionsBus,
   Build,
-  Engineering
-} from '@mui/icons-material';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import apiClient from '../api/client';
+  Engineering,
+} from "@mui/icons-material";
+import { Header, Footer } from "../components/layout";
+import apiClient from "../api/client";
 
 interface Category {
   id: string;
@@ -51,39 +50,49 @@ const MainLayout: React.FC = () => {
     const fetchData = async () => {
       try {
         const [categoriesRes] = await Promise.all([
-          apiClient.get<Category[]>('/categories')
+          apiClient.get<Category[]>("/categories"),
         ]);
         setCategories(categoriesRes.data);
-        
+
         // Mock ads for now
         setAds([
           {
-            id: '1',
-            title: '2020 Model Mercedes Actros',
+            id: "1",
+            title: "2020 Model Mercedes Actros",
             price: 450000,
             year: 2020,
-            createdAt: '2024-01-15',
-            owner: 'Ahmet Yılmaz',
-            phone: '0532 123 45 67'
+            createdAt: "2024-01-15",
+            owner: "Ahmet Yılmaz",
+            phone: "0532 123 45 67",
           },
           {
-            id: '2', 
-            title: 'Ford Transit Minibüs',
+            id: "2",
+            title: "Ford Transit Minibüs",
             price: 180000,
             year: 2019,
-            createdAt: '2024-01-14',
-            owner: 'Mehmet Kaya',
-            phone: '0542 987 65 43'
-          }
+            createdAt: "2024-01-14",
+            owner: "Mehmet Kaya",
+            phone: "0542 987 65 43",
+          },
         ]);
       } catch {
         // Fallback data
         setCategories([
-          { id: '1', name: 'Çekici', slug: 'cekici', displayOrder: 1 },
-          { id: '2', name: 'Dorse', slug: 'dorse', displayOrder: 2 },
-          { id: '3', name: 'Kamyon & Kamyonet', slug: 'kamyon-kamyonet', displayOrder: 3 },
-          { id: '4', name: 'Minibüs & Midibüs', slug: 'minibus-midibus', displayOrder: 4 },
-          { id: '5', name: 'Otobüs', slug: 'otobus', displayOrder: 5 }
+          { id: "1", name: "Çekici", slug: "cekici", displayOrder: 1 },
+          { id: "2", name: "Dorse", slug: "dorse", displayOrder: 2 },
+          {
+            id: "3",
+            name: "Kamyon & Kamyonet",
+            slug: "kamyon-kamyonet",
+            displayOrder: 3,
+          },
+          {
+            id: "4",
+            name: "Minibüs & Midibüs",
+            slug: "minibus-midibus",
+            displayOrder: 4,
+          },
+          { id: "5", name: "Otobüs", slug: "otobus", displayOrder: 5 },
         ]);
       }
     };
@@ -93,13 +102,13 @@ const MainLayout: React.FC = () => {
 
   const getCategoryIcon = (slug: string) => {
     switch (slug) {
-      case 'cekici':
-      case 'kamyon-kamyonet':
+      case "cekici":
+      case "kamyon-kamyonet":
         return <LocalShipping />;
-      case 'minibus-midibus':
-      case 'otobus':
+      case "minibus-midibus":
+      case "otobus":
         return <DirectionsBus />;
-      case 'dorse':
+      case "dorse":
         return <Build />;
       default:
         return <Engineering />;
@@ -107,30 +116,33 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <Header />
-      
+
       <Container maxWidth="lg" sx={{ mt: 3, mb: 3, flex: 1 }}>
-        <Box sx={{ display: 'flex', gap: 3 }}>
+        <Box sx={{ display: "flex", gap: 3 }}>
           {/* Left Sidebar - Categories */}
-          <Box sx={{ width: '300px', flexShrink: 0 }}>
+          <Box sx={{ width: "300px", flexShrink: 0 }}>
             <Card>
               <CardContent>
-                <Typography variant="h6" sx={{ mb: 2, color: '#313B4C', fontWeight: 'bold' }}>
+                <Typography
+                  variant="h6"
+                  sx={{ mb: 2, color: "#313B4C", fontWeight: "bold" }}
+                >
                   Kategoriler
                 </Typography>
                 <List sx={{ p: 0 }}>
                   {categories.map((category) => (
-                    <ListItem 
+                    <ListItem
                       key={category.id}
-                      sx={{ 
-                        cursor: 'pointer',
-                        '&:hover': {
-                          backgroundColor: '#FCE4EC' // Light red hover
-                        }
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "#FCE4EC", // Light red hover
+                        },
                       }}
                     >
-                      <ListItemIcon sx={{ color: '#D34237' }}>
+                      <ListItemIcon sx={{ color: "#D34237" }}>
                         {getCategoryIcon(category.slug)}
                       </ListItemIcon>
                       <ListItemText primary={category.name} />
@@ -152,19 +164,19 @@ const MainLayout: React.FC = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Search sx={{ color: '#D34237' }} />
+                        <Search sx={{ color: "#D34237" }} />
                       </InputAdornment>
                     ),
                   }}
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '&:hover fieldset': {
-                        borderColor: '#D34237'
+                    "& .MuiOutlinedInput-root": {
+                      "&:hover fieldset": {
+                        borderColor: "#D34237",
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#D34237'
-                      }
-                    }
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#D34237",
+                      },
+                    },
                   }}
                 />
               </CardContent>
@@ -175,16 +187,16 @@ const MainLayout: React.FC = () => {
               {ads.map((ad) => (
                 <Card key={ad.id} sx={{ mb: 2 }}>
                   <CardContent>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box sx={{ display: "flex", gap: 2 }}>
                       {/* Left - Image */}
-                      <Box sx={{ width: '200px', flexShrink: 0 }}>
+                      <Box sx={{ width: "200px", flexShrink: 0 }}>
                         <CardMedia
-                          sx={{ 
-                            height: 150, 
-                            backgroundColor: '#f5f5f5',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
+                          sx={{
+                            height: 150,
+                            backgroundColor: "#f5f5f5",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                         >
                           <Typography variant="body2" color="text.secondary">
@@ -194,36 +206,61 @@ const MainLayout: React.FC = () => {
                       </Box>
 
                       {/* Right - Details */}
-                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                        <Typography variant="h6" sx={{ mb: 1, color: '#313B4C' }}>
+                      <Box
+                        sx={{
+                          flex: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
+                        <Typography
+                          variant="h6"
+                          sx={{ mb: 1, color: "#313B4C" }}
+                        >
                           {ad.title}
                         </Typography>
-                        
-                        <Typography variant="h5" sx={{ color: '#D34237', fontWeight: 'bold', mb: 1 }}>
+
+                        <Typography
+                          variant="h5"
+                          sx={{ color: "#D34237", fontWeight: "bold", mb: 1 }}
+                        >
                           ₺{ad.price.toLocaleString()}
                         </Typography>
-                        
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 1 }}
+                        >
                           Model Yılı: {ad.year}
                         </Typography>
-                        
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          İlan Tarihi: {new Date(ad.createdAt).toLocaleDateString('tr-TR')}
+
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 1 }}
+                        >
+                          İlan Tarihi:{" "}
+                          {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
                         </Typography>
-                        
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 2 }}
+                        >
                           İlan Sahibi: {ad.owner} | Tel: {ad.phone}
                         </Typography>
 
                         {/* Action Button */}
-                        <Box sx={{ mt: 'auto' }}>
+                        <Box sx={{ mt: "auto" }}>
                           <Button
                             variant="contained"
-                            sx={{ 
-                              backgroundColor: '#D34237',
-                              '&:hover': {
-                                backgroundColor: '#B73429'
-                              }
+                            sx={{
+                              backgroundColor: "#D34237",
+                              "&:hover": {
+                                backgroundColor: "#B73429",
+                              },
                             }}
                           >
                             Detayları Gör

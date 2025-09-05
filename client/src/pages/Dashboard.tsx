@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../hooks/redux';
 import { logoutUser } from '../store/authSlice';
 import { useNavigate } from 'react-router-dom';
-import SEO from '../components/SEO';
+import { SEO } from '../components/common';
 import {
   AppBar,
   Toolbar,
@@ -31,10 +31,9 @@ import {
   DirectionsCar,
   Analytics
 } from '@mui/icons-material';
-import CreateAdForm from '../components/CreateAdForm';
-import MyAds from '../components/MyAds';
-import MessagingSystem from '../components/MessagingSystem';
-import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import { CreateAdForm, MyAds } from '../components/ads';
+import { MessagingSystem } from '../components/messaging';
+import { AnalyticsDashboard } from '../components/analytics';
 
 interface TabPanelProps {
   children?: React.ReactNode;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
-import apiClient from '../api/client';
+import type { RootState } from '../../store';
+import apiClient from '../../api/client';
 import {
   Box,
   Card,

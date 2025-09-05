@@ -1,14 +1,14 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
-import ProtectedRoute from '../components/ProtectedRoute';
+import { ProtectedRoute } from '../components/auth';
 
 // Lazy load components for better performance
 const Homepage = lazy(() => import('../pages/Homepage'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const AdDetail = lazy(() => import('../pages/AdDetail'));
-const Login = lazy(() => import('../components/Login'));
-const Register = lazy(() => import('../components/Register'));
+const Login = lazy(() => import('../components/auth').then(module => ({ default: module.Login })));
+const Register = lazy(() => import('../components/auth').then(module => ({ default: module.Register })));
 
 // Loading component for suspense fallback
 const LoadingFallback = ({ message = 'Yükleniyor...' }: { message?: string }) => (

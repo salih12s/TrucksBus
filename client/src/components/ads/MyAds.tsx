@@ -44,7 +44,7 @@ import {
   CalendarToday,
   DirectionsCar
 } from '@mui/icons-material';
-import apiClient from '../api/client';
+import apiClient from '../../api/client';
 
 interface Ad {
   id: string;

@@ -23,7 +23,7 @@ import {
   Build,
   Engineering
 } from '@mui/icons-material';
-import SEO from '../components/SEO';
+import { SEO } from '../components/common';
 import apiClient from '../api/client';
 
 interface Category {

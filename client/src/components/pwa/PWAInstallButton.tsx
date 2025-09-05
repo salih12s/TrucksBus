@@ -23,7 +23,7 @@ import {
   Storage,
   Close
 } from '@mui/icons-material';
-import { usePWA, useNetworkStatus } from '../utils/pwa';
+import { usePWA, useNetworkStatus } from '../../utils/pwa';
 
 interface PWAInstallButtonProps {
   variant?: 'button' | 'fab' | 'chip';

@@ -15,7 +15,7 @@ import {
   NetworkCheck,
   VisibilityOff
 } from '@mui/icons-material';
-import { usePerformanceMonitor } from '../hooks/usePerformanceMonitor';
+import { usePerformanceMonitor } from '../../hooks/usePerformanceMonitor';
 
 // Performance Monitor Component (for development)
 const PerformanceMonitor = () => {

@@ -21,7 +21,7 @@ import {
   ExpandLess,
   NetworkCheck
 } from '@mui/icons-material';
-import { usePWA, useNetworkStatus } from '../utils/pwa';
+import { usePWA, useNetworkStatus } from '../../utils/pwa';
 
 const PWAStatus: React.FC = () => {
   const [showDetails, setShowDetails] = React.useState(false);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import SEO from '../components/SEO';
+import { SEO } from '../components/common';
 import {
   Box,
   Container,
