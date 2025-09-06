@@ -14,7 +14,7 @@
     }
   ],
   "settings": {
-    "files.autoSave": "afterDelay",
+    "files.autoSave": "off",
     "files.autoSaveDelay": 1000,
     "git.autofetch": true,
     "git.enableSmartCommit": true,
@@ -22,10 +22,10 @@
     "editor.formatOnSave": true,
     "typescript.preferences.includePackageJsonAutoImports": "auto",
     "workbench.editor.enablePreview": false,
-    "workbench.editor.restoreViewState": true,
+    "workbench.editor.restoreViewState": false,
     "workbench.editor.wrapTabs": true,
-    "window.restoreWindows": "all",
-    "files.hotExit": "onExitAndWindowClose",
+    "window.restoreWindows": "none",
+    "files.hotExit": "off",
     "workbench.settings.enableNaturalLanguageSearch": false,
     "extensions.autoUpdate": false,
     "telemetry.telemetryLevel": "off"
