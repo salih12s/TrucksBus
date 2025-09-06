@@ -20,6 +20,8 @@ import {
   MenuItem,
   Fade,
   Paper,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import {
   AccountCircle,
@@ -52,7 +54,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`dashboard-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ p: { xs: 2, sm: 3 } }}>{children}</Box>}
     </div>
   );
 }
@@ -63,6 +65,10 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [currentTab, setCurrentTab] = useState(0);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // Responsive hooks
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
@@ -113,20 +119,35 @@ const Dashboard: React.FC = () => {
           elevation={1}
           sx={{ bgcolor: "white", borderBottom: 1, borderColor: "divider" }}
         >
-          <Toolbar>
-            <DirectionsCar sx={{ mr: 2, color: "primary.main" }} />
+          <Toolbar sx={{ px: { xs: 1, sm: 2 } }}>
+            <DirectionsCar
+              sx={{ mr: { xs: 1, sm: 2 }, color: "primary.main" }}
+            />
             <Typography
               variant="h6"
               component="div"
-              sx={{ flexGrow: 1, fontWeight: "bold", color: "primary.main" }}
+              sx={{
+                flexGrow: 1,
+                fontWeight: "bold",
+                color: "primary.main",
+                fontSize: { xs: "1rem", sm: "1.25rem" },
+              }}
             >
-              TrucksBus Dashboard
+              {isMobile ? "TrucksBus" : "TrucksBus Dashboard"}
             </Typography>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Hoş geldiniz, {user?.firstName || user?.email}
-              </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 1, sm: 2 },
+              }}
+            >
+              {!isMobile && (
+                <Typography variant="body2" color="text.secondary">
+                  Hoş geldiniz, {user?.firstName || user?.email}
+                </Typography>
+              )}
 
               <IconButton
                 size="large"
@@ -161,20 +182,52 @@ const Dashboard: React.FC = () => {
         </AppBar>
 
         {/* Main Content */}
-        <Container maxWidth="xl" sx={{ mt: 3 }}>
+        <Container
+          maxWidth="xl"
+          sx={{ mt: { xs: 2, sm: 3 }, px: { xs: 1, sm: 3 } }}
+        >
           {/* User Info Card */}
-          <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56 }}>
+          <Paper
+            elevation={2}
+            sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 1.5, sm: 2 },
+                flexDirection: { xs: "column", sm: "row" },
+                textAlign: { xs: "center", sm: "left" },
+              }}
+            >
+              <Avatar
+                sx={{
+                  bgcolor: "primary.main",
+                  width: { xs: 48, sm: 56 },
+                  height: { xs: 48, sm: 56 },
+                }}
+              >
                 {user?.firstName?.charAt(0) || user?.email?.charAt(0)}
               </Avatar>
               <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="h5" gutterBottom>
+                <Typography
+                  variant="h5"
+                  gutterBottom
+                  sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" } }}
+                >
                   {user?.firstName && user?.lastName
                     ? `${user.firstName} ${user.lastName}`
                     : user?.email}
                 </Typography>
-                <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    mb: 1,
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "center", sm: "flex-start" },
+                  }}
+                >
                   <Chip
                     label={getRoleDisplayName(user?.role)}
                     color="primary"
@@ -199,70 +252,131 @@ const Dashboard: React.FC = () => {
               value={currentTab}
               onChange={handleTabChange}
               aria-label="dashboard tabs"
-              sx={{ borderBottom: 1, borderColor: "divider" }}
+              sx={{
+                borderBottom: 1,
+                borderColor: "divider",
+                "& .MuiTab-root": {
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  minWidth: { xs: "auto", sm: 120 },
+                  padding: { xs: "6px 8px", sm: "6px 12px" },
+                },
+              }}
+              variant={isMobile ? "scrollable" : "standard"}
+              scrollButtons={isMobile ? "auto" : false}
+              allowScrollButtonsMobile={isMobile}
             >
-              <Tab icon={<DashboardIcon />} label="Genel Bakış" />
-              <Tab icon={<Add />} label="İlan Ver" />
-              <Tab icon={<ViewList />} label="İlanlarım" />
-              <Tab icon={<Message />} label="Mesajlar" />
-              <Tab icon={<Analytics />} label="Analitik" />
+              <Tab
+                icon={<DashboardIcon />}
+                label={isMobile ? "Genel" : "Genel Bakış"}
+                iconPosition={isMobile ? "top" : "start"}
+              />
+              <Tab
+                icon={<Add />}
+                label={isMobile ? "İlan" : "İlan Ver"}
+                iconPosition={isMobile ? "top" : "start"}
+              />
+              <Tab
+                icon={<ViewList />}
+                label={isMobile ? "İlanlar" : "İlanlarım"}
+                iconPosition={isMobile ? "top" : "start"}
+              />
+              <Tab
+                icon={<Message />}
+                label="Mesajlar"
+                iconPosition={isMobile ? "top" : "start"}
+              />
+              <Tab
+                icon={<Analytics />}
+                label="Analitik"
+                iconPosition={isMobile ? "top" : "start"}
+              />
             </Tabs>
 
             {/* Overview Tab */}
             <TabPanel value={currentTab} index={0}>
-              <Typography variant="h4" gutterBottom>
+              <Typography
+                variant="h4"
+                gutterBottom
+                sx={{ fontSize: { xs: "1.5rem", sm: "2.125rem" } }}
+              >
                 Genel Bakış
               </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mt: 3 }}>
-                <Card sx={{ minWidth: 275, flex: 1 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "repeat(2, 1fr)",
+                    md: "repeat(3, 1fr)",
+                  },
+                  gap: { xs: 2, sm: 3 },
+                  mt: 3,
+                }}
+              >
+                <Card sx={{ minWidth: 0 }}>
                   <CardContent>
                     <Typography
                       variant="h5"
                       component="div"
                       color="primary.main"
+                      sx={{ fontSize: { xs: "1.125rem", sm: "1.5rem" } }}
                     >
                       Aktif İlanlar
                     </Typography>
                     <Typography sx={{ mb: 1.5 }} color="text.secondary">
                       Yayında olan ilanlarınız
                     </Typography>
-                    <Typography variant="h3" component="div">
+                    <Typography
+                      variant="h3"
+                      component="div"
+                      sx={{ fontSize: { xs: "2rem", sm: "3rem" } }}
+                    >
                       0
                     </Typography>
                   </CardContent>
                 </Card>
 
-                <Card sx={{ minWidth: 275, flex: 1 }}>
+                <Card sx={{ minWidth: 0 }}>
                   <CardContent>
                     <Typography
                       variant="h5"
                       component="div"
                       color="secondary.main"
+                      sx={{ fontSize: { xs: "1.125rem", sm: "1.5rem" } }}
                     >
                       Toplam Görüntülenme
                     </Typography>
                     <Typography sx={{ mb: 1.5 }} color="text.secondary">
                       İlanlarınızın görüntülenme sayısı
                     </Typography>
-                    <Typography variant="h3" component="div">
+                    <Typography
+                      variant="h3"
+                      component="div"
+                      sx={{ fontSize: { xs: "2rem", sm: "3rem" } }}
+                    >
                       0
                     </Typography>
                   </CardContent>
                 </Card>
 
-                <Card sx={{ minWidth: 275, flex: 1 }}>
+                <Card sx={{ minWidth: 0 }}>
                   <CardContent>
                     <Typography
                       variant="h5"
                       component="div"
                       color="success.main"
+                      sx={{ fontSize: { xs: "1.125rem", sm: "1.5rem" } }}
                     >
                       Mesajlar
                     </Typography>
                     <Typography sx={{ mb: 1.5 }} color="text.secondary">
                       Gelen mesaj sayısı
                     </Typography>
-                    <Typography variant="h3" component="div">
+                    <Typography
+                      variant="h3"
+                      component="div"
+                      sx={{ fontSize: { xs: "2rem", sm: "3rem" } }}
+                    >
                       0
                     </Typography>
                   </CardContent>

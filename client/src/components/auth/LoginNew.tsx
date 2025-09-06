@@ -11,6 +11,8 @@ import {
   IconButton,
   Checkbox,
   FormControlLabel,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
@@ -20,6 +22,10 @@ const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { isLoading, error } = useAppSelector((state) => state.auth);
+
+  // Responsive hooks
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [formData, setFormData] = useState({
     email: "",
@@ -56,6 +62,7 @@ const Login: React.FC = () => {
         minHeight: "100vh",
         display: "flex",
         backgroundColor: "#f5f5f5",
+        flexDirection: { xs: "column", md: "row" },
       }}
     >
       {/* Left Side - Branding */}
@@ -63,7 +70,7 @@ const Login: React.FC = () => {
         sx={{
           flex: 1,
           background: "linear-gradient(135deg, #313B4C 0%, #2a3441 100%)",
-          display: "flex",
+          display: { xs: "none", md: "flex" },
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
@@ -191,18 +198,45 @@ const Login: React.FC = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          p: 4,
+          p: { xs: 2, sm: 4 },
+          minHeight: { xs: "100vh", md: "auto" },
         }}
       >
+        {/* Mobile Logo */}
+        {isMobile && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 20,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 2,
+            }}
+          >
+            <img
+              src="/Trucksbus.png"
+              alt="TrucksBus Logo"
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "contain",
+                filter:
+                  "brightness(0) saturate(100%) invert(20%) sepia(20%) saturate(500%) hue-rotate(190deg)",
+              }}
+            />
+          </Box>
+        )}
+
         <Paper
           elevation={0}
           sx={{
-            p: 6,
+            p: { xs: 3, sm: 4, md: 6 },
             width: "100%",
             maxWidth: 480,
             borderRadius: 3,
             backgroundColor: "white",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+            boxShadow: { xs: "none", md: "0 10px 40px rgba(0,0,0,0.1)" },
+            mt: { xs: 8, md: 0 },
           }}
         >
           {/* Header */}
@@ -213,6 +247,7 @@ const Login: React.FC = () => {
                 fontWeight: "bold",
                 color: "#313B4C",
                 mb: 1,
+                fontSize: { xs: "1.75rem", sm: "2.125rem" },
               }}
             >
               Giriş Yap
@@ -221,6 +256,7 @@ const Login: React.FC = () => {
               variant="body1"
               sx={{
                 color: "#666",
+                fontSize: { xs: "0.875rem", sm: "1rem" },
               }}
             >
               Hesabınıza giriş yaparak devam edin

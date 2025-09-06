@@ -11,6 +11,8 @@ import {
   Card,
   CardContent,
   Chip,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -27,6 +29,10 @@ import type { RootState } from "@/store";
 
 const Profile: React.FC = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
+
+  // Responsive hooks
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -72,25 +78,47 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container
+      maxWidth="lg"
+      sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1, sm: 3 } }}
+    >
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: "bold", color: "#313B4C" }}>
+      <Box sx={{ mb: { xs: 3, sm: 4 } }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: "bold",
+            color: "#313B4C",
+            fontSize: { xs: "1.5rem", sm: "2.125rem" },
+            textAlign: { xs: "center", sm: "left" },
+          }}
+        >
           Profil Bilgileri
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          sx={{ textAlign: { xs: "center", sm: "left" } }}
+        >
           Hesap bilgilerinizi görüntüleyin ve güncelleyin
         </Typography>
       </Box>
 
-      <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: { xs: 2, sm: 3 },
+          flexDirection: { xs: "column", lg: "row" },
+          alignItems: { xs: "stretch", lg: "flex-start" },
+        }}
+      >
         {/* Profile Card */}
-        <Box sx={{ flex: "1 1 300px", minWidth: "280px" }}>
-          <Paper sx={{ p: 3, textAlign: "center" }}>
+        <Box sx={{ flex: { lg: "0 0 350px" }, width: "100%" }}>
+          <Paper sx={{ p: { xs: 2, sm: 3 }, textAlign: "center" }}>
             <Avatar
               sx={{
-                width: 120,
-                height: 120,
+                width: { xs: 80, sm: 120 },
+                height: { xs: 80, sm: 120 },
                 mx: "auto",
                 mb: 2,
                 bgcolor: "#D34237",
@@ -100,7 +128,14 @@ const Profile: React.FC = () => {
               {getUserInitials()}
             </Avatar>
 
-            <Typography variant="h5" sx={{ fontWeight: "bold", mb: 1 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: "bold",
+                mb: 1,
+                fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              }}
+            >
               {user?.firstName && user?.lastName
                 ? `${user.firstName} ${user.lastName}`
                 : "Kullanıcı"}
@@ -112,9 +147,14 @@ const Profile: React.FC = () => {
               }
               color={user?.role === "CORPORATE" ? "success" : "primary"}
               sx={{ mb: 2 }}
+              size={isMobile ? "small" : "medium"}
             />
 
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
+            >
               {user?.email}
             </Typography>
 
@@ -132,17 +172,25 @@ const Profile: React.FC = () => {
         </Box>
 
         {/* Profile Details */}
-        <Box sx={{ flex: "2 1 400px", minWidth: "320px" }}>
-          <Paper sx={{ p: 3 }}>
+        <Box sx={{ flex: 1, width: "100%" }}>
+          <Paper sx={{ p: { xs: 2, sm: 3 } }}>
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
                 mb: 3,
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 2, sm: 0 },
               }}
             >
-              <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: { xs: "1.125rem", sm: "1.25rem" },
+                }}
+              >
                 Kişisel Bilgiler
               </Typography>
 
@@ -151,16 +199,27 @@ const Profile: React.FC = () => {
                   startIcon={<EditIcon />}
                   onClick={() => setIsEditing(true)}
                   variant="outlined"
+                  size={isMobile ? "small" : "medium"}
+                  fullWidth={isMobile}
                 >
                   Düzenle
                 </Button>
               ) : (
-                <Box sx={{ display: "flex", gap: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    flexDirection: { xs: "column", sm: "row" },
+                    width: { xs: "100%", sm: "auto" },
+                  }}
+                >
                   <Button
                     startIcon={<SaveIcon />}
                     onClick={handleSave}
                     variant="contained"
                     color="primary"
+                    size={isMobile ? "small" : "medium"}
+                    fullWidth={isMobile}
                   >
                     Kaydet
                   </Button>
@@ -169,6 +228,8 @@ const Profile: React.FC = () => {
                     onClick={handleCancel}
                     variant="outlined"
                     color="secondary"
+                    size={isMobile ? "small" : "medium"}
+                    fullWidth={isMobile}
                   >
                     İptal
                   </Button>
@@ -179,8 +240,11 @@ const Profile: React.FC = () => {
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: 3,
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(auto-fit, minmax(250px, 1fr))",
+                },
+                gap: { xs: 2, sm: 3 },
               }}
             >
               {/* Personal Information */}

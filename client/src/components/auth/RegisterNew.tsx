@@ -11,6 +11,8 @@ import {
   IconButton,
   Checkbox,
   FormControlLabel,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Visibility,
@@ -27,6 +29,10 @@ const Register: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { isLoading, error } = useAppSelector((state) => state.auth);
+
+  // Responsive hooks
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -137,6 +143,7 @@ const Register: React.FC = () => {
         minHeight: "100vh",
         display: "flex",
         backgroundColor: "#f5f5f5",
+        flexDirection: { xs: "column", md: "row" },
       }}
     >
       {/* Left Side - Branding */}
@@ -144,7 +151,7 @@ const Register: React.FC = () => {
         sx={{
           flex: 1,
           background: "linear-gradient(135deg, #313B4C 0%, #2a3441 100%)",
-          display: "flex",
+          display: { xs: "none", md: "flex" },
           flexDirection: "column",
           justifyContent: "center",
           alignItems: "center",
@@ -269,18 +276,45 @@ const Register: React.FC = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          p: 4,
+          p: { xs: 2, sm: 4 },
+          minHeight: { xs: "100vh", md: "auto" },
         }}
       >
+        {/* Mobile Logo */}
+        {isMobile && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 20,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 2,
+            }}
+          >
+            <img
+              src="/Trucksbus.png"
+              alt="TrucksBus Logo"
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "contain",
+                filter:
+                  "brightness(0) saturate(100%) invert(20%) sepia(20%) saturate(500%) hue-rotate(190deg)",
+              }}
+            />
+          </Box>
+        )}
+
         <Paper
           elevation={0}
           sx={{
-            p: 6,
+            p: { xs: 3, sm: 4, md: 6 },
             width: "100%",
             maxWidth: 480,
             borderRadius: 3,
             backgroundColor: "white",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+            boxShadow: { xs: "none", md: "0 10px 40px rgba(0,0,0,0.1)" },
+            mt: { xs: 8, md: 0 },
           }}
         >
           {/* Header */}
@@ -291,6 +325,7 @@ const Register: React.FC = () => {
                 fontWeight: "bold",
                 color: "#313B4C",
                 mb: 1,
+                fontSize: { xs: "1.75rem", sm: "2.125rem" },
               }}
             >
               Hesap aç
@@ -315,7 +350,14 @@ const Register: React.FC = () => {
           {/* Register Form */}
           <Box component="form" onSubmit={handleSubmit}>
             {/* Name Fields */}
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                mb: 3,
+                flexDirection: { xs: "column", sm: "row" },
+              }}
+            >
               <TextField
                 fullWidth
                 name="firstName"
@@ -323,6 +365,7 @@ const Register: React.FC = () => {
                 value={formData.firstName}
                 onChange={handleChange}
                 required
+                size={isMobile ? "small" : "medium"}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -338,6 +381,7 @@ const Register: React.FC = () => {
                 value={formData.lastName}
                 onChange={handleChange}
                 required
+                size={isMobile ? "small" : "medium"}
               />
             </Box>
 
@@ -350,6 +394,7 @@ const Register: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               required
+              size={isMobile ? "small" : "medium"}
               sx={{ mb: 3 }}
               InputProps={{
                 startAdornment: (
