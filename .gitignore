@@ -48,6 +48,12 @@ coverage/
 tmp/
 temp/
 
+# Deleted components - prevent VS Code from restoring
+client/src/routes/
+client/src/components/auth/Login.tsx
+client/src/components/auth/Register.tsx
+client/src/components/ads/CategorySelection.tsx
+
 # Unwanted component files
 client/src/components/AdvancedSearch.tsx
 client/src/components/AnalyticsDashboard.tsx

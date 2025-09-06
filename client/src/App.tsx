@@ -23,8 +23,8 @@ const RegisterCorporate = React.lazy(
   () => import("./components/auth/RegisterCorporate")
 );
 const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
-const CategorySelection = React.lazy(
-  () => import("./components/ads").then((module) => ({
+const CategorySelection = React.lazy(() =>
+  import("./components/ads").then((module) => ({
     default: module.CategorySelection,
   }))
 );
