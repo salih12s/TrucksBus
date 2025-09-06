@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../config/database";
 import { UserRole } from "@prisma/client";
 import { AuthenticatedRequest } from "../middleware/auth";
+import { createAdminLog } from "./adminLogsController";
 
 interface RegisterRequest {
   email: string;
@@ -262,6 +263,20 @@ export class AuthController {
       );
       const refreshToken = AuthController.generateRefreshToken(user.id);
 
+      // Log admin login activity
+      if (user.role === "ADMIN") {
+        await createAdminLog(
+          user.id,
+          user.email,
+          "LOGIN",
+          `Admin logged in`,
+          undefined,
+          undefined,
+          clientIP,
+          req.get("User-Agent")
+        );
+      }
+
       // Remove sensitive data from response
       const { passwordHash, ...safeUser } = user;
 
@@ -383,6 +398,132 @@ export class AuthController {
       res.json({ user });
     } catch (error) {
       console.error("Get current user error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  // Get all users (Admin only)
+  static async getAllUsers(req: AuthenticatedRequest, res: Response) {
+    try {
+      // Admin kontrolü
+      if (req.user?.role !== "ADMIN") {
+        res.status(403).json({ error: "Access denied. Admin role required." });
+        return;
+      }
+
+      const users = await prisma.user.findMany({
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          isVerified: true,
+          createdAt: true,
+          lastLoginAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      res.json(users);
+    } catch (error) {
+      console.error("Get all users error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  // Toggle user status (Admin only)
+  static async toggleUserStatus(req: AuthenticatedRequest, res: Response) {
+    try {
+      // Admin kontrolü
+      if (req.user?.role !== "ADMIN") {
+        res.status(403).json({ error: "Access denied. Admin role required." });
+        return;
+      }
+
+      const { userId } = req.params;
+      const userIdNum = parseInt(userId);
+
+      if (isNaN(userIdNum)) {
+        res.status(400).json({ error: "Invalid user ID" });
+        return;
+      }
+
+      // Kendi hesabını engelleyemez
+      if (req.user.id === userIdNum) {
+        res
+          .status(400)
+          .json({ error: "Cannot change your own account status" });
+        return;
+      }
+
+      // Kullanıcıyı bul
+      const user = await prisma.user.findUnique({
+        where: { id: userIdNum },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          isActive: true,
+          role: true,
+        },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      // Diğer admin'leri engelleyemez
+      if (user.role === "ADMIN") {
+        res.status(400).json({ error: "Cannot change admin user status" });
+        return;
+      }
+
+      // Durumu değiştir
+      const updatedUser = await prisma.user.update({
+        where: { id: userIdNum },
+        data: { isActive: !user.isActive },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          isVerified: true,
+          createdAt: true,
+          lastLoginAt: true,
+        },
+      });
+
+      // Log admin activity
+      const action = updatedUser.isActive ? "ACTIVATE_USER" : "DEACTIVATE_USER";
+      await createAdminLog(
+        req.user.id,
+        req.user.email,
+        "TOGGLE_USER_STATUS",
+        `${action.toLowerCase().replace("_", " ")} user: ${user.email}`,
+        userIdNum,
+        user.email,
+        req.ip,
+        req.get("User-Agent")
+      );
+
+      res.json({
+        message: `User ${
+          updatedUser.isActive ? "activated" : "deactivated"
+        } successfully`,
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.error("Toggle user status error:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   }

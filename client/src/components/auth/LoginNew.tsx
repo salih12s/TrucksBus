@@ -51,7 +51,13 @@ const Login: React.FC = () => {
     if (formData.email && formData.password) {
       const result = await dispatch(loginUser(formData));
       if (loginUser.fulfilled.match(result)) {
-        navigate("/");
+        // Admin kontrolü
+        const user = result.payload?.user;
+        if (user?.role === "ADMIN") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       }
     }
   };

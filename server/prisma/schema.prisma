@@ -70,6 +70,7 @@ model User {
   complaints       Complaint[]
   feedback         Feedback[]
   reviewedAds      PendingAd[] @relation("ReviewedByAdmin")
+  adminLogs        AdminLog[] @relation("AdminLogs")
 
   @@map("users")
 }
@@ -293,4 +294,22 @@ model Feedback {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("feedback")
+}
+
+model AdminLog {
+  id              Int      @id @default(autoincrement())
+  adminId         Int      @map("admin_id")
+  adminEmail      String   @map("admin_email")
+  action          String
+  targetUserId    Int?     @map("target_user_id")
+  targetUserEmail String?  @map("target_user_email")
+  details         String?
+  ipAddress       String?  @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  admin User @relation("AdminLogs", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("admin_logs")
 }

@@ -4,7 +4,6 @@ import {
   Container,
   Typography,
   Card,
-  CardContent,
   CardMedia,
   CardActionArea,
   Breadcrumbs,
@@ -188,19 +187,6 @@ const CategorySelection: React.FC = () => {
           </Box>
         )}
 
-        {/* Debug - Kategorileri text olarak göster */}
-        <Box sx={{ mb: 2, p: 2, bgcolor: "#f5f5f5", borderRadius: 1 }}>
-          <Typography variant="body2">
-            Debug: {categories.length} kategori bulundu
-          </Typography>
-          {categories.slice(0, 3).map((cat) => (
-            <Typography key={cat.id} variant="caption" display="block">
-              {cat.id}: {cat.name} - Slug: {cat.slug} - Image:{" "}
-              {getCategoryImage(cat)}
-            </Typography>
-          ))}
-        </Box>
-
         {/* Kategori Kartları - Responsive Grid */}
         <Box
           sx={{
@@ -220,8 +206,7 @@ const CategorySelection: React.FC = () => {
               key={category.id}
               sx={{
                 height: 250,
-                display: "flex",
-                flexDirection: "column",
+                position: "relative",
                 transition: "all 0.3s ease",
                 cursor: "pointer",
                 "&:hover": {
@@ -237,77 +222,69 @@ const CategorySelection: React.FC = () => {
                 onClick={() => handleCategorySelect(category)}
                 sx={{
                   height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
+                  position: "relative",
                   p: 0,
                 }}
               >
-                {/* Kategori İsmi - Üstte */}
+                {/* Arka Plan Resmi */}
+                <CardMedia
+                  component="img"
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                  image={getCategoryImage(category)}
+                  alt={category.name}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "/CategoryImage/cekici.png";
+                  }}
+                />
+
+                {/* Overlay ve Yazı */}
                 <Box
                   sx={{
-                    p: 1.5,
-                    bgcolor: "#f8f9fa",
-                    borderBottom: "1px solid #e0e0e0",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background:
+                      "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    color: "white",
+                    textAlign: "center",
+                    p: 2,
                   }}
                 >
                   <Typography
-                    variant="h6"
+                    variant="h5"
                     component="h3"
                     sx={{
-                      color: "#333",
                       fontWeight: "bold",
-                      textAlign: "center",
-                      fontSize: "1rem",
+                      textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+                      mb: 1,
                     }}
                   >
                     {category.name}
                   </Typography>
-                </Box>
 
-                {/* Resim Alanı */}
-                <Box
-                  sx={{
-                    flexGrow: 1,
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    bgcolor: "#ffffff",
-                    minHeight: 150,
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    sx={{
-                      maxWidth: "90%",
-                      maxHeight: "90%",
-                      objectFit: "contain",
-                    }}
-                    image={getCategoryImage(category)}
-                    alt={category.name}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "/CategoryImage/cekici.png";
-                      console.log(
-                        `Image failed for ${category.name}:`,
-                        getCategoryImage(category)
-                      );
-                    }}
-                  />
-                </Box>
-
-                {/* Alt bilgi (isteğe bağlı) */}
-                {category.description && (
-                  <CardContent sx={{ p: 1, pt: 0.5 }}>
+                  {category.description && (
                     <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ textAlign: "center", display: "block" }}
+                      variant="body2"
+                      sx={{
+                        textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
+                        opacity: 0.9,
+                      }}
                     >
                       {category.description}
                     </Typography>
-                  </CardContent>
-                )}
+                  )}
+                </Box>
               </CardActionArea>
             </Card>
           ))}

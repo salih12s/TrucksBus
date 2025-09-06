@@ -20,4 +20,12 @@ router.post("/logout", authLimiter, AuthController.logout);
 // Protected routes
 router.get("/me", authenticateToken, AuthController.getCurrentUser);
 
+// Admin routes
+router.get("/users", authenticateToken, AuthController.getAllUsers);
+router.patch(
+  "/users/:userId/toggle-status",
+  authenticateToken,
+  AuthController.toggleUserStatus
+);
+
 export default router;

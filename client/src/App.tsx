@@ -23,10 +23,8 @@ const RegisterCorporate = React.lazy(
   () => import("./components/auth/RegisterCorporate")
 );
 const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
-const CategorySelection = React.lazy(() =>
-  import("./components/ads").then((module) => ({
-    default: module.CategorySelection,
-  }))
+const CategorySelection = React.lazy(
+  () => import("./components/ads/CategorySelection")
 );
 const MyAds = React.lazy(() => import("./components/ads/MyAds"));
 const MessagingSystem = React.lazy(
@@ -35,6 +33,12 @@ const MessagingSystem = React.lazy(
 const AnalyticsDashboard = React.lazy(
   () => import("./components/analytics/AnalyticsDashboard")
 );
+
+// Admin Components
+const AdminLayout = React.lazy(() => import("./admin/components/AdminLayout"));
+const AdminDashboard = React.lazy(() => import("./admin/pages/AdminDashboard"));
+const UsersPage = React.lazy(() => import("./admin/pages/UsersPage"));
+const AdminLogsPage = React.lazy(() => import("./admin/pages/AdminLogsPage"));
 
 import "./App.css";
 
@@ -190,6 +194,14 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+
+                  {/* Admin Routes */}
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="users" element={<UsersPage />} />
+                    <Route path="logs" element={<AdminLogsPage />} />
+                    {/* Diğer admin sayfaları buraya eklenecek */}
+                  </Route>
 
                   {/* Error Routes */}
                   <Route
