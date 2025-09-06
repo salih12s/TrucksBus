@@ -4,11 +4,20 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 import { ProtectedRoute } from "../components/auth";
 import MainLayout from "@/pages/MainLayout";
 
-
 // Lazy load components for better performance
 
 const Dashboard = lazy(() => import("../pages/Dashboard"));
 const AdDetail = lazy(() => import("../pages/AdDetail"));
+const CategorySelection = lazy(() =>
+  import("../components/ads").then((module) => ({
+    default: module.CategorySelection,
+  }))
+);
+const CreateAdForm = lazy(() =>
+  import("../components/ads").then((module) => ({
+    default: module.CreateAdForm,
+  }))
+);
 const LoginNew = lazy(() =>
   import("../components/auth").then((module) => ({ default: module.LoginNew }))
 );
@@ -97,6 +106,19 @@ const AppRoutes = () => {
           <Suspense fallback={<PageLoadingFallback page="İlan Detayı" />}>
             <AdDetail />
           </Suspense>
+        }
+      />
+
+      <Route path="/category-selection" element={<CategorySelection />} />
+
+      <Route
+        path="/create-ad"
+        element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoadingFallback page="İlan Oluştur" />}>
+              <CreateAdForm />
+            </Suspense>
+          </ProtectedRoute>
         }
       />
 

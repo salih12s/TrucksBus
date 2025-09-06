@@ -23,6 +23,11 @@ const RegisterCorporate = React.lazy(
   () => import("./components/auth/RegisterCorporate")
 );
 const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
+const CategorySelection = React.lazy(
+  () => import("./components/ads").then((module) => ({
+    default: module.CategorySelection,
+  }))
+);
 const MyAds = React.lazy(() => import("./components/ads/MyAds"));
 const MessagingSystem = React.lazy(
   () => import("./components/messaging/MessagingSystem")
@@ -108,6 +113,10 @@ function App() {
                     element={<RegisterCorporate />}
                   />
                   <Route path="/ad/:id" element={<AdDetail />} />
+                  <Route
+                    path="/category-selection"
+                    element={<CategorySelection />}
+                  />
 
                   {/* Protected Routes */}
                   <Route

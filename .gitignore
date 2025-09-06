@@ -48,6 +48,35 @@ coverage/
 tmp/
 temp/
 
+# Unwanted component files
+client/src/components/AdvancedSearch.tsx
+client/src/components/AnalyticsDashboard.tsx
+client/src/components/CreateAdForm.tsx
+client/src/components/ErrorBoundary.tsx
+client/src/components/Footer.tsx
+client/src/components/Header.tsx
+client/src/components/ImageUpload.tsx
+client/src/components/Login.tsx
+client/src/components/MessagingSystem.tsx
+client/src/components/MyAds.tsx
+client/src/components/PWAInstallButton.tsx
+client/src/components/PWAStatus.tsx
+client/src/components/PerformanceMonitor.tsx
+client/src/components/ProtectedRoute.tsx
+client/src/components/Register.tsx
+client/src/components/SEO.tsx
+
+# VS Code workspace files that might restore deleted files
+.vscode/state.vscdb*
+.vscode/*.json.bak
+.vscode/extensions.json
+
+# File restoration prevention
+**/*~
+**/.#*
+**/.*swp
+**/.*swo
+
 # Optional npm cache directory
 .npm
 

@@ -155,7 +155,7 @@ const Header: React.FC = () => {
               <Button
                 variant="contained"
                 component={RouterLink}
-                to="/create-ad"
+                to="/category-selection"
                 sx={{
                   backgroundColor: "#D34237",
                   color: "white",
@@ -317,7 +317,7 @@ const Header: React.FC = () => {
               <Button
                 variant="contained"
                 component={RouterLink}
-                to="/create-ad"
+                to="/category-selection"
                 sx={{
                   backgroundColor: "#D34237",
                   color: "white",

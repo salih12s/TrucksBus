@@ -70,14 +70,21 @@ const corsOptions = {
       "http://localhost:5174",
     ];
 
+    console.log("🔍 CORS Check:");
+    console.log("  Request Origin:", origin);
+    console.log("  Allowed Origins:", allowedOrigins);
+
     // Allow requests with no origin (like mobile apps or curl requests) in development
     if (!origin && process.env.NODE_ENV === "development") {
+      console.log("  ✅ No origin in development - allowing");
       return callback(null, true);
     }
 
     if (allowedOrigins.indexOf(origin || "") !== -1) {
+      console.log("  ✅ Origin allowed");
       callback(null, true);
     } else {
+      console.log("  ❌ Origin not allowed");
       callback(new Error("Not allowed by CORS"));
     }
   },
