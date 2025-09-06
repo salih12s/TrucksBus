@@ -43,7 +43,8 @@ const Notifications: React.FC = () => {
       id: 1,
       type: "info",
       title: "Yeni Mesaj",
-      message: "2019 model Mercedes Sprinter ilanınız için yeni bir mesaj aldınız.",
+      message:
+        "2019 model Mercedes Sprinter ilanınız için yeni bir mesaj aldınız.",
       time: "2 saat önce",
       isRead: false,
     },
@@ -81,25 +82,25 @@ const Notifications: React.FC = () => {
     },
   ]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
   const markAsRead = (id: number) => {
-    setNotifications(prev =>
-      prev.map(notif =>
+    setNotifications((prev) =>
+      prev.map((notif) =>
         notif.id === id ? { ...notif, isRead: true } : notif
       )
     );
   };
 
   const deleteNotification = (id: number) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
+    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notif => ({ ...notif, isRead: true }))
+    setNotifications((prev) =>
+      prev.map((notif) => ({ ...notif, isRead: true }))
     );
   };
 
@@ -123,22 +124,32 @@ const Notifications: React.FC = () => {
       case 0: // Tümü
         return notifications;
       case 1: // Okunmamış
-        return notifications.filter(notif => !notif.isRead);
+        return notifications.filter((notif) => !notif.isRead);
       case 2: // Teklifler
-        return notifications.filter(notif => notif.type === "offer");
+        return notifications.filter((notif) => notif.type === "offer");
       default:
         return notifications;
     }
   };
 
-  const unreadCount = notifications.filter(notif => !notif.isRead).length;
+  const unreadCount = notifications.filter((notif) => !notif.isRead).length;
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Header */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: "bold", color: "#313B4C" }}>
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: "bold", color: "#313B4C" }}
+          >
             Bildirimler
             {unreadCount > 0 && (
               <Badge badgeContent={unreadCount} color="error" sx={{ ml: 2 }} />
@@ -148,7 +159,7 @@ const Notifications: React.FC = () => {
             Hesabınızla ilgili önemli bildirimler
           </Typography>
         </Box>
-        
+
         {unreadCount > 0 && (
           <Button
             variant="outlined"
@@ -164,20 +175,26 @@ const Notifications: React.FC = () => {
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={tabValue} onChange={handleTabChange}>
-            <Tab 
-              label={`Tümü (${notifications.length})`} 
-              icon={<NotificationsIcon />} 
-              iconPosition="start" 
+            <Tab
+              label={`Tümü (${notifications.length})`}
+              icon={<NotificationsIcon />}
+              iconPosition="start"
             />
-            <Tab 
-              label={`Okunmamış (${unreadCount})`} 
-              icon={<Badge badgeContent={unreadCount} color="error"><InfoIcon /></Badge>} 
-              iconPosition="start" 
+            <Tab
+              label={`Okunmamış (${unreadCount})`}
+              icon={
+                <Badge badgeContent={unreadCount} color="error">
+                  <InfoIcon />
+                </Badge>
+              }
+              iconPosition="start"
             />
-            <Tab 
-              label={`Teklifler (${notifications.filter(n => n.type === "offer").length})`} 
-              icon={<OfferIcon />} 
-              iconPosition="start" 
+            <Tab
+              label={`Teklifler (${
+                notifications.filter((n) => n.type === "offer").length
+              })`}
+              icon={<OfferIcon />}
+              iconPosition="start"
             />
           </Tabs>
         </Box>
@@ -186,31 +203,40 @@ const Notifications: React.FC = () => {
         <Box sx={{ p: 2 }}>
           {getFilteredNotifications().length === 0 ? (
             <Alert severity="info" sx={{ mt: 2 }}>
-              {tabValue === 1 ? "Okunmamış bildiriminiz bulunmuyor." : 
-               tabValue === 2 ? "Henüz teklif bildirimi bulunmuyor." : 
-               "Henüz bildiriminiz bulunmuyor."}
+              {tabValue === 1
+                ? "Okunmamış bildiriminiz bulunmuyor."
+                : tabValue === 2
+                ? "Henüz teklif bildirimi bulunmuyor."
+                : "Henüz bildiriminiz bulunmuyor."}
             </Alert>
           ) : (
             <List>
-              {getFilteredNotifications().map((notification, index) => (
+              {getFilteredNotifications().map((notification) => (
                 <ListItem
                   key={notification.id}
                   sx={{
                     border: "1px solid",
-                    borderColor: notification.isRead ? "transparent" : "primary.main",
+                    borderColor: notification.isRead
+                      ? "transparent"
+                      : "primary.main",
                     borderRadius: 2,
                     mb: 1,
-                    backgroundColor: notification.isRead ? "transparent" : "action.hover",
+                    backgroundColor: notification.isRead
+                      ? "transparent"
+                      : "action.hover",
                   }}
                 >
-                  <ListItemIcon>
-                    {getIcon(notification.type)}
-                  </ListItemIcon>
-                  
+                  <ListItemIcon>{getIcon(notification.type)}</ListItemIcon>
+
                   <ListItemText
                     primary={
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: "bold" }}
+                        >
                           {notification.title}
                         </Typography>
                         {!notification.isRead && (
@@ -220,7 +246,11 @@ const Notifications: React.FC = () => {
                     }
                     secondary={
                       <Box>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 1 }}
+                        >
                           {notification.message}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -229,8 +259,10 @@ const Notifications: React.FC = () => {
                       </Box>
                     }
                   />
-                  
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
                     {!notification.isRead && (
                       <IconButton
                         size="small"
@@ -261,7 +293,7 @@ const Notifications: React.FC = () => {
         <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
           Bildirim Ayarları
         </Typography>
-        
+
         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <Button variant="outlined" startIcon={<InfoIcon />}>
             E-posta Bildirimleri

@@ -4,7 +4,6 @@ import {
   Container,
   Paper,
   Typography,
-  Grid,
   Card,
   CardMedia,
   CardContent,
@@ -22,7 +21,6 @@ import {
 } from "@mui/material";
 import {
   Bookmark as BookmarkIcon,
-  BookmarkBorder as BookmarkBorderIcon,
   Search as SearchIcon,
   FilterList as FilterIcon,
   Share as ShareIcon,
@@ -120,29 +118,44 @@ const Bookmarks: React.FC = () => {
 
     // Search filter
     if (searchQuery) {
-      filtered = filtered.filter(ad =>
-        ad.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ad.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ad.model.toLowerCase().includes(searchQuery.toLowerCase())
+      filtered = filtered.filter(
+        (ad) =>
+          ad.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          ad.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          ad.model.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     // Status filter
     if (filterBy === "active") {
-      filtered = filtered.filter(ad => ad.isActive);
+      filtered = filtered.filter((ad) => ad.isActive);
     } else if (filterBy === "inactive") {
-      filtered = filtered.filter(ad => !ad.isActive);
+      filtered = filtered.filter((ad) => !ad.isActive);
     }
 
     // Sort
     if (sortBy === "newest") {
-      filtered.sort((a, b) => new Date(b.savedDate).getTime() - new Date(a.savedDate).getTime());
+      filtered.sort(
+        (a, b) =>
+          new Date(b.savedDate).getTime() - new Date(a.savedDate).getTime()
+      );
     } else if (sortBy === "oldest") {
-      filtered.sort((a, b) => new Date(a.savedDate).getTime() - new Date(b.savedDate).getTime());
+      filtered.sort(
+        (a, b) =>
+          new Date(a.savedDate).getTime() - new Date(b.savedDate).getTime()
+      );
     } else if (sortBy === "price-high") {
-      filtered.sort((a, b) => parseFloat(b.price.replace(/[^\d]/g, "")) - parseFloat(a.price.replace(/[^\d]/g, "")));
+      filtered.sort(
+        (a, b) =>
+          parseFloat(b.price.replace(/[^\d]/g, "")) -
+          parseFloat(a.price.replace(/[^\d]/g, ""))
+      );
     } else if (sortBy === "price-low") {
-      filtered.sort((a, b) => parseFloat(a.price.replace(/[^\d]/g, "")) - parseFloat(b.price.replace(/[^\d]/g, "")));
+      filtered.sort(
+        (a, b) =>
+          parseFloat(a.price.replace(/[^\d]/g, "")) -
+          parseFloat(b.price.replace(/[^\d]/g, ""))
+      );
     }
 
     return filtered;
@@ -162,8 +175,15 @@ const Bookmarks: React.FC = () => {
 
       {/* Filters and Search */}
       <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={3} alignItems="center">
-          <Grid item xs={12} md={4}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 3,
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
             <TextField
               fullWidth
               placeholder="İlan ara..."
@@ -177,9 +197,9 @@ const Bookmarks: React.FC = () => {
                 ),
               }}
             />
-          </Grid>
-          
-          <Grid item xs={12} md={3}>
+          </Box>
+
+          <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
             <FormControl fullWidth>
               <InputLabel>Sırala</InputLabel>
               <Select
@@ -193,9 +213,9 @@ const Bookmarks: React.FC = () => {
                 <MenuItem value="price-low">Fiyat (Düşük-Yüksek)</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} md={3}>
+          </Box>
+
+          <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
             <FormControl fullWidth>
               <InputLabel>Filtrele</InputLabel>
               <Select
@@ -208,18 +228,14 @@ const Bookmarks: React.FC = () => {
                 <MenuItem value="inactive">Pasif İlanlar</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} md={2}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<FilterIcon />}
-            >
+          </Box>
+
+          <Box sx={{ flex: "0 1 120px" }}>
+            <Button fullWidth variant="outlined" startIcon={<FilterIcon />}>
               Filtrele
             </Button>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Paper>
 
       {/* Results Count */}
@@ -232,120 +248,130 @@ const Bookmarks: React.FC = () => {
       {/* Saved Ads Grid */}
       {getFilteredAds().length === 0 ? (
         <Alert severity="info">
-          {searchQuery || filterBy !== "all" 
+          {searchQuery || filterBy !== "all"
             ? "Arama kriterlerinize uygun kaydettiğiniz ilan bulunamadı."
-            : "Henüz kaydettiğiniz ilan bulunmuyor. İlanları görüntülerken ♡ ikonuna tıklayarak kaydedebilirsiniz."
-          }
+            : "Henüz kaydettiğiniz ilan bulunmuyor. İlanları görüntülerken ♡ ikonuna tıklayarak kaydedebilirsiniz."}
         </Alert>
       ) : (
-        <Grid container spacing={3}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+            gap: 3,
+          }}
+        >
           {getFilteredAds().map((ad) => (
-            <Grid item xs={12} sm={6} md={4} key={ad.id}>
-              <Card 
-                sx={{ 
-                  height: "100%", 
-                  display: "flex", 
-                  flexDirection: "column",
-                  position: "relative",
-                  opacity: ad.isActive ? 1 : 0.7,
-                }}
-              >
-                {/* Status Badge */}
-                {!ad.isActive && (
-                  <Chip
-                    label="İlan Kaldırıldı"
-                    color="error"
-                    size="small"
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      left: 8,
-                      zIndex: 1,
-                    }}
-                  />
-                )}
-                
-                {/* Bookmark Button */}
-                <IconButton
+            <Card
+              key={ad.id}
+              sx={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                opacity: ad.isActive ? 1 : 0.7,
+              }}
+            >
+              {/* Status Badge */}
+              {!ad.isActive && (
+                <Chip
+                  label="İlan Kaldırıldı"
+                  color="error"
+                  size="small"
                   sx={{
                     position: "absolute",
                     top: 8,
-                    right: 8,
+                    left: 8,
                     zIndex: 1,
-                    backgroundColor: "rgba(255,255,255,0.8)",
-                    "&:hover": {
-                      backgroundColor: "rgba(255,255,255,0.9)",
-                    },
                   }}
-                  onClick={() => toggleBookmark(ad.id)}
-                >
-                  <BookmarkIcon color="primary" />
-                </IconButton>
-
-                {/* Image */}
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={ad.image}
-                  alt={ad.title}
-                  sx={{ backgroundColor: "#f5f5f5" }}
                 />
+              )}
 
-                {/* Content */}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
-                    {ad.title}
-                  </Typography>
-                  
-                  <Typography variant="h5" color="primary" sx={{ fontWeight: "bold", mb: 2 }}>
-                    {ad.price}
-                  </Typography>
-                  
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                    <LocationIcon sx={{ fontSize: 16, color: "#666", mr: 0.5 }} />
-                    <Typography variant="body2" color="text.secondary">
-                      {ad.location}
-                    </Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
-                    <Chip label={ad.year.toString()} size="small" variant="outlined" />
-                    <Chip label={ad.km} size="small" variant="outlined" />
-                    <Chip label={ad.fuel} size="small" variant="outlined" />
-                  </Box>
-                  
-                  <Typography variant="caption" color="text.secondary">
-                    Kaydedilme: {new Date(ad.savedDate).toLocaleDateString("tr-TR")}
-                  </Typography>
-                </CardContent>
+              {/* Bookmark Button */}
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  zIndex: 1,
+                  backgroundColor: "rgba(255,255,255,0.8)",
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,0.9)",
+                  },
+                }}
+                onClick={() => toggleBookmark(ad.id)}
+              >
+                <BookmarkIcon color="primary" />
+              </IconButton>
 
-                {/* Actions */}
-                <CardActions sx={{ p: 2, pt: 0 }}>
-                  <Button
+              {/* Image */}
+              <CardMedia
+                component="img"
+                height="200"
+                image={ad.image}
+                alt={ad.title}
+                sx={{ backgroundColor: "#f5f5f5" }}
+              />
+
+              {/* Content */}
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
+                  {ad.title}
+                </Typography>
+
+                <Typography
+                  variant="h5"
+                  color="primary"
+                  sx={{ fontWeight: "bold", mb: 2 }}
+                >
+                  {ad.price}
+                </Typography>
+
+                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                  <LocationIcon sx={{ fontSize: 16, color: "#666", mr: 0.5 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    {ad.location}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
+                  <Chip
+                    label={ad.year.toString()}
                     size="small"
-                    startIcon={<ViewIcon />}
-                    disabled={!ad.isActive}
-                  >
-                    İncele
-                  </Button>
-                  <Button
-                    size="small"
-                    startIcon={<PhoneIcon />}
-                    disabled={!ad.isActive}
-                  >
-                    Ara
-                  </Button>
-                  <Button
-                    size="small"
-                    startIcon={<ShareIcon />}
-                  >
-                    Paylaş
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
+                    variant="outlined"
+                  />
+                  <Chip label={ad.km} size="small" variant="outlined" />
+                  <Chip label={ad.fuel} size="small" variant="outlined" />
+                </Box>
+
+                <Typography variant="caption" color="text.secondary">
+                  Kaydedilme:{" "}
+                  {new Date(ad.savedDate).toLocaleDateString("tr-TR")}
+                </Typography>
+              </CardContent>
+
+              {/* Actions */}
+              <CardActions sx={{ p: 2, pt: 0 }}>
+                <Button
+                  size="small"
+                  startIcon={<ViewIcon />}
+                  disabled={!ad.isActive}
+                >
+                  İncele
+                </Button>
+                <Button
+                  size="small"
+                  startIcon={<PhoneIcon />}
+                  disabled={!ad.isActive}
+                >
+                  Ara
+                </Button>
+                <Button size="small" startIcon={<ShareIcon />}>
+                  Paylaş
+                </Button>
+              </CardActions>
+            </Card>
           ))}
-        </Grid>
+        </Box>
       )}
     </Container>
   );
