@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
 import { SEO } from "../components/common";
 import {
   Box,
@@ -287,10 +287,14 @@ const AdDetail: React.FC = () => {
 
         {/* Breadcrumbs */}
         <Breadcrumbs sx={{ mb: 3 }}>
-          <Link color="inherit" href="/">
+          <Link component={RouterLink} to="/" color="inherit">
             Ana Sayfa
           </Link>
-          <Link color="inherit" href={`/category/${ad.category.id}`}>
+          <Link
+            component={RouterLink}
+            to={`/category/${ad.category.id}`}
+            color="inherit"
+          >
             {ad.category.displayName}
           </Link>
           <Typography color="text.primary">{ad.title}</Typography>

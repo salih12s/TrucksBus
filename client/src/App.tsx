@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import { Provider } from "react-redux";
@@ -241,12 +241,12 @@ function App() {
                           <p className="text-gray-600 mb-4">
                             Bu sayfaya erişim yetkiniz bulunmamaktadır.
                           </p>
-                          <a
-                            href="/"
+                          <Link
+                            to="/"
                             className="text-blue-600 hover:text-blue-500"
                           >
                             Ana sayfaya dön
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     }
@@ -266,12 +266,12 @@ function App() {
                           <p className="text-gray-600 mb-4">
                             Aradığınız sayfa mevcut değil.
                           </p>
-                          <a
-                            href="/"
+                          <Link
+                            to="/"
                             className="text-blue-600 hover:text-blue-500"
                           >
                             Ana sayfaya dön
-                          </a>
+                          </Link>
                         </div>
                       </div>
                     }

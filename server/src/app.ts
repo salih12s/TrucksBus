@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
+import path from "path";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import routes from "./routes";
@@ -113,6 +114,22 @@ app.get("/health", (req, res) => {
 
 // API routes
 app.use("/api", routes);
+
+// Serve static files from client build (production)
+if (process.env.NODE_ENV === "production") {
+  const clientBuildPath = path.join(__dirname, "../../client/dist");
+  app.use(express.static(clientBuildPath));
+
+  // SPA fallback - serve index.html for all non-API routes
+  app.get("*", (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+
+    res.sendFile(path.join(clientBuildPath, "index.html"));
+  });
+}
 
 // 404 handler - this must be after all other routes
 app.use((req, res, next) => {
