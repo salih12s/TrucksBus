@@ -86,6 +86,7 @@ model Category {
 
   // Relations
   brands       CategoryBrand[]
+  models       Model[]
   ads          Ad[]
   formFields   AdFormField[]
 
@@ -119,31 +120,36 @@ model CategoryBrand {
 }
 
 model Model {
-  id      Int     @id @default(autoincrement())
-  brandId Int     @map("brand_id")
-  name    String
-  slug    String
-  isActive Boolean @default(true) @map("is_active")
+  id         Int     @id @default(autoincrement())
+  brandId    Int     @map("brand_id")
+  categoryId Int     @map("category_id")
+  name       String
+  slug       String
+  isActive   Boolean @default(true) @map("is_active")
 
   // Relations
   brand    Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   variants Variant[]
   ads      Ad[]
 
+  @@unique([brandId, categoryId, slug])
   @@map("models")
 }
 
 model Variant {
-  id            Int    @id @default(autoincrement())
-  modelId       Int    @map("model_id")
+  id            Int     @id @default(autoincrement())
+  modelId       Int     @map("model_id")
   name          String
   slug          String
   specifications Json?
+  isActive      Boolean @default(true) @map("is_active")
 
   // Relations
   model Model @relation(fields: [modelId], references: [id], onDelete: Cascade)
   ads   Ad[]
 
+  @@unique([modelId, slug])
   @@map("variants")
 }
 

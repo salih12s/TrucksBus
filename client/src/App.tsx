@@ -26,6 +26,15 @@ const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
 const CategorySelection = React.lazy(
   () => import("./components/ads/CategorySelection")
 );
+const BrandSelection = React.lazy(
+  () => import("./components/ads/BrandSelection")
+);
+const ModelSelection = React.lazy(
+  () => import("./components/ads/ModelSelection")
+);
+const VariantSelection = React.lazy(
+  () => import("./components/ads/VariantSelection")
+);
 const MyAds = React.lazy(() => import("./components/ads/MyAds"));
 const MessagingSystem = React.lazy(
   () => import("./components/messaging/MessagingSystem")
@@ -120,6 +129,20 @@ function App() {
                   <Route
                     path="/category-selection"
                     element={<CategorySelection />}
+                  />
+
+                  {/* Brand/Model/Variant Selection Routes */}
+                  <Route
+                    path="/categories/:categorySlug/brands"
+                    element={<BrandSelection />}
+                  />
+                  <Route
+                    path="/categories/:categorySlug/brands/:brandSlug/models"
+                    element={<ModelSelection />}
+                  />
+                  <Route
+                    path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/variants"
+                    element={<VariantSelection />}
                   />
 
                   {/* Protected Routes */}

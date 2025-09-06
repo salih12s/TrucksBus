@@ -28,7 +28,8 @@ import {
   Refresh,
 } from "@mui/icons-material";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import { useAppSelector } from "../../hooks/redux";
+import { useAppSelector, useAppDispatch } from "../../hooks/redux";
+import { logoutUser } from "../../store/authSlice";
 
 const drawerWidth = 280;
 
@@ -53,6 +54,7 @@ const menuItems = [
 const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useAppDispatch();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   // Admin kontrolü
@@ -65,10 +67,23 @@ const AdminLayout: React.FC = () => {
     }
   }, [isAuthenticated, user, navigate]);
 
-  const handleLogout = useCallback(() => {
-    // Admin çıkış işlemi
-    navigate("/");
-  }, [navigate]);
+  const handleLogout = useCallback(async () => {
+    try {
+      // Redux üzerinden logout işlemi
+      await dispatch(logoutUser()).unwrap();
+      // LocalStorage'ı temizle
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      // Login sayfasına yönlendir
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Hata olsa bile çıkış yap
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      navigate("/login");
+    }
+  }, [dispatch, navigate]);
 
   // Admin session timeout (30 dakika)
   useEffect(() => {

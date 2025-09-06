@@ -58,8 +58,8 @@ const CategorySelection: React.FC = () => {
       setSelectedPath([...selectedPath, category]);
       setCategories(category.children);
     } else {
-      // Son kategori, ilan oluşturma sayfasına git
-      navigate(`/create-ad?category=${category.id}`);
+      // Son kategori, marka seçimine git
+      navigate(`/categories/${category.slug}/brands`);
     }
   };
 
@@ -187,7 +187,7 @@ const CategorySelection: React.FC = () => {
           </Box>
         )}
 
-        {/* Kategori Kartları - Responsive Grid */}
+        {/* Kategori Kartları - 4x4 Grid */}
         <Box
           sx={{
             display: "grid",
@@ -195,8 +195,9 @@ const CategorySelection: React.FC = () => {
               xs: "repeat(2, 1fr)", // Mobil: 2 sütun
               sm: "repeat(3, 1fr)", // Tablet: 3 sütun
               md: "repeat(4, 1fr)", // Masaüstü: 4 sütun
+              lg: "repeat(4, 1fr)", // Büyük masaüstü: 4 sütun
             },
-            gap: 2,
+            gap: { xs: 2, sm: 2.5, md: 3 },
             maxWidth: "1200px",
             mx: "auto",
           }}
@@ -205,17 +206,18 @@ const CategorySelection: React.FC = () => {
             <Card
               key={category.id}
               sx={{
-                height: 250,
+                height: { xs: 200, sm: 220, md: 240 },
                 position: "relative",
-                transition: "all 0.3s ease",
+                transition: "transform 0.3s ease, box-shadow 0.3s ease",
                 cursor: "pointer",
                 "&:hover": {
                   transform: "translateY(-4px)",
-                  boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
                 },
-                borderRadius: 2,
+                borderRadius: 3,
                 overflow: "hidden",
-                border: "1px solid #e0e0e0",
+                border: "1px solid #e3f2fd",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               }}
             >
               <CardActionArea
@@ -226,13 +228,16 @@ const CategorySelection: React.FC = () => {
                   p: 0,
                 }}
               >
-                {/* Arka Plan Resmi */}
+                {/* Resim - Tüm Alanı Kaplar */}
                 <CardMedia
                   component="img"
                   sx={{
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
                   }}
                   image={getCategoryImage(category)}
                   alt={category.name}
@@ -242,32 +247,39 @@ const CategorySelection: React.FC = () => {
                   }}
                 />
 
-                {/* Overlay ve Yazı */}
+                {/* Alt Kısım - Yazı Alanı (Resmin Üstünde) */}
                 <Box
+                  className="category-overlay"
                   sx={{
                     position: "absolute",
-                    top: 0,
+                    bottom: 0,
                     left: 0,
                     right: 0,
-                    bottom: 0,
+                    height: "auto",
                     background:
-                      "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)",
+                      "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%)",
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: "center",
+                    justifyContent: "flex-end",
                     alignItems: "center",
-                    color: "white",
                     textAlign: "center",
-                    p: 2,
+                    p: { xs: 1.5, sm: 2, md: 2.5 },
+                    pb: { xs: 2, sm: 2.5, md: 3 },
+                    transition: "all 0.3s ease",
                   }}
                 >
                   <Typography
-                    variant="h5"
+                    className="category-title"
+                    variant="h6"
                     component="h3"
                     sx={{
-                      fontWeight: "bold",
-                      textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
-                      mb: 1,
+                      fontWeight: 700,
+                      color: "white",
+                      mb: 0.5,
+                      fontSize: { xs: "0.9rem", sm: "1rem", md: "1.1rem" },
+                      transition: "all 0.3s ease",
+                      lineHeight: 1.2,
+                      textShadow: "0 2px 8px rgba(0,0,0,0.7)",
                     }}
                   >
                     {category.name}
@@ -275,10 +287,15 @@ const CategorySelection: React.FC = () => {
 
                   {category.description && (
                     <Typography
-                      variant="body2"
+                      className="category-description"
+                      variant="caption"
                       sx={{
-                        textShadow: "1px 1px 2px rgba(0,0,0,0.8)",
-                        opacity: 0.9,
+                        color: "rgba(255,255,255,0.9)",
+                        fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.8rem" },
+                        transition: "all 0.3s ease",
+                        lineHeight: 1.3,
+                        textShadow: "0 1px 4px rgba(0,0,0,0.7)",
+                        display: { xs: "none", sm: "block" }, // Mobilde description gizle
                       }}
                     >
                       {category.description}

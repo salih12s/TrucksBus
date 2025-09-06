@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRoutes from "./auth";
 import categoryRoutes from "./categories";
+import brandRoutes from "./brands";
 import adRoutes from "./ads";
 import adminLogRoutes from "./adminLogs";
 
@@ -9,6 +10,7 @@ const router = Router();
 // Mount route modules
 router.use("/auth", authRoutes);
 router.use("/categories", categoryRoutes);
+router.use("/brands", brandRoutes);
 router.use("/ads", adRoutes);
 router.use("/admin/logs", adminLogRoutes);
 
