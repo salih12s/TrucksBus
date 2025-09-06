@@ -11,7 +11,6 @@ import { PWAStatus } from "./components/pwa";
 import { ProtectedRoute } from "./components/auth";
 
 // Pages - Lazy loaded for better performance
-const Homepage = React.lazy(() => import("./pages/Homepage"));
 const MainLayout = React.lazy(() => import("./pages/MainLayout"));
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const AdDetail = React.lazy(() => import("./pages/AdDetail"));
@@ -102,7 +101,6 @@ function App() {
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<MainLayout />} />
-                  <Route path="/old-homepage" element={<Homepage />} />
                   <Route path="/login" element={<LoginNew />} />
                   <Route path="/register" element={<RegisterNew />} />
                   <Route

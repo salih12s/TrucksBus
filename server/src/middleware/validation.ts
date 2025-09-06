@@ -8,23 +8,27 @@ const passwordSchema = Joi.string()
   .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
   .messages({
     "string.pattern.base":
-      "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
-    "string.min": "Password must be at least 8 characters long",
-    "string.max": "Password must not exceed 128 characters",
+      "Şifreniz güvenlik için şu koşulları karşılamalıdır: en az 1 büyük harf (A-Z), 1 küçük harf (a-z), 1 rakam (0-9) ve 1 özel karakter (@$!%*?&)",
+    "string.min": "Şifreniz en az 8 karakter olmalıdır",
+    "string.max": "Şifreniz 128 karakterden uzun olamaz",
+    "any.required": "Şifre alanı zorunludur",
   });
 
 // Email validation
 const emailSchema = Joi.string().email().max(254).required().messages({
-  "string.email": "Please provide a valid email address",
-  "string.max": "Email must not exceed 254 characters",
+  "string.email":
+    "Lütfen geçerli bir e-posta adresi giriniz (örnek: ornek@email.com)",
+  "string.max": "E-posta adresi 254 karakterden uzun olamaz",
+  "any.required": "E-posta alanı zorunludur",
 });
 
 // Phone validation (Turkish format)
 const phoneSchema = Joi.string()
-  .pattern(/^(\+90|0)?[5]\d{9}$/)
+  .pattern(/^(\+90|0)?[45]\d{9}$/)
   .messages({
     "string.pattern.base":
-      "Please provide a valid Turkish phone number (e.g., 05551234567)",
+      "Lütfen geçerli bir Türk telefon numarası giriniz (örnek: 05551234567 veya 05441234567)",
+    "any.required": "Telefon numarası zorunludur",
   });
 
 // Name validation
@@ -34,9 +38,10 @@ const nameSchema = Joi.string()
   .pattern(/^[a-zA-ZğüşıöçĞÜŞIÖÇ\s]+$/)
   .trim()
   .messages({
-    "string.pattern.base": "Name can only contain letters and spaces",
-    "string.min": "Name must be at least 2 characters long",
-    "string.max": "Name must not exceed 50 characters",
+    "string.pattern.base": "İsim ve soyisim sadece harf ve boşluk içerebilir",
+    "string.min": "İsim ve soyisim en az 2 karakter olmalıdır",
+    "string.max": "İsim ve soyisim 50 karakterden uzun olamaz",
+    "any.required": "İsim alanı zorunludur",
   });
 
 // Company name validation
@@ -46,22 +51,25 @@ const companyNameSchema = Joi.string()
   .pattern(/^[a-zA-ZğüşıöçĞÜŞIÖÇ0-9\s\.\-&]+$/)
   .trim()
   .messages({
-    "string.pattern.base": "Company name contains invalid characters",
-    "string.min": "Company name must be at least 2 characters long",
-    "string.max": "Company name must not exceed 200 characters",
+    "string.pattern.base": "Şirket adı geçersiz karakterler içeriyor",
+    "string.min": "Şirket adı en az 2 karakter olmalıdır",
+    "string.max": "Şirket adı 200 karakterden uzun olamaz",
+    "any.required": "Şirket adı zorunludur",
   });
 
 // Tax ID validation (Turkish format)
 const taxIdSchema = Joi.string()
   .pattern(/^\d{10,11}$/)
   .messages({
-    "string.pattern.base": "Tax ID must be 10 or 11 digits",
+    "string.pattern.base": "Vergi numarası 10 veya 11 haneli olmalıdır",
+    "any.required": "Vergi numarası zorunludur",
   });
 
 // Address validation
 const addressSchema = Joi.string().min(10).max(500).trim().messages({
-  "string.min": "Address must be at least 10 characters long",
-  "string.max": "Address must not exceed 500 characters",
+  "string.min": "Adres en az 10 karakter olmalıdır",
+  "string.max": "Adres 500 karakterden uzun olamaz",
+  "any.required": "Adres alanı zorunludur",
 });
 
 // Validation schemas
@@ -93,6 +101,10 @@ export const authSchemas = {
     }),
     city: Joi.string().min(2).max(50).optional(),
     country: Joi.string().min(2).max(50).optional(),
+    kvkkAccepted: Joi.boolean().valid(true).required().messages({
+      "any.only": "KVKK şartlarını kabul etmelisiniz",
+      "any.required": "KVKK kabul alanı gereklidir",
+    }),
   }),
 
   // User login validation
@@ -245,6 +257,11 @@ export const validate = (
         message: detail.message,
         value: detail.context?.value,
       }));
+
+      console.log("Validation failed:", {
+        errors: errorDetails,
+        originalData: data,
+      });
 
       res.status(400).json({
         error: "Validation failed",

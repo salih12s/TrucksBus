@@ -9,6 +9,7 @@ import routes from "./routes";
 import {
   generalLimiter,
   sanitizeData,
+  mongoSanitizeMiddleware,
   securityHeaders,
   requestSizeLimit,
 } from "./middleware/security";
@@ -54,6 +55,7 @@ app.use(compression());
 
 // Apply data sanitization middleware
 app.use(sanitizeData);
+// app.use(mongoSanitizeMiddleware); // Temporarily disabled due to compatibility issues
 
 // Request size limiting
 app.use(requestSizeLimit("10mb"));
@@ -65,7 +67,7 @@ app.use(generalLimiter);
 const corsOptions = {
   origin: function (origin: string | undefined, callback: Function) {
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
-      "http://localhost:5173",
+      "http://localhost:5174",
     ];
 
     // Allow requests with no origin (like mobile apps or curl requests) in development

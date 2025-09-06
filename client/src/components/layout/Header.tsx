@@ -45,7 +45,7 @@ const Header: React.FC = () => {
   const handleLogout = async () => {
     await dispatch(logoutUser());
     handleMenuClose();
-    navigate("/");
+    navigate("/login");
   };
 
   const getUserInitials = () => {
@@ -64,13 +64,27 @@ const Header: React.FC = () => {
         borderBottom: "1px solid #444",
       }}
     >
-      <Toolbar sx={{ px: 3 }}>
-        {/* Logo */}
-        <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+      <Toolbar sx={{ px: 3, position: "relative" }}>
+        {/* Logo - Absolute positioned */}
+        <Box
+          sx={{
+            position: "absolute",
+            left: 20,
+            top: "50%",
+            transform: "translateY(-50%)",
+            display: "flex",
+            alignItems: "center",
+            zIndex: 1,
+          }}
+        >
           <img
             src="/Trucksbus.png"
             alt="TrucksBus"
-            style={{ height: 40, marginRight: 12 }}
+            style={{
+              height: 120, // Büyütüldü (40'tan 55'e)
+              filter: "brightness(0) invert(1)", // Beyaz renk
+              marginRight: 16,
+            }}
           />
           <Typography
             variant="h6"
@@ -78,6 +92,7 @@ const Header: React.FC = () => {
             sx={{
               fontWeight: "bold",
               fontSize: "1.5rem",
+              marginLeft: 2, // Yazıyı sağa kaydır
             }}
           >
             <span style={{ color: "white" }}>Alın Satın </span>
@@ -87,7 +102,16 @@ const Header: React.FC = () => {
         </Box>
 
         {/* Right side content */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            marginLeft: "auto", // Push to right
+            position: "relative",
+            zIndex: 2,
+          }}
+        >
           {isAuthenticated ? (
             <>
               {/* Authenticated user toolbar */}

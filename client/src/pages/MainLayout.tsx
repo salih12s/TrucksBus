@@ -207,7 +207,9 @@ const MainLayout: React.FC = () => {
         </Box>
 
         {/* Main Content Area */}
-        <Box sx={{ flex: 1, p: 3 }}>
+        <Box sx={{ flex: 1.25, p: 3 }}>
+          {" "}
+          {/* %25 büyütüldü (1'den 1.25'e) */}
           {/* Search Bar */}
           <Box sx={{ mb: 3 }}>
             <TextField
@@ -228,7 +230,6 @@ const MainLayout: React.FC = () => {
               }}
             />
           </Box>
-
           {/* Ads Grid */}
           <Box
             sx={{

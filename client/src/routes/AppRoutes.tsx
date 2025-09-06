@@ -2,9 +2,11 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { ProtectedRoute } from "../components/auth";
+import MainLayout from "@/pages/MainLayout";
+
 
 // Lazy load components for better performance
-const Homepage = lazy(() => import("../pages/Homepage"));
+
 const Dashboard = lazy(() => import("../pages/Dashboard"));
 const AdDetail = lazy(() => import("../pages/AdDetail"));
 const LoginNew = lazy(() =>
@@ -57,7 +59,7 @@ const AppRoutes = () => {
         path="/"
         element={
           <Suspense fallback={<PageLoadingFallback page="Ana Sayfa" />}>
-            <Homepage />
+            <MainLayout />
           </Suspense>
         }
       />

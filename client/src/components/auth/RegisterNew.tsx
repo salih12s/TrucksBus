@@ -19,7 +19,6 @@ import {
   Lock,
   Person,
   Phone,
-  LocalShipping,
 } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { registerUser, clearError } from "../../store/authSlice";
@@ -41,12 +40,62 @@ const Register: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
 
+  // Telefon formatı: 0555 555 55 55
+  const formatPhoneNumber = (value: string) => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+
+    // 11 haneden fazla girişi engelle
+    if (numbers.length > 11) return formData.phone;
+
+    // Boşsa return et
+    if (numbers.length === 0) return "";
+
+    // İlk rakam 0 olmalı
+    if (numbers.length === 1 && numbers !== "0") return "0";
+
+    // Format uygula
+    let formatted = numbers;
+    if (numbers.length > 4) {
+      formatted = numbers.slice(0, 4) + " " + numbers.slice(4);
+    }
+    if (numbers.length > 7) {
+      formatted =
+        numbers.slice(0, 4) +
+        " " +
+        numbers.slice(4, 7) +
+        " " +
+        numbers.slice(7);
+    }
+    if (numbers.length > 9) {
+      formatted =
+        numbers.slice(0, 4) +
+        " " +
+        numbers.slice(4, 7) +
+        " " +
+        numbers.slice(7, 9) +
+        " " +
+        numbers.slice(9);
+    }
+
+    return formatted;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    if (name === "phone") {
+      const formattedPhone = formatPhoneNumber(value);
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formattedPhone,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
 
     if (error) {
       dispatch(clearError());
@@ -70,9 +119,10 @@ const Register: React.FC = () => {
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
-      phone: formData.phone,
+      phone: formData.phone.replace(/\s/g, ""), // Remove spaces for API call
       password: formData.password,
       role: "USER" as const,
+      kvkkAccepted: acceptTerms,
     };
 
     const result = await dispatch(registerUser(userData));
@@ -118,19 +168,27 @@ const Register: React.FC = () => {
           {/* Logo */}
           <Box
             sx={{
-              width: 120,
-              height: 120,
-              backgroundColor: "white",
+              width: 140,
+              height: 140,
               borderRadius: 3,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               mb: 4,
               mx: "auto",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+              overflow: "hidden",
             }}
           >
-            <LocalShipping sx={{ fontSize: 60, color: "#313B4C" }} />
+            <img
+              src="/Trucksbus.png"
+              alt="TrucksBus Logo"
+              style={{
+                width: "280px",
+                height: "280px",
+                objectFit: "contain",
+                filter: "brightness(0) invert(1)",
+              }}
+            />
           </Box>
 
           {/* Welcome Text */}
@@ -145,7 +203,7 @@ const Register: React.FC = () => {
               WebkitTextFillColor: "transparent",
             }}
           >
-            TRUCK-BUS
+            TRUCKS-BUS
           </Typography>
 
           <Typography
@@ -307,7 +365,7 @@ const Register: React.FC = () => {
               fullWidth
               name="phone"
               label="Telefon"
-              placeholder="0xxx xxx xx xx"
+              placeholder="0555 555 55 55"
               value={formData.phone}
               onChange={handleChange}
               required
@@ -331,7 +389,8 @@ const Register: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              sx={{ mb: 3 }}
+              sx={{ mb: 1 }}
+              helperText="Şifreniz en az 8 karakter olmalı ve şunları içermeli: 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter (@$!%*?&)"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">

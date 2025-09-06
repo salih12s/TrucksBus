@@ -18,6 +18,7 @@ interface RegisterRequest {
   address?: string;
   city?: string;
   country?: string;
+  kvkkAccepted: boolean;
 }
 
 interface LoginRequest {
@@ -39,9 +40,9 @@ const BCRYPT_ROUNDS = 12;
 export class AuthController {
   // Generate access token
   private static generateAccessToken(userId: number, role: UserRole): string {
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_SECRET_ACCESS;
     if (!secret) {
-      throw new Error("JWT_SECRET is not defined");
+      throw new Error("JWT_SECRET_ACCESS is not defined");
     }
 
     return jwt.sign({ userId, role }, secret, { expiresIn: "15m" });
@@ -49,9 +50,9 @@ export class AuthController {
 
   // Generate refresh token
   private static generateRefreshToken(userId: number): string {
-    const secret = process.env.JWT_REFRESH_SECRET;
+    const secret = process.env.JWT_SECRET_REFRESH;
     if (!secret) {
-      throw new Error("JWT_REFRESH_SECRET is not defined");
+      throw new Error("JWT_SECRET_REFRESH is not defined");
     }
 
     return jwt.sign({ userId }, secret, { expiresIn: "7d" });
@@ -87,6 +88,11 @@ export class AuthController {
   // Register new user
   static async register(req: Request, res: Response): Promise<void> {
     try {
+      console.log("Registration request received:", {
+        body: req.body,
+        headers: req.headers["content-type"],
+      });
+
       const {
         email,
         password,
@@ -100,6 +106,7 @@ export class AuthController {
         address,
         city,
         country,
+        kvkkAccepted,
       }: RegisterRequest = req.body;
 
       // Check if user already exists
@@ -132,6 +139,8 @@ export class AuthController {
           address,
           city,
           country,
+          kvkkAccepted,
+          kvkkAcceptedAt: kvkkAccepted ? new Date() : null,
         },
         select: {
           id: true,

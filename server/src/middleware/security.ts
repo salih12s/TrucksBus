@@ -24,17 +24,17 @@ export const createRateLimit = (
   });
 };
 
-// General API rate limit (100 requests per 15 minutes)
+// General API rate limit (1000 requests per 15 minutes - development)
 export const generalLimiter = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  100,
+  1000, // Increased for development
   "Too many requests from this IP, please try again later."
 );
 
-// Strict rate limit for authentication endpoints (5 attempts per 15 minutes)
+// Strict rate limit for authentication endpoints (50 attempts per 15 minutes - development)
 export const authLimiter = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  5,
+  50, // Increased for development
   "Too many authentication attempts, please try again later."
 );
 
@@ -61,11 +61,6 @@ export const emailVerificationLimiter = createRateLimit(
 
 // Security middleware for data sanitization
 export const sanitizeData = [
-  // Prevent NoSQL injection attacks
-  mongoSanitize({
-    replaceWith: "_",
-  }),
-
   // Prevent HTTP Parameter Pollution attacks
   hpp({
     whitelist: [
@@ -81,6 +76,35 @@ export const sanitizeData = [
     ],
   }),
 ];
+
+// Custom mongo sanitization middleware
+export const mongoSanitizeMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Sanitize request body
+    if (req.body) {
+      req.body = mongoSanitize.sanitize(req.body, { replaceWith: "_" });
+    }
+
+    // Sanitize query parameters
+    if (req.query) {
+      req.query = mongoSanitize.sanitize(req.query, { replaceWith: "_" });
+    }
+
+    // Sanitize URL parameters
+    if (req.params) {
+      req.params = mongoSanitize.sanitize(req.params, { replaceWith: "_" });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error in mongo sanitization:", error);
+    next();
+  }
+};
 
 // Custom security headers
 export const securityHeaders = (

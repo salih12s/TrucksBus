@@ -12,13 +12,7 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
-import {
-  Visibility,
-  VisibilityOff,
-  Email,
-  Lock,
-  LocalShipping,
-} from "@mui/icons-material";
+import { Visibility, VisibilityOff, Email, Lock } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { loginUser, clearError } from "../../store/authSlice";
 
@@ -51,7 +45,7 @@ const Login: React.FC = () => {
     if (formData.email && formData.password) {
       const result = await dispatch(loginUser(formData));
       if (loginUser.fulfilled.match(result)) {
-        navigate("/dashboard");
+        navigate("/");
       }
     }
   };
@@ -93,19 +87,27 @@ const Login: React.FC = () => {
           {/* Logo */}
           <Box
             sx={{
-              width: 120,
-              height: 120,
-              backgroundColor: "white",
+              width: 140,
+              height: 140,
               borderRadius: 3,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               mb: 4,
               mx: "auto",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+              overflow: "hidden",
             }}
           >
-            <LocalShipping sx={{ fontSize: 60, color: "#313B4C" }} />
+            <img
+              src="/Trucksbus.png"
+              alt="TrucksBus Logo"
+              style={{
+                width: "280px",
+                height: "280px",
+                objectFit: "contain",
+                filter: "brightness(0) invert(1)",
+              }}
+            />
           </Box>
 
           {/* Welcome Text */}
@@ -120,7 +122,7 @@ const Login: React.FC = () => {
               WebkitTextFillColor: "transparent",
             }}
           >
-            TruckBus'a Hoş Geldin
+            TrucksBus'a Hoş Geldin
           </Typography>
 
           <Typography

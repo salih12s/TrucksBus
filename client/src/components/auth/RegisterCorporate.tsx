@@ -46,11 +46,61 @@ const RegisterCorporate: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
 
+  // Telefon numarası formatlama
+  const formatPhoneNumber = (phone: string) => {
+    const digitsOnly = phone.replace(/\D/g, "");
+
+    if (!digitsOnly.startsWith("0")) {
+      return "";
+    }
+
+    const limitedDigits = digitsOnly.slice(0, 11);
+
+    if (limitedDigits.length <= 4) {
+      return limitedDigits;
+    } else if (limitedDigits.length <= 7) {
+      return limitedDigits.slice(0, 4) + " " + limitedDigits.slice(4);
+    } else if (limitedDigits.length <= 9) {
+      return (
+        limitedDigits.slice(0, 4) +
+        " " +
+        limitedDigits.slice(4, 7) +
+        " " +
+        limitedDigits.slice(7)
+      );
+    } else {
+      return (
+        limitedDigits.slice(0, 4) +
+        " " +
+        limitedDigits.slice(4, 7) +
+        " " +
+        limitedDigits.slice(7, 9) +
+        " " +
+        limitedDigits.slice(9)
+      );
+    }
+  };
+
+  // Vergi numarası formatlama
+  const formatTaxNumber = (taxNumber: string) => {
+    const digitsOnly = taxNumber.replace(/\D/g, "");
+    return digitsOnly.slice(0, 10);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    let formattedValue = value;
+
+    if (name === "phone") {
+      formattedValue = formatPhoneNumber(value);
+    } else if (name === "taxNumber") {
+      formattedValue = formatTaxNumber(value);
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: formattedValue,
     }));
 
     if (error) {
@@ -75,12 +125,13 @@ const RegisterCorporate: React.FC = () => {
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
-      phone: formData.phone,
+      phone: formData.phone.replace(/\s/g, ""), // Remove spaces for API call
       password: formData.password,
       role: "CORPORATE" as const,
       companyName: formData.companyName,
-      taxId: formData.taxNumber,
+      taxId: formData.taxNumber.replace(/\s/g, ""), // Remove spaces from tax number too
       address: formData.address,
+      kvkkAccepted: acceptTerms,
     };
 
     const result = await dispatch(registerUser(userData));
@@ -101,7 +152,7 @@ const RegisterCorporate: React.FC = () => {
       <Box
         sx={{
           flex: 1,
-          background: "linear-gradient(135deg, #1a472a 0%, #2d6b3d 100%)",
+          background: "linear-gradient(135deg, #313B4C 0%, #2a3441 100%)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -126,19 +177,26 @@ const RegisterCorporate: React.FC = () => {
           {/* Corporate Logo */}
           <Box
             sx={{
-              width: 120,
-              height: 120,
-              backgroundColor: "white",
+              width: 140,
+              height: 140,
               borderRadius: 3,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               mb: 4,
               mx: "auto",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
             }}
           >
-            <Business sx={{ fontSize: 60, color: "#1a472a" }} />
+            <img
+              src="/Trucksbus.png"
+              alt="TrucksBus Logo"
+              style={{
+                width: "280px",
+                height: "280px",
+                objectFit: "contain",
+                filter: "brightness(0) invert(1)",
+              }}
+            />
           </Box>
 
           {/* Corporate Welcome Text */}
@@ -251,7 +309,7 @@ const RegisterCorporate: React.FC = () => {
               variant="h4"
               sx={{
                 fontWeight: "bold",
-                color: "#1a472a",
+                color: "#313B4C",
                 mb: 1,
               }}
             >
@@ -279,7 +337,7 @@ const RegisterCorporate: React.FC = () => {
             {/* Company Information */}
             <Typography
               variant="h6"
-              sx={{ color: "#1a472a", mb: 2, fontWeight: "bold" }}
+              sx={{ color: "#313B4C", mb: 2, fontWeight: "bold" }}
             >
               Şirket Bilgileri
             </Typography>
@@ -337,7 +395,7 @@ const RegisterCorporate: React.FC = () => {
             {/* Contact Person Information */}
             <Typography
               variant="h6"
-              sx={{ color: "#1a472a", mb: 2, fontWeight: "bold" }}
+              sx={{ color: "#313B4C", mb: 2, fontWeight: "bold" }}
             >
               İletişim Sorumlusu
             </Typography>
@@ -408,7 +466,7 @@ const RegisterCorporate: React.FC = () => {
             {/* Password Fields */}
             <Typography
               variant="h6"
-              sx={{ color: "#1a472a", mb: 2, fontWeight: "bold" }}
+              sx={{ color: "#313B4C", mb: 2, fontWeight: "bold" }}
             >
               Güvenlik
             </Typography>
@@ -422,7 +480,8 @@ const RegisterCorporate: React.FC = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              sx={{ mb: 3 }}
+              sx={{ mb: 1 }}
+              helperText="Şifreniz en az 8 karakter olmalı ve şunları içermeli: 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter (@$!%*?&)"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
