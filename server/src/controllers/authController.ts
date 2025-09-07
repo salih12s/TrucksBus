@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../config/database";
 import { UserRole } from "@prisma/client";
 import { AuthenticatedRequest } from "../middleware/auth";
-import { createAdminLog } from "./adminLogsController";
+import { AdminLogController } from "./adminLogController";
 
 interface RegisterRequest {
   email: string;
@@ -265,7 +265,7 @@ export class AuthController {
 
       // Log admin login activity
       if (user.role === "ADMIN") {
-        await createAdminLog(
+        await AdminLogController.logActivity(
           user.id,
           user.email,
           "LOGIN",
@@ -505,7 +505,7 @@ export class AuthController {
 
       // Log admin activity
       const action = updatedUser.isActive ? "ACTIVATE_USER" : "DEACTIVATE_USER";
-      await createAdminLog(
+      await AdminLogController.logActivity(
         req.user.id,
         req.user.email,
         "TOGGLE_USER_STATUS",
