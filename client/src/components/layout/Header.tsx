@@ -233,7 +233,7 @@ const Header: React.FC = () => {
                 <MenuItem
                   onClick={() => {
                     handleMenuClose();
-                    navigate("/dashboard");
+                    navigate("/doping");
                   }}
                 >
                   <ListItemIcon>

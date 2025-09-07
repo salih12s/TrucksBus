@@ -50,7 +50,7 @@ const MyAds: React.FC = () => {
   }>({
     open: false,
     message: "",
-    severity: "info"
+    severity: "info",
   });
 
   const loadMyAds = async () => {
@@ -121,17 +121,17 @@ const MyAds: React.FC = () => {
     if (window.confirm("Bu ilanı silmek istediğinizden emin misiniz?")) {
       try {
         await deleteAd(adId.toString());
-        setAds(ads.filter(ad => ad.id !== adId));
+        setAds(ads.filter((ad) => ad.id !== adId));
         setSnackbar({
           open: true,
           message: "İlan başarıyla silindi",
-          severity: "success"
+          severity: "success",
         });
       } catch {
         setSnackbar({
           open: true,
           message: "İlan silinirken bir hata oluştu",
-          severity: "error"
+          severity: "error",
         });
       }
     }
@@ -151,11 +151,11 @@ const MyAds: React.FC = () => {
 
   const formatPrice = (price: number | undefined) => {
     if (!price) return "Fiyat belirtilmemiş";
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
+    return new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: "TRY",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(price);
   };
 
@@ -192,11 +192,7 @@ const MyAds: React.FC = () => {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton
-              onClick={handleGoBack}
-              sx={{ mr: 1 }}
-              color="primary"
-            >
+            <IconButton onClick={handleGoBack} sx={{ mr: 1 }} color="primary">
               <ArrowBackIcon />
             </IconButton>
             <Typography variant="h4" component="h1">
@@ -249,7 +245,9 @@ const MyAds: React.FC = () => {
                   {ads.map((ad) => (
                     <TableRow key={ad.id}>
                       <TableCell>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                        >
                           <img
                             src={getImageUrl(ad.images)}
                             alt={ad.title}
@@ -257,14 +255,17 @@ const MyAds: React.FC = () => {
                               width: 60,
                               height: 40,
                               objectFit: "cover",
-                              borderRadius: 4
+                              borderRadius: 4,
                             }}
                           />
                           <Box>
                             <Typography variant="body2" fontWeight="medium">
                               {ad.title}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               {ad.location}
                             </Typography>
                           </Box>
@@ -290,14 +291,10 @@ const MyAds: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2">
-                          {ad.viewCount}
-                        </Typography>
+                        <Typography variant="body2">{ad.viewCount}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2">
-                          -
-                        </Typography>
+                        <Typography variant="body2">-</Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="caption">
@@ -380,7 +377,13 @@ const MyAds: React.FC = () => {
                 </IconButton>
               </DialogTitle>
               <DialogContent dividers>
-                <Box sx={{ display: "flex", gap: 3, flexDirection: { xs: "column", md: "row" } }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 3,
+                    flexDirection: { xs: "column", md: "row" },
+                  }}
+                >
                   <Box sx={{ flex: 1 }}>
                     <img
                       src={getImageUrl(selectedAd.images)}
@@ -389,7 +392,7 @@ const MyAds: React.FC = () => {
                         width: "100%",
                         height: 200,
                         objectFit: "cover",
-                        borderRadius: 8
+                        borderRadius: 8,
                       }}
                     />
                   </Box>
@@ -411,10 +414,18 @@ const MyAds: React.FC = () => {
                         variant="outlined"
                       />
                     </Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       📍 {selectedAd.location}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       👁️ {selectedAd.viewCount} görüntüleme
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -422,18 +433,19 @@ const MyAds: React.FC = () => {
                     </Typography>
                   </Box>
                 </Box>
-                
+
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Typography variant="subtitle1" gutterBottom>
                   <strong>Açıklama:</strong>
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>
                   {selectedAd.description}
                 </Typography>
-                
+
                 <Typography variant="caption" color="text.secondary">
-                  Oluşturulma: {new Date(selectedAd.createdAt).toLocaleString("tr-TR")}
+                  Oluşturulma:{" "}
+                  {new Date(selectedAd.createdAt).toLocaleString("tr-TR")}
                 </Typography>
               </DialogContent>
               <DialogActions>
@@ -454,7 +466,7 @@ const MyAds: React.FC = () => {
           autoHideDuration={6000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         >
-          <Alert 
+          <Alert
             severity={snackbar.severity}
             onClose={() => setSnackbar({ ...snackbar, open: false })}
           >

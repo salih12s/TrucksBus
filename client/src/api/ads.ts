@@ -62,7 +62,9 @@ export interface GetMyAdsParams {
 }
 
 // Kullanıcının kendi ilanlarını getir
-export const getMyAds = async (params?: GetMyAdsParams): Promise<GetMyAdsResponse> => {
+export const getMyAds = async (
+  params?: GetMyAdsParams
+): Promise<GetMyAdsResponse> => {
   const response = await apiClient.get("/ads/user/my-ads", { params });
   return response.data as GetMyAdsResponse;
 };

@@ -38,6 +38,7 @@ model User {
   sentMessages     Message[]      @relation("SentMessages")
   notifications    Notification[] @relation("UserNotifications")
   reviewedAds      PendingAd[]    @relation("ReviewedByAdmin")
+  userDopings      UserDoping[]   @relation("UserDopings")
 
   @@map("users")
 }
@@ -381,6 +382,46 @@ enum ComplaintStatus {
 
 enum FeedbackStatus {
   OPEN
-  REVIEWED
+  REVIEWED  
   RESPONDED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Doping Package Models
+model DopingPackage {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String
+  features    String[] // Array of features
+  price       Float
+  originalPrice Float?
+  duration    Int      // Duration in days
+  isActive    Boolean  @default(true)
+  icon        String   // Icon name/class
+  color       String   // Card color theme
+  
+  userDopings UserDoping[] @relation("PackageDopings")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("doping_packages")
+}
+
+model UserDoping {
+  id        String   @id @default(cuid())
+  userId    Int
+  packageId String
+  
+  activatedAt DateTime @default(now())
+  expiresAt   DateTime
+  isActive    Boolean  @default(true)
+  
+  user    User          @relation("UserDopings", fields: [userId], references: [id], onDelete: Cascade)
+  package DopingPackage @relation("PackageDopings", fields: [packageId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, packageId]) // Prevent duplicate activations
+  @@map("user_dopings")
 }

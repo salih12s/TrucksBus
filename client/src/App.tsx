@@ -96,6 +96,7 @@ const VariantSelection = React.lazy(
   () => import("./components/ads/VariantSelection")
 );
 const MyAds = React.lazy(() => import("./pages/MyAds"));
+const Doping = React.lazy(() => import("./pages/Doping"));
 const MessagingSystem = React.lazy(
   () => import("./components/messaging/MessagingSystem")
 );
@@ -261,6 +262,15 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <MyAds />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/doping"
+                    element={
+                      <ProtectedRoute>
+                        <Doping />
                       </ProtectedRoute>
                     }
                   />
