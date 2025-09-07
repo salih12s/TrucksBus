@@ -53,6 +53,36 @@ const KayaTipiForm = React.lazy(
   () => import("./components/forms/Damperli/KayaTipiForm")
 );
 
+// Karoser UstYapi Forms
+const KamyonRomorkForm = React.lazy(
+  () => import("./components/forms/KamyonRomorkForm")
+);
+
+// Karoser UstYapi - Damperli Forms
+const KaroserKayaTipiForm = React.lazy(
+  () => import("./components/forms/KaroserUstyapi/Damperli/KayaTipiForm")
+);
+const KaroserHavuzHardoxTipiForm = React.lazy(
+  () => import("./components/forms/KaroserUstyapi/Damperli/HavuzHardoxTipiForm")
+);
+const KaroserKapakliTipForm = React.lazy(
+  () => import("./components/forms/KaroserUstyapi/Damperli/KapakliTipForm")
+);
+const KaroserAhsapKasaForm = React.lazy(
+  () => import("./components/forms/KaroserUstyapi/Damperli/AhsapKasaForm")
+);
+
+// Karoser UstYapi - Sabit Kabin Forms
+const AcikKasaForm = React.lazy(
+  () => import("./components/forms/KaroserUstyapi/SabitKabin/AcikKasaForm")
+);
+const KapaliKasaForm = React.lazy(
+  () => import("./components/forms/KaroserUstyapi/SabitKabin/KapaliKasaForm")
+);
+const OzelKasaForm = React.lazy(
+  () => import("./components/forms/KaroserUstyapi/SabitKabin/OzelKasaForm")
+);
+
 const CategorySelection = React.lazy(
   () => import("./components/ads/CategorySelection")
 );
@@ -329,6 +359,81 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <KayaTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Karoser Üst Yapı - Kamyon Römork Route */}
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/kamyon-romork/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KamyonRomorkForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Karoser Üst Yapı - Damperli Routes */}
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/kaya-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserKayaTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserHavuzHardoxTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/kapakli-tip/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserKapakliTipForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/ahsap-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserAhsapKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Karoser Üst Yapı - Sabit Kabin Routes */}
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/acik-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <AcikKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/kapali-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KapaliKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/ozel-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <OzelKasaForm />
                       </ProtectedRoute>
                     }
                   />
