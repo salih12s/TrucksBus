@@ -327,7 +327,7 @@ const MyFeedback: React.FC = () => {
                 {selectedFeedback.description}
               </Typography>
 
-              {selectedFeedback.response && (
+              {selectedFeedback.adminResponse && (
                 <>
                   <Divider sx={{ my: 2 }} />
                   <Typography variant="subtitle1" gutterBottom>
@@ -343,7 +343,7 @@ const MyFeedback: React.FC = () => {
                     }}
                   >
                     <Typography variant="body1">
-                      {selectedFeedback.response}
+                      {selectedFeedback.adminResponse}
                     </Typography>
                     {selectedFeedback.adminResponseAt && (
                       <Typography

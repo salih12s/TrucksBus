@@ -14,7 +14,7 @@ export interface Feedback {
   category: string;
   priority: string;
   status: "OPEN" | "REVIEWED" | "RESPONDED";
-  response?: string;
+  adminResponse?: string;
   adminResponseAt?: string;
   createdAt: string;
   user: {
@@ -38,7 +38,7 @@ export interface FeedbackListResponse {
 
 export interface UpdateFeedbackStatusRequest {
   status: "OPEN" | "REVIEWED" | "RESPONDED";
-  response?: string;
+  adminResponse?: string;
 }
 
 export const feedbackAPI = {

@@ -168,7 +168,7 @@ const FeedbackManagement: React.FC = () => {
 
   const handleRespondFeedback = (feedback: Feedback) => {
     setSelectedFeedback(feedback);
-    setResponse(feedback.response || "");
+    setResponse(feedback.adminResponse || "");
     setResponseStatus(feedback.status === "OPEN" ? "REVIEWED" : "RESPONDED");
     setResponseModal(true);
   };
@@ -182,7 +182,7 @@ const FeedbackManagement: React.FC = () => {
         selectedFeedback.id,
         {
           status: responseStatus,
-          response: response.trim() || undefined,
+          adminResponse: response.trim() || undefined,
         }
       );
 
@@ -413,7 +413,7 @@ const FeedbackManagement: React.FC = () => {
                 {selectedFeedback.description}
               </Typography>
 
-              {selectedFeedback.response && (
+              {selectedFeedback.adminResponse && (
                 <>
                   <Typography variant="subtitle1" gutterBottom>
                     <strong>Admin Yanıtı:</strong>
@@ -422,7 +422,7 @@ const FeedbackManagement: React.FC = () => {
                     variant="body1"
                     sx={{ p: 2, bgcolor: "primary.50", borderRadius: 1 }}
                   >
-                    {selectedFeedback.response}
+                    {selectedFeedback.adminResponse}
                   </Typography>
                   {selectedFeedback.adminResponseAt && (
                     <Typography

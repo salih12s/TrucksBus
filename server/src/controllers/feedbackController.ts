@@ -35,10 +35,8 @@ export const createFeedback = async (
         userId,
         subject: title,
         content: description,
-        category,
-        priority,
         status: "OPEN",
-      },
+      } as any,
       include: {
         user: {
           select: {
@@ -51,10 +49,31 @@ export const createFeedback = async (
       },
     });
 
+    // Update with category and priority using raw query
+    await prisma.$executeRaw`
+      UPDATE feedback 
+      SET category = ${category}, priority = ${priority}
+      WHERE id = ${feedback.id}
+    `;
+
+    // Transform data to match frontend expectations
+    const transformedFeedback = {
+      ...feedback,
+      title: feedback.subject,
+      description: feedback.content,
+      category: category,
+      priority: priority,
+      user: {
+        id: (feedback as any).user.id.toString(),
+        name: `${(feedback as any).user.firstName} ${(feedback as any).user.lastName}`.trim(),
+        email: (feedback as any).user.email,
+      },
+    };
+
     res.status(201).json({
       success: true,
       message: "Geri bildiriminiz başarıyla gönderildi",
-      data: feedback,
+      data: transformedFeedback,
     });
   } catch (error) {
     console.error("Create feedback error:", error);
@@ -83,22 +102,18 @@ export const getUserFeedbacks = async (
     const feedbacks = await prisma.feedback.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        subject: true,
-        content: true,
-        category: true,
-        priority: true,
-        status: true,
-        adminResponse: true,
-        createdAt: true,
-        updatedAt: true,
-      },
     });
+
+    // Transform data to match frontend expectations
+    const transformedFeedbacks = feedbacks.map((feedback) => ({
+      ...feedback,
+      title: feedback.subject,
+      description: feedback.content,
+    }));
 
     res.json({
       success: true,
-      data: feedbacks,
+      data: transformedFeedbacks,
     });
   } catch (error) {
     console.error("Get user feedbacks error:", error);
@@ -143,9 +158,21 @@ export const getAllFeedbacks = async (
       prisma.feedback.count({ where }),
     ]);
 
+    // Transform data to match frontend expectations
+    const transformedFeedbacks = feedbacks.map((feedback) => ({
+      ...feedback,
+      title: feedback.subject,
+      description: feedback.content,
+      user: {
+        id: (feedback as any).user.id.toString(),
+        name: `${(feedback as any).user.firstName} ${(feedback as any).user.lastName}`.trim(),
+        email: (feedback as any).user.email,
+      },
+    }));
+
     res.json({
       success: true,
-      data: feedbacks,
+      data: transformedFeedbacks,
       pagination: {
         page: Number(page),
         limit: Number(limit),
@@ -200,10 +227,22 @@ export const updateFeedbackStatus = async (
       );
     }
 
+    // Transform data to match frontend expectations
+    const transformedFeedback = {
+      ...feedback,
+      title: feedback.subject,
+      description: feedback.content,
+      user: {
+        id: (feedback as any).user.id.toString(),
+        name: `${(feedback as any).user.firstName} ${(feedback as any).user.lastName}`.trim(),
+        email: (feedback as any).user.email,
+      },
+    };
+
     res.json({
       success: true,
       message: "Geri bildirim güncellendi",
-      data: feedback,
+      data: transformedFeedback,
     });
   } catch (error) {
     console.error("Update feedback error:", error);
