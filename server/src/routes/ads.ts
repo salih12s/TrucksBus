@@ -54,6 +54,14 @@ router.post(
   adController.createOtobusAd
 );
 
+// Dorse ilan oluşturma (multipart/form-data desteği ile)
+router.post(
+  "/dorse",
+  authenticateToken,
+  upload.any(),
+  adController.createDorseAd
+);
+
 // Kullanıcının ilanları
 router.get("/user/my-ads", authenticateToken, adController.getUserAds);
 

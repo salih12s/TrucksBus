@@ -90,9 +90,17 @@ const ModelSelection: React.FC = () => {
   );
 
   const handleModelSelect = (modelSlug: string) => {
-    navigate(
-      `/categories/${categorySlug}/brands/${brandSlug}/models/${modelSlug}/variants`
-    );
+    // Dorse kategorisi için özel kontrol - varyant olmadığı için direkt form sayfasına git
+    if (categorySlug === "dorse" || categorySlug === "damperli-dorse") {
+      navigate(
+        `/categories/${categorySlug}/brands/${brandSlug}/models/${modelSlug}/create-ad`
+      );
+    } else {
+      // Diğer kategoriler için normal varyant seçim akışı
+      navigate(
+        `/categories/${categorySlug}/brands/${brandSlug}/models/${modelSlug}/variants`
+      );
+    }
   };
 
   const handleBackToBrands = () => {

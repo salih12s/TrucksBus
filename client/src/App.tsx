@@ -35,6 +35,24 @@ const KamyonAdForm = React.lazy(
 const CekiciAdForm = React.lazy(
   () => import("./components/forms/CekiciAdForm")
 );
+const VehicleFormSelector = React.lazy(
+  () => import("./components/VehicleFormSelector")
+);
+
+// Dorse Forms
+const HafriyatTipiForm = React.lazy(
+  () => import("./components/forms/Damperli/HafriyatTipiForm")
+);
+const HavuzHardoxTipiForm = React.lazy(
+  () => import("./components/forms/Damperli/HavuzHardoxTipiForm")
+);
+const KapakliTipForm = React.lazy(
+  () => import("./components/forms/Damperli/KapakliTipForm")
+);
+const KayaTipiForm = React.lazy(
+  () => import("./components/forms/Damperli/KayaTipiForm")
+);
+
 const CategorySelection = React.lazy(
   () => import("./components/ads/CategorySelection")
 );
@@ -241,12 +259,96 @@ function App() {
                     }
                   />
 
+                  {/* Dorse Form Routes */}
+                  <Route
+                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <HafriyatTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <HavuzHardoxTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kapakli-tip/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KapakliTipForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KayaTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Damperli-Dorse kategorisi için de aynı route'lar */}
+                  <Route
+                    path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <HafriyatTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <HavuzHardoxTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/kapakli-tip/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KapakliTipForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KayaTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Varyantı olmayan dorse modelleri için model seviyesinde route'lar */}
+                  <Route
+                    path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <VehicleFormSelector />
+                      </ProtectedRoute>
+                    }
+                  />
+
                   {/* Genel route - En son fallback olarak */}
                   <Route
                     path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
                     element={
                       <ProtectedRoute>
-                        <CreateMinibusAdForm />
+                        <VehicleFormSelector />
                       </ProtectedRoute>
                     }
                   />

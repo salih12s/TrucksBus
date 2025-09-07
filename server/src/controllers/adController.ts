@@ -995,3 +995,102 @@ export const createOtobusAd = async (req: Request, res: Response) => {
     });
   }
 };
+
+// İlan oluştur (Dorse)
+export const createDorseAd = async (req: Request, res: Response) => {
+  try {
+    console.log("🚛 Dorse İlanı API'ye istek geldi");
+    console.log("📦 Request body:", req.body);
+    console.log("📦 Request headers:", req.headers);
+    console.log("📦 Content-Type:", req.headers["content-type"]);
+
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+    }
+
+    const {
+      title,
+      description,
+      year,
+      price,
+      cityId,
+      districtId,
+      categorySlug,
+      brandSlug,
+      modelSlug,
+      variantSlug,
+      // Dorse özel alanları
+      genislik,
+      uzunluk,
+      lastikDurumu,
+      devrilmeYonu,
+      warranty,
+      negotiable,
+      exchange,
+    } = req.body;
+
+    // Dorse kategorisini bul
+    const dorseCategory = await prisma.category.findFirst({
+      where: {
+        OR: [
+          { slug: "dorse" },
+          { slug: "damperli-dorse" },
+          { name: { contains: "Dorse" } },
+        ],
+      },
+    });
+
+    if (!dorseCategory) {
+      return res.status(400).json({ error: "Dorse kategorisi bulunamadı" });
+    }
+
+    const ad = await prisma.ad.create({
+      data: {
+        userId,
+        categoryId: dorseCategory.id,
+        title,
+        description,
+        year: year ? parseInt(year) : null,
+        price: price ? parseFloat(price) : null,
+        customFields: {
+          genislik: genislik || null,
+          uzunluk: uzunluk || null,
+          lastikDurumu: lastikDurumu || null,
+          devrilmeYonu: devrilmeYonu || null,
+          warranty: warranty || null,
+          negotiable: negotiable || null,
+          exchange: exchange || null,
+          cityId: cityId ? parseInt(cityId) : null,
+          districtId: districtId ? parseInt(districtId) : null,
+          categorySlug: categorySlug || null,
+          brandSlug: brandSlug || null,
+          modelSlug: modelSlug || null,
+          variantSlug: variantSlug || null,
+        },
+        status: "PENDING",
+      },
+      include: {
+        category: true,
+        user: true,
+      },
+    });
+
+    return res.status(201).json({
+      message: "Dorse ilanı başarıyla oluşturuldu ve onay bekliyor",
+      ad,
+    });
+  } catch (error: any) {
+    console.error("Dorse ilanı oluşturma hatası detayı:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      requestBody: req.body,
+    });
+    return res.status(500).json({
+      error: "İlan oluşturulurken hata oluştu",
+      details: error.message,
+    });
+  }
+};
