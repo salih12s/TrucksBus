@@ -99,6 +99,7 @@ const MyAds = React.lazy(() => import("./components/ads/MyAds"));
 const MessagingSystem = React.lazy(
   () => import("./components/messaging/MessagingSystem")
 );
+const Complaints = React.lazy(() => import("./pages/Complaints"));
 const AnalyticsDashboard = React.lazy(
   () => import("./components/analytics/AnalyticsDashboard")
 );
@@ -242,6 +243,15 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Bookmarks />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/complaints"
+                    element={
+                      <ProtectedRoute>
+                        <Complaints />
                       </ProtectedRoute>
                     }
                   />

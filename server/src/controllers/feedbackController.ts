@@ -65,7 +65,9 @@ export const createFeedback = async (
       priority: priority,
       user: {
         id: (feedback as any).user.id.toString(),
-        name: `${(feedback as any).user.firstName} ${(feedback as any).user.lastName}`.trim(),
+        name: `${(feedback as any).user.firstName} ${
+          (feedback as any).user.lastName
+        }`.trim(),
         email: (feedback as any).user.email,
       },
     };
@@ -165,7 +167,9 @@ export const getAllFeedbacks = async (
       description: feedback.content,
       user: {
         id: (feedback as any).user.id.toString(),
-        name: `${(feedback as any).user.firstName} ${(feedback as any).user.lastName}`.trim(),
+        name: `${(feedback as any).user.firstName} ${
+          (feedback as any).user.lastName
+        }`.trim(),
         email: (feedback as any).user.email,
       },
     }));
@@ -234,7 +238,9 @@ export const updateFeedbackStatus = async (
       description: feedback.content,
       user: {
         id: (feedback as any).user.id.toString(),
-        name: `${(feedback as any).user.firstName} ${(feedback as any).user.lastName}`.trim(),
+        name: `${(feedback as any).user.firstName} ${
+          (feedback as any).user.lastName
+        }`.trim(),
         email: (feedback as any).user.email,
       },
     };
