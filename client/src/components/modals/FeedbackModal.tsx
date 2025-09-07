@@ -15,9 +15,13 @@ import {
   IconButton,
   Alert,
   CircularProgress,
+  Avatar,
+  Card,
+  CardContent,
 } from "@mui/material";
-import { Close as CloseIcon } from "@mui/icons-material";
+import { Close as CloseIcon, Person as PersonIcon } from "@mui/icons-material";
 import { feedbackAPI, type CreateFeedbackRequest } from "../../api/feedback";
+import { useAppSelector } from "../../hooks/redux";
 
 interface FeedbackModalProps {
   open: boolean;
@@ -40,6 +44,7 @@ const FEEDBACK_URGENCY = [
 ];
 
 const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onClose }) => {
+  const { user } = useAppSelector((state) => state.auth);
   const [formData, setFormData] = useState({
     category: "",
     urgency: "MEDIUM",
@@ -153,6 +158,47 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onClose }) => {
           Görüşleriniz bizim için değerli. Lütfen düşüncelerinizi paylaşın.
         </Typography>
 
+        {/* Kullanıcı Bilgi Kartı */}
+        {user && (
+          <Card sx={{ mb: 3, bgcolor: "grey.50" }}>
+            <CardContent sx={{ py: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Avatar sx={{ bgcolor: "primary.main" }}>
+                  <PersonIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    {user.firstName && user.lastName
+                      ? `${user.firstName} ${user.lastName}`
+                      : user.email}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {user.email}
+                  </Typography>
+                  {user.role && (
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block" }}
+                      color="text.secondary"
+                    >
+                      Rol:{" "}
+                      {user.role === "USER"
+                        ? "Bireysel Kullanıcı"
+                        : user.role === "CORPORATE"
+                        ? "Kurumsal Kullanıcı"
+                        : user.role === "ADMIN"
+                        ? "Yönetici"
+                        : user.role === "MODERATOR"
+                        ? "Moderatör"
+                        : user.role}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        )}
+
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -215,27 +261,34 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onClose }) => {
             inputProps={{ maxLength: 2000 }}
             helperText={`${formData.content.length}/2000`}
           />
-
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-            Gönderen:{" "}
-            {JSON.parse(localStorage.getItem("user") || "{}")?.email ||
-              "memet@abc.com"}
-          </Typography>
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleClose} variant="outlined">
-          İptal
-        </Button>
+      <DialogActions sx={{ px: 3, py: 2, justifyContent: "space-between" }}>
         <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={16} /> : null}
+          variant="text"
+          color="primary"
+          onClick={() => {
+            handleClose();
+            // MyFeedback sayfasına yönlendirme - ileride implement edilecek
+            window.open("/my-feedback", "_blank");
+          }}
         >
-          {loading ? "Gönderiliyor..." : "Gönder"}
+          Geri Bildirimlerim
         </Button>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button onClick={handleClose} variant="outlined">
+            İptal
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={16} /> : null}
+          >
+            {loading ? "Gönderiliyor..." : "Gönder"}
+          </Button>
+        </Box>
       </DialogActions>
     </Dialog>
   );
