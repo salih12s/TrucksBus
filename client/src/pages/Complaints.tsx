@@ -198,190 +198,192 @@ const Complaints: React.FC = () => {
               Şikayetlerim
             </Typography>
           </Box>
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={loadComplaints}
-          disabled={loading}
-        >
-          Yenile
-        </Button>
-      </Box>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={loadComplaints}
+            disabled={loading}
+          >
+            Yenile
+          </Button>
+        </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
 
-      <Card>
-        <CardContent>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Şikayet Konusu</TableCell>
-                  <TableCell>Kategori</TableCell>
-                  <TableCell>Öncelik</TableCell>
-                  <TableCell>Durum</TableCell>
-                  <TableCell>Tarih</TableCell>
-                  <TableCell>İşlemler</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {complaints.map((complaint) => (
-                  <TableRow key={complaint.id}>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="medium">
-                        {complaint.title}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getCategoryLabel(complaint.category)}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getPriorityLabel(complaint.priority)}
-                        size="small"
-                        color={getPriorityColor(complaint.priority)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getStatusLabel(complaint.status)}
-                        size="small"
-                        color={getStatusColor(complaint.status)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                        {new Date(complaint.createdAt).toLocaleDateString(
-                          "tr-TR"
-                        )}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleViewComplaint(complaint)}
-                      >
-                        <ViewIcon />
-                      </IconButton>
-                    </TableCell>
+        <Card>
+          <CardContent>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Şikayet Konusu</TableCell>
+                    <TableCell>Kategori</TableCell>
+                    <TableCell>Öncelik</TableCell>
+                    <TableCell>Durum</TableCell>
+                    <TableCell>Tarih</TableCell>
+                    <TableCell>İşlemler</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {complaints.map((complaint) => (
+                    <TableRow key={complaint.id}>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="medium">
+                          {complaint.title}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={getCategoryLabel(complaint.category)}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={getPriorityLabel(complaint.priority)}
+                          size="small"
+                          color={getPriorityColor(complaint.priority)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={getStatusLabel(complaint.status)}
+                          size="small"
+                          color={getStatusColor(complaint.status)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {new Date(complaint.createdAt).toLocaleDateString(
+                            "tr-TR"
+                          )}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleViewComplaint(complaint)}
+                        >
+                          <ViewIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-          {complaints.length === 0 && (
-            <Box sx={{ textAlign: "center", py: 4 }}>
-              <Typography variant="body1" color="text.secondary">
-                Henüz şikayetiniz bulunmuyor.
-              </Typography>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Şikayet Detayı Modal'ı */}
-      <Dialog
-        open={!!selectedComplaint}
-        onClose={handleCloseModal}
-        maxWidth="md"
-        fullWidth
-      >
-        {selectedComplaint && (
-          <>
-            <DialogTitle
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Typography variant="h6">Şikayet Detayı</Typography>
-              <IconButton onClick={handleCloseModal}>
-                <CloseIcon />
-              </IconButton>
-            </DialogTitle>
-            <DialogContent dividers>
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                  <strong>Şikayet Konusu:</strong> {selectedComplaint.title}
-                </Typography>
-                <Typography variant="subtitle1" gutterBottom>
-                  <strong>Kategori:</strong>{" "}
-                  {getCategoryLabel(selectedComplaint.category)}
-                </Typography>
-                <Typography variant="subtitle1" gutterBottom>
-                  <strong>Öncelik:</strong>{" "}
-                  {getPriorityLabel(selectedComplaint.priority)}
-                </Typography>
-                <Typography variant="subtitle1" gutterBottom>
-                  <strong>Durum:</strong>{" "}
-                  {getStatusLabel(selectedComplaint.status)}
-                </Typography>
-                <Typography variant="subtitle1" gutterBottom>
-                  <strong>Tarih:</strong>{" "}
-                  {new Date(selectedComplaint.createdAt).toLocaleString("tr-TR")}
+            {complaints.length === 0 && (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <Typography variant="body1" color="text.secondary">
+                  Henüz şikayetiniz bulunmuyor.
                 </Typography>
               </Box>
+            )}
+          </CardContent>
+        </Card>
 
-              <Typography variant="subtitle1" gutterBottom>
-                <strong>Şikayet Açıklaması:</strong>
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{ mb: 3, p: 2, bgcolor: "grey.100", borderRadius: 1 }}
+        {/* Şikayet Detayı Modal'ı */}
+        <Dialog
+          open={!!selectedComplaint}
+          onClose={handleCloseModal}
+          maxWidth="md"
+          fullWidth
+        >
+          {selectedComplaint && (
+            <>
+              <DialogTitle
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                {selectedComplaint.description}
-              </Typography>
-
-              {selectedComplaint.adminResponse && (
-                <>
-                  <Divider sx={{ my: 2 }} />
+                <Typography variant="h6">Şikayet Detayı</Typography>
+                <IconButton onClick={handleCloseModal}>
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <DialogContent dividers>
+                <Box sx={{ mb: 3 }}>
                   <Typography variant="subtitle1" gutterBottom>
-                    <strong>Yetkili Yanıtı:</strong>
+                    <strong>Şikayet Konusu:</strong> {selectedComplaint.title}
                   </Typography>
-                  <Box
-                    sx={{
-                      p: 2,
-                      bgcolor: "success.50",
-                      borderRadius: 1,
-                      border: "1px solid",
-                      borderColor: "success.200",
-                    }}
-                  >
-                    <Typography variant="body1">
-                      {selectedComplaint.adminResponse}
-                    </Typography>
-                    {selectedComplaint.adminResponseAt && (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 1, display: "block" }}
-                      >
-                        Yanıt Tarihi:{" "}
-                        {new Date(
-                          selectedComplaint.adminResponseAt
-                        ).toLocaleString("tr-TR")}
-                      </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    <strong>Kategori:</strong>{" "}
+                    {getCategoryLabel(selectedComplaint.category)}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    <strong>Öncelik:</strong>{" "}
+                    {getPriorityLabel(selectedComplaint.priority)}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    <strong>Durum:</strong>{" "}
+                    {getStatusLabel(selectedComplaint.status)}
+                  </Typography>
+                  <Typography variant="subtitle1" gutterBottom>
+                    <strong>Tarih:</strong>{" "}
+                    {new Date(selectedComplaint.createdAt).toLocaleString(
+                      "tr-TR"
                     )}
-                  </Box>
-                </>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseModal}>Kapat</Button>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
+                  </Typography>
+                </Box>
+
+                <Typography variant="subtitle1" gutterBottom>
+                  <strong>Şikayet Açıklaması:</strong>
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{ mb: 3, p: 2, bgcolor: "grey.100", borderRadius: 1 }}
+                >
+                  {selectedComplaint.description}
+                </Typography>
+
+                {selectedComplaint.adminResponse && (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="subtitle1" gutterBottom>
+                      <strong>Yetkili Yanıtı:</strong>
+                    </Typography>
+                    <Box
+                      sx={{
+                        p: 2,
+                        bgcolor: "success.50",
+                        borderRadius: 1,
+                        border: "1px solid",
+                        borderColor: "success.200",
+                      }}
+                    >
+                      <Typography variant="body1">
+                        {selectedComplaint.adminResponse}
+                      </Typography>
+                      {selectedComplaint.adminResponseAt && (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ mt: 1, display: "block" }}
+                        >
+                          Yanıt Tarihi:{" "}
+                          {new Date(
+                            selectedComplaint.adminResponseAt
+                          ).toLocaleString("tr-TR")}
+                        </Typography>
+                      )}
+                    </Box>
+                  </>
+                )}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseModal}>Kapat</Button>
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
       </Box>
     </Box>
   );

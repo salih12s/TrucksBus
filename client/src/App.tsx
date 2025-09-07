@@ -95,7 +95,7 @@ const ModelSelection = React.lazy(
 const VariantSelection = React.lazy(
   () => import("./components/ads/VariantSelection")
 );
-const MyAds = React.lazy(() => import("./components/ads/MyAds"));
+const MyAds = React.lazy(() => import("./pages/MyAds"));
 const MessagingSystem = React.lazy(
   () => import("./components/messaging/MessagingSystem")
 );
@@ -252,6 +252,15 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <Complaints />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/my-ads"
+                    element={
+                      <ProtectedRoute>
+                        <MyAds />
                       </ProtectedRoute>
                     }
                   />
