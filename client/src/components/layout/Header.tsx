@@ -17,7 +17,6 @@ import {
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
   Message as MessageIcon,
-  Notifications as NotificationsIcon,
   Bookmark as BookmarkIcon,
   Feedback as FeedbackIcon,
   Person as PersonIcon,
@@ -27,12 +26,15 @@ import {
 } from "@mui/icons-material";
 import { useAppSelector, useAppDispatch } from "../../hooks/redux";
 import { logoutUser } from "../../store/authSlice";
+import FeedbackModal from "../modals/FeedbackModal";
+import NotificationDropdown from "../NotificationDropdown";
 
 const Header: React.FC = () => {
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
 
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -125,15 +127,7 @@ const Header: React.FC = () => {
                 </Badge>
               </IconButton>
 
-              <IconButton
-                color="inherit"
-                sx={{ color: "white" }}
-                onClick={() => navigate("/notifications")}
-              >
-                <Badge badgeContent={5} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
+              <NotificationDropdown />
 
               <IconButton
                 color="inherit"
@@ -146,7 +140,7 @@ const Header: React.FC = () => {
               <IconButton
                 color="inherit"
                 sx={{ color: "white" }}
-                onClick={() => navigate("/feedback")}
+                onClick={() => setFeedbackModalOpen(true)}
               >
                 <FeedbackIcon />
               </IconButton>
@@ -348,6 +342,12 @@ const Header: React.FC = () => {
           )}
         </Box>
       </Toolbar>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        open={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+      />
     </AppBar>
   );
 };

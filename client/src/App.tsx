@@ -109,6 +109,9 @@ const AdminDashboard = React.lazy(() => import("./admin/pages/AdminDashboard"));
 const PendingAds = React.lazy(() => import("./admin/pages/PendingAds"));
 const UsersPage = React.lazy(() => import("./admin/pages/UsersPage"));
 const AdminLogsPage = React.lazy(() => import("./admin/pages/AdminLogsPage"));
+const FeedbackManagement = React.lazy(
+  () => import("./admin/pages/FeedbackManagement")
+);
 
 import "./App.css";
 
@@ -491,6 +494,7 @@ function App() {
                     <Route path="pending-ads" element={<PendingAds />} />
                     <Route path="users" element={<UsersPage />} />
                     <Route path="logs" element={<AdminLogsPage />} />
+                    <Route path="feedback" element={<FeedbackManagement />} />
                     {/* Diğer admin sayfaları buraya eklenecek */}
                   </Route>
 
