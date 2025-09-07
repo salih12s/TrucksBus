@@ -35,6 +35,8 @@ export const createFeedback = async (
         userId,
         subject: title,
         content: description,
+        category,
+        priority,
         status: "OPEN",
       },
       include: {
@@ -85,6 +87,8 @@ export const getUserFeedbacks = async (
         id: true,
         subject: true,
         content: true,
+        category: true,
+        priority: true,
         status: true,
         adminResponse: true,
         createdAt: true,

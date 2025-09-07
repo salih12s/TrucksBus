@@ -252,6 +252,8 @@ model Feedback {
   userId        Int            @map("user_id")
   subject       String
   content       String
+  category      String         @default("OTHER")
+  priority      String         @default("MEDIUM")
   status        FeedbackStatus @default(OPEN)
   adminResponse String?        @map("admin_response")
   createdAt     DateTime       @default(now()) @map("created_at")
