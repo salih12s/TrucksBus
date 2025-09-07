@@ -23,6 +23,18 @@ const RegisterCorporate = React.lazy(
   () => import("./components/auth/RegisterCorporate")
 );
 const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
+const CreateMinibusAdForm = React.lazy(
+  () => import("./components/ads/CreateMinibusAdForm")
+);
+const OtobusAdForm = React.lazy(
+  () => import("./components/forms/OtobusAdForm")
+);
+const KamyonAdForm = React.lazy(
+  () => import("./components/forms/KamyonAdForm")
+);
+const CekiciAdForm = React.lazy(
+  () => import("./components/forms/CekiciAdForm")
+);
 const CategorySelection = React.lazy(
   () => import("./components/ads/CategorySelection")
 );
@@ -46,6 +58,7 @@ const AnalyticsDashboard = React.lazy(
 // Admin Components
 const AdminLayout = React.lazy(() => import("./admin/components/AdminLayout"));
 const AdminDashboard = React.lazy(() => import("./admin/pages/AdminDashboard"));
+const PendingAds = React.lazy(() => import("./admin/pages/PendingAds"));
 const UsersPage = React.lazy(() => import("./admin/pages/UsersPage"));
 const AdminLogsPage = React.lazy(() => import("./admin/pages/AdminLogsPage"));
 
@@ -191,6 +204,53 @@ function App() {
                     }
                   />
 
+                  {/* Specific vehicle form routes - SPESİFİK ROUTE'LAR ÖNCE GELMELİ */}
+                  <Route
+                    path="/categories/otobus/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <OtobusAdForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/kamyon-kamyonet/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KamyonAdForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/cekici/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <CekiciAdForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/categories/minibus-midibus/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <CreateMinibusAdForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Genel route - En son fallback olarak */}
+                  <Route
+                    path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <CreateMinibusAdForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
                   <Route
                     path="/my-ads"
                     element={
@@ -221,6 +281,7 @@ function App() {
                   {/* Admin Routes */}
                   <Route path="/admin" element={<AdminLayout />}>
                     <Route index element={<AdminDashboard />} />
+                    <Route path="pending-ads" element={<PendingAds />} />
                     <Route path="users" element={<UsersPage />} />
                     <Route path="logs" element={<AdminLogsPage />} />
                     {/* Diğer admin sayfaları buraya eklenecek */}

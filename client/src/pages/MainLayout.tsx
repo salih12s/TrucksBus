@@ -38,13 +38,37 @@ interface Category {
 }
 
 interface Ad {
-  id: string;
+  id: number;
   title: string;
-  price: number;
-  year: number;
+  price: number | null;
+  year: number | null;
   createdAt: string;
-  owner: string;
-  phone: string;
+  user: {
+    firstName: string | null;
+    lastName: string | null;
+    phone: string | null;
+  };
+  category?: {
+    name: string;
+  };
+  brand?: {
+    name: string;
+  };
+  model?: {
+    name: string;
+  };
+  mileage?: number | null;
+  location?: string;
+}
+
+interface ApiAdsResponse {
+  ads: Ad[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 const MainLayout: React.FC = () => {
@@ -71,20 +95,29 @@ const MainLayout: React.FC = () => {
       try {
         const [categoriesRes, adsRes] = await Promise.all([
           apiClient.get("/categories"),
-          apiClient.get("/ads"),
+          apiClient.get("/ads?status=APPROVED"), // Sadece onaylanmış ilanları çek
         ]);
 
         // Güvenli veri kontrolü
         const categoriesData = Array.isArray(categoriesRes.data)
           ? categoriesRes.data
           : [];
-        const adsData = Array.isArray(adsRes.data) ? adsRes.data : [];
+
+        // Backend response format: { ads: [], pagination: {} }
+        const adsResponse = adsRes.data as ApiAdsResponse;
+        const adsData = adsResponse?.ads
+          ? Array.isArray(adsResponse.ads)
+            ? adsResponse.ads
+            : []
+          : Array.isArray(adsRes.data)
+          ? adsRes.data
+          : [];
 
         setCategories(categoriesData as Category[]);
         setAds(adsData as Ad[]);
       } catch (error) {
         console.error("Data fetch error:", error);
-        // Fallback data
+        // Fallback data sadece kategoriler için
         setCategories([
           { id: "1", name: "Çekici", slug: "cekici", displayOrder: 1 },
           { id: "2", name: "Dorse", slug: "dorse", displayOrder: 2 },
@@ -116,26 +149,8 @@ const MainLayout: React.FC = () => {
           { id: "8", name: "Römork", slug: "romork", displayOrder: 8 },
         ]);
 
-        setAds([
-          {
-            id: "1",
-            title: "2020 Model Mercedes Actros",
-            price: 450000,
-            year: 2020,
-            createdAt: "15.01.2024",
-            owner: "Ahmet Yılmaz",
-            phone: "0532 123 45 67",
-          },
-          {
-            id: "2",
-            title: "Ford Transit Minibüs",
-            price: 180000,
-            year: 2019,
-            createdAt: "14.01.2024",
-            owner: "Mehmet Kaya",
-            phone: "0542 987 65 43",
-          },
-        ]);
+        // İlanlar için boş array
+        setAds([]);
       }
     };
 
@@ -511,7 +526,7 @@ const MainLayout: React.FC = () => {
                         fontSize: { xs: "1.25rem", sm: "1.5rem" },
                       }}
                     >
-                      ₺{ad.price.toLocaleString()}
+                      ₺{ad.price ? ad.price.toLocaleString() : "0"}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -545,7 +560,8 @@ const MainLayout: React.FC = () => {
                         wordWrap: "break-word",
                       }}
                     >
-                      İlan Sahibi: {ad.owner} | Tel: {ad.phone}
+                      İlan Sahibi: {ad.user.firstName} {ad.user.lastName} | Tel:{" "}
+                      {ad.user.phone}
                     </Typography>
                     <Button
                       fullWidth

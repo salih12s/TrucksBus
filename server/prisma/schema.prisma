@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,6 +5,312 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  passwordHash     String         @map("password_hash")
+  firstName        String?        @map("first_name")
+  lastName         String?        @map("last_name")
+  phone            String?
+  role             UserRole       @default(USER)
+  isVerified       Boolean        @default(false) @map("is_verified")
+  isActive         Boolean        @default(true) @map("is_active")
+  companyName      String?        @map("company_name")
+  taxId            String?        @map("tax_id")
+  tradeRegistryNo  String?        @map("trade_registry_no")
+  address          String?
+  city             String?
+  country          String?
+  profileImageUrl  String?        @map("profile_image_url")
+  kvkkAccepted     Boolean        @default(false) @map("kvkk_accepted")
+  kvkkAcceptedAt   DateTime?      @map("kvkk_accepted_at")
+  lastLoginAt      DateTime?      @map("last_login_at")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  adminLogs        AdminLog[]     @relation("AdminLogs")
+  ads              Ad[]
+  complaints       Complaint[]
+  favorites        Favorite[]
+  feedback         Feedback[]
+  receivedMessages Message[]      @relation("ReceivedMessages")
+  sentMessages     Message[]      @relation("SentMessages")
+  notifications    Notification[] @relation("UserNotifications")
+  reviewedAds      PendingAd[]    @relation("ReviewedByAdmin")
+
+  @@map("users")
+}
+
+model Category {
+  id           Int             @id @default(autoincrement())
+  name         String
+  slug         String          @unique
+  iconUrl      String?         @map("icon_url")
+  displayOrder Int             @map("display_order")
+  isActive     Boolean         @default(true) @map("is_active")
+  description  String?
+  formFields   AdFormField[]
+  ads          Ad[]
+  brands       CategoryBrand[]
+  models       Model[]
+
+  @@map("categories")
+}
+
+model Brand {
+  id         Int             @id @default(autoincrement())
+  name       String
+  slug       String          @unique
+  logoUrl    String?         @map("logo_url")
+  isActive   Boolean         @default(true) @map("is_active")
+  ads        Ad[]
+  categories CategoryBrand[]
+  models     Model[]
+
+  @@map("brands")
+}
+
+model CategoryBrand {
+  categoryId Int      @map("category_id")
+  brandId    Int      @map("brand_id")
+  brand      Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([categoryId, brandId])
+  @@map("category_brands")
+}
+
+model Model {
+  id         Int       @id @default(autoincrement())
+  brandId    Int       @map("brand_id")
+  categoryId Int       @map("category_id")
+  name       String
+  slug       String
+  isActive   Boolean   @default(true) @map("is_active")
+  ads        Ad[]
+  brand      Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  variants   Variant[]
+
+  @@unique([brandId, categoryId, slug])
+  @@map("models")
+}
+
+model Variant {
+  id             Int     @id @default(autoincrement())
+  modelId        Int     @map("model_id")
+  name           String
+  slug           String
+  specifications Json?
+  isActive       Boolean @default(true) @map("is_active")
+  ads            Ad[]
+  model          Model   @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, slug])
+  @@map("variants")
+}
+
+model Ad {
+  id               Int               @id @default(autoincrement())
+  userId           Int               @map("user_id")
+  categoryId       Int               @map("category_id")
+  brandId          Int?              @map("brand_id")
+  modelId          Int?              @map("model_id")
+  variantId        Int?              @map("variant_id")
+  title            String
+  description      String?
+  price            Decimal?          @db.Decimal(12, 2)
+  year             Int?
+  mileage          Int?
+  location         String?
+  latitude         Float?
+  longitude        Float?
+  status           AdStatus          @default(PENDING)
+  viewCount        Int               @default(0) @map("view_count")
+  isPromoted       Boolean           @default(false) @map("is_promoted")
+  promotedUntil    DateTime?         @map("promoted_until")
+  customFields     Json?             @map("custom_fields")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  chassisType      ChassisType?      @map("chassis_type")
+  cityId           Int?              @map("city_id")
+  color            String?
+  detailFeatures   Json?             @map("detail_features")
+  districtId       Int?              @map("district_id")
+  driveType        DriveType?        @map("drive_type")
+  engineCapacity   String?           @map("engine_capacity")
+  fuelType         FuelType?         @map("fuel_type")
+  isExchangeable   Boolean?          @map("is_exchangeable")
+  plateNumber      String?           @map("plate_number")
+  plateType        PlateType?        @map("plate_type")
+  roofType         RoofType?         @map("roof_type")
+  seatCount        String?           @map("seat_count")
+  transmissionType TransmissionType? @map("transmission_type")
+  vehicleCondition VehicleCondition? @map("vehicle_condition")
+  images           AdImage[]
+  brand            Brand?            @relation(fields: [brandId], references: [id])
+  category         Category          @relation(fields: [categoryId], references: [id])
+  city             City?             @relation(fields: [cityId], references: [id])
+  district         District?         @relation(fields: [districtId], references: [id])
+  model            Model?            @relation(fields: [modelId], references: [id])
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variant          Variant?          @relation(fields: [variantId], references: [id])
+  complaints       Complaint[]
+  favorites        Favorite[]
+  messages         Message[]
+  pendingAd        PendingAd?
+
+  @@map("ads")
+}
+
+model AdImage {
+  id           Int     @id @default(autoincrement())
+  adId         Int     @map("ad_id")
+  imageUrl     String  @map("image_url")
+  isPrimary    Boolean @default(false) @map("is_primary")
+  displayOrder Int     @map("display_order")
+  altText      String? @map("alt_text")
+  ad           Ad      @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("ad_images")
+}
+
+model AdFormField {
+  id           Int      @id @default(autoincrement())
+  categoryId   Int      @map("category_id")
+  fieldName    String   @map("field_name")
+  fieldType    String   @map("field_type")
+  fieldLabel   String   @map("field_label")
+  isRequired   Boolean  @default(false) @map("is_required")
+  options      Json?
+  validation   Json?
+  displayOrder Int      @map("display_order")
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("ad_form_fields")
+}
+
+model PendingAd {
+  id         Int       @id @default(autoincrement())
+  adId       Int       @unique @map("ad_id")
+  adminNotes String?   @map("admin_notes")
+  reviewedBy Int?      @map("reviewed_by")
+  reviewedAt DateTime? @map("reviewed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  ad         Ad        @relation(fields: [adId], references: [id], onDelete: Cascade)
+  reviewer   User?     @relation("ReviewedByAdmin", fields: [reviewedBy], references: [id])
+
+  @@map("pending_ads")
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  senderId   Int      @map("sender_id")
+  receiverId Int      @map("receiver_id")
+  adId       Int?     @map("ad_id")
+  content    String
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
+  ad         Ad?      @relation(fields: [adId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  adId      Int      @map("ad_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  ad        Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, adId])
+  @@map("favorites")
+}
+
+model Complaint {
+  id            Int             @id @default(autoincrement())
+  adId          Int             @map("ad_id")
+  userId        Int             @map("user_id")
+  reason        String
+  description   String?
+  status        ComplaintStatus @default(OPEN)
+  adminResponse String?         @map("admin_response")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  ad            Ad              @relation(fields: [adId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("complaints")
+}
+
+model Feedback {
+  id            Int            @id @default(autoincrement())
+  userId        Int            @map("user_id")
+  subject       String
+  content       String
+  status        FeedbackStatus @default(OPEN)
+  adminResponse String?        @map("admin_response")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
+}
+
+model AdminLog {
+  id              Int      @id @default(autoincrement())
+  adminId         Int      @map("admin_id")
+  adminEmail      String   @map("admin_email")
+  action          String
+  targetUserId    Int?     @map("target_user_id")
+  targetUserEmail String?  @map("target_user_email")
+  details         String?
+  ipAddress       String?  @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  createdAt       DateTime @default(now()) @map("created_at")
+  admin           User     @relation("AdminLogs", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("admin_logs")
+}
+
+model City {
+  id        Int        @id @default(autoincrement())
+  name      String
+  plateCode String     @unique @map("plate_code")
+  isActive  Boolean    @default(true) @map("is_active")
+  ads       Ad[]
+  districts District[]
+
+  @@map("cities")
+}
+
+model District {
+  id       Int     @id @default(autoincrement())
+  cityId   Int     @map("city_id")
+  name     String
+  isActive Boolean @default(true) @map("is_active")
+  ads      Ad[]
+  city     City    @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@map("districts")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false) @map("is_read")
+  relatedId Int?     @map("related_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }
 
 enum UserRole {
@@ -26,6 +329,47 @@ enum AdStatus {
   EXPIRED
 }
 
+enum VehicleCondition {
+  NEW
+  USED
+  IMPORTED
+}
+
+enum DriveType {
+  FRONT_WHEEL_DRIVE
+  REAR_WHEEL_DRIVE
+  ALL_WHEEL_DRIVE
+  REAR_WHEEL_ELECTRONIC
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+}
+
+enum FuelType {
+  GASOLINE
+  GASOLINE_LPG
+  DIESEL
+}
+
+enum RoofType {
+  NORMAL
+  HIGH
+}
+
+enum ChassisType {
+  SHORT
+  MEDIUM
+  LONG
+  EXTRA_LONG
+}
+
+enum PlateType {
+  TR_PLATE
+  MA_PLATE
+}
+
 enum ComplaintStatus {
   OPEN
   IN_REVIEW
@@ -37,285 +381,4 @@ enum FeedbackStatus {
   OPEN
   REVIEWED
   RESPONDED
-}
-
-model User {
-  id              Int       @id @default(autoincrement())
-  email           String    @unique
-  passwordHash    String    @map("password_hash")
-  firstName       String?   @map("first_name")
-  lastName        String?   @map("last_name")
-  phone           String?
-  role            UserRole  @default(USER)
-  isVerified      Boolean   @default(false) @map("is_verified")
-  isActive        Boolean   @default(true) @map("is_active")
-  companyName     String?   @map("company_name")
-  taxId           String?   @map("tax_id")
-  tradeRegistryNo String?   @map("trade_registry_no")
-  address         String?
-  city            String?
-  country         String?
-  profileImageUrl String?   @map("profile_image_url")
-  kvkkAccepted    Boolean   @default(false) @map("kvkk_accepted")
-  kvkkAcceptedAt  DateTime? @map("kvkk_accepted_at")
-  lastLoginAt     DateTime? @map("last_login_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  ads         Ad[]
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
-  favorites        Favorite[]
-  complaints       Complaint[]
-  feedback         Feedback[]
-  reviewedAds      PendingAd[] @relation("ReviewedByAdmin")
-  adminLogs        AdminLog[] @relation("AdminLogs")
-
-  @@map("users")
-}
-
-model Category {
-  id           Int     @id @default(autoincrement())
-  name         String
-  slug         String  @unique
-  iconUrl      String? @map("icon_url")
-  displayOrder Int     @map("display_order")
-  isActive     Boolean @default(true) @map("is_active")
-  description  String?
-
-  // Relations
-  brands       CategoryBrand[]
-  models       Model[]
-  ads          Ad[]
-  formFields   AdFormField[]
-
-  @@map("categories")
-}
-
-model Brand {
-  id      Int     @id @default(autoincrement())
-  name    String
-  slug    String  @unique
-  logoUrl String? @map("logo_url")
-  isActive Boolean @default(true) @map("is_active")
-
-  // Relations
-  categories CategoryBrand[]
-  models     Model[]
-  ads        Ad[]
-
-  @@map("brands")
-}
-
-model CategoryBrand {
-  categoryId Int @map("category_id")
-  brandId    Int @map("brand_id")
-
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  brand    Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
-
-  @@id([categoryId, brandId])
-  @@map("category_brands")
-}
-
-model Model {
-  id         Int     @id @default(autoincrement())
-  brandId    Int     @map("brand_id")
-  categoryId Int     @map("category_id")
-  name       String
-  slug       String
-  isActive   Boolean @default(true) @map("is_active")
-
-  // Relations
-  brand    Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  variants Variant[]
-  ads      Ad[]
-
-  @@unique([brandId, categoryId, slug])
-  @@map("models")
-}
-
-model Variant {
-  id            Int     @id @default(autoincrement())
-  modelId       Int     @map("model_id")
-  name          String
-  slug          String
-  specifications Json?
-  isActive      Boolean @default(true) @map("is_active")
-
-  // Relations
-  model Model @relation(fields: [modelId], references: [id], onDelete: Cascade)
-  ads   Ad[]
-
-  @@unique([modelId, slug])
-  @@map("variants")
-}
-
-model Ad {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
-  categoryId  Int      @map("category_id")
-  brandId     Int?     @map("brand_id")
-  modelId     Int?     @map("model_id")
-  variantId   Int?     @map("variant_id")
-  title       String
-  description String?
-  price       Decimal? @db.Decimal(12, 2)
-  year        Int?
-  mileage     Int?
-  location    String?
-  latitude    Float?
-  longitude   Float?
-  status      AdStatus @default(PENDING)
-  viewCount   Int      @default(0) @map("view_count")
-  isPromoted  Boolean  @default(false) @map("is_promoted")
-  promotedUntil DateTime? @map("promoted_until")
-  customFields Json?   @map("custom_fields")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category  Category   @relation(fields: [categoryId], references: [id])
-  brand     Brand?     @relation(fields: [brandId], references: [id])
-  model     Model?     @relation(fields: [modelId], references: [id])
-  variant   Variant?   @relation(fields: [variantId], references: [id])
-  images    AdImage[]
-  messages  Message[]
-  favorites Favorite[]
-  complaints Complaint[]
-  pendingAd PendingAd?
-
-  @@map("ads")
-}
-
-model AdImage {
-  id           Int     @id @default(autoincrement())
-  adId         Int     @map("ad_id")
-  imageUrl     String  @map("image_url")
-  isPrimary    Boolean @default(false) @map("is_primary")
-  displayOrder Int     @map("display_order")
-  altText      String? @map("alt_text")
-
-  // Relations
-  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
-
-  @@map("ad_images")
-}
-
-model AdFormField {
-  id         Int     @id @default(autoincrement())
-  categoryId Int     @map("category_id")
-  fieldName  String  @map("field_name")
-  fieldType  String  @map("field_type")
-  fieldLabel String  @map("field_label")
-  isRequired Boolean @default(false) @map("is_required")
-  options    Json?
-  validation Json?
-  displayOrder Int   @map("display_order")
-
-  // Relations
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@map("ad_form_fields")
-}
-
-model PendingAd {
-  id         Int       @id @default(autoincrement())
-  adId       Int       @unique @map("ad_id")
-  adminNotes String?   @map("admin_notes")
-  reviewedBy Int?      @map("reviewed_by")
-  reviewedAt DateTime? @map("reviewed_at")
-  createdAt  DateTime  @default(now()) @map("created_at")
-
-  // Relations
-  ad       Ad   @relation(fields: [adId], references: [id], onDelete: Cascade)
-  reviewer User? @relation("ReviewedByAdmin", fields: [reviewedBy], references: [id])
-
-  @@map("pending_ads")
-}
-
-model Message {
-  id         Int      @id @default(autoincrement())
-  senderId   Int      @map("sender_id")
-  receiverId Int      @map("receiver_id")
-  adId       Int?     @map("ad_id")
-  content    String
-  isRead     Boolean  @default(false) @map("is_read")
-  createdAt  DateTime @default(now()) @map("created_at")
-
-  // Relations
-  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
-  ad       Ad?  @relation(fields: [adId], references: [id], onDelete: SetNull)
-
-  @@map("messages")
-}
-
-model Favorite {
-  id     Int @id @default(autoincrement())
-  userId Int @map("user_id")
-  adId   Int @map("ad_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ad   Ad   @relation(fields: [adId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, adId])
-  @@map("favorites")
-}
-
-model Complaint {
-  id        Int             @id @default(autoincrement())
-  adId      Int             @map("ad_id")
-  userId    Int             @map("user_id")
-  reason    String
-  description String?
-  status    ComplaintStatus @default(OPEN)
-  adminResponse String?     @map("admin_response")
-  createdAt DateTime        @default(now()) @map("created_at")
-  updatedAt DateTime        @updatedAt @map("updated_at")
-
-  // Relations
-  ad   Ad   @relation(fields: [adId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("complaints")
-}
-
-model Feedback {
-  id          Int            @id @default(autoincrement())
-  userId      Int            @map("user_id")
-  subject     String
-  content     String
-  status      FeedbackStatus @default(OPEN)
-  adminResponse String?      @map("admin_response")
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("feedback")
-}
-
-model AdminLog {
-  id              Int      @id @default(autoincrement())
-  adminId         Int      @map("admin_id")
-  adminEmail      String   @map("admin_email")
-  action          String
-  targetUserId    Int?     @map("target_user_id")
-  targetUserEmail String?  @map("target_user_email")
-  details         String?
-  ipAddress       String?  @map("ip_address")
-  userAgent       String?  @map("user_agent")
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  // Relations
-  admin User @relation("AdminLogs", fields: [adminId], references: [id], onDelete: Cascade)
-
-  @@map("admin_logs")
 }

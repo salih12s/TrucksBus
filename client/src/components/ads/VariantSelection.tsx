@@ -103,15 +103,10 @@ const VariantSelection: React.FC = () => {
   );
 
   const handleVariantSelect = (variantSlug: string) => {
-    // Navigate to create ad form with pre-selected category, brand, model, variant
-    navigate("/create-ad", {
-      state: {
-        selectedCategory: category,
-        selectedBrand: brand,
-        selectedModel: model,
-        selectedVariant: variants.find((v) => v.slug === variantSlug),
-      },
-    });
+    // Tüm kategoriler için özel form sayfasına yönlendir
+    navigate(
+      `/categories/${categorySlug}/brands/${brandSlug}/models/${modelSlug}/variants/${variantSlug}/create-ad`
+    );
   };
 
   const handleBackToModels = () => {

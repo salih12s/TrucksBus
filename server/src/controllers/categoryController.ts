@@ -245,7 +245,7 @@ export const createModel = async (req: Request, res: Response) => {
         slug,
         brandId: parseInt(brandId),
         categoryId: parseInt(categoryId),
-      },
+      } as any,
       include: {
         brand: true,
       },
