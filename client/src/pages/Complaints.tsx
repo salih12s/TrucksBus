@@ -26,10 +26,14 @@ import {
   Visibility as ViewIcon,
   Refresh as RefreshIcon,
   Close as CloseIcon,
+  ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import { feedbackAPI, type Feedback } from "../api/feedback";
+import Header from "../components/layout/Header";
 
 const Complaints: React.FC = () => {
+  const navigate = useNavigate();
   const [complaints, setComplaints] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,18 +175,29 @@ const Complaints: React.FC = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: 3,
-        }}
-      >
-        <Typography variant="h4" component="h1">
-          Şikayetlerim
-        </Typography>
+    <Box>
+      <Header />
+      <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <IconButton
+              onClick={() => navigate(-1)}
+              sx={{ mr: 1 }}
+              color="primary"
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant="h4" component="h1">
+              Şikayetlerim
+            </Typography>
+          </Box>
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
@@ -367,6 +382,7 @@ const Complaints: React.FC = () => {
           </>
         )}
       </Dialog>
+      </Box>
     </Box>
   );
 };
