@@ -523,15 +523,92 @@ export const createMinibusAd = async (req: Request, res: Response) => {
         },
         status: "PENDING",
       },
+    });
+
+    // Resim yükleme işlemi
+    const files = req.files as any;
+    if (files) {
+      console.log("📷 Resimler yükleniyor:", Object.keys(files));
+
+      const imagePromises = [];
+      let displayOrder = 0;
+
+      // Vitrin resmi önce işle
+      if (files.showcasePhoto) {
+        const showcaseFile = Array.isArray(files.showcasePhoto)
+          ? files.showcasePhoto[0]
+          : files.showcasePhoto;
+
+        const imageUrl = `/uploads/${showcaseFile.filename}`;
+        console.log("📷 Vitrin resmi:", imageUrl);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl,
+              isPrimary: true,
+              displayOrder: 0,
+              altText: `${title} - Vitrin Resmi`,
+            },
+          })
+        );
+        displayOrder = 1;
+      }
+
+      // Diğer resimleri işle
+      for (const key in files) {
+        if (key.startsWith("photo_")) {
+          const file = Array.isArray(files[key]) ? files[key][0] : files[key];
+          const imageUrl = `/uploads/${file.filename}`;
+
+          console.log(`📷 Resim ${displayOrder}:`, imageUrl);
+
+          imagePromises.push(
+            prisma.adImage.create({
+              data: {
+                adId: ad.id,
+                imageUrl,
+                isPrimary: false,
+                displayOrder,
+                altText: `${title} - Resim ${displayOrder}`,
+              },
+            })
+          );
+          displayOrder++;
+        }
+      }
+
+      // Tüm resimleri kaydet
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
+      }
+    }
+
+    // Oluşturulan ilanı resimlerle birlikte getir
+    const createdAd = await prisma.ad.findUnique({
+      where: { id: ad.id },
       include: {
         category: true,
-        user: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
       },
     });
 
     return res.status(201).json({
-      message: "İlan başarıyla oluşturuldu ve onay bekliyor",
-      ad,
+      message: "Minibüs ilanı başarıyla oluşturuldu ve onay bekliyor",
+      ad: createdAd,
     });
   } catch (error: any) {
     console.error("İlan oluşturma hatası detayı:", {
@@ -651,9 +728,94 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       },
     });
 
+    console.log("✅ Çekici ilanı oluşturuldu, ID:", ad.id);
+
+    // Resim yükleme işlemleri
+    const files = req.files as {
+      [fieldname: string]: Express.Multer.File | Express.Multer.File[];
+    };
+    console.log("📂 Yüklenen dosyalar:", files);
+
+    if (files && Object.keys(files).length > 0) {
+      const imagePromises: any[] = [];
+      let displayOrder = 0;
+
+      // Önce vitrin resmi (showcasePhoto) varsa işle
+      if (files.showcasePhoto) {
+        const showcaseFile = Array.isArray(files.showcasePhoto)
+          ? files.showcasePhoto[0]
+          : files.showcasePhoto;
+        const showcaseImageUrl = `/uploads/${showcaseFile.filename}`;
+
+        console.log("🖼️ Vitrin resmi:", showcaseImageUrl);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: showcaseImageUrl,
+              isPrimary: true,
+              displayOrder: 0,
+              altText: `${title} - Vitrin Resmi`,
+            },
+          })
+        );
+        displayOrder = 1;
+      }
+
+      // Diğer resimleri işle
+      for (const key in files) {
+        if (key.startsWith("photo_")) {
+          const file = Array.isArray(files[key]) ? files[key][0] : files[key];
+          const imageUrl = `/uploads/${file.filename}`;
+
+          console.log(`📷 Resim ${displayOrder}:`, imageUrl);
+
+          imagePromises.push(
+            prisma.adImage.create({
+              data: {
+                adId: ad.id,
+                imageUrl,
+                isPrimary: false,
+                displayOrder,
+                altText: `${title} - Resim ${displayOrder}`,
+              },
+            })
+          );
+          displayOrder++;
+        }
+      }
+
+      // Tüm resimleri kaydet
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
+      }
+    }
+
+    // Oluşturulan ilanı resimlerle birlikte getir
+    const createdAd = await prisma.ad.findUnique({
+      where: { id: ad.id },
+      include: {
+        category: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+    });
+
     return res.status(201).json({
       message: "Çekici ilanı başarıyla oluşturuldu ve onay bekliyor",
-      ad,
+      ad: createdAd,
     });
   } catch (error: any) {
     console.error("Çekici ilanı oluşturma hatası detayı:", {
@@ -732,12 +894,12 @@ export const getPendingAds = async (req: Request, res: Response) => {
       },
       orderBy: { createdAt: "desc" },
     });
-    
+
     console.log("Pending ads fetched:", pendingAds.length);
     if (pendingAds.length > 0) {
       console.log("Sample ad fields:", Object.keys(pendingAds[0]));
     }
-    
+
     res.json(pendingAds);
   } catch (error) {
     console.error("Onay bekleyen ilanlar hatası:", error);
@@ -903,9 +1065,94 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       },
     });
 
+    console.log("✅ Kamyon ilanı oluşturuldu, ID:", ad.id);
+
+    // Resim yükleme işlemleri
+    const files = req.files as {
+      [fieldname: string]: Express.Multer.File | Express.Multer.File[];
+    };
+    console.log("📂 Yüklenen dosyalar:", files);
+
+    if (files && Object.keys(files).length > 0) {
+      const imagePromises: any[] = [];
+      let displayOrder = 0;
+
+      // Önce vitrin resmi (showcasePhoto) varsa işle
+      if (files.showcasePhoto) {
+        const showcaseFile = Array.isArray(files.showcasePhoto)
+          ? files.showcasePhoto[0]
+          : files.showcasePhoto;
+        const showcaseImageUrl = `/uploads/${showcaseFile.filename}`;
+
+        console.log("🖼️ Vitrin resmi:", showcaseImageUrl);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: showcaseImageUrl,
+              isPrimary: true,
+              displayOrder: 0,
+              altText: `${title} - Vitrin Resmi`,
+            },
+          })
+        );
+        displayOrder = 1;
+      }
+
+      // Diğer resimleri işle
+      for (const key in files) {
+        if (key.startsWith("photo_")) {
+          const file = Array.isArray(files[key]) ? files[key][0] : files[key];
+          const imageUrl = `/uploads/${file.filename}`;
+
+          console.log(`📷 Resim ${displayOrder}:`, imageUrl);
+
+          imagePromises.push(
+            prisma.adImage.create({
+              data: {
+                adId: ad.id,
+                imageUrl,
+                isPrimary: false,
+                displayOrder,
+                altText: `${title} - Resim ${displayOrder}`,
+              },
+            })
+          );
+          displayOrder++;
+        }
+      }
+
+      // Tüm resimleri kaydet
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
+      }
+    }
+
+    // Oluşturulan ilanı resimlerle birlikte getir
+    const createdAd = await prisma.ad.findUnique({
+      where: { id: ad.id },
+      include: {
+        category: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+    });
+
     return res.status(201).json({
       message: "Kamyon ilanı başarıyla oluşturuldu ve onay bekliyor",
-      ad,
+      ad: createdAd,
     });
   } catch (error: any) {
     console.error("Kamyon ilanı oluşturma hatası detayı:", {
@@ -1026,34 +1273,94 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       },
     });
 
-    // Fotoğraf işleme
-    const files = req.files as Express.Multer.File[];
-    if (files && files.length > 0) {
-      console.log(`📷 ${files.length} fotoğraf yükleniyor...`);
+    console.log("✅ Otobüs ilanı oluşturuldu, ID:", ad.id);
 
-      const imagePromises = files.map((file, index) => {
-        const isShowcase = file.fieldname === "showcasePhoto";
+    // Resim yükleme işlemleri
+    const files = req.files as {
+      [fieldname: string]: Express.Multer.File | Express.Multer.File[];
+    };
+    console.log("📂 Yüklenen dosyalar:", files);
 
-        return prisma.adImage.create({
-          data: {
-            adId: ad.id,
-            imageUrl: `/uploads/${file.filename}`,
-            isPrimary: isShowcase,
-            displayOrder: isShowcase ? 0 : index + 1,
-            altText: `${title} - ${isShowcase ? "Vitrin" : "Fotoğraf"} ${
-              index + 1
-            }`,
-          },
-        });
-      });
+    if (files && Object.keys(files).length > 0) {
+      const imagePromises: any[] = [];
+      let displayOrder = 0;
 
-      await Promise.all(imagePromises);
-      console.log("✅ Tüm fotoğraflar başarıyla kaydedildi");
+      // Önce vitrin resmi (showcasePhoto) varsa işle
+      if (files.showcasePhoto) {
+        const showcaseFile = Array.isArray(files.showcasePhoto)
+          ? files.showcasePhoto[0]
+          : files.showcasePhoto;
+        const showcaseImageUrl = `/uploads/${showcaseFile.filename}`;
+
+        console.log("🖼️ Vitrin resmi:", showcaseImageUrl);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: showcaseImageUrl,
+              isPrimary: true,
+              displayOrder: 0,
+              altText: `${title} - Vitrin Resmi`,
+            },
+          })
+        );
+        displayOrder = 1;
+      }
+
+      // Diğer resimleri işle
+      for (const key in files) {
+        if (key.startsWith("photo_")) {
+          const file = Array.isArray(files[key]) ? files[key][0] : files[key];
+          const imageUrl = `/uploads/${file.filename}`;
+
+          console.log(`📷 Resim ${displayOrder}:`, imageUrl);
+
+          imagePromises.push(
+            prisma.adImage.create({
+              data: {
+                adId: ad.id,
+                imageUrl,
+                isPrimary: false,
+                displayOrder,
+                altText: `${title} - Resim ${displayOrder}`,
+              },
+            })
+          );
+          displayOrder++;
+        }
+      }
+
+      // Tüm resimleri kaydet
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
+      }
     }
+
+    // Oluşturulan ilanı resimlerle birlikte getir
+    const createdAd = await prisma.ad.findUnique({
+      where: { id: ad.id },
+      include: {
+        category: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+    });
 
     return res.status(201).json({
       message: "Otobüs ilanı başarıyla oluşturuldu ve onay bekliyor",
-      ad,
+      ad: createdAd,
     });
   } catch (error: any) {
     console.error("Otobüs ilanı oluşturma hatası detayı:", {

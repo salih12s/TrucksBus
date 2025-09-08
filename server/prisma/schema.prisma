@@ -336,6 +336,7 @@ enum VehicleCondition {
   NEW
   USED
   IMPORTED
+  DAMAGED
 }
 
 enum DriveType {
@@ -348,12 +349,15 @@ enum DriveType {
 enum TransmissionType {
   MANUAL
   AUTOMATIC
+  SEMI_AUTOMATIC
 }
 
 enum FuelType {
   GASOLINE
   GASOLINE_LPG
   DIESEL
+  ELECTRIC
+  HYBRID
 }
 
 enum RoofType {
@@ -370,6 +374,7 @@ enum ChassisType {
 
 enum PlateType {
   TR_PLATE
+  BLUE_PLATE
   MA_PLATE
 }
 
