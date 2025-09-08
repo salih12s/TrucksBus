@@ -314,7 +314,7 @@ const OtobusAdForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Temel bilgileri ekle
+      // Temel bilgileri ekle (price ve mileage'ı parse ederek)
       Object.entries(formData).forEach(([key, value]) => {
         if (
           key !== "photos" &&
@@ -323,7 +323,15 @@ const OtobusAdForm: React.FC = () => {
           value !== null &&
           value !== undefined
         ) {
-          submitData.append(key, value.toString());
+          // Price ve mileage değerlerini parse et
+          if (key === "price" || key === "mileage") {
+            const parsedValue = parseFormattedNumber(value.toString());
+            if (parsedValue) {
+              submitData.append(key, parsedValue);
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
@@ -334,10 +342,7 @@ const OtobusAdForm: React.FC = () => {
       submitData.append("variantSlug", variantSlug || "");
 
       // Detay özelliklerini JSON olarak ekle (backend "features" bekliyor)
-      submitData.append(
-        "features",
-        JSON.stringify(formData.detailFeatures)
-      );
+      submitData.append("features", JSON.stringify(formData.detailFeatures));
 
       // Diğer özel alanları ekle
       submitData.append("seatBackScreen", formData.seatBackScreen);

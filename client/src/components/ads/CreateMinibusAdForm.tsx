@@ -320,7 +320,7 @@ const CreateMinibusAdForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Temel bilgileri ekle
+      // Temel bilgileri ekle (price ve mileage'ı parse ederek)
       Object.entries(formData).forEach(([key, value]) => {
         if (
           key !== "photos" &&
@@ -328,7 +328,15 @@ const CreateMinibusAdForm: React.FC = () => {
           key !== "detailFeatures" &&
           value
         ) {
-          submitData.append(key, value.toString());
+          // Price ve mileage değerlerini parse et
+          if (key === "price" || key === "mileage") {
+            const parsedValue = parseFormattedNumber(value.toString());
+            if (parsedValue) {
+              submitData.append(key, parsedValue);
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
@@ -338,11 +346,8 @@ const CreateMinibusAdForm: React.FC = () => {
       submitData.append("modelSlug", modelSlug || "");
       submitData.append("variantSlug", variantSlug || "");
 
-      // Detay özelliklerini JSON olarak ekle
-      submitData.append(
-        "detailFeatures",
-        JSON.stringify(formData.detailFeatures)
-      );
+      // Detay özelliklerini JSON olarak ekle (backend "features" bekliyor)
+      submitData.append("features", JSON.stringify(formData.detailFeatures));
 
       // Fotoğrafları ekle
       if (formData.showcasePhoto) {

@@ -414,13 +414,14 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       plateNumber,
       cityId,
       districtId,
+      address,
       detailedInfo,
       categorySlug,
       brandSlug,
       modelSlug,
       variantSlug,
       // Detay bilgiler
-      detailFeatures,
+      features,
     } = req.body;
 
     // Enum değerlerini dönüştür
@@ -467,15 +468,13 @@ export const createMinibusAd = async (req: Request, res: Response) => {
 
     // Detay özelliklerini JSON olarak hazırla
     let detailFeaturesJson = null;
-    if (detailFeatures) {
+    if (features) {
       try {
         detailFeaturesJson =
-          typeof detailFeatures === "string"
-            ? JSON.parse(detailFeatures)
-            : detailFeatures;
+          typeof features === "string" ? JSON.parse(features) : features;
       } catch (parseError) {
         console.error("JSON parse error:", parseError);
-        detailFeaturesJson = detailFeatures; // Fallback
+        detailFeaturesJson = features; // Fallback
       }
     }
 
@@ -516,6 +515,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
           exchange: exchange || null,
           plateType: plateType || null,
           plateNumber: plateNumber || null,
+          address: address || null,
           detailedInfo: detailedInfo || null,
           detailFeatures: detailFeaturesJson || null,
           cityId: cityId ? parseInt(cityId) : null,
@@ -806,14 +806,22 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       fuelType,
       transmission,
       motorPower,
-      gearCount,
-      vehicleType,
-      suspension,
+      drivetrain,
+      loadCapacity,
+      cabin,
+      tireCondition,
+      superstructure,
+      exchange,
       plateType,
       plateNumber,
       cityId,
       districtId,
+      address,
       detailedInfo,
+      categorySlug,
+      brandSlug,
+      modelSlug,
+      variantSlug,
       features,
     } = req.body;
 
@@ -855,11 +863,15 @@ export const createKamyonAd = async (req: Request, res: Response) => {
           fuelType: fuelType || null,
           transmission: transmission || null,
           motorPower: motorPower || null,
-          gearCount: gearCount || null,
-          vehicleType: vehicleType || null,
-          suspension: suspension || null,
+          drivetrain: drivetrain || null,
+          loadCapacity: loadCapacity || null,
+          cabin: cabin || null,
+          tireCondition: tireCondition || null,
+          superstructure: superstructure || null,
+          exchange: exchange || null,
           plateType: plateType || null,
           plateNumber: plateNumber || null,
+          address: address || null,
           cityId: cityId ? parseInt(cityId) : null,
           districtId: districtId ? parseInt(districtId) : null,
           detailedInfo: detailedInfo || null,
@@ -1003,14 +1015,16 @@ export const createOtobusAd = async (req: Request, res: Response) => {
 
       const imagePromises = files.map((file, index) => {
         const isShowcase = file.fieldname === "showcasePhoto";
-        
+
         return prisma.adImage.create({
           data: {
             adId: ad.id,
             imageUrl: `/uploads/${file.filename}`,
             isPrimary: isShowcase,
             displayOrder: isShowcase ? 0 : index + 1,
-            altText: `${title} - ${isShowcase ? "Vitrin" : "Fotoğraf"} ${index + 1}`,
+            altText: `${title} - ${isShowcase ? "Vitrin" : "Fotoğraf"} ${
+              index + 1
+            }`,
           },
         });
       });

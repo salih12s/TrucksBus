@@ -373,7 +373,7 @@ const KamyonAdForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Temel bilgileri ekle
+      // Temel bilgileri ekle (price ve mileage'ı parse ederek)
       Object.entries(formData).forEach(([key, value]) => {
         if (
           key !== "photos" &&
@@ -381,7 +381,15 @@ const KamyonAdForm: React.FC = () => {
           key !== "detailFeatures" &&
           value
         ) {
-          submitData.append(key, value.toString());
+          // Price ve mileage değerlerini parse et
+          if (key === "price" || key === "mileage") {
+            const parsedValue = parseFormattedNumber(value.toString());
+            if (parsedValue) {
+              submitData.append(key, parsedValue);
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 

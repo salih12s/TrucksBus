@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Container,
-  Paper,
   Typography,
   TextField,
   Button,
@@ -20,11 +19,17 @@ import {
   DialogContent,
   DialogActions,
   Alert,
-  Stepper,
-  Step,
-  StepLabel,
 } from "@mui/material";
-import { CheckCircle, CloudUpload, PhotoCamera } from "@mui/icons-material";
+import {
+  CheckCircle,
+  CloudUpload,
+  PhotoCamera,
+  EditNote,
+  Build,
+  LocationOn,
+  Star,
+  CameraAlt,
+} from "@mui/icons-material";
 import apiClient from "../../api/client";
 import Header from "../layout/Header";
 
@@ -73,134 +78,60 @@ interface FormData {
   detailedInfo: string;
 
   // Fotoğraflar
-  photos: File[];
   showcasePhoto: File | null;
+  photos: File[];
 
   // Özellikler
   features: {
-    // Güvenlik
     abs: boolean;
     esp: boolean;
     asr: boolean;
+    alarm: boolean;
     ebv: boolean;
     airBag: boolean;
     sideAirbag: boolean;
     passengerAirbag: boolean;
     centralLock: boolean;
-    alarm: boolean;
     immobilizer: boolean;
-    laneKeepAssist: boolean;
-    cruiseControl: boolean;
-    hillStartAssist: boolean;
-    adr: boolean;
-    retarder: boolean;
-    pto: boolean;
-
-    // Sensör & Aydınlatma
     headlightSensor: boolean;
     headlightWasher: boolean;
     rainSensor: boolean;
-    xenonHeadlight: boolean;
-    fogLight: boolean;
-
-    // Konfor & İç Mekân
+    pto: boolean;
+    cruiseControl: boolean;
     airCondition: boolean;
-    electricWindow: boolean;
-    electricMirror: boolean;
-    powerSteering: boolean;
-    leatherSeat: boolean;
-    heatedSeats: boolean;
-    memorySeats: boolean;
-    sunroof: boolean;
     alloyWheel: boolean;
+    cd: boolean;
     towHook: boolean;
+    leatherSeat: boolean;
+    electricMirror: boolean;
+    electricWindow: boolean;
+    fogLight: boolean;
+    heatedSeats: boolean;
+    powerSteering: boolean;
+    memorySeats: boolean;
+    retarder: boolean;
     spoiler: boolean;
+    sunroof: boolean;
+    radio: boolean;
+    gps: boolean;
+    tripComputer: boolean;
     windDeflector: boolean;
     table: boolean;
     flexibleReadingLight: boolean;
-
-    // Multimedya & Sürüş Bilgi
-    radio: boolean;
-    cd: boolean;
-    bluetooth: boolean;
-    gps: boolean;
-    tripComputer: boolean;
-
-    // Park & Görüntüleme
-    camera: boolean;
-    parkingSensor: boolean;
   };
 }
 
-// Renk seçenekleri
-const colorOptions = [
-  "Beyaz",
-  "Siyah",
-  "Gri",
-  "Gümüş",
-  "Mavi",
-  "Kırmızı",
-  "Yeşil",
-  "Sarı",
-  "Turuncu",
-  "Mor",
-  "Kahverengi",
-  "Altın",
-  "Bronz",
-  "Pembe",
-  "Turkuaz",
-  "Bordo",
-  "Lacivert",
-  "Bej",
-];
-
-// Motor gücü seçenekleri
-const enginePowerOptions = [
-  "100 hp ye kadar",
-  "101 - 125 hp",
-  "126 - 150 hp",
-  "151 - 175 hp",
-  "176 - 200 hp",
-  "201 - 225 hp",
-  "226 - 250 hp",
-  "251 - 275 hp",
-  "276 - 300 hp",
-  "301 - 325 hp",
-  "326 - 350 hp",
-  "351 - 375 hp",
-  "376 - 400 hp",
-  "401 - 425 hp",
-  "426 - 450 hp",
-  "451 - 475 hp",
-  "476 - 500 hp",
-  "501 hp ve üzeri",
-];
-
-// Motor hacmi seçenekleri
-const engineCapacityOptions = [
-  "1300 cm3' e kadar",
-  "1301 - 1600 cm3",
-  "1601 - 1800 cm3",
-  "1801 - 2000 cm3",
-  "2001 - 2500 cm3",
-  "2501 - 3000 cm3",
-  "3001 - 3500 cm3",
-  "3501 - 4000 cm3",
-  "4001 - 4500 cm3",
-  "4501 - 5000 cm3",
-  "5001 cm3 ve üzeri",
+// Yatak sayısı seçenekleri
+const bedCountOptions = [
+  { label: "Yok", value: "yok" },
+  { label: "1 Yatak", value: "1" },
+  { label: "2 Yatak", value: "2" },
+  { label: "3 Yatak", value: "3" },
+  { label: "4 Yatak", value: "4" },
 ];
 
 // Kabin tipi seçenekleri
 const cabinTypeOptions = ["Çift Kabin", "Yüksek", "Normal"];
-
-const steps = [
-  "Araç Bilgileri",
-  "Teknik Özellikler",
-  "Özellikler",
-  "Fotoğraflar",
-  "İletişim & Fiyat",
-];
 
 const CekiciAdForm: React.FC = () => {
   const navigate = useNavigate();
@@ -210,7 +141,6 @@ const CekiciAdForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
 
   const [formData, setFormData] = useState<FormData>({
     // Temel bilgiler
@@ -245,97 +175,97 @@ const CekiciAdForm: React.FC = () => {
     detailedInfo: "",
 
     // Fotoğraflar
-    photos: [],
     showcasePhoto: null,
+    photos: [],
 
     // Özellikler
     features: {
-      // Güvenlik
       abs: false,
       esp: false,
       asr: false,
+      alarm: false,
       ebv: false,
       airBag: false,
       sideAirbag: false,
       passengerAirbag: false,
       centralLock: false,
-      alarm: false,
       immobilizer: false,
-      laneKeepAssist: false,
-      cruiseControl: false,
-      hillStartAssist: false,
-      adr: false,
-      retarder: false,
-      pto: false,
-
-      // Sensör & Aydınlatma
       headlightSensor: false,
       headlightWasher: false,
       rainSensor: false,
-      xenonHeadlight: false,
-      fogLight: false,
-
-      // Konfor & İç Mekân
+      pto: false,
+      cruiseControl: false,
       airCondition: false,
-      electricWindow: false,
-      electricMirror: false,
-      powerSteering: false,
-      leatherSeat: false,
-      heatedSeats: false,
-      memorySeats: false,
-      sunroof: false,
       alloyWheel: false,
+      cd: false,
       towHook: false,
+      leatherSeat: false,
+      electricMirror: false,
+      electricWindow: false,
+      fogLight: false,
+      heatedSeats: false,
+      powerSteering: false,
+      memorySeats: false,
+      retarder: false,
       spoiler: false,
+      sunroof: false,
+      radio: false,
+      gps: false,
+      tripComputer: false,
       windDeflector: false,
       table: false,
       flexibleReadingLight: false,
-
-      // Multimedya & Sürüş Bilgi
-      radio: false,
-      cd: false,
-      bluetooth: false,
-      gps: false,
-      tripComputer: false,
-
-      // Park & Görüntüleme
-      camera: false,
-      parkingSensor: false,
     },
   });
 
-  // Şehirleri yükle
+  // Şehirler ve ilçeleri yükle
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await apiClient.get("/ads/cities");
+        const response = await apiClient.get("/cities");
         setCities(response.data as City[]);
       } catch (error) {
         console.error("Şehirler yüklenirken hata:", error);
       }
     };
+
     fetchCities();
   }, []);
 
-  // İlçeleri yükle
   useEffect(() => {
     if (formData.cityId) {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/cities/${formData.cityId}/districts`
           );
           setDistricts(response.data as District[]);
         } catch (error) {
           console.error("İlçeler yüklenirken hata:", error);
         }
       };
+
       fetchDistricts();
     } else {
       setDistricts([]);
       setFormData((prev) => ({ ...prev, districtId: "" }));
     }
   }, [formData.cityId]);
+
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
+  };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
@@ -358,27 +288,23 @@ const CekiciAdForm: React.FC = () => {
   };
 
   const handlePhotoUpload = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    isShowcase = false
+    e: React.ChangeEvent<HTMLInputElement>,
+    isShowcase: boolean
   ) => {
-    const files = event.target.files;
-    if (files) {
-      if (isShowcase) {
-        setFormData((prev) => ({ ...prev, showcasePhoto: files[0] }));
-      } else {
-        const currentPhotos = formData.photos;
-        const newPhotos = Array.from(files);
-        const totalPhotos = currentPhotos.length + newPhotos.length;
+    const files = e.target.files;
+    if (!files) return;
 
-        if (totalPhotos <= 15) {
-          setFormData((prev) => ({
-            ...prev,
-            photos: [...currentPhotos, ...newPhotos],
-          }));
-        } else {
-          alert("En fazla 15 fotoğraf yükleyebilirsiniz");
-        }
-      }
+    if (isShowcase) {
+      setFormData((prev) => ({
+        ...prev,
+        showcasePhoto: files[0],
+      }));
+    } else {
+      const newPhotos = Array.from(files);
+      setFormData((prev) => ({
+        ...prev,
+        photos: [...prev.photos, ...newPhotos].slice(0, 15),
+      }));
     }
   };
 
@@ -389,14 +315,6 @@ const CekiciAdForm: React.FC = () => {
     }));
   };
 
-  const handleNext = () => {
-    setActiveStep((prev) => prev + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -404,7 +322,7 @@ const CekiciAdForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Temel bilgileri ekle
+      // Temel bilgileri ekle (price ve mileage'ı parse ederek)
       Object.entries(formData).forEach(([key, value]) => {
         if (
           key !== "photos" &&
@@ -412,7 +330,15 @@ const CekiciAdForm: React.FC = () => {
           key !== "features" &&
           value
         ) {
-          submitData.append(key, value.toString());
+          // Price ve mileage değerlerini parse et
+          if (key === "price" || key === "mileage") {
+            const parsedValue = parseFormattedNumber(value.toString());
+            if (parsedValue) {
+              submitData.append(key, parsedValue);
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
@@ -455,319 +381,602 @@ const CekiciAdForm: React.FC = () => {
     navigate("/dashboard");
   };
 
-  const renderStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* İlan Başlığı */}
-            <TextField
-              fullWidth
-              label="İlan Başlığı"
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
-              required
-            />
+  return (
+    <>
+      <Header />
+      <Container
+        maxWidth="lg"
+        sx={{
+          mt: 4,
+          mb: 6,
+          background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+          minHeight: "100vh",
+          borderRadius: 3,
+          p: 0,
+        }}
+      >
+        {/* Ana Başlık */}
+        <Box
+          sx={{
+            background: "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+            color: "white",
+            p: 4,
+            borderRadius: "24px 24px 0 0",
+            textAlign: "center",
+            mb: 4,
+          }}
+        >
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 800,
+              mb: 2,
+              textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
+            }}
+          >
+            🚛 Çekici İlanı Ver
+          </Typography>
+          <Typography variant="h6" sx={{ opacity: 0.9 }}>
+            Çekici aracınızı hızlıca satmak için detaylı bilgilerini girin
+          </Typography>
+        </Box>
 
-            {/* Açıklama */}
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Açıklama"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              required
-            />
+        <form onSubmit={handleSubmit} style={{ padding: "0 32px 32px" }}>
+          {/* Genel Bilgiler Kartı */}
+          <Card
+            elevation={6}
+            sx={{
+              mb: 4,
+              borderRadius: 3,
+              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              border: "1px solid #e2e8f0",
+              transition: "all 0.3s ease-in-out",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+              },
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                <Box
+                  sx={{
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    borderRadius: "50%",
+                    p: 1.5,
+                    mr: 2,
+                  }}
+                >
+                  <EditNote sx={{ color: "white", fontSize: 28 }} />
+                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  📝 Genel Bilgiler
+                </Typography>
+              </Box>
 
-            {/* Yıl, Fiyat, KM */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
+              {/* İlan Başlığı */}
+              <TextField
+                fullWidth
+                label="İlan Başlığı"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                required
+                sx={{
+                  mb: 3,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 3,
+                  },
+                }}
+              />
+
+              {/* Açıklama */}
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                label="Açıklama"
+                value={formData.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
+                required
+                sx={{
+                  mb: 3,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 3,
+                  },
+                }}
+              />
+
+              {/* Yıl, Fiyat, KM */}
+              <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
                 <TextField
-                  fullWidth
                   label="Yıl"
                   type="number"
                   value={formData.year}
                   onChange={(e) => handleInputChange("year", e.target.value)}
                   required
+                  sx={{
+                    flex: 1,
+                    minWidth: 200,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
                 />
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
                 <TextField
-                  fullWidth
                   label="Fiyat (TL)"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  value={formatNumber(formData.price)}
+                  onChange={(e) => {
+                    const rawValue = parseFormattedNumber(e.target.value);
+                    handleInputChange("price", rawValue);
+                  }}
                   required
+                  sx={{
+                    flex: 1,
+                    minWidth: 200,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
                 />
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
                 <TextField
-                  fullWidth
-                  label="KM"
-                  type="number"
-                  value={formData.mileage}
-                  onChange={(e) => handleInputChange("mileage", e.target.value)}
+                  label="Kilometre"
+                  value={formatNumber(formData.mileage)}
+                  onChange={(e) => {
+                    const rawValue = parseFormattedNumber(e.target.value);
+                    handleInputChange("mileage", rawValue);
+                  }}
                   required
+                  sx={{
+                    flex: 1,
+                    minWidth: 200,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
                 />
               </Box>
-            </Box>
 
-            {/* Araç Durumu ve Renk */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Araç Durumu</InputLabel>
+              {/* Durum, Renk */}
+              <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
+                  <InputLabel>Durum</InputLabel>
                   <Select
                     value={formData.condition}
                     onChange={(e) =>
                       handleInputChange("condition", e.target.value)
                     }
+                    required
+                    label="Durum"
                   >
                     <MenuItem value="sifir">Sıfır</MenuItem>
                     <MenuItem value="ikinci-el">İkinci El</MenuItem>
-                    <MenuItem value="hasarli">Hasarlı</MenuItem>
                   </Select>
                 </FormControl>
+                <TextField
+                  label="Renk"
+                  value={formData.color}
+                  onChange={(e) => handleInputChange("color", e.target.value)}
+                  required
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                />
               </Box>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Renk</InputLabel>
-                  <Select
-                    value={formData.color}
-                    onChange={(e) => handleInputChange("color", e.target.value)}
-                  >
-                    {colorOptions.map((color) => (
-                      <MenuItem key={color} value={color.toLowerCase()}>
-                        {color}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
 
-            {/* Yakıt Tipi ve Vites */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Yakıt Tipi</InputLabel>
+              {/* Yakıt, Vites */}
+              <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
+                  <InputLabel>Yakıt Türü</InputLabel>
                   <Select
                     value={formData.fuelType}
                     onChange={(e) =>
                       handleInputChange("fuelType", e.target.value)
                     }
+                    required
+                    label="Yakıt Türü"
                   >
                     <MenuItem value="dizel">Dizel</MenuItem>
                     <MenuItem value="benzin">Benzin</MenuItem>
                     <MenuItem value="lpg">LPG</MenuItem>
+                    <MenuItem value="elektrik">Elektrik</MenuItem>
+                    <MenuItem value="hibrit">Hibrit</MenuItem>
                   </Select>
                 </FormControl>
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
                   <InputLabel>Vites</InputLabel>
                   <Select
                     value={formData.transmission}
                     onChange={(e) =>
                       handleInputChange("transmission", e.target.value)
                     }
+                    required
+                    label="Vites"
                   >
                     <MenuItem value="manuel">Manuel</MenuItem>
                     <MenuItem value="otomatik">Otomatik</MenuItem>
+                    <MenuItem value="yarimotomatik">Yarı Otomatik</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
-            </Box>
-          </Box>
-        );
+            </CardContent>
+          </Card>
 
-      case 1:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* Motor Gücü ve Motor Hacmi */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Motor Gücü</InputLabel>
-                  <Select
-                    value={formData.enginePower}
-                    onChange={(e) =>
-                      handleInputChange("enginePower", e.target.value)
-                    }
-                  >
-                    {enginePowerOptions.map((power) => (
-                      <MenuItem key={power} value={power}>
-                        {power}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+          {/* Teknik Özellikler Kartı */}
+          <Card
+            elevation={6}
+            sx={{
+              mb: 4,
+              borderRadius: 3,
+              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              border: "1px solid #e2e8f0",
+              transition: "all 0.3s ease-in-out",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+              },
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                <Box
+                  sx={{
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    borderRadius: "50%",
+                    p: 1.5,
+                    mr: 2,
+                  }}
+                >
+                  <Build sx={{ color: "white", fontSize: 28 }} />
+                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  🔧 Teknik Özellikler
+                </Typography>
               </Box>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Motor Hacmi</InputLabel>
-                  <Select
-                    value={formData.engineCapacity}
-                    onChange={(e) =>
-                      handleInputChange("engineCapacity", e.target.value)
-                    }
-                  >
-                    {engineCapacityOptions.map((capacity) => (
-                      <MenuItem key={capacity} value={capacity}>
-                        {capacity}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
 
-            {/* Kabin Tipi ve Yatak Sayısı */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
+              {/* Motor Gücü, Motor Hacmi */}
+              <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
+                <TextField
+                  label="Motor Gücü (HP)"
+                  type="number"
+                  value={formData.enginePower}
+                  onChange={(e) =>
+                    handleInputChange("enginePower", e.target.value)
+                  }
+                  required
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                />
+                <TextField
+                  label="Motor Hacmi (cc)"
+                  type="number"
+                  value={formData.engineCapacity}
+                  onChange={(e) =>
+                    handleInputChange("engineCapacity", e.target.value)
+                  }
+                  required
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Kabin Tipi, Yatak Sayısı */}
+              <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
                   <InputLabel>Kabin Tipi</InputLabel>
                   <Select
                     value={formData.cabinType}
                     onChange={(e) =>
                       handleInputChange("cabinType", e.target.value)
                     }
+                    required
+                    label="Kabin Tipi"
                   >
-                    {cabinTypeOptions.map((cabin) => (
-                      <MenuItem key={cabin} value={cabin.toLowerCase()}>
-                        {cabin}
+                    {cabinTypeOptions.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        {type}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
                   <InputLabel>Yatak Sayısı</InputLabel>
                   <Select
                     value={formData.bedCount}
                     onChange={(e) =>
                       handleInputChange("bedCount", e.target.value)
                     }
+                    required
+                    label="Yatak Sayısı"
                   >
-                    <MenuItem value="yok">Yok</MenuItem>
-                    <MenuItem value="1">1</MenuItem>
-                    <MenuItem value="2">2</MenuItem>
+                    {bedCountOptions.map((bed) => (
+                      <MenuItem key={bed.value} value={bed.value}>
+                        {bed.label}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Box>
-            </Box>
 
-            {/* Dorse ve Plaka Tipi */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Dorse</InputLabel>
+              {/* Dorse, Plaka Tipi */}
+              <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
+                  <InputLabel>Dorse Var Mı?</InputLabel>
                   <Select
                     value={formData.dorseAvailable}
                     onChange={(e) =>
                       handleInputChange("dorseAvailable", e.target.value)
                     }
+                    required
+                    label="Dorse Var Mı?"
                   >
-                    <MenuItem value="yok">Yok</MenuItem>
                     <MenuItem value="var">Var</MenuItem>
+                    <MenuItem value="yok">Yok</MenuItem>
                   </Select>
                 </FormControl>
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Plaka / Uyruk</InputLabel>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
+                  <InputLabel>Plaka Tipi</InputLabel>
                   <Select
                     value={formData.plateType}
                     onChange={(e) =>
                       handleInputChange("plateType", e.target.value)
                     }
+                    required
+                    label="Plaka Tipi"
                   >
-                    <MenuItem value="tr-plakali">Türk Plakası</MenuItem>
-                    <MenuItem value="yabanci-plakali">Yabancı Plaka</MenuItem>
+                    <MenuItem value="tr-plakali">TR Plakalı</MenuItem>
+                    <MenuItem value="yabanci-plakali">Yabancı Plakalı</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
-            </Box>
 
-            {/* Plaka Numarası ve Lastik Durumu */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
+              {/* Plaka No, Lastik Durumu */}
+              <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
                 <TextField
-                  fullWidth
-                  label="Araç Plakası"
+                  label="Plaka No"
                   value={formData.plateNumber}
                   onChange={(e) =>
                     handleInputChange("plateNumber", e.target.value)
                   }
-                  placeholder="34 ABC 1234"
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
                 />
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
                 <TextField
-                  fullWidth
                   label="Lastik Durumu"
                   value={formData.tireCondition}
                   onChange={(e) =>
                     handleInputChange("tireCondition", e.target.value)
                   }
-                  placeholder="Örn: %80 - 4 adet yeni"
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
                 />
               </Box>
-            </Box>
 
-            {/* Hasar Kaydı, Boya Değişimi, Takas */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <FormControl fullWidth>
+              {/* Hasar Kaydı, Boya, Takas */}
+              <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 200,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
                   <InputLabel>Hasar Kaydı</InputLabel>
                   <Select
                     value={formData.damageRecord}
                     onChange={(e) =>
                       handleInputChange("damageRecord", e.target.value)
                     }
+                    required
+                    label="Hasar Kaydı"
                   >
-                    <MenuItem value="hayir">Hayır</MenuItem>
                     <MenuItem value="evet">Evet</MenuItem>
+                    <MenuItem value="hayir">Hayır</MenuItem>
                   </Select>
                 </FormControl>
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Boya Değişimi</InputLabel>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 200,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
+                  <InputLabel>Boyalı</InputLabel>
                   <Select
                     value={formData.paintChange}
                     onChange={(e) =>
                       handleInputChange("paintChange", e.target.value)
                     }
+                    required
+                    label="Boyalı"
                   >
-                    <MenuItem value="hayir">Hayır</MenuItem>
                     <MenuItem value="evet">Evet</MenuItem>
+                    <MenuItem value="hayir">Hayır</MenuItem>
                   </Select>
                 </FormControl>
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <FormControl fullWidth>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 200,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
                   <InputLabel>Takas</InputLabel>
                   <Select
                     value={formData.exchange}
                     onChange={(e) =>
                       handleInputChange("exchange", e.target.value)
                     }
+                    required
+                    label="Takas"
                   >
                     <MenuItem value="olabilir">Olabilir</MenuItem>
                     <MenuItem value="olmaz">Olmaz</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
-            </Box>
+            </CardContent>
+          </Card>
 
-            {/* İl ve İlçe */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
+          {/* Konum Kartı */}
+          <Card
+            elevation={6}
+            sx={{
+              mb: 4,
+              borderRadius: 3,
+              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              border: "1px solid #e2e8f0",
+              transition: "all 0.3s ease-in-out",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+              },
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                <Box
+                  sx={{
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    borderRadius: "50%",
+                    p: 1.5,
+                    mr: 2,
+                  }}
+                >
+                  <LocationOn sx={{ color: "white", fontSize: 28 }} />
+                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  📍 Konum Bilgileri
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
                   <InputLabel>İl</InputLabel>
                   <Select
                     value={formData.cityId}
@@ -775,6 +984,7 @@ const CekiciAdForm: React.FC = () => {
                       handleInputChange("cityId", e.target.value)
                     }
                     required
+                    label="İl"
                   >
                     {cities.map((city) => (
                       <MenuItem key={city.id} value={city.id.toString()}>
@@ -783,9 +993,15 @@ const CekiciAdForm: React.FC = () => {
                     ))}
                   </Select>
                 </FormControl>
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 250 }}>
-                <FormControl fullWidth>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 250,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
                   <InputLabel>İlçe</InputLabel>
                   <Select
                     value={formData.districtId}
@@ -794,6 +1010,7 @@ const CekiciAdForm: React.FC = () => {
                     }
                     disabled={!formData.cityId}
                     required
+                    label="İlçe"
                   >
                     {districts.map((district) => (
                       <MenuItem
@@ -806,31 +1023,65 @@ const CekiciAdForm: React.FC = () => {
                   </Select>
                 </FormControl>
               </Box>
-            </Box>
-          </Box>
-        );
+            </CardContent>
+          </Card>
 
-      case 2:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <Paper variant="outlined" sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Aracınızda Bulunan Özellikler
-              </Typography>
+          {/* Araç Özellikleri Kartı */}
+          <Card
+            elevation={6}
+            sx={{
+              mb: 4,
+              borderRadius: 3,
+              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              border: "1px solid #e2e8f0",
+              transition: "all 0.3s ease-in-out",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+              },
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                <Box
+                  sx={{
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    borderRadius: "50%",
+                    p: 1.5,
+                    mr: 2,
+                  }}
+                >
+                  <Star sx={{ color: "white", fontSize: 28 }} />
+                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  ⭐ Araç Özellikleri
+                </Typography>
+              </Box>
 
               {/* Güvenlik Özellikleri */}
               <Typography
                 variant="subtitle1"
                 gutterBottom
-                sx={{ mt: 2, fontWeight: "bold" }}
+                sx={{ mt: 2, fontWeight: "bold", color: "#1976d2" }}
               >
-                Güvenlik
+                🛡️ Güvenlik
               </Typography>
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                   gap: 2,
+                  mb: 3,
                 }}
               >
                 <FormControlLabel
@@ -840,9 +1091,23 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("abs", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="ABS"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -851,9 +1116,23 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("esp", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="ESP"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -862,64 +1141,23 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("asr", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
-                  label="ASR (Çekiş Kontrol)"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.ebv}
-                      onChange={(e) =>
-                        handleFeatureChange("ebv", e.target.checked)
-                      }
-                    />
-                  }
-                  label="EBV (Fren Gücü Dağıtımı)"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.airBag}
-                      onChange={(e) =>
-                        handleFeatureChange("airBag", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Hava Yastığı (Sürücü)"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.sideAirbag}
-                      onChange={(e) =>
-                        handleFeatureChange("sideAirbag", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Hava Yastığı (Yan)"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.passengerAirbag}
-                      onChange={(e) =>
-                        handleFeatureChange("passengerAirbag", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Hava Yastığı (Yolcu)"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.centralLock}
-                      onChange={(e) =>
-                        handleFeatureChange("centralLock", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Merkezi Kilit"
+                  label="ASR"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -928,9 +1166,148 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("alarm", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Alarm"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.ebv}
+                      onChange={(e) =>
+                        handleFeatureChange("ebv", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="EBV"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.airBag}
+                      onChange={(e) =>
+                        handleFeatureChange("airBag", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Hava Yastığı (Sürücü)"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.sideAirbag}
+                      onChange={(e) =>
+                        handleFeatureChange("sideAirbag", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Hava Yastığı (Yan)"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.passengerAirbag}
+                      onChange={(e) =>
+                        handleFeatureChange("passengerAirbag", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Hava Yastığı (Yolcu)"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.centralLock}
+                      onChange={(e) =>
+                        handleFeatureChange("centralLock", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Merkezi Kilit"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -939,93 +1316,24 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("immobilizer", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Immobilizer"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.laneKeepAssist}
-                      onChange={(e) =>
-                        handleFeatureChange("laneKeepAssist", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Şerit Koruma Desteği"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.cruiseControl}
-                      onChange={(e) =>
-                        handleFeatureChange("cruiseControl", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Hız Sabitleyici"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.hillStartAssist}
-                      onChange={(e) =>
-                        handleFeatureChange("hillStartAssist", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Yokuş Kalkış Desteği"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.adr}
-                      onChange={(e) =>
-                        handleFeatureChange("adr", e.target.checked)
-                      }
-                    />
-                  }
-                  label="ADR"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.retarder}
-                      onChange={(e) =>
-                        handleFeatureChange("retarder", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Retarder"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.pto}
-                      onChange={(e) =>
-                        handleFeatureChange("pto", e.target.checked)
-                      }
-                    />
-                  }
-                  label="PTO"
-                />
-              </Box>
-
-              {/* Sensör & Aydınlatma */}
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ mt: 3, fontWeight: "bold" }}
-              >
-                Sensör & Aydınlatma
-              </Typography>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 2,
-                }}
-              >
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -1033,9 +1341,23 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("headlightSensor", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Far Sensörü"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -1044,9 +1366,23 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("headlightWasher", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Far Yıkama Sistemi"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -1055,47 +1391,90 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("rainSensor", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Yağmur Sensörü"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={formData.features.xenonHeadlight}
+                      checked={formData.features.pto}
                       onChange={(e) =>
-                        handleFeatureChange("xenonHeadlight", e.target.checked)
+                        handleFeatureChange("pto", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
-                  label="Xenon Far"
+                  label="PTO"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={formData.features.fogLight}
+                      checked={formData.features.cruiseControl}
                       onChange={(e) =>
-                        handleFeatureChange("fogLight", e.target.checked)
+                        handleFeatureChange("cruiseControl", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
-                  label="Sis Farı"
+                  label="Yokuş Kalkış Desteği"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
               </Box>
 
-              {/* Konfor & İç Mekân */}
+              {/* Donanım Özellikleri */}
               <Typography
                 variant="subtitle1"
                 gutterBottom
-                sx={{ mt: 3, fontWeight: "bold" }}
+                sx={{ mt: 3, fontWeight: "bold", color: "#1976d2" }}
               >
-                Konfor & İç Mekân
+                🔧 Donanım
               </Typography>
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                   gap: 2,
+                  mb: 3,
                 }}
               >
                 <FormControlLabel
@@ -1105,86 +1484,23 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("airCondition", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Klima"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.electricWindow}
-                      onChange={(e) =>
-                        handleFeatureChange("electricWindow", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Elektrikli Cam"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.electricMirror}
-                      onChange={(e) =>
-                        handleFeatureChange("electricMirror", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Elektrikli Ayna"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.powerSteering}
-                      onChange={(e) =>
-                        handleFeatureChange("powerSteering", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Hidrolik Direksiyon"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.leatherSeat}
-                      onChange={(e) =>
-                        handleFeatureChange("leatherSeat", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Deri Döşeme"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.heatedSeats}
-                      onChange={(e) =>
-                        handleFeatureChange("heatedSeats", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Isıtmalı Koltuklar"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.memorySeats}
-                      onChange={(e) =>
-                        handleFeatureChange("memorySeats", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Hafızalı Koltuklar"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.sunroof}
-                      onChange={(e) =>
-                        handleFeatureChange("sunroof", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Sunroof"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -1193,9 +1509,48 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("alloyWheel", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Alaşım Jant"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.cd}
+                      onChange={(e) =>
+                        handleFeatureChange("cd", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="CD Çalar"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -1204,9 +1559,223 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("towHook", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Çeki Demiri"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.leatherSeat}
+                      onChange={(e) =>
+                        handleFeatureChange("leatherSeat", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Deri Döşeme"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.electricMirror}
+                      onChange={(e) =>
+                        handleFeatureChange("electricMirror", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Elektrikli Aynalar"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.electricWindow}
+                      onChange={(e) =>
+                        handleFeatureChange("electricWindow", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Elektrikli Cam"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.fogLight}
+                      onChange={(e) =>
+                        handleFeatureChange("fogLight", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Far (Sis)"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.heatedSeats}
+                      onChange={(e) =>
+                        handleFeatureChange("heatedSeats", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Hafızalı Koltuklar"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.powerSteering}
+                      onChange={(e) =>
+                        handleFeatureChange("powerSteering", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Hidrolik Direksiyon"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.memorySeats}
+                      onChange={(e) =>
+                        handleFeatureChange("memorySeats", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Isıtmalı Koltuklar"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.retarder}
+                      onChange={(e) =>
+                        handleFeatureChange("retarder", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Retarder"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -1215,9 +1784,123 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("spoiler", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
-                  label="Spoyler"
+                  label="Spoiler"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.sunroof}
+                      onChange={(e) =>
+                        handleFeatureChange("sunroof", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Sunroof"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.radio}
+                      onChange={(e) =>
+                        handleFeatureChange("radio", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Radio - Teyp"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.gps}
+                      onChange={(e) =>
+                        handleFeatureChange("gps", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="TV / Navigasyon"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.features.tripComputer}
+                      onChange={(e) =>
+                        handleFeatureChange("tripComputer", e.target.checked)
+                      }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
+                    />
+                  }
+                  label="Yol Bilgisayarı"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -1226,9 +1909,23 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("windDeflector", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Cam Rüzgarlığı"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -1237,9 +1934,23 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange("table", e.target.checked)
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Masa"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
                 <FormControlLabel
                   control={
@@ -1251,147 +1962,98 @@ const CekiciAdForm: React.FC = () => {
                           e.target.checked
                         )
                       }
+                      sx={{
+                        color: "#1976d2",
+                        "&.Mui-checked": { color: "#1976d2" },
+                      }}
                     />
                   }
                   label="Esnek Okuma Lambası"
+                  sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    m: 0,
+                    p: 1,
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                      borderColor: "#1976d2",
+                    },
+                  }}
                 />
               </Box>
 
-              {/* Multimedya & Sürüş Bilgi */}
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ mt: 3, fontWeight: "bold" }}
-              >
-                Multimedya & Sürüş Bilgi
-              </Typography>
-              <Box
+              {/* Detaylı Bilgi */}
+              <TextField
+                fullWidth
+                multiline
+                rows={6}
+                label="Detaylı Bilgi"
+                value={formData.detailedInfo}
+                onChange={(e) =>
+                  handleInputChange("detailedInfo", e.target.value)
+                }
+                placeholder="Aracınız hakkında detaylı bilgi verebilirsiniz..."
                 sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 2,
+                  mt: 3,
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 3,
+                    "&:hover fieldset": { borderColor: "primary.main" },
+                  },
                 }}
-              >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.radio}
-                      onChange={(e) =>
-                        handleFeatureChange("radio", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Radio - Teyp"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.cd}
-                      onChange={(e) =>
-                        handleFeatureChange("cd", e.target.checked)
-                      }
-                    />
-                  }
-                  label="CD Çalar"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.bluetooth}
-                      onChange={(e) =>
-                        handleFeatureChange("bluetooth", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Bluetooth"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.gps}
-                      onChange={(e) =>
-                        handleFeatureChange("gps", e.target.checked)
-                      }
-                    />
-                  }
-                  label="TV / Navigasyon"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.tripComputer}
-                      onChange={(e) =>
-                        handleFeatureChange("tripComputer", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Yol Bilgisayarı"
-                />
+              />
+            </CardContent>
+          </Card>
+
+          {/* Fotoğraflar Kartı */}
+          <Card
+            elevation={6}
+            sx={{
+              mb: 4,
+              borderRadius: 3,
+              background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+              border: "1px solid #e2e8f0",
+              transition: "all 0.3s ease-in-out",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+              },
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                <Box
+                  sx={{
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    borderRadius: "50%",
+                    p: 1.5,
+                    mr: 2,
+                  }}
+                >
+                  <CameraAlt sx={{ color: "white", fontSize: 28 }} />
+                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  📸 Fotoğraflar
+                </Typography>
               </Box>
 
-              {/* Park & Görüntüleme */}
-              <Typography
-                variant="subtitle1"
-                gutterBottom
-                sx={{ mt: 3, fontWeight: "bold" }}
-              >
-                Park & Görüntüleme
-              </Typography>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                  gap: 2,
-                }}
-              >
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.camera}
-                      onChange={(e) =>
-                        handleFeatureChange("camera", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Geri Görüş Kamerası"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.features.parkingSensor}
-                      onChange={(e) =>
-                        handleFeatureChange("parkingSensor", e.target.checked)
-                      }
-                    />
-                  }
-                  label="Park Sensörü"
-                />
-              </Box>
-            </Paper>
-
-            {/* Detaylı Bilgi */}
-            <TextField
-              fullWidth
-              multiline
-              rows={6}
-              label="Detaylı Bilgi"
-              value={formData.detailedInfo}
-              onChange={(e) =>
-                handleInputChange("detailedInfo", e.target.value)
-              }
-              placeholder="Aracınız hakkında detaylı bilgi verebilirsiniz..."
-            />
-          </Box>
-        );
-
-      case 3:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* Vitrin Fotoğrafı */}
-            <Card variant="outlined" sx={{ p: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Vitrin Fotoğrafı *
+              {/* Vitrin Fotoğrafı */}
+              <Box sx={{ mb: 4 }}>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ color: "#1976d2", fontWeight: 600 }}
+                >
+                  📌 Vitrin Fotoğrafı *
                 </Typography>
                 <input
                   accept="image/*"
@@ -1406,35 +2068,60 @@ const CekiciAdForm: React.FC = () => {
                     component="span"
                     startIcon={<PhotoCamera />}
                     fullWidth
-                    sx={{ mb: 2 }}
+                    sx={{
+                      mb: 2,
+                      py: 2,
+                      borderRadius: 3,
+                      borderStyle: "dashed",
+                      borderWidth: 2,
+                      "&:hover": {
+                        backgroundColor: "#f5f5f5",
+                        borderColor: "primary.main",
+                      },
+                    }}
                   >
                     Vitrin Fotoğrafı Seç
                   </Button>
                 </label>
                 {formData.showcasePhoto && (
-                  <Box sx={{ textAlign: "center" }}>
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      p: 2,
+                      border: "2px solid #e0e0e0",
+                      borderRadius: 3,
+                      backgroundColor: "#f9f9f9",
+                    }}
+                  >
                     <img
                       src={URL.createObjectURL(formData.showcasePhoto)}
                       alt="Vitrin"
                       style={{
-                        maxWidth: "200px",
-                        maxHeight: "150px",
+                        maxWidth: "300px",
+                        maxHeight: "200px",
                         objectFit: "cover",
+                        borderRadius: "8px",
                       }}
                     />
-                    <Typography variant="caption" display="block">
+                    <Typography
+                      variant="caption"
+                      display="block"
+                      sx={{ mt: 1 }}
+                    >
                       {formData.showcasePhoto.name}
                     </Typography>
                   </Box>
                 )}
-              </CardContent>
-            </Card>
+              </Box>
 
-            {/* Diğer Fotoğraflar */}
-            <Card variant="outlined" sx={{ p: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Diğer Fotoğraflar (En fazla 15 adet)
+              {/* Diğer Fotoğraflar */}
+              <Box>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ color: "#1976d2", fontWeight: 600 }}
+                >
+                  🖼️ Diğer Fotoğraflar (En fazla 15 adet)
                 </Typography>
                 <input
                   accept="image/*"
@@ -1450,7 +2137,17 @@ const CekiciAdForm: React.FC = () => {
                     component="span"
                     startIcon={<CloudUpload />}
                     fullWidth
-                    sx={{ mb: 2 }}
+                    sx={{
+                      mb: 3,
+                      py: 2,
+                      borderRadius: 3,
+                      borderStyle: "dashed",
+                      borderWidth: 2,
+                      "&:hover": {
+                        backgroundColor: "#f5f5f5",
+                        borderColor: "primary.main",
+                      },
+                    }}
                   >
                     Fotoğraf Ekle
                   </Button>
@@ -1461,33 +2158,55 @@ const CekiciAdForm: React.FC = () => {
                     sx={{
                       display: "grid",
                       gridTemplateColumns:
-                        "repeat(auto-fill, minmax(120px, 1fr))",
+                        "repeat(auto-fill, minmax(150px, 1fr))",
                       gap: 2,
-                      mt: 2,
                     }}
                   >
                     {formData.photos.map((photo, index) => (
-                      <Box key={index} sx={{ position: "relative" }}>
+                      <Box
+                        key={index}
+                        sx={{
+                          position: "relative",
+                          borderRadius: 2,
+                          overflow: "hidden",
+                          border: "2px solid #e0e0e0",
+                          "&:hover": {
+                            borderColor: "#1976d2",
+                            "& .delete-btn": {
+                              opacity: 1,
+                            },
+                          },
+                        }}
+                      >
                         <img
                           src={URL.createObjectURL(photo)}
                           alt={`Fotoğraf ${index + 1}`}
                           style={{
                             width: "100%",
-                            height: "80px",
+                            height: "120px",
                             objectFit: "cover",
-                            borderRadius: "4px",
                           }}
                         />
                         <Button
+                          className="delete-btn"
                           size="small"
                           onClick={() => removePhoto(index)}
                           sx={{
                             position: "absolute",
-                            top: 0,
-                            right: 0,
+                            top: 4,
+                            right: 4,
                             minWidth: "24px",
+                            width: "24px",
+                            height: "24px",
+                            borderRadius: "50%",
                             bgcolor: "error.main",
                             color: "white",
+                            opacity: 0.7,
+                            transition: "opacity 0.2s",
+                            "&:hover": {
+                              bgcolor: "error.dark",
+                              opacity: 1,
+                            },
                           }}
                         >
                           ×
@@ -1496,128 +2215,39 @@ const CekiciAdForm: React.FC = () => {
                     ))}
                   </Box>
                 )}
-              </CardContent>
-            </Card>
-          </Box>
-        );
+              </Box>
+            </CardContent>
+          </Card>
 
-      case 4:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <Alert severity="info">
-              İlanınız admin onayından sonra yayınlanacaktır.
-            </Alert>
-            <Typography variant="h6">İlan Özeti</Typography>
-            <Box
+          {/* Submit Button */}
+          <Box sx={{ textAlign: "center", mb: 4 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading || !formData.showcasePhoto}
+              size="large"
               sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: 2,
+                py: 2,
+                px: 6,
+                borderRadius: 3,
+                fontSize: "1.1rem",
+                fontWeight: 600,
+                background: "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #2c3540 0%, #b8392f 100%)",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+                },
+                "&:disabled": {
+                  background: "#cccccc",
+                },
               }}
             >
-              <Typography>
-                <strong>Başlık:</strong> {formData.title}
-              </Typography>
-              <Typography>
-                <strong>Yıl:</strong> {formData.year}
-              </Typography>
-              <Typography>
-                <strong>Fiyat:</strong> {formData.price} TL
-              </Typography>
-              <Typography>
-                <strong>KM:</strong> {formData.mileage}
-              </Typography>
-              <Typography>
-                <strong>Yakıt:</strong> {formData.fuelType}
-              </Typography>
-              <Typography>
-                <strong>Vites:</strong> {formData.transmission}
-              </Typography>
-            </Box>
+              {loading ? "İlan Yayınlanıyor..." : "🚀 İlanı Yayınla"}
+            </Button>
           </Box>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <>
-      <Header />
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-            }}
-          >
-            Çekici İlanı Ver
-          </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-            Aracınızın detaylarını girerek profesyonel ilanınızı oluşturun
-          </Typography>
-        </Box>
-
-        <Paper
-          elevation={8}
-          sx={{
-            p: 5,
-            mt: 3,
-            borderRadius: 3,
-            background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-            "& .MuiPaper-root": {
-              background: "white",
-            },
-          }}
-        >
-          <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
-          <form onSubmit={handleSubmit}>
-            {renderStepContent(activeStep)}
-
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}
-            >
-              <Button
-                disabled={activeStep === 0}
-                onClick={handleBack}
-                variant="outlined"
-              >
-                Geri
-              </Button>
-
-              {activeStep === steps.length - 1 ? (
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={loading || !formData.showcasePhoto}
-                  size="large"
-                >
-                  {loading ? "İlan Yayınlanıyor..." : "İlanı Yayınla"}
-                </Button>
-              ) : (
-                <Button onClick={handleNext} variant="contained">
-                  İleri
-                </Button>
-              )}
-            </Box>
-          </form>
-        </Paper>
+        </form>
       </Container>
 
       {/* Success Modal */}
