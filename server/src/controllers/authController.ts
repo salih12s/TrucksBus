@@ -527,4 +527,148 @@ export class AuthController {
       res.status(500).json({ error: "Internal server error" });
     }
   }
+
+  // Update password
+  static async updatePassword(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ error: "User not authenticated" });
+        return;
+      }
+
+      // Validate input
+      if (!currentPassword || !newPassword) {
+        res.status(400).json({
+          error: "Current password and new password are required",
+        });
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        res.status(400).json({
+          error: "New password must be at least 6 characters long",
+        });
+        return;
+      }
+
+      // Get user with password hash
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          passwordHash: true,
+        },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.passwordHash
+      );
+
+      if (!isCurrentPasswordValid) {
+        res.status(400).json({ error: "Current password is incorrect" });
+        return;
+      }
+
+      // Hash new password
+      const newPasswordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+      // Update password in database
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          passwordHash: newPasswordHash,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Log the password change
+      await AdminLogController.logActivity(
+        userId,
+        user.email,
+        "PASSWORD_CHANGED",
+        "User changed their password"
+      );
+
+      res.json({
+        success: true,
+        message: "Password updated successfully",
+      });
+    } catch (error) {
+      console.error("Update password error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  // Get user statistics
+  static async getUserStats(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id;
+
+      if (!userId) {
+        res.status(401).json({ error: "User not authenticated" });
+        return;
+      }
+
+      // Get user's ads statistics
+      const totalAds = await prisma.ad.count({
+        where: { userId },
+      });
+
+      const activeAds = await prisma.ad.count({
+        where: {
+          userId,
+          status: "APPROVED",
+        },
+      });
+
+      const pendingAds = await prisma.ad.count({
+        where: {
+          userId,
+          status: "PENDING",
+        },
+      });
+
+      // Get total views for user's ads
+      const userAds = await prisma.ad.findMany({
+        where: { userId },
+        select: { viewCount: true },
+      });
+
+      const totalViews = userAds.reduce(
+        (sum, ad) => sum + (ad.viewCount || 0),
+        0
+      );
+
+      // Get active dopings count
+      const activeDopings = await prisma.userDoping.count({
+        where: {
+          userId,
+          isActive: true,
+          expiresAt: { gt: new Date() },
+        },
+      });
+
+      res.json({
+        totalAds,
+        activeAds,
+        pendingAds,
+        totalViews,
+        activeDopings,
+      });
+    } catch (error) {
+      console.error("Get user stats error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
 }

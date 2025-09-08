@@ -19,6 +19,12 @@ router.post("/logout", authLimiter, AuthController.logout);
 
 // Protected routes
 router.get("/me", authenticateToken, AuthController.getCurrentUser);
+router.get("/stats", authenticateToken, AuthController.getUserStats);
+router.put(
+  "/update-password",
+  authenticateToken,
+  AuthController.updatePassword
+);
 
 // Admin routes
 router.get("/users", authenticateToken, AuthController.getAllUsers);

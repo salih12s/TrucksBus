@@ -103,4 +103,34 @@ export const authApi = {
     const response = await apiClient.get("/auth/me");
     return response.data;
   },
+
+  // Update password
+  updatePassword: async (data: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.put<{ success: boolean; message: string }>(
+      "/auth/update-password",
+      data
+    );
+    return response.data;
+  },
+
+  // Get user statistics
+  getUserStats: async (): Promise<{
+    totalAds: number;
+    activeAds: number;
+    pendingAds: number;
+    totalViews: number;
+    activeDopings: number;
+  }> => {
+    const response = await apiClient.get<{
+      totalAds: number;
+      activeAds: number;
+      pendingAds: number;
+      totalViews: number;
+      activeDopings: number;
+    }>("/auth/stats");
+    return response.data;
+  },
 };
