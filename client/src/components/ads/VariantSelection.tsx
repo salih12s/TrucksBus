@@ -220,9 +220,6 @@ const VariantSelection: React.FC = () => {
               </Typography>
             </Box>
           </Box>
-          <Typography variant="body1" color="text.secondary">
-            {filteredVariants.length} varyant bulundu
-          </Typography>
         </Box>
 
         {/* Search */}

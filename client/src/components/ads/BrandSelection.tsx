@@ -9,7 +9,6 @@ import {
   InputAdornment,
   Breadcrumbs,
   Link,
-  Chip,
 } from "@mui/material";
 import { Search } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
@@ -266,9 +265,6 @@ const BrandSelection: React.FC = () => {
           <Typography variant="h6" color="text.secondary" gutterBottom>
             {category?.name}
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {filteredBrands.length} marka bulundu
-          </Typography>
         </Box>
 
         {/* Search */}
@@ -394,19 +390,6 @@ const BrandSelection: React.FC = () => {
                     >
                       {brand.name}
                     </Typography>
-
-                    {brand._count && (
-                      <Chip
-                        label={`${brand._count.models} model`}
-                        size="small"
-                        sx={{
-                          backgroundColor: "rgba(25, 118, 210, 0.1)",
-                          color: "#1976d2",
-                          fontWeight: "bold",
-                          fontSize: "0.75rem",
-                        }}
-                      />
-                    )}
                   </Box>
                 </Card>
               );

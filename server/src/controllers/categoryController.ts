@@ -131,9 +131,11 @@ export const getModelsByBrand = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Brand not found" });
     }
 
+    // Get models that belong to BOTH the specific brand AND category
     const models = await prisma.model.findMany({
       where: {
         brandId: brand.id,
+        categoryId: category.id, // ⭐ Bu satır eklendi - kategoriye özel filtreleme
       },
       include: {
         _count: {
@@ -146,6 +148,14 @@ export const getModelsByBrand = async (req: Request, res: Response) => {
         name: "asc",
       },
     });
+
+    console.log(
+      `🔍 Found ${models.length} models for brand ${brand.name} in category ${category.name}`
+    );
+    console.log(
+      `📋 Models:`,
+      models.map((m) => m.name)
+    );
 
     return res.json(models);
   } catch (error) {

@@ -198,9 +198,6 @@ const ModelSelection: React.FC = () => {
               </Typography>
             </Box>
           </Box>
-          <Typography variant="body1" color="text.secondary">
-            {filteredModels.length} model bulundu
-          </Typography>
         </Box>
 
         {/* Search */}
@@ -276,15 +273,6 @@ const ModelSelection: React.FC = () => {
                   >
                     {model.name}
                   </Typography>
-                  {model._count && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
-                      {model._count.variants} varyant
-                    </Typography>
-                  )}
                 </Box>
               </Card>
             ))}
