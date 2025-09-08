@@ -65,6 +65,8 @@ export const getAds = async (req: Request, res: Response) => {
         brand: true,
         model: true,
         variant: true,
+        city: true,
+        district: true,
         images: {
           orderBy: { displayOrder: "asc" },
         },
@@ -504,6 +506,10 @@ export const createMinibusAd = async (req: Request, res: Response) => {
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
         mileage: mileage ? parseInt(mileage) : null,
+        // City ve District'i asıl sütunlara kaydet
+        cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
+        districtId:
+          districtId && districtId !== "" ? parseInt(districtId) : null,
         customFields: {
           condition: condition || null,
           engineVolume: engineVolume || null,
@@ -520,6 +526,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
           address: address || null,
           detailedInfo: detailedInfo || null,
           detailFeatures: detailFeaturesJson || null,
+          // CustomFields'ta da sakla (backward compatibility için)
           cityId: cityId ? parseInt(cityId) : null,
           districtId: districtId ? parseInt(districtId) : null,
         },
@@ -727,6 +734,10 @@ export const createCekiciAd = async (req: Request, res: Response) => {
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
         mileage: mileage ? parseInt(mileage) : null,
+        // City ve District'i asıl sütunlara kaydet
+        cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
+        districtId:
+          districtId && districtId !== "" ? parseInt(districtId) : null,
         customFields: {
           condition: condition || null,
           color: color || null,
@@ -1099,6 +1110,10 @@ export const createKamyonAd = async (req: Request, res: Response) => {
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
         mileage: mileage ? parseInt(mileage) : null,
+        // City ve District'i asıl sütunlara kaydet
+        cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
+        districtId:
+          districtId && districtId !== "" ? parseInt(districtId) : null,
         customFields: {
           condition: condition || null,
           color: color || null,
@@ -1329,6 +1344,10 @@ export const createOtobusAd = async (req: Request, res: Response) => {
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
         mileage: mileage ? parseInt(mileage) : null,
+        // City ve District'i asıl sütunlara kaydet
+        cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
+        districtId:
+          districtId && districtId !== "" ? parseInt(districtId) : null,
         customFields: {
           condition: condition || null,
           color: color || null,

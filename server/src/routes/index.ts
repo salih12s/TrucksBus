@@ -7,6 +7,7 @@ import adminLogRoutes from "./adminLogs";
 import feedbackRoutes from "./feedback";
 import notificationRoutes from "./notifications";
 import dopingRoutes from "./doping";
+import favoriteRoutes from "./favorites";
 
 const router = Router();
 
@@ -19,6 +20,7 @@ router.use("/admin/logs", adminLogRoutes);
 router.use("/feedback", feedbackRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/doping", dopingRoutes);
+router.use("/favorites", favoriteRoutes);
 
 // API info endpoint
 router.get("/", (req, res) => {
@@ -34,6 +36,7 @@ router.get("/", (req, res) => {
       feedback: "/api/feedback",
       notifications: "/api/notifications",
       doping: "/api/doping",
+      favorites: "/api/favorites",
     },
   });
 });

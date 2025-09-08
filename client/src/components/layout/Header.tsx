@@ -29,7 +29,11 @@ import { logoutUser } from "../../store/authSlice";
 import FeedbackModal from "../modals/FeedbackModal";
 import NotificationDropdown from "../NotificationDropdown";
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  favoritesCount?: number;
+}
+
+const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -146,7 +150,18 @@ const Header: React.FC = () => {
                 sx={{ color: "white" }}
                 onClick={() => navigate("/bookmarks")}
               >
-                <BookmarkIcon />
+                <Badge
+                  badgeContent={favoritesCount}
+                  color="error"
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      backgroundColor: "#D34237",
+                      color: "white",
+                    },
+                  }}
+                >
+                  <BookmarkIcon />
+                </Badge>
               </IconButton>
 
               <IconButton

@@ -104,7 +104,7 @@ const PendingAds: React.FC = () => {
 
   // Image gallery modal states
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<Ad['images']>([]);
+  const [selectedImages, setSelectedImages] = useState<Ad["images"]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // API Base URL'i al
@@ -179,7 +179,7 @@ const PendingAds: React.FC = () => {
   };
 
   // Image gallery functions
-  const openImageModal = (images: Ad['images'], startIndex: number = 0) => {
+  const openImageModal = (images: Ad["images"], startIndex: number = 0) => {
     setSelectedImages(images);
     setCurrentImageIndex(startIndex);
     setImageModalOpen(true);

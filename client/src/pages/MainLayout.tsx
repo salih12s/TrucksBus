@@ -16,6 +16,9 @@ import {
   useTheme,
   useMediaQuery,
   Drawer,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import {
   Search,
@@ -26,8 +29,10 @@ import {
   Menu as MenuIcon,
   ChevronLeft,
   ChevronRight,
+  CheckCircle,
 } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
+import { useAppSelector } from "../hooks/redux";
 import apiClient from "../api/client";
 
 interface Category {
@@ -43,8 +48,14 @@ interface Ad {
   price: number | null;
   year: number | null;
   createdAt: string;
-  city?: string;
-  district?: string;
+  city?: {
+    id: number;
+    name: string;
+  };
+  district?: {
+    id: number;
+    name: string;
+  };
   photos?: string[];
   images?: Array<{
     id: number;
@@ -86,7 +97,16 @@ const MainLayout: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success"
+  );
+  const [savingAdId, setSavingAdId] = useState<number | null>(null);
+  const [savedAds, setSavedAds] = useState<Set<number>>(new Set());
+  const [favoritesCount, setFavoritesCount] = useState(0);
 
+  const { user } = useAppSelector((state) => state.auth);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
@@ -99,6 +119,96 @@ const MainLayout: React.FC = () => {
       setSidebarOpen(true);
     }
   }, [isMobile]);
+
+  // API Base URL'i al
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const getImageUrl = (images?: Ad["images"]) => {
+    if (!images || images.length === 0) return null;
+
+    // Önce vitrin resmini ara
+    const primaryImage = images.find((img) => img.isPrimary);
+    const imageToUse = primaryImage || images[0];
+
+    if (imageToUse?.imageUrl) {
+      const baseUrl = API_BASE_URL.replace("/api", "");
+      return `${baseUrl}${imageToUse.imageUrl}`;
+    }
+    return null;
+  };
+
+  // Fiyat formatlama fonksiyonu
+  const formatPrice = (price: number | null) => {
+    if (!price) return "Belirtilmemiş";
+    return price.toLocaleString("tr-TR");
+  };
+
+  // Telefon formatlama fonksiyonu
+  const formatPhone = (phone: string | null) => {
+    if (!phone) return "Belirtilmemiş";
+    // Sadece rakamları al
+    const digits = phone.replace(/\D/g, "");
+    // 0545 585 55 55 formatına çevir
+    if (digits.length === 11) {
+      return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(
+        7,
+        9
+      )} ${digits.slice(9, 11)}`;
+    }
+    return phone;
+  };
+
+  // Şehir/İlçe formatlama fonksiyonu
+  const formatLocation = (
+    city?: { name: string },
+    district?: { name: string }
+  ) => {
+    if (!city && !district) return "Belirtilmemiş";
+    if (city && district) return `${city.name} / ${district.name}`;
+    if (city) return city.name;
+    if (district) return district.name;
+    return "Belirtilmemiş";
+  };
+
+  // Favorites fonksiyonları
+  const handleAddToFavorites = async (adId: number) => {
+    if (!user) {
+      setSnackbarMessage("Favorilere eklemek için giriş yapmalısınız");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    // Zaten kaydedilmişse tekrar kaydetme
+    if (savedAds.has(adId)) {
+      setSnackbarMessage("Bu ilan zaten favorilerinizde");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    setSavingAdId(adId);
+    try {
+      await apiClient.post("/favorites", { adId });
+      setSavedAds((prev) => new Set([...prev, adId]));
+      setFavoritesCount((prev) => prev + 1);
+      setSnackbarMessage("İlan favorilere eklendi");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { error?: string } } };
+      const message =
+        axiosError.response?.data?.error || "Favorilere eklenirken hata oluştu";
+      setSnackbarMessage(message);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setSavingAdId(null);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -172,6 +282,31 @@ const MainLayout: React.FC = () => {
 
     fetchData();
   }, []);
+
+  // Favorites count'u yükle
+  useEffect(() => {
+    const fetchFavoritesCount = async () => {
+      if (!user) {
+        setFavoritesCount(0);
+        return;
+      }
+
+      try {
+        const response = await apiClient.get("/favorites");
+        const favorites = response.data as Array<{ ad: { id: number } }>;
+        setFavoritesCount(favorites.length);
+
+        // Mevcut kaydedilmiş ilanları da set et
+        const savedAdIds = new Set(favorites.map((fav) => fav.ad.id));
+        setSavedAds(savedAdIds);
+      } catch (error) {
+        console.error("Error fetching favorites count:", error);
+        setFavoritesCount(0);
+      }
+    };
+
+    fetchFavoritesCount();
+  }, [user]);
 
   const getCategoryIcon = (slug: string) => {
     switch (slug) {
@@ -361,7 +496,7 @@ const MainLayout: React.FC = () => {
         padding: 0,
       }}
     >
-      <Header />
+      <Header favoritesCount={favoritesCount} />
 
       <Box
         sx={{
@@ -474,12 +609,25 @@ const MainLayout: React.FC = () => {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: isMobile
-                ? "1fr"
-                : isTablet
-                ? "repeat(auto-fit, minmax(250px, 1fr))"
-                : "repeat(auto-fit, minmax(300px, 1fr))",
+              gridTemplateColumns: (() => {
+                if (isMobile) {
+                  return "1fr"; // Mobile: 1 sütun
+                } else if (isTablet) {
+                  return sidebarOpen
+                    ? "repeat(auto-fit, minmax(280px, 1fr))" // Tablet sidebar açık: 2-3 sütun
+                    : "repeat(auto-fit, minmax(250px, 1fr))"; // Tablet sidebar kapalı: 3-4 sütun
+                } else {
+                  return sidebarOpen
+                    ? "repeat(3, 1fr)" // Desktop sidebar açık: tam 3 sütun
+                    : "repeat(4, 1fr)"; // Desktop sidebar kapalı: tam 4 sütun
+                }
+              })(),
               gap: isMobile ? 2 : 3,
+              minChildWidth: isMobile
+                ? "auto"
+                : sidebarOpen
+                ? "280px"
+                : "250px", // Minimum genişlik
             }}
           >
             {Array.isArray(ads) &&
@@ -494,121 +642,213 @@ const MainLayout: React.FC = () => {
                       transform: "translateY(-2px)",
                     },
                     transition: "all 0.3s ease",
-                    height: { xs: "auto", sm: "420px" },
+                    height: "100%",
                     display: "flex",
                     flexDirection: "column",
+                    minWidth: isMobile
+                      ? "auto"
+                      : sidebarOpen
+                      ? "280px"
+                      : "250px",
+                    cursor: "pointer",
                   }}
                 >
+                  {/* Vitrin Görseli */}
                   <CardMedia
                     component="div"
                     sx={{
-                      height: { xs: 120, sm: 140, md: 160 },
-                      backgroundColor: "#f0f0f0",
+                      height: { xs: 140, sm: 160, md: 180 },
+                      backgroundColor: "#f5f5f5",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "#999",
-                      fontSize: { xs: "12px", sm: "14px" },
-                      backgroundImage:
-                        ad.images && ad.images.length > 0
-                          ? `url(${
-                              ad.images.find((img) => img.isPrimary)
-                                ?.imageUrl || ad.images[0]?.imageUrl
-                            })`
-                          : ad.photos && ad.photos.length > 0
-                          ? `url(${ad.photos[0]})`
-                          : "none",
+                      backgroundImage: getImageUrl(ad.images)
+                        ? `url(${getImageUrl(ad.images)})`
+                        : "none",
                       backgroundSize: "cover",
                       backgroundPosition: "center",
+                      position: "relative",
+                      overflow: "hidden",
                     }}
                   >
-                    {(!ad.images || ad.images.length === 0) &&
-                      (!ad.photos || ad.photos.length === 0) &&
-                      "Görsel Yok"}
+                    {!getImageUrl(ad.images) && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          color: "#999",
+                        }}
+                      >
+                        <LocalShipping sx={{ fontSize: 40, mb: 1 }} />
+                        <Typography variant="caption">Görsel Yok</Typography>
+                      </Box>
+                    )}
+
+                    {/* Kategori Badge */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                        color: "white",
+                        px: 1,
+                        py: 0.3,
+                        borderRadius: 0.5,
+                        fontSize: "0.7rem",
+                      }}
+                    >
+                      {ad.category?.name || "Araç"}
+                    </Box>
                   </CardMedia>
+
                   <CardContent
                     sx={{
                       flexGrow: 1,
                       display: "flex",
                       flexDirection: "column",
                       p: 2,
+                      "&:last-child": { pb: 2 },
                     }}
                   >
+                    {/* İlan Başlığı */}
                     <Typography
                       variant="h6"
                       sx={{
                         fontWeight: "bold",
                         color: "#313B4C",
                         mb: 1,
-                        textAlign: "center",
                         fontSize: { xs: "0.9rem", sm: "1rem" },
-                        lineHeight: 1.2,
+                        lineHeight: 1.3,
+                        height: "2.6em", // 2 satırlık sabit yükseklik
+                        overflow: "hidden",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
                       }}
                     >
-                      {ad.title}
+                      {ad.title || "İlan Başlığı Belirtilmemiş"}
                     </Typography>
+
+                    {/* Fiyat */}
                     <Typography
                       variant="h5"
                       sx={{
-                        color: "#D34237",
+                        color: "#333",
                         fontWeight: "bold",
-                        textAlign: "center",
-                        mb: 1,
+                        mb: 2,
                         fontSize: { xs: "1.1rem", sm: "1.25rem" },
                       }}
                     >
-                      ₺{ad.price ? ad.price.toLocaleString() : "Belirtilmemiş"}
+                      ₺{formatPrice(ad.price)}
                     </Typography>
 
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        textAlign: "center",
-                        mb: 0.5,
-                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
-                      }}
-                    >
-                      📍 {ad.city || "İstanbul"}, {ad.district || "Beylikdüzü"}
-                    </Typography>
+                    {/* Araç Bilgileri */}
+                    <Box sx={{ mb: 2 }}>
+                      {/* Model Yılı */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#666",
+                          mb: 0.8,
+                          fontSize: "0.8rem",
+                        }}
+                      >
+                        <strong>Model Yılı:</strong>{" "}
+                        {ad.year || "Belirtilmemiş"}
+                      </Typography>
 
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        textAlign: "center",
-                        mb: 0.5,
-                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
-                      }}
-                    >
-                      Model Yılı: {ad.year || "Belirtilmemiş"}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        textAlign: "center",
-                        mb: 1,
-                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
-                      }}
-                    >
-                      İlan Tarihi:{" "}
-                      {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
-                    </Typography>
+                      {/* Kilometre */}
+                      {ad.mileage && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "#666",
+                            mb: 0.8,
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          <strong>KM:</strong>{" "}
+                          {ad.mileage.toLocaleString("tr-TR")} km
+                        </Typography>
+                      )}
 
-                    <Typography
-                      variant="body2"
+                      {/* Konum */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#666",
+                          mb: 0.8,
+                          fontSize: "0.8rem",
+                        }}
+                      >
+                        <strong>Şehir/İlçe:</strong>{" "}
+                        {formatLocation(ad.city, ad.district)}
+                      </Typography>
+
+                      {/* İlan Tarihi */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#999",
+                          fontSize: "0.75rem",
+                        }}
+                      >
+                        <strong>İlan Tarihi:</strong>{" "}
+                        {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
+                      </Typography>
+                    </Box>
+
+                    {/* Satıcı Bilgileri */}
+                    <Box
                       sx={{
-                        color: "#666",
-                        textAlign: "center",
+                        backgroundColor: "#f5f5f5",
+                        borderRadius: 1,
+                        p: 1.5,
                         mb: 2,
-                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
-                        wordWrap: "break-word",
                       }}
                     >
-                      {ad.user.firstName} {ad.user.lastName}
-                    </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "#666",
+                            fontSize: "0.8rem",
+                          }}
+                        >
+                          <strong>İlan Sahibi:</strong>{" "}
+                          {[ad.user.firstName, ad.user.lastName]
+                            .filter(Boolean)
+                            .join(" ") || "Belirtilmemiş"}
+                        </Typography>
 
+                        {ad.user.phone && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#333",
+                              fontSize: "0.85rem",
+                              fontWeight: "600",
+                              backgroundColor: "#e8e8e8",
+                              px: 0.8,
+                              py: 0.2,
+                              borderRadius: 0.5,
+                            }}
+                          >
+                            {formatPhone(ad.user.phone)}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+
+                    {/* Action Buttons */}
                     <Box
                       sx={{
                         display: "flex",
@@ -621,71 +861,99 @@ const MainLayout: React.FC = () => {
                         fullWidth
                         variant="contained"
                         sx={{
-                          backgroundColor: "#D34237",
+                          backgroundColor: "#333",
                           color: "white",
-                          py: 0.5,
+                          py: 1,
                           borderRadius: 1,
-                          fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                          fontSize: "0.8rem",
                           "&:hover": {
-                            backgroundColor: "#B73429",
+                            backgroundColor: "#555",
                           },
                         }}
                       >
                         Detayları Gör
                       </Button>
 
-                      {/* Eğer kullanıcının kendi ilanı değilse bu butonları göster */}
                       <Box sx={{ display: "flex", gap: 0.5 }}>
+                        {ad.user.phone && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            href={`tel:${ad.user.phone}`}
+                            sx={{
+                              flex: 1,
+                              fontSize: "0.7rem",
+                              py: 0.3,
+                              borderColor: "#888",
+                              color: "#666",
+                              "&:hover": {
+                                borderColor: "#666",
+                                backgroundColor: "#f5f5f5",
+                              },
+                            }}
+                          >
+                            Ara
+                          </Button>
+                        )}
                         <Button
                           variant="outlined"
                           size="small"
                           sx={{
                             flex: 1,
-                            fontSize: { xs: "0.6rem", sm: "0.65rem" },
+                            fontSize: "0.7rem",
                             py: 0.3,
-                            borderColor: "#D34237",
-                            color: "#D34237",
-                            "&:hover": {
-                              borderColor: "#B73429",
-                              backgroundColor: "rgba(211, 66, 55, 0.1)",
-                            },
-                          }}
-                        >
-                          Mesaj At
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          sx={{
-                            flex: 1,
-                            fontSize: { xs: "0.6rem", sm: "0.65rem" },
-                            py: 0.3,
-                            borderColor: "#666",
+                            borderColor: "#888",
                             color: "#666",
                             "&:hover": {
-                              borderColor: "#333",
-                              backgroundColor: "rgba(102, 102, 102, 0.1)",
+                              borderColor: "#666",
+                              backgroundColor: "#f5f5f5",
                             },
                           }}
                         >
-                          Kaydet
+                          Mesaj
                         </Button>
                         <Button
-                          variant="outlined"
+                          variant={
+                            savedAds.has(ad.id) ? "contained" : "outlined"
+                          }
                           size="small"
+                          onClick={() => handleAddToFavorites(ad.id)}
+                          disabled={savingAdId === ad.id || savedAds.has(ad.id)}
+                          startIcon={
+                            savingAdId === ad.id ? (
+                              <CircularProgress size={12} />
+                            ) : savedAds.has(ad.id) ? (
+                              <CheckCircle />
+                            ) : null
+                          }
                           sx={{
                             flex: 1,
-                            fontSize: { xs: "0.6rem", sm: "0.65rem" },
+                            fontSize: "0.7rem",
                             py: 0.3,
-                            borderColor: "#f44336",
-                            color: "#f44336",
+                            borderColor: savedAds.has(ad.id)
+                              ? "#4caf50"
+                              : "#888",
+                            color: savedAds.has(ad.id) ? "white" : "#666",
+                            backgroundColor: savedAds.has(ad.id)
+                              ? "#4caf50"
+                              : "transparent",
                             "&:hover": {
-                              borderColor: "#d32f2f",
-                              backgroundColor: "rgba(244, 67, 54, 0.1)",
+                              borderColor: savedAds.has(ad.id)
+                                ? "#4caf50"
+                                : "#666",
+                              backgroundColor: savedAds.has(ad.id)
+                                ? "#4caf50"
+                                : "#f5f5f5",
+                            },
+                            "&:disabled": {
+                              backgroundColor: savedAds.has(ad.id)
+                                ? "#4caf50"
+                                : "transparent",
+                              color: savedAds.has(ad.id) ? "white" : "#999",
                             },
                           }}
                         >
-                          Şikayet Et
+                          {savedAds.has(ad.id) ? "Kaydedildi" : "Kaydet"}
                         </Button>
                       </Box>
                     </Box>
@@ -697,6 +965,22 @@ const MainLayout: React.FC = () => {
       </Box>
 
       <Footer />
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

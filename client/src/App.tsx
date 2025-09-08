@@ -12,7 +12,6 @@ import { ProtectedRoute } from "./components/auth";
 
 // Pages - Lazy loaded for better performance
 const MainLayout = React.lazy(() => import("./pages/MainLayout"));
-const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const AdDetail = React.lazy(() => import("./pages/AdDetail"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 const Notifications = React.lazy(() => import("./pages/Notifications"));
@@ -212,14 +211,7 @@ function App() {
                   />
 
                   {/* Protected Routes */}
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    }
-                  />
+               
 
                   <Route
                     path="/profile"
