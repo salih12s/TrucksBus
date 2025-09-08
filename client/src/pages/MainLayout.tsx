@@ -43,6 +43,16 @@ interface Ad {
   price: number | null;
   year: number | null;
   createdAt: string;
+  city?: string;
+  district?: string;
+  photos?: string[];
+  images?: Array<{
+    id: number;
+    imageUrl: string;
+    isPrimary: boolean;
+    displayOrder: number;
+    altText?: string;
+  }>;
   user: {
     firstName: string | null;
     lastName: string | null;
@@ -115,6 +125,12 @@ const MainLayout: React.FC = () => {
 
         setCategories(categoriesData as Category[]);
         setAds(adsData as Ad[]);
+
+        // Debug: Check if images are coming from API
+        console.log("Ads data:", adsData);
+        if (adsData.length > 0) {
+          console.log("First ad images:", adsData[0].images);
+        }
       } catch (error) {
         console.error("Data fetch error:", error);
         // Fallback data sadece kategoriler için
@@ -461,8 +477,8 @@ const MainLayout: React.FC = () => {
               gridTemplateColumns: isMobile
                 ? "1fr"
                 : isTablet
-                ? "repeat(auto-fit, minmax(300px, 1fr))"
-                : "repeat(auto-fit, minmax(400px, 1fr))",
+                ? "repeat(auto-fit, minmax(250px, 1fr))"
+                : "repeat(auto-fit, minmax(300px, 1fr))",
               gap: isMobile ? 2 : 3,
             }}
           >
@@ -478,7 +494,7 @@ const MainLayout: React.FC = () => {
                       transform: "translateY(-2px)",
                     },
                     transition: "all 0.3s ease",
-                    height: { xs: "auto", sm: "100%" },
+                    height: { xs: "auto", sm: "420px" },
                     display: "flex",
                     flexDirection: "column",
                   }}
@@ -486,22 +502,36 @@ const MainLayout: React.FC = () => {
                   <CardMedia
                     component="div"
                     sx={{
-                      height: { xs: 150, sm: 180, md: 200 },
+                      height: { xs: 120, sm: 140, md: 160 },
                       backgroundColor: "#f0f0f0",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       color: "#999",
                       fontSize: { xs: "12px", sm: "14px" },
+                      backgroundImage:
+                        ad.images && ad.images.length > 0
+                          ? `url(${
+                              ad.images.find((img) => img.isPrimary)
+                                ?.imageUrl || ad.images[0]?.imageUrl
+                            })`
+                          : ad.photos && ad.photos.length > 0
+                          ? `url(${ad.photos[0]})`
+                          : "none",
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
                     }}
                   >
-                    Görsel Yok
+                    {(!ad.images || ad.images.length === 0) &&
+                      (!ad.photos || ad.photos.length === 0) &&
+                      "Görsel Yok"}
                   </CardMedia>
                   <CardContent
                     sx={{
                       flexGrow: 1,
                       display: "flex",
                       flexDirection: "column",
+                      p: 2,
                     }}
                   >
                     <Typography
@@ -511,7 +541,8 @@ const MainLayout: React.FC = () => {
                         color: "#313B4C",
                         mb: 1,
                         textAlign: "center",
-                        fontSize: { xs: "1rem", sm: "1.25rem" },
+                        fontSize: { xs: "0.9rem", sm: "1rem" },
+                        lineHeight: 1.2,
                       }}
                     >
                       {ad.title}
@@ -522,11 +553,35 @@ const MainLayout: React.FC = () => {
                         color: "#D34237",
                         fontWeight: "bold",
                         textAlign: "center",
-                        mb: 2,
-                        fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                        mb: 1,
+                        fontSize: { xs: "1.1rem", sm: "1.25rem" },
                       }}
                     >
-                      ₺{ad.price ? ad.price.toLocaleString() : "0"}
+                      ₺{ad.price ? ad.price.toLocaleString() : "Belirtilmemiş"}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#666",
+                        textAlign: "center",
+                        mb: 0.5,
+                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                      }}
+                    >
+                      📍 {ad.city || "İstanbul"}, {ad.district || "Beylikdüzü"}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#666",
+                        textAlign: "center",
+                        mb: 0.5,
+                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                      }}
+                    >
+                      Model Yılı: {ad.year || "Belirtilmemiş"}
                     </Typography>
                     <Typography
                       variant="body2"
@@ -534,52 +589,106 @@ const MainLayout: React.FC = () => {
                         color: "#666",
                         textAlign: "center",
                         mb: 1,
-                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
                       }}
                     >
-                      Model Yılı: {ad.year}
+                      İlan Tarihi:{" "}
+                      {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "#666",
-                        textAlign: "center",
-                        mb: 1,
-                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                      }}
-                    >
-                      İlan Tarihi: {ad.createdAt}
-                    </Typography>
+
                     <Typography
                       variant="body2"
                       sx={{
                         color: "#666",
                         textAlign: "center",
                         mb: 2,
-                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        fontSize: { xs: "0.7rem", sm: "0.75rem" },
                         wordWrap: "break-word",
                       }}
                     >
-                      İlan Sahibi: {ad.user.firstName} {ad.user.lastName} | Tel:{" "}
-                      {ad.user.phone}
+                      {ad.user.firstName} {ad.user.lastName}
                     </Typography>
-                    <Button
-                      fullWidth
-                      variant="contained"
+
+                    <Box
                       sx={{
-                        backgroundColor: "#D34237",
-                        color: "white",
-                        py: { xs: 0.75, sm: 1 },
-                        borderRadius: 2,
-                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1,
                         mt: "auto",
-                        "&:hover": {
-                          backgroundColor: "#B73429",
-                        },
                       }}
                     >
-                      Detayları Gör
-                    </Button>
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                          backgroundColor: "#D34237",
+                          color: "white",
+                          py: 0.5,
+                          borderRadius: 1,
+                          fontSize: { xs: "0.7rem", sm: "0.75rem" },
+                          "&:hover": {
+                            backgroundColor: "#B73429",
+                          },
+                        }}
+                      >
+                        Detayları Gör
+                      </Button>
+
+                      {/* Eğer kullanıcının kendi ilanı değilse bu butonları göster */}
+                      <Box sx={{ display: "flex", gap: 0.5 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          sx={{
+                            flex: 1,
+                            fontSize: { xs: "0.6rem", sm: "0.65rem" },
+                            py: 0.3,
+                            borderColor: "#D34237",
+                            color: "#D34237",
+                            "&:hover": {
+                              borderColor: "#B73429",
+                              backgroundColor: "rgba(211, 66, 55, 0.1)",
+                            },
+                          }}
+                        >
+                          Mesaj At
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          sx={{
+                            flex: 1,
+                            fontSize: { xs: "0.6rem", sm: "0.65rem" },
+                            py: 0.3,
+                            borderColor: "#666",
+                            color: "#666",
+                            "&:hover": {
+                              borderColor: "#333",
+                              backgroundColor: "rgba(102, 102, 102, 0.1)",
+                            },
+                          }}
+                        >
+                          Kaydet
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          sx={{
+                            flex: 1,
+                            fontSize: { xs: "0.6rem", sm: "0.65rem" },
+                            py: 0.3,
+                            borderColor: "#f44336",
+                            color: "#f44336",
+                            "&:hover": {
+                              borderColor: "#d32f2f",
+                              backgroundColor: "rgba(244, 67, 54, 0.1)",
+                            },
+                          }}
+                        >
+                          Şikayet Et
+                        </Button>
+                      </Box>
+                    </Box>
                   </CardContent>
                 </Card>
               ))}

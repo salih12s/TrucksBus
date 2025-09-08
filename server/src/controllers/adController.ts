@@ -711,15 +711,33 @@ export const getPendingAds = async (req: Request, res: Response) => {
       where: { status: "PENDING" },
       include: {
         user: {
-          select: { id: true, firstName: true, lastName: true, email: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            companyName: true,
+          },
         },
         category: true,
         brand: true,
         model: true,
         variant: true,
+        city: true,
+        district: true,
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
+    
+    console.log("Pending ads fetched:", pendingAds.length);
+    if (pendingAds.length > 0) {
+      console.log("Sample ad fields:", Object.keys(pendingAds[0]));
+    }
+    
     res.json(pendingAds);
   } catch (error) {
     console.error("Onay bekleyen ilanlar hatası:", error);

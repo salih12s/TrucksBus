@@ -77,7 +77,14 @@ const Header: React.FC = () => {
             display: "flex",
             alignItems: "center",
             zIndex: 1,
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+            "&:hover": {
+              transform: "translateY(-50%) scale(1.05)",
+              filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
+            },
           }}
+          onClick={() => navigate("/")}
         >
           <img
             src="/Trucksbus.png"
@@ -86,6 +93,7 @@ const Header: React.FC = () => {
               height: 120, // Büyütüldü (40'tan 55'e)
               filter: "brightness(0) invert(1)", // Beyaz renk
               marginRight: 16,
+              transition: "all 0.3s ease",
             }}
           />
           <Typography
@@ -95,6 +103,10 @@ const Header: React.FC = () => {
               fontWeight: "bold",
               fontSize: "1.5rem",
               marginLeft: 2, // Yazıyı sağa kaydır
+              transition: "all 0.3s ease",
+              "&:hover": {
+                textShadow: "0 2px 4px rgba(0,0,0,0.3)",
+              },
             }}
           >
             <span style={{ color: "white" }}>Alın Satın </span>
