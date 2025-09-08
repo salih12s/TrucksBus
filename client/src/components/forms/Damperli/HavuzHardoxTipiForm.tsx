@@ -23,6 +23,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../layout/Header";
 import apiClient from "../../../api/client";
 
+interface User {
+  id: number;
+  fullName: string;
+  phone: string;
+  email: string;
+}
+
 interface City {
   id: number;
   name: string;
@@ -79,6 +86,10 @@ const HavuzHardoxTipiForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  // User variable'ı sadece form verilerini doldurmak için kullanılıyor
+  console.log("User data loaded:", user?.fullName);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -112,6 +123,28 @@ const HavuzHardoxTipiForm: React.FC = () => {
 
     detailedInfo: "",
   });
+
+  // Kullanıcı bilgilerini yükle
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await apiClient.get("/auth/profile");
+        const userData = response.data as User;
+        setUser(userData);
+
+        // Form verilerini kullanıcı bilgileriyle doldur
+        setFormData((prev) => ({
+          ...prev,
+          sellerName: userData.fullName || "",
+          phone: userData.phone || "",
+          email: userData.email || "",
+        }));
+      } catch (error) {
+        console.error("Kullanıcı bilgileri yüklenirken hata:", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   // Şehirleri yükle
   useEffect(() => {
@@ -174,6 +207,21 @@ const HavuzHardoxTipiForm: React.FC = () => {
     }));
   };
 
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -181,10 +229,18 @@ const HavuzHardoxTipiForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Temel bilgileri ekle
+      // Temel bilgileri ekle (price'ı parse ederek)
       Object.entries(formData).forEach(([key, value]) => {
         if (key !== "photos" && key !== "showcasePhoto" && value) {
-          submitData.append(key, value.toString());
+          // Price değerini parse et
+          if (key === "price") {
+            const parsedValue = parseFormattedNumber(value.toString());
+            if (parsedValue) {
+              submitData.append(key, parsedValue);
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
@@ -305,10 +361,14 @@ const HavuzHardoxTipiForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  type="number"
+                  type="text"
                   label="Fiyat (TL) *"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  value={formatNumber(formData.price)}
+                  onChange={(e) => {
+                    const rawValue = parseFormattedNumber(e.target.value);
+                    handleInputChange("price", rawValue);
+                  }}
+                  placeholder="Örn: 150.000"
                   required
                 />
               </Box>
@@ -445,6 +505,8 @@ const HavuzHardoxTipiForm: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange("sellerName", e.target.value)
                 }
+                disabled
+                helperText="Profil bilgilerinizden otomatik olarak doldurulmuştur"
                 required
               />
 
@@ -456,6 +518,8 @@ const HavuzHardoxTipiForm: React.FC = () => {
                   label="Telefon *"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik olarak doldurulmuştur"
                   required
                 />
 
@@ -465,6 +529,8 @@ const HavuzHardoxTipiForm: React.FC = () => {
                   label="E-posta"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik olarak doldurulmuştur"
                 />
               </Box>
             </Box>
@@ -636,10 +702,10 @@ const HavuzHardoxTipiForm: React.FC = () => {
                 type="button"
                 variant="outlined"
                 size="large"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/")}
                 sx={{ px: 4 }}
               >
-                Geri Dön
+                Anasayfaya Dön
               </Button>
               <Button
                 type="submit"

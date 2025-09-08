@@ -330,9 +330,27 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {/* Database slug için alternatif route */}
+                  <Route
+                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tip/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <HafriyatTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
 
                   <Route
                     path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <HavuzHardoxTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* Database slug için alternatif route */}
+                  <Route
+                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/havuzhardox-tip/create-ad"
                     element={
                       <ProtectedRoute>
                         <HavuzHardoxTipiForm />
@@ -348,9 +366,27 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {/* Database slug için alternatif route */}
+                  <Route
+                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kapakl-tip/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KapakliTipForm />
+                      </ProtectedRoute>
+                    }
+                  />
 
                   <Route
                     path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KayaTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* Database slug için alternatif route */}
+                  <Route
+                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tip/create-ad"
                     element={
                       <ProtectedRoute>
                         <KayaTipiForm />

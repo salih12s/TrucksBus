@@ -23,6 +23,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../layout/Header";
 import apiClient from "../../../api/client";
 
+interface User {
+  id: number;
+  fullName: string;
+  phone: string;
+  email: string;
+}
+
 interface City {
   id: number;
   name: string;
@@ -79,6 +86,10 @@ const KayaTipiForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  // User variable'ı sadece form verilerini doldurmak için kullanılıyor
+  console.log("User data loaded:", user?.fullName);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -112,6 +123,28 @@ const KayaTipiForm: React.FC = () => {
 
     detailedInfo: "",
   });
+
+  // Kullanıcı bilgilerini yükle
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await apiClient.get("/auth/profile");
+        const userData = response.data as User;
+        setUser(userData);
+
+        // Form verilerini kullanıcı bilgileriyle doldur
+        setFormData((prev) => ({
+          ...prev,
+          sellerName: userData.fullName || "",
+          phone: userData.phone || "",
+          email: userData.email || "",
+        }));
+      } catch (error) {
+        console.error("Kullanıcı bilgileri yüklenirken hata:", error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   // Şehirleri yükle
   useEffect(() => {
@@ -472,6 +505,8 @@ const KayaTipiForm: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange("sellerName", e.target.value)
                 }
+                disabled
+                helperText="Profil bilgilerinizden otomatik olarak doldurulmuştur"
                 required
               />
 
@@ -483,6 +518,8 @@ const KayaTipiForm: React.FC = () => {
                   label="Telefon *"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik olarak doldurulmuştur"
                   required
                 />
 
@@ -492,6 +529,8 @@ const KayaTipiForm: React.FC = () => {
                   label="E-posta"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik olarak doldurulmuştur"
                 />
               </Box>
             </Box>

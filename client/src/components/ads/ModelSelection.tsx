@@ -26,6 +26,12 @@ interface Model {
   };
 }
 
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+}
+
 interface Brand {
   id: number;
   name: string;
@@ -89,16 +95,29 @@ const ModelSelection: React.FC = () => {
     model.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleModelSelect = (modelSlug: string) => {
-    // Dorse kategorisi için özel kontrol - varyant olmadığı için direkt form sayfasına git
-    if (categorySlug === "dorse" || categorySlug === "damperli-dorse") {
-      navigate(
-        `/categories/${categorySlug}/brands/${brandSlug}/models/${modelSlug}/create-ad`
+  const handleModelSelect = async (model: Model) => {
+    try {
+      // Önce bu modelin variant sayısını kontrol edelim
+      const variantsResponse = await apiClient.get(
+        `/categories/${categorySlug}/brands/${brandSlug}/models/${model.slug}/variants`
       );
-    } else {
-      // Diğer kategoriler için normal varyant seçim akışı
+      const variants = variantsResponse.data as Variant[];
+
+      // Variant varsa variant seçim sayfasına git, yoksa direkt form sayfasına
+      if (variants && variants.length > 0) {
+        navigate(
+          `/categories/${categorySlug}/brands/${brandSlug}/models/${model.slug}/variants`
+        );
+      } else {
+        navigate(
+          `/categories/${categorySlug}/brands/${brandSlug}/models/${model.slug}/create-ad`
+        );
+      }
+    } catch (error) {
+      console.error("Error checking variants:", error);
+      // Hata durumunda variant sayfasına yönlendir (güvenli taraf)
       navigate(
-        `/categories/${categorySlug}/brands/${brandSlug}/models/${modelSlug}/variants`
+        `/categories/${categorySlug}/brands/${brandSlug}/models/${model.slug}/variants`
       );
     }
   };
@@ -260,7 +279,7 @@ const ModelSelection: React.FC = () => {
                     boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
                   },
                 }}
-                onClick={() => handleModelSelect(model.slug)}
+                onClick={() => handleModelSelect(model)}
               >
                 <Box sx={{ textAlign: "center", padding: 2 }}>
                   <Typography
