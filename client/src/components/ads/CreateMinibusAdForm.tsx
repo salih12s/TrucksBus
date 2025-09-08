@@ -1223,28 +1223,6 @@ const CreateMinibusAdForm: React.FC = () => {
                     }}
                   />
                 </Box>
-
-                {/* Detaylı Bilgi */}
-                <Box sx={{ mb: 3 }}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={6}
-                    label="Detaylı Bilgi"
-                    value={formData.detailedInfo}
-                    onChange={(e) =>
-                      handleInputChange("detailedInfo", e.target.value)
-                    }
-                    placeholder="Aracınız hakkında detaylı bilgi verebilirsiniz..."
-                    variant="outlined"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 3,
-                        "&:hover fieldset": { borderColor: "primary.main" },
-                      },
-                    }}
-                  />
-                </Box>
               </CardContent>
             </Card>
 

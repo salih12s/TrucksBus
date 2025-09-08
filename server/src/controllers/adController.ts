@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import fs from "fs";
+import path from "path";
 
 const prisma = new PrismaClient();
 
@@ -527,20 +529,37 @@ export const createMinibusAd = async (req: Request, res: Response) => {
 
     // Resim yükleme işlemi
     const files = req.files as any;
-    if (files) {
-      console.log("📷 Resimler yükleniyor:", Object.keys(files));
+    if (files && files.length > 0) {
+      console.log(
+        "📷 Resimler yükleniyor:",
+        files.map((f: any) => f.fieldname)
+      );
+
+      // Uploads klasörünün var olduğundan emin ol
+      const uploadsDir = path.join(__dirname, "../../uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
 
       const imagePromises = [];
       let displayOrder = 0;
 
-      // Vitrin resmi önce işle
-      if (files.showcasePhoto) {
-        const showcaseFile = Array.isArray(files.showcasePhoto)
-          ? files.showcasePhoto[0]
-          : files.showcasePhoto;
+      // Vitrin resmini bul ve işle
+      const showcaseFile = files.find(
+        (f: any) => f.fieldname === "showcasePhoto"
+      );
+      if (showcaseFile) {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000);
+        const extension = path.extname(showcaseFile.originalname);
+        const filename = `${timestamp}-${randomNum}${extension}`;
+        const filepath = path.join(uploadsDir, filename);
 
-        const imageUrl = `/uploads/${showcaseFile.filename}`;
-        console.log("📷 Vitrin resmi:", imageUrl);
+        // Dosyayı kaydet
+        fs.writeFileSync(filepath, showcaseFile.buffer);
+
+        const imageUrl = `/uploads/${filename}`;
+        console.log("📷 Vitrin resmi kaydedildi:", imageUrl);
 
         imagePromises.push(
           prisma.adImage.create({
@@ -557,29 +576,37 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       }
 
       // Diğer resimleri işle
-      for (const key in files) {
-        if (key.startsWith("photo_")) {
-          const file = Array.isArray(files[key]) ? files[key][0] : files[key];
-          const imageUrl = `/uploads/${file.filename}`;
+      const photoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("photo_")
+      );
+      for (const file of photoFiles) {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000);
+        const extension = path.extname(file.originalname);
+        const filename = `${timestamp}-${randomNum}${extension}`;
+        const filepath = path.join(uploadsDir, filename);
 
-          console.log(`📷 Resim ${displayOrder}:`, imageUrl);
+        // Dosyayı kaydet
+        fs.writeFileSync(filepath, file.buffer);
 
-          imagePromises.push(
-            prisma.adImage.create({
-              data: {
-                adId: ad.id,
-                imageUrl,
-                isPrimary: false,
-                displayOrder,
-                altText: `${title} - Resim ${displayOrder}`,
-              },
-            })
-          );
-          displayOrder++;
-        }
+        const imageUrl = `/uploads/${filename}`;
+        console.log(`📷 Resim ${displayOrder} kaydedildi:`, imageUrl);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl,
+              isPrimary: false,
+              displayOrder,
+              altText: `${title} - Resim ${displayOrder}`,
+            },
+          })
+        );
+        displayOrder++;
       }
 
-      // Tüm resimleri kaydet
+      // Tüm resimleri veritabanına kaydet
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
@@ -731,29 +758,46 @@ export const createCekiciAd = async (req: Request, res: Response) => {
     console.log("✅ Çekici ilanı oluşturuldu, ID:", ad.id);
 
     // Resim yükleme işlemleri
-    const files = req.files as {
-      [fieldname: string]: Express.Multer.File | Express.Multer.File[];
-    };
+    const files = req.files as any;
     console.log("📂 Yüklenen dosyalar:", files);
 
-    if (files && Object.keys(files).length > 0) {
+    if (files && files.length > 0) {
+      console.log(
+        "� Resimler yükleniyor:",
+        files.map((f: any) => f.fieldname)
+      );
+
+      // Uploads klasörünün var olduğundan emin ol
+      const uploadsDir = path.join(__dirname, "../../uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
       const imagePromises: any[] = [];
       let displayOrder = 0;
 
-      // Önce vitrin resmi (showcasePhoto) varsa işle
-      if (files.showcasePhoto) {
-        const showcaseFile = Array.isArray(files.showcasePhoto)
-          ? files.showcasePhoto[0]
-          : files.showcasePhoto;
-        const showcaseImageUrl = `/uploads/${showcaseFile.filename}`;
+      // Vitrin resmini bul ve işle
+      const showcaseFile = files.find(
+        (f: any) => f.fieldname === "showcasePhoto"
+      );
+      if (showcaseFile) {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000);
+        const extension = path.extname(showcaseFile.originalname);
+        const filename = `${timestamp}-${randomNum}${extension}`;
+        const filepath = path.join(uploadsDir, filename);
 
-        console.log("🖼️ Vitrin resmi:", showcaseImageUrl);
+        // Dosyayı kaydet
+        fs.writeFileSync(filepath, showcaseFile.buffer);
+
+        const imageUrl = `/uploads/${filename}`;
+        console.log("🖼️ Vitrin resmi kaydedildi:", imageUrl);
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl: showcaseImageUrl,
+              imageUrl,
               isPrimary: true,
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
@@ -764,29 +808,37 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       }
 
       // Diğer resimleri işle
-      for (const key in files) {
-        if (key.startsWith("photo_")) {
-          const file = Array.isArray(files[key]) ? files[key][0] : files[key];
-          const imageUrl = `/uploads/${file.filename}`;
+      const photoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("photo_")
+      );
+      for (const file of photoFiles) {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000);
+        const extension = path.extname(file.originalname);
+        const filename = `${timestamp}-${randomNum}${extension}`;
+        const filepath = path.join(uploadsDir, filename);
 
-          console.log(`📷 Resim ${displayOrder}:`, imageUrl);
+        // Dosyayı kaydet
+        fs.writeFileSync(filepath, file.buffer);
 
-          imagePromises.push(
-            prisma.adImage.create({
-              data: {
-                adId: ad.id,
-                imageUrl,
-                isPrimary: false,
-                displayOrder,
-                altText: `${title} - Resim ${displayOrder}`,
-              },
-            })
-          );
-          displayOrder++;
-        }
+        const imageUrl = `/uploads/${filename}`;
+        console.log(`📷 Resim ${displayOrder} kaydedildi:`, imageUrl);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl,
+              isPrimary: false,
+              displayOrder,
+              altText: `${title} - Resim ${displayOrder}`,
+            },
+          })
+        );
+        displayOrder++;
       }
 
-      // Tüm resimleri kaydet
+      // Tüm resimleri veritabanına kaydet
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
@@ -886,8 +938,18 @@ export const getPendingAds = async (req: Request, res: Response) => {
         brand: true,
         model: true,
         variant: true,
-        city: true,
-        district: true,
+        city: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        district: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         images: {
           orderBy: { displayOrder: "asc" },
         },
@@ -1068,29 +1130,46 @@ export const createKamyonAd = async (req: Request, res: Response) => {
     console.log("✅ Kamyon ilanı oluşturuldu, ID:", ad.id);
 
     // Resim yükleme işlemleri
-    const files = req.files as {
-      [fieldname: string]: Express.Multer.File | Express.Multer.File[];
-    };
+    const files = req.files as any;
     console.log("📂 Yüklenen dosyalar:", files);
 
-    if (files && Object.keys(files).length > 0) {
+    if (files && files.length > 0) {
+      console.log(
+        "� Resimler yükleniyor:",
+        files.map((f: any) => f.fieldname)
+      );
+
+      // Uploads klasörünün var olduğundan emin ol
+      const uploadsDir = path.join(__dirname, "../../uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
       const imagePromises: any[] = [];
       let displayOrder = 0;
 
-      // Önce vitrin resmi (showcasePhoto) varsa işle
-      if (files.showcasePhoto) {
-        const showcaseFile = Array.isArray(files.showcasePhoto)
-          ? files.showcasePhoto[0]
-          : files.showcasePhoto;
-        const showcaseImageUrl = `/uploads/${showcaseFile.filename}`;
+      // Vitrin resmini bul ve işle
+      const showcaseFile = files.find(
+        (f: any) => f.fieldname === "showcasePhoto"
+      );
+      if (showcaseFile) {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000);
+        const extension = path.extname(showcaseFile.originalname);
+        const filename = `${timestamp}-${randomNum}${extension}`;
+        const filepath = path.join(uploadsDir, filename);
 
-        console.log("🖼️ Vitrin resmi:", showcaseImageUrl);
+        // Dosyayı kaydet
+        fs.writeFileSync(filepath, showcaseFile.buffer);
+
+        const imageUrl = `/uploads/${filename}`;
+        console.log("🖼️ Vitrin resmi kaydedildi:", imageUrl);
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl: showcaseImageUrl,
+              imageUrl,
               isPrimary: true,
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
@@ -1101,29 +1180,37 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       }
 
       // Diğer resimleri işle
-      for (const key in files) {
-        if (key.startsWith("photo_")) {
-          const file = Array.isArray(files[key]) ? files[key][0] : files[key];
-          const imageUrl = `/uploads/${file.filename}`;
+      const photoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("photo_")
+      );
+      for (const file of photoFiles) {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000);
+        const extension = path.extname(file.originalname);
+        const filename = `${timestamp}-${randomNum}${extension}`;
+        const filepath = path.join(uploadsDir, filename);
 
-          console.log(`📷 Resim ${displayOrder}:`, imageUrl);
+        // Dosyayı kaydet
+        fs.writeFileSync(filepath, file.buffer);
 
-          imagePromises.push(
-            prisma.adImage.create({
-              data: {
-                adId: ad.id,
-                imageUrl,
-                isPrimary: false,
-                displayOrder,
-                altText: `${title} - Resim ${displayOrder}`,
-              },
-            })
-          );
-          displayOrder++;
-        }
+        const imageUrl = `/uploads/${filename}`;
+        console.log(`📷 Resim ${displayOrder} kaydedildi:`, imageUrl);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl,
+              isPrimary: false,
+              displayOrder,
+              altText: `${title} - Resim ${displayOrder}`,
+            },
+          })
+        );
+        displayOrder++;
       }
 
-      // Tüm resimleri kaydet
+      // Tüm resimleri veritabanına kaydet
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
@@ -1276,29 +1363,46 @@ export const createOtobusAd = async (req: Request, res: Response) => {
     console.log("✅ Otobüs ilanı oluşturuldu, ID:", ad.id);
 
     // Resim yükleme işlemleri
-    const files = req.files as {
-      [fieldname: string]: Express.Multer.File | Express.Multer.File[];
-    };
+    const files = req.files as any;
     console.log("📂 Yüklenen dosyalar:", files);
 
-    if (files && Object.keys(files).length > 0) {
+    if (files && files.length > 0) {
+      console.log(
+        "� Resimler yükleniyor:",
+        files.map((f: any) => f.fieldname)
+      );
+
+      // Uploads klasörünün var olduğundan emin ol
+      const uploadsDir = path.join(__dirname, "../../uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
       const imagePromises: any[] = [];
       let displayOrder = 0;
 
-      // Önce vitrin resmi (showcasePhoto) varsa işle
-      if (files.showcasePhoto) {
-        const showcaseFile = Array.isArray(files.showcasePhoto)
-          ? files.showcasePhoto[0]
-          : files.showcasePhoto;
-        const showcaseImageUrl = `/uploads/${showcaseFile.filename}`;
+      // Vitrin resmini bul ve işle
+      const showcaseFile = files.find(
+        (f: any) => f.fieldname === "showcasePhoto"
+      );
+      if (showcaseFile) {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000);
+        const extension = path.extname(showcaseFile.originalname);
+        const filename = `${timestamp}-${randomNum}${extension}`;
+        const filepath = path.join(uploadsDir, filename);
 
-        console.log("🖼️ Vitrin resmi:", showcaseImageUrl);
+        // Dosyayı kaydet
+        fs.writeFileSync(filepath, showcaseFile.buffer);
+
+        const imageUrl = `/uploads/${filename}`;
+        console.log("🖼️ Vitrin resmi kaydedildi:", imageUrl);
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl: showcaseImageUrl,
+              imageUrl,
               isPrimary: true,
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
@@ -1309,29 +1413,37 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       }
 
       // Diğer resimleri işle
-      for (const key in files) {
-        if (key.startsWith("photo_")) {
-          const file = Array.isArray(files[key]) ? files[key][0] : files[key];
-          const imageUrl = `/uploads/${file.filename}`;
+      const photoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("photo_")
+      );
+      for (const file of photoFiles) {
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 1000);
+        const extension = path.extname(file.originalname);
+        const filename = `${timestamp}-${randomNum}${extension}`;
+        const filepath = path.join(uploadsDir, filename);
 
-          console.log(`📷 Resim ${displayOrder}:`, imageUrl);
+        // Dosyayı kaydet
+        fs.writeFileSync(filepath, file.buffer);
 
-          imagePromises.push(
-            prisma.adImage.create({
-              data: {
-                adId: ad.id,
-                imageUrl,
-                isPrimary: false,
-                displayOrder,
-                altText: `${title} - Resim ${displayOrder}`,
-              },
-            })
-          );
-          displayOrder++;
-        }
+        const imageUrl = `/uploads/${filename}`;
+        console.log(`📷 Resim ${displayOrder} kaydedildi:`, imageUrl);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl,
+              isPrimary: false,
+              displayOrder,
+              altText: `${title} - Resim ${displayOrder}`,
+            },
+          })
+        );
+        displayOrder++;
       }
 
-      // Tüm resimleri kaydet
+      // Tüm resimleri veritabanına kaydet
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);

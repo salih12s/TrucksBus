@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Container,
@@ -18,6 +18,9 @@ import {
   Avatar,
   IconButton,
   Collapse,
+  Modal,
+  Backdrop,
+  Fade,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -28,6 +31,11 @@ import {
   DateRange,
   AttachMoney,
   DirectionsCar,
+  PhotoCamera,
+  Image,
+  Close,
+  ArrowBack,
+  ArrowForward,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
 
@@ -51,6 +59,21 @@ interface Ad {
     id: number;
     name: string;
   };
+  city: {
+    id: number;
+    name: string;
+  };
+  district: {
+    id: number;
+    name: string;
+  };
+  images: {
+    id: number;
+    imageUrl: string;
+    isPrimary: boolean;
+    displayOrder: number;
+    altText: string;
+  }[];
   customFields: {
     condition?: string;
     engineVolume?: string;
@@ -79,6 +102,20 @@ const PendingAds: React.FC = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
+  // Image gallery modal states
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<Ad['images']>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // API Base URL'i al
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const getImageUrl = (imageUrl: string) => {
+    // imageUrl zaten /uploads/filename.jpg formatında gelir
+    const baseUrl = API_BASE_URL.replace("/api", "");
+    const fullUrl = `${baseUrl}${imageUrl}`;
+    return fullUrl;
+  };
+
   // Onay bekleyen ilanları yükle
   useEffect(() => {
     fetchPendingAds();
@@ -87,7 +124,8 @@ const PendingAds: React.FC = () => {
   const fetchPendingAds = async () => {
     try {
       const response = await apiClient.get("/ads/admin/pending");
-      setAds(response.data as Ad[]);
+      const adsData = response.data as Ad[];
+      setAds(adsData);
     } catch (error) {
       console.error("Onay bekleyen ilanlar alınamadı:", error);
     } finally {
@@ -139,6 +177,69 @@ const PendingAds: React.FC = () => {
   const toggleCardExpansion = (adId: number) => {
     setExpandedCard(expandedCard === adId ? null : adId);
   };
+
+  // Image gallery functions
+  const openImageModal = (images: Ad['images'], startIndex: number = 0) => {
+    setSelectedImages(images);
+    setCurrentImageIndex(startIndex);
+    setImageModalOpen(true);
+  };
+
+  const closeImageModal = () => {
+    setImageModalOpen(false);
+    setSelectedImages([]);
+    setCurrentImageIndex(0);
+  };
+
+  const nextImage = useCallback(() => {
+    setCurrentImageIndex((prev) =>
+      prev < selectedImages.length - 1 ? prev + 1 : 0
+    );
+  }, [selectedImages.length]);
+
+  const prevImage = useCallback(() => {
+    setCurrentImageIndex((prev) =>
+      prev > 0 ? prev - 1 : selectedImages.length - 1
+    );
+  }, [selectedImages.length]);
+
+  const handleImageError = (
+    e: React.SyntheticEvent<HTMLImageElement, Event>
+  ) => {
+    const target = e.target as HTMLImageElement;
+    target.style.display = "none";
+    const parent = target.parentElement;
+    if (parent) {
+      parent.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; color: #999; flex-direction: column;">
+          <span style="font-size: 12px;">Resim</span>
+          <span style="font-size: 12px;">yüklenemedi</span>
+        </div>
+      `;
+    }
+  };
+
+  // Keyboard navigation for image modal
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!imageModalOpen) return;
+
+      switch (event.key) {
+        case "ArrowLeft":
+          prevImage();
+          break;
+        case "ArrowRight":
+          nextImage();
+          break;
+        case "Escape":
+          closeImageModal();
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [imageModalOpen, nextImage, prevImage]);
 
   // Değerleri Türkçeleştirme fonksiyonları
   const translateCondition = (condition: string) => {
@@ -269,6 +370,15 @@ const PendingAds: React.FC = () => {
                           color="secondary"
                           size="small"
                         />
+                        {ad.city && (
+                          <Chip
+                            label={`${ad.city.name}${
+                              ad.district ? ` / ${ad.district.name}` : ""
+                            }`}
+                            variant="outlined"
+                            size="small"
+                          />
+                        )}
                       </Box>
                     </Box>
 
@@ -326,6 +436,97 @@ const PendingAds: React.FC = () => {
                       </Box>
                     </Box>
                   </Paper>
+
+                  {/* Resimler */}
+                  {ad.images && ad.images.length > 0 && (
+                    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mb: 2,
+                        }}
+                      >
+                        <PhotoCamera color="primary" />
+                        <Typography variant="subtitle2">
+                          İlan Resimleri ({ad.images.length})
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          flexWrap: "wrap",
+                          maxHeight: 120,
+                          overflowY: "auto",
+                        }}
+                      >
+                        {ad.images.map((image, index) => (
+                          <Box
+                            key={image.id}
+                            sx={{
+                              position: "relative",
+                              width: 100,
+                              height: 80,
+                              borderRadius: 1,
+                              overflow: "hidden",
+                              border: image.isPrimary
+                                ? "2px solid #1976d2"
+                                : "1px solid #e0e0e0",
+                              cursor: "pointer",
+                              transition: "transform 0.2s",
+                              "&:hover": {
+                                transform: "scale(1.05)",
+                              },
+                            }}
+                            onClick={() => openImageModal(ad.images, index)}
+                          >
+                            <img
+                              src={getImageUrl(image.imageUrl)}
+                              alt={image.altText || `Resim ${index + 1}`}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                              onError={handleImageError}
+                            />
+                            {image.isPrimary && (
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  top: 2,
+                                  right: 2,
+                                  background: "#1976d2",
+                                  color: "white",
+                                  fontSize: 10,
+                                  px: 0.5,
+                                  py: 0.25,
+                                  borderRadius: 0.5,
+                                }}
+                              >
+                                Vitrin
+                              </Box>
+                            )}
+                          </Box>
+                        ))}
+                      </Box>
+                    </Paper>
+                  )}
+
+                  {/* Eğer resim yoksa */}
+                  {(!ad.images || ad.images.length === 0) && (
+                    <Paper
+                      variant="outlined"
+                      sx={{ p: 2, mb: 2, textAlign: "center" }}
+                    >
+                      <Image sx={{ fontSize: 40, color: "#ccc", mb: 1 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        Bu ilan için resim yüklenmemiş
+                      </Typography>
+                    </Paper>
+                  )}
 
                   {/* Açıklama */}
                   <Typography
@@ -589,6 +790,183 @@ const PendingAds: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Image Gallery Modal */}
+      <Modal
+        open={imageModalOpen}
+        onClose={closeImageModal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+          sx: { backgroundColor: "rgba(0,0,0,0.9)" },
+        }}
+      >
+        <Fade in={imageModalOpen}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: "90vw",
+              height: "90vh",
+              bgcolor: "background.paper",
+              borderRadius: 2,
+              boxShadow: 24,
+              p: 2,
+              outline: "none",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Modal Header */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="h6">
+                Resim {currentImageIndex + 1} / {selectedImages.length}
+              </Typography>
+              <IconButton onClick={closeImageModal} size="large">
+                <Close />
+              </IconButton>
+            </Box>
+
+            {/* Image Container */}
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+                overflow: "hidden",
+                borderRadius: 1,
+                bgcolor: "#f5f5f5",
+              }}
+            >
+              {selectedImages.length > 0 && (
+                <>
+                  <img
+                    src={getImageUrl(
+                      selectedImages[currentImageIndex]?.imageUrl
+                    )}
+                    alt={
+                      selectedImages[currentImageIndex]?.altText ||
+                      `Resim ${currentImageIndex + 1}`
+                    }
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+
+                  {/* Navigation Arrows */}
+                  {selectedImages.length > 1 && (
+                    <>
+                      <IconButton
+                        onClick={prevImage}
+                        sx={{
+                          position: "absolute",
+                          left: 16,
+                          bgcolor: "rgba(0,0,0,0.5)",
+                          color: "white",
+                          "&:hover": {
+                            bgcolor: "rgba(0,0,0,0.7)",
+                          },
+                        }}
+                        size="large"
+                      >
+                        <ArrowBack />
+                      </IconButton>
+                      <IconButton
+                        onClick={nextImage}
+                        sx={{
+                          position: "absolute",
+                          right: 16,
+                          bgcolor: "rgba(0,0,0,0.5)",
+                          color: "white",
+                          "&:hover": {
+                            bgcolor: "rgba(0,0,0,0.7)",
+                          },
+                        }}
+                        size="large"
+                      >
+                        <ArrowForward />
+                      </IconButton>
+                    </>
+                  )}
+
+                  {/* Image Info */}
+                  {selectedImages[currentImageIndex]?.isPrimary && (
+                    <Chip
+                      label="Vitrin Resmi"
+                      color="primary"
+                      sx={{
+                        position: "absolute",
+                        top: 16,
+                        left: 16,
+                      }}
+                    />
+                  )}
+                </>
+              )}
+            </Box>
+
+            {/* Thumbnail Navigation */}
+            {selectedImages.length > 1 && (
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1,
+                  mt: 2,
+                  overflowX: "auto",
+                  pb: 1,
+                }}
+              >
+                {selectedImages.map((image, index) => (
+                  <Box
+                    key={image.id}
+                    onClick={() => setCurrentImageIndex(index)}
+                    sx={{
+                      width: 60,
+                      height: 45,
+                      borderRadius: 1,
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      border:
+                        index === currentImageIndex
+                          ? "2px solid #1976d2"
+                          : "1px solid #e0e0e0",
+                      flexShrink: 0,
+                      transition: "border-color 0.2s",
+                      "&:hover": {
+                        borderColor: "#1976d2",
+                      },
+                    }}
+                  >
+                    <img
+                      src={getImageUrl(image.imageUrl)}
+                      alt={`Thumbnail ${index + 1}`}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
+        </Fade>
+      </Modal>
     </Container>
   );
 };
