@@ -174,6 +174,21 @@ const KayaTipiForm: React.FC = () => {
     }));
   };
 
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -181,10 +196,18 @@ const KayaTipiForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Temel bilgileri ekle
+      // Temel bilgileri ekle (price'ı parse ederek)
       Object.entries(formData).forEach(([key, value]) => {
         if (key !== "photos" && key !== "showcasePhoto" && value) {
-          submitData.append(key, value.toString());
+          // Price değerini parse et
+          if (key === "price") {
+            const parsedValue = parseFormattedNumber(value.toString());
+            if (parsedValue) {
+              submitData.append(key, parsedValue);
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
@@ -224,7 +247,7 @@ const KayaTipiForm: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   return (
@@ -305,10 +328,14 @@ const KayaTipiForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  type="number"
+                  type="text"
                   label="Fiyat (TL) *"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  value={formatNumber(formData.price)}
+                  onChange={(e) => {
+                    const rawValue = parseFormattedNumber(e.target.value);
+                    handleInputChange("price", rawValue);
+                  }}
+                  placeholder="Örn: 150.000"
                   required
                 />
               </Box>

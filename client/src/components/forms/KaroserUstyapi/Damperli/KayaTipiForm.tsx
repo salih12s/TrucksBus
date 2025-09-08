@@ -113,6 +113,42 @@ const KayaTipiForm: React.FC = () => {
     detailedInfo: "",
   });
 
+  // Kullanıcı bilgilerini otomatik yükle
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await apiClient.get("/auth/profile", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const user = response.data as {
+            firstName?: string;
+            lastName?: string;
+            companyName?: string;
+            phone?: string;
+            email?: string;
+          };
+
+          setFormData((prev) => ({
+            ...prev,
+            sellerName:
+              `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+              user.companyName ||
+              "",
+            phone: user.phone || "",
+            email: user.email || "",
+          }));
+        }
+      } catch (error) {
+        console.error("Kullanıcı bilgileri yüklenirken hata:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
   // Şehirleri yükle
   useEffect(() => {
     const fetchCities = async () => {
@@ -174,6 +210,21 @@ const KayaTipiForm: React.FC = () => {
     }));
   };
 
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -181,10 +232,18 @@ const KayaTipiForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Temel bilgileri ekle
+      // Temel bilgileri ekle (price'ı parse ederek)
       Object.entries(formData).forEach(([key, value]) => {
         if (key !== "photos" && key !== "showcasePhoto" && value) {
-          submitData.append(key, value.toString());
+          // Price değerini parse et
+          if (key === "price") {
+            const parsedValue = parseFormattedNumber(value.toString());
+            if (parsedValue) {
+              submitData.append(key, parsedValue);
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
@@ -224,7 +283,7 @@ const KayaTipiForm: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   return (
@@ -305,10 +364,14 @@ const KayaTipiForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  type="number"
+                  type="text"
                   label="Fiyat (TL) *"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  value={formatNumber(formData.price)}
+                  onChange={(e) => {
+                    const rawValue = parseFormattedNumber(e.target.value);
+                    handleInputChange("price", rawValue);
+                  }}
+                  placeholder="Örn: 150.000"
                   required
                 />
               </Box>
@@ -445,7 +508,9 @@ const KayaTipiForm: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange("sellerName", e.target.value)
                 }
+                disabled
                 required
+                helperText="Profil bilgilerinizden otomatik olarak alınmıştır"
               />
 
               <Box
@@ -456,7 +521,9 @@ const KayaTipiForm: React.FC = () => {
                   label="Telefon *"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
+                  disabled
                   required
+                  helperText="Profil bilgilerinizden otomatik alındı"
                 />
 
                 <TextField
@@ -465,6 +532,8 @@ const KayaTipiForm: React.FC = () => {
                   label="E-posta"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik alındı"
                 />
               </Box>
             </Box>

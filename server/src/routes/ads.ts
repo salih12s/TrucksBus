@@ -62,6 +62,14 @@ router.post(
   adController.createDorseAd
 );
 
+// Karoser üst yapı ilan oluşturma (multipart/form-data desteği ile)
+router.post(
+  "/karoser",
+  authenticateToken,
+  upload.any(),
+  adController.createKaroserAd
+);
+
 // Kullanıcının ilanları
 router.get("/user/my-ads", authenticateToken, adController.getUserAds);
 

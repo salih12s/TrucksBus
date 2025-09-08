@@ -1084,6 +1084,11 @@ export const createDorseAd = async (req: Request, res: Response) => {
       warranty,
       negotiable,
       exchange,
+      // İletişim ve detay bilgileri
+      sellerName,
+      phone,
+      email,
+      detailedInfo,
     } = req.body;
 
     // Dorse kategorisini bul
@@ -1117,6 +1122,10 @@ export const createDorseAd = async (req: Request, res: Response) => {
           warranty: warranty || null,
           negotiable: negotiable || null,
           exchange: exchange || null,
+          sellerName: sellerName || null,
+          phone: phone || null,
+          email: email || null,
+          detailedInfo: detailedInfo || null,
           cityId: cityId ? parseInt(cityId) : null,
           districtId: districtId ? parseInt(districtId) : null,
           categorySlug: categorySlug || null,
@@ -1138,6 +1147,140 @@ export const createDorseAd = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("Dorse ilanı oluşturma hatası detayı:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      requestBody: req.body,
+    });
+    return res.status(500).json({
+      error: "İlan oluşturulurken hata oluştu",
+      details: error.message,
+    });
+  }
+};
+
+// İlan oluştur (Karoser Üst Yapı)
+export const createKaroserAd = async (req: Request, res: Response) => {
+  try {
+    console.log("🏗️ Karoser Üst Yapı İlanı API'ye istek geldi");
+    console.log("📦 Request body:", req.body);
+    console.log("📦 Content-Type:", req.headers["content-type"]);
+
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+    }
+
+    const {
+      title,
+      description,
+      year,
+      productionYear, // Sabit Kabin formlarında productionYear kullanılıyor
+      price,
+      cityId,
+      districtId,
+      categorySlug,
+      brandSlug,
+      modelSlug,
+      variantSlug,
+      // Karoser özel alanları (Damperli)
+      genislik,
+      uzunluk,
+      lastikDurumu,
+      devrilmeYonu,
+      tippingDirection, // Ahşap Kasa
+      // Sabit Kabin özel alanları
+      length, // Açık Kasa, Kapalı Kasa
+      width, // Açık Kasa, Kapalı Kasa
+      isExchangeable, // Açık Kasa, Kapalı Kasa
+      usageArea, // Kapalı Kasa
+      bodyStructure, // Kapalı Kasa
+      caseType, // Özel Kasa
+      warranty,
+      negotiable,
+      exchange,
+      // İletişim ve detay bilgileri
+      sellerName,
+      phone,
+      email,
+      detailedInfo,
+    } = req.body;
+
+    // Karoser kategorisini bul (karoser-ustyapi veya benzer)
+    const karoserCategory = await prisma.category.findFirst({
+      where: {
+        OR: [
+          { slug: "karoser-ustyapi" },
+          { slug: "karoser" },
+          { name: { contains: "Karoser" } },
+          { name: { contains: "Üst Yapı" } },
+        ],
+      },
+    });
+
+    if (!karoserCategory) {
+      return res.status(400).json({ error: "Karoser kategorisi bulunamadı" });
+    }
+
+    const ad = await prisma.ad.create({
+      data: {
+        userId,
+        categoryId: karoserCategory.id,
+        title,
+        description,
+        year: year
+          ? parseInt(year)
+          : productionYear
+          ? parseInt(productionYear)
+          : null,
+        price: price ? parseFloat(price) : null,
+        customFields: {
+          // Damperli alanları
+          genislik: genislik || null,
+          uzunluk: uzunluk || null,
+          lastikDurumu: lastikDurumu || null,
+          devrilmeYonu: devrilmeYonu || null,
+          tippingDirection: tippingDirection || null,
+
+          // Sabit Kabin alanları
+          length: length || null,
+          width: width || null,
+          isExchangeable: isExchangeable || null,
+          usageArea: usageArea || null,
+          bodyStructure: bodyStructure || null,
+          caseType: caseType || null,
+          productionYear: productionYear || null,
+
+          // Ortak alanlar
+          warranty: warranty || null,
+          negotiable: negotiable || null,
+          exchange: exchange || null,
+          sellerName: sellerName || null,
+          phone: phone || null,
+          email: email || null,
+          detailedInfo: detailedInfo || null,
+          cityId: cityId ? parseInt(cityId) : null,
+          districtId: districtId ? parseInt(districtId) : null,
+          categorySlug: categorySlug || null,
+          brandSlug: brandSlug || null,
+          modelSlug: modelSlug || null,
+          variantSlug: variantSlug || null,
+        },
+        status: "PENDING",
+      },
+      include: {
+        category: true,
+        user: true,
+      },
+    });
+
+    return res.status(201).json({
+      message: "Karoser üst yapı ilanı başarıyla oluşturuldu ve onay bekliyor",
+      ad,
+    });
+  } catch (error: any) {
+    console.error("Karoser ilanı oluşturma hatası detayı:", {
       message: error.message,
       stack: error.stack,
       name: error.name,

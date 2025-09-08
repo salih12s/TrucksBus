@@ -27,6 +27,19 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../../layout/Header";
 import apiClient from "../../../../api/client";
 
+// Price formatting fonksiyonları
+const formatNumber = (value: string): string => {
+  if (!value) return "";
+  const number = parseFloat(value.replace(/[^\d]/g, ""));
+  if (isNaN(number)) return "";
+  return new Intl.NumberFormat("tr-TR").format(number);
+};
+
+const parseFormattedNumber = (formattedValue: string): string => {
+  if (!formattedValue) return "";
+  return formattedValue.replace(/[^\d]/g, "");
+};
+
 interface City {
   id: number;
   name: string;
@@ -144,6 +157,42 @@ const KapaliKasaForm: React.FC = () => {
     detailedInfo: "",
   });
 
+  // Kullanıcı bilgilerini otomatik yükle
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await apiClient.get("/auth/profile", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const user = response.data as {
+            firstName?: string;
+            lastName?: string;
+            companyName?: string;
+            phone?: string;
+            email?: string;
+          };
+
+          setFormData((prev) => ({
+            ...prev,
+            sellerName:
+              `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+              user.companyName ||
+              "",
+            phone: user.phone || "",
+            email: user.email || "",
+          }));
+        }
+      } catch (error) {
+        console.error("Kullanıcı bilgileri yüklenirken hata:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
   // Şehirleri yükle
   useEffect(() => {
     const fetchCities = async () => {
@@ -215,7 +264,13 @@ const KapaliKasaForm: React.FC = () => {
       // Temel bilgileri ekle
       Object.entries(formData).forEach(([key, value]) => {
         if (key !== "photos" && key !== "showcasePhoto" && value) {
-          submitData.append(key, value.toString());
+          // Fiyat için özel işlem
+          if (key === "price") {
+            const numericPrice = parseFormattedNumber(value.toString());
+            submitData.append(key, numericPrice.toString());
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
@@ -255,7 +310,7 @@ const KapaliKasaForm: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   // Üretim yılları (son 30 yıl)
@@ -344,10 +399,13 @@ const KapaliKasaForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  type="number"
                   label="Fiyat (TL) *"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  value={formatNumber(formData.price)}
+                  onChange={(e) => {
+                    const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                    handleInputChange("price", rawValue);
+                  }}
+                  placeholder="100.000"
                   required
                 />
               </Box>
@@ -510,6 +568,8 @@ const KapaliKasaForm: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange("sellerName", e.target.value)
                 }
+                disabled
+                helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
                 required
               />
 
@@ -522,6 +582,8 @@ const KapaliKasaForm: React.FC = () => {
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   placeholder="(5XX) XXX XX XX"
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
                   required
                 />
 
@@ -531,6 +593,8 @@ const KapaliKasaForm: React.FC = () => {
                   label="E-posta"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
                 />
               </Box>
             </Box>

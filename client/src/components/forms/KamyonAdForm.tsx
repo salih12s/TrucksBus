@@ -429,7 +429,7 @@ const KamyonAdForm: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   return (

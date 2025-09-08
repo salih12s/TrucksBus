@@ -233,7 +233,7 @@ const KamyonRomorkForm: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   // Üretim yılları (son 30 yıl)

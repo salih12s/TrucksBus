@@ -406,8 +406,17 @@ function App() {
                   />
 
                   {/* Karoser Üst Yapı - Damperli Routes */}
+                  {/* Kaya Tipi - hem kaya-tipi hem kaya-tipi variant'larını destekle */}
                   <Route
-                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/kaya-tipi/create-ad"
+                    path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/kaya-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserKayaTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/kaya-tipi/create-ad"
                     element={
                       <ProtectedRoute>
                         <KaroserKayaTipiForm />
@@ -415,8 +424,17 @@ function App() {
                     }
                   />
 
+                  {/* Havuz Hardox Tipi */}
                   <Route
-                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                    path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserHavuzHardoxTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
                     element={
                       <ProtectedRoute>
                         <KaroserHavuzHardoxTipiForm />
@@ -424,8 +442,17 @@ function App() {
                     }
                   />
 
+                  {/* Kapaklı Tip */}
                   <Route
-                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/kapakli-tip/create-ad"
+                    path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/kapakli-tip/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserKapakliTipForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/kapakli-tip/create-ad"
                     element={
                       <ProtectedRoute>
                         <KaroserKapakliTipForm />
@@ -433,8 +460,34 @@ function App() {
                     }
                   />
 
+                  {/* Ahşap Kasa */}
                   <Route
-                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/ahsap-kasa/create-ad"
+                    path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/ahsap-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserAhsapKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/ahsap-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserAhsapKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* damperli-grup brand slug'ı ve ahşap-kasa model slug'ı için özel route'lar */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/ahşap-kasa/variants/ahşap-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserAhsapKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/damperli-grup/models/ahşap-kasa/variants/ahşap-kasa/create-ad"
                     element={
                       <ProtectedRoute>
                         <KaroserAhsapKasaForm />
@@ -442,9 +495,18 @@ function App() {
                     }
                   />
 
-                  {/* Karoser Üst Yapı - Sabit Kabin Routes */}
+                  {/* karoser-ustyapi pattern'i için Sabit Kabin route'ları */}
+                  {/* Açık Kasa */}
                   <Route
-                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/acik-kasa/create-ad"
+                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/acik-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <AcikKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/ak-kasa/create-ad"
                     element={
                       <ProtectedRoute>
                         <AcikKasaForm />
@@ -452,8 +514,25 @@ function App() {
                     }
                   />
 
+                  {/* Kapalı Kasa */}
                   <Route
-                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/kapali-kasa/create-ad"
+                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/kapali-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KapaliKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/kk-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KapaliKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/kapal-kasa/variants/kapal-kasa/create-ad"
                     element={
                       <ProtectedRoute>
                         <KapaliKasaForm />
@@ -461,11 +540,152 @@ function App() {
                     }
                   />
 
+                  {/* Özel Kasa */}
                   <Route
-                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/ozel-kasa/create-ad"
+                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/ozel-kasa/create-ad"
                     element={
                       <ProtectedRoute>
                         <OzelKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/oz-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <OzelKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/zel-kasa/variants/zel-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <OzelKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Karoser Üst Yapı - Sabit Kabin Routes */}
+                  {/* Açık Kasa - hem acik-kasa hem ak-kasa variant'larını destekle */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/acik-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <AcikKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/ak-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <AcikKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Kapalı Kasa - hem kapali-kasa hem kk-kasa variant'larını destekle */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/kapali-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KapaliKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/kk-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KapaliKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* kapal-kasa model slug'ı için özel route */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/kapal-kasa/variants/kapal-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KapaliKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Özel Kasa - hem ozel-kasa hem oz-kasa variant'larını destekle */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/ozel-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <OzelKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/oz-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <OzelKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* zel-kasa model slug'ı için özel route */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/zel-kasa/variants/zel-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <OzelKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Karoser Üst Yapı - Damperli Brand Route'ları */}
+                  {/* Ahşap Kasa (ahap-kasa - Türkçe karakter olmadan) */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/ahap-kasa/variants/ahap-kasa/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserAhsapKasaForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Hafriyat Tipi */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/hafriyat-tipi/variants/hafriyat-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <HafriyatTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Havuz Hardox Tipi (havuzhardox-tipi - tek kelime) */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/havuzhardox-tipi/variants/havuzhardox-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserHavuzHardoxTipiForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Kapaklı Tip */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/kapakli-tip/variants/kapakli-tip/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserKapakliTipForm />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Kaya Tipi */}
+                  <Route
+                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/kaya-tipi/variants/kaya-tipi/create-ad"
+                    element={
+                      <ProtectedRoute>
+                        <KaroserKayaTipiForm />
                       </ProtectedRoute>
                     }
                   />

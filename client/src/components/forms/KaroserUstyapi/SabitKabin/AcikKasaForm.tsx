@@ -27,6 +27,19 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../../layout/Header";
 import apiClient from "../../../../api/client";
 
+// Price formatting fonksiyonları
+const formatNumber = (value: string): string => {
+  if (!value) return "";
+  const number = parseFloat(value.replace(/[^\d]/g, ""));
+  if (isNaN(number)) return "";
+  return new Intl.NumberFormat("tr-TR").format(number);
+};
+
+const parseFormattedNumber = (formattedValue: string): string => {
+  if (!formattedValue) return "";
+  return formattedValue.replace(/[^\d]/g, "");
+};
+
 interface City {
   id: number;
   name: string;
@@ -112,6 +125,42 @@ const AcikKasaForm: React.FC = () => {
     detailedInfo: "",
   });
 
+  // Kullanıcı bilgilerini otomatik yükle
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await apiClient.get("/auth/profile", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const user = response.data as {
+            firstName?: string;
+            lastName?: string;
+            companyName?: string;
+            phone?: string;
+            email?: string;
+          };
+
+          setFormData((prev) => ({
+            ...prev,
+            sellerName:
+              `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+              user.companyName ||
+              "",
+            phone: user.phone || "",
+            email: user.email || "",
+          }));
+        }
+      } catch (error) {
+        console.error("Kullanıcı bilgileri yüklenirken hata:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
   // Şehirleri yükle
   useEffect(() => {
     const fetchCities = async () => {
@@ -180,10 +229,20 @@ const AcikKasaForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Temel bilgileri ekle
+      // Temel bilgileri ekle (price özel olarak parse edilir)
       Object.entries(formData).forEach(([key, value]) => {
         if (key !== "photos" && key !== "showcasePhoto" && value) {
-          submitData.append(key, value.toString());
+          if (key === "price") {
+            // Price değerini number olarak parse et
+            const parsedPrice = parseFloat(
+              parseFormattedNumber(value.toString())
+            );
+            if (!isNaN(parsedPrice)) {
+              submitData.append(key, parsedPrice.toString());
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
@@ -223,7 +282,7 @@ const AcikKasaForm: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   // Üretim yılları (son 30 yıl)
@@ -312,10 +371,15 @@ const AcikKasaForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  type="number"
                   label="Fiyat (TL) *"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  value={formatNumber(formData.price)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "price",
+                      parseFormattedNumber(e.target.value)
+                    )
+                  }
+                  placeholder="Örn: 150.000"
                   required
                 />
               </Box>
@@ -440,7 +504,9 @@ const AcikKasaForm: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange("sellerName", e.target.value)
                 }
+                disabled
                 required
+                helperText="Profil bilgilerinizden otomatik olarak alınmıştır"
               />
 
               <Box
@@ -452,7 +518,9 @@ const AcikKasaForm: React.FC = () => {
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   placeholder="(5XX) XXX XX XX"
+                  disabled
                   required
+                  helperText="Profil bilgilerinizden otomatik alındı"
                 />
 
                 <TextField
@@ -461,6 +529,8 @@ const AcikKasaForm: React.FC = () => {
                   label="E-posta"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik alındı"
                 />
               </Box>
             </Box>

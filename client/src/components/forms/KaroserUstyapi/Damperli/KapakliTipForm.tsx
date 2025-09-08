@@ -113,6 +113,42 @@ const KapakliTipForm: React.FC = () => {
     detailedInfo: "",
   });
 
+  // Kullanıcı bilgilerini otomatik yükle
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await apiClient.get("/auth/profile", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const user = response.data as {
+            firstName?: string;
+            lastName?: string;
+            companyName?: string;
+            phone?: string;
+            email?: string;
+          };
+
+          setFormData((prev) => ({
+            ...prev,
+            sellerName:
+              `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+              user.companyName ||
+              "",
+            phone: user.phone || "",
+            email: user.email || "",
+          }));
+        }
+      } catch (error) {
+        console.error("Kullanıcı bilgileri yüklenirken hata:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
   // Şehirleri yükle
   useEffect(() => {
     const fetchCities = async () => {
@@ -224,7 +260,7 @@ const KapakliTipForm: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   return (
@@ -445,6 +481,8 @@ const KapakliTipForm: React.FC = () => {
                 onChange={(e) =>
                   handleInputChange("sellerName", e.target.value)
                 }
+                disabled
+                helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
                 required
               />
 
@@ -456,6 +494,8 @@ const KapakliTipForm: React.FC = () => {
                   label="Telefon *"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
                   required
                 />
 
@@ -465,6 +505,8 @@ const KapakliTipForm: React.FC = () => {
                   label="E-posta"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
+                  disabled
+                  helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
                 />
               </Box>
             </Box>
