@@ -127,6 +127,8 @@ const CreateMinibusAdForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -234,6 +236,21 @@ const CreateMinibusAdForm: React.FC = () => {
     }
   }, [formData.cityId]);
 
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
+  };
+
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -248,7 +265,15 @@ const CreateMinibusAdForm: React.FC = () => {
     const files = event.target.files;
     if (files) {
       if (isShowcase) {
-        setFormData((prev) => ({ ...prev, showcasePhoto: files[0] }));
+        const file = files[0];
+        setFormData((prev) => ({ ...prev, showcasePhoto: file }));
+
+        // Vitrin fotoğrafı önizlemesi oluştur
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setShowcasePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
       } else {
         const currentPhotos = formData.photos;
         const newPhotos = Array.from(files);
@@ -259,6 +284,19 @@ const CreateMinibusAdForm: React.FC = () => {
             ...prev,
             photos: [...currentPhotos, ...newPhotos],
           }));
+
+          // Yeni fotoğraflar için önizlemeler oluştur
+          const newPreviews: string[] = [];
+          Array.from(files).forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              newPreviews.push(e.target?.result as string);
+              if (newPreviews.length === files.length) {
+                setPhotoPreviews((prev) => [...prev, ...newPreviews]);
+              }
+            };
+            reader.readAsDataURL(file);
+          });
         } else {
           alert("En fazla 15 fotoğraf yükleyebilirsiniz");
         }
@@ -271,6 +309,8 @@ const CreateMinibusAdForm: React.FC = () => {
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index),
     }));
+    // Önizlemeyi de kaldır
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -345,7 +385,7 @@ const CreateMinibusAdForm: React.FC = () => {
             gutterBottom
             sx={{
               fontWeight: "bold",
-              background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
+              background: "linear-gradient(45deg, #313B4C 30%, #D34237 90%)",
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
@@ -386,7 +426,7 @@ const CreateMinibusAdForm: React.FC = () => {
                   <Box
                     sx={{
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       borderRadius: "50%",
                       p: 1.5,
                       mr: 2,
@@ -399,7 +439,7 @@ const CreateMinibusAdForm: React.FC = () => {
                     sx={{
                       fontWeight: 700,
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                     }}
@@ -473,7 +513,7 @@ const CreateMinibusAdForm: React.FC = () => {
                   <Box
                     sx={{
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       borderRadius: "50%",
                       p: 1.5,
                       mr: 2,
@@ -486,7 +526,7 @@ const CreateMinibusAdForm: React.FC = () => {
                     sx={{
                       fontWeight: 700,
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                     }}
@@ -527,37 +567,41 @@ const CreateMinibusAdForm: React.FC = () => {
                   <TextField
                     fullWidth
                     label="Fiyat (TL)"
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
+                    type="text"
+                    value={formatNumber(formData.price)}
+                    onChange={(e) => {
+                      const rawValue = parseFormattedNumber(e.target.value);
+                      handleInputChange("price", rawValue);
+                    }}
                     required
                     variant="outlined"
+                    placeholder="Örn: 250.000"
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,
                         "&:hover fieldset": { borderColor: "primary.main" },
                       },
                     }}
-                    inputProps={{ min: 0 }}
                   />
 
                   <TextField
                     fullWidth
                     label="Kilometre"
-                    type="number"
-                    value={formData.mileage}
-                    onChange={(e) =>
-                      handleInputChange("mileage", e.target.value)
-                    }
+                    type="text"
+                    value={formatNumber(formData.mileage)}
+                    onChange={(e) => {
+                      const rawValue = parseFormattedNumber(e.target.value);
+                      handleInputChange("mileage", rawValue);
+                    }}
                     required
                     variant="outlined"
+                    placeholder="Örn: 125.000"
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,
                         "&:hover fieldset": { borderColor: "primary.main" },
                       },
                     }}
-                    inputProps={{ min: 0 }}
                   />
                 </Box>
 
@@ -1218,7 +1262,7 @@ const CreateMinibusAdForm: React.FC = () => {
                   <Box
                     sx={{
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       borderRadius: "50%",
                       p: 1.5,
                       mr: 2,
@@ -1231,7 +1275,7 @@ const CreateMinibusAdForm: React.FC = () => {
                     sx={{
                       fontWeight: 700,
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                     }}
@@ -1367,7 +1411,7 @@ const CreateMinibusAdForm: React.FC = () => {
                   <Box
                     sx={{
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       borderRadius: "50%",
                       p: 1.5,
                       mr: 2,
@@ -1380,7 +1424,7 @@ const CreateMinibusAdForm: React.FC = () => {
                     sx={{
                       fontWeight: 700,
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                     }}
@@ -1425,7 +1469,7 @@ const CreateMinibusAdForm: React.FC = () => {
                   <Box
                     sx={{
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       borderRadius: "50%",
                       p: 1.5,
                       mr: 2,
@@ -1438,7 +1482,7 @@ const CreateMinibusAdForm: React.FC = () => {
                     sx={{
                       fontWeight: 700,
                       background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                     }}
@@ -1456,1215 +1500,1101 @@ const CreateMinibusAdForm: React.FC = () => {
                   çekici hale getirin
                 </Typography>
 
-                <Box
+                {/* Güvenlik Özellikleri */}
+                <Card
+                  variant="outlined"
                   sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                    gap: 3,
-                    mt: 3,
+                    mb: 3,
+                    borderRadius: 3,
+                    background: "#ffffff",
+                    border: "1px solid #f0f0f0",
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+                      transform: "translateY(-2px)",
+                    },
                   }}
                 >
-                  {/* ABS */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.abs}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                abs: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="ABS"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 3,
+                        fontWeight: 600,
+                        color: "#2c3e50",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        borderBottom: "2px solid #f8f9fa",
+                        paddingBottom: 2,
+                      }}
+                    >
+                      🛡️ Güvenlik Özellikleri
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(200px, 1fr))",
+                        gap: 2,
+                      }}
+                    >
+                      {/* ABS */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.abs}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  abs: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#5a6c7d" }}
+                          />
+                        }
+                        label="ABS"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Alarm */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.alarm}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                alarm: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Alarm"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* ASR */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.asr}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  asr: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="ASR"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Alaşım Jant */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.alasimJant}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                alasimJant: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Alaşım Jant"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* ESP */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.esp}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  esp: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="ESP"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* ASR */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.asr}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                asr: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="ASR"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Hava Yastığı */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.havaYastigi}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  havaYastigi: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="Hava Yastığı"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* CD Çalar */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.cdCalar}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                cdCalar: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="CD Çalar"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Hava Yastığı Yolcu */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.havaYastigiYolcu}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  havaYastigiYolcu: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="Hava Yastığı (Yolcu)"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Çeki Demiri */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.cekiDemiri}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                cekiDemiri: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Çeki Demiri"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Yan Hava Yastığı */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.yanHavaYastigi}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  yanHavaYastigi: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="Yan Hava Yastığı"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Deri Döşeme */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.deriDoseme}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                deriDoseme: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Deri Döşeme"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Immobilizer */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.immobilizer}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  immobilizer: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="Immobilizer"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Elektrikli Aynalar */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.elektrikliAynalar}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                elektrikliAynalar: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Elektrikli Aynalar"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Alarm */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.alarm}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  alarm: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="Alarm"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Elektrikli Cam */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.elektrikliCam}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                elektrikliCam: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Elektrikli Cam"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Park Sensörü */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.parkSensoru}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  parkSensoru: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="Park Sensörü"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* ESP */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.esp}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                esp: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="ESP"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Geri Görüş Kamerası */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.geriGorusKamerasi}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  geriGorusKamerasi: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="Geri Görüş Kamerası"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Far (Sis) */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.farSis}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                farSis: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Far (Sis)"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Yokuş Kalkış Desteği */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.yokusKalkisDestegi}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  yokusKalkisDestegi: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="Yokuş Kalkış Desteği"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Far Sensörü */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.farSensoru}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                farSensoru: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Far Sensörü"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* El Freni */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.elFreni}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  elFreni: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="El Freni"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Far Yıkama Sistemi */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.farYikamaSistemi}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                farYikamaSistemi: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Far Yıkama Sistemi"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Ayak Freni */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.ayakFreni}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  ayakFreni: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#d32f2f" }}
+                          />
+                        }
+                        label="Ayak Freni"
+                        sx={{ m: 0 }}
+                      />
+                    </Box>
+                  </CardContent>
+                </Card>
 
-                  {/* Hava Yastığı (Sürücü) */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.havaYastigi}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                havaYastigi: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Hava Yastığı (Sürücü)"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                {/* Konfor Özellikleri */}
+                <Card
+                  variant="outlined"
+                  sx={{
+                    mb: 3,
+                    borderRadius: 3,
+                    background: "#ffffff",
+                    border: "1px solid #f0f0f0",
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+                      transform: "translateY(-2px)",
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 3,
+                        fontWeight: 600,
+                        color: "#2c3e50",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        borderBottom: "2px solid #f8f9fa",
+                        paddingBottom: 2,
+                      }}
+                    >
+                      🛋️ Konfor Özellikleri
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(200px, 1fr))",
+                        gap: 2,
+                      }}
+                    >
+                      {/* Klima */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.klima}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  klima: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Klima"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Hava Yastığı (Yolcu) */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.havaYastigiYolcu}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                havaYastigiYolcu: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Hava Yastığı (Yolcu)"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Isıtmalı Koltuklar */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.isitmalKoltuklar}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  isitmalKoltuklar: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Isıtmalı Koltuklar"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Hız Sabitleme */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.hizSabitleme}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                hizSabitleme: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Hız Sabitleme"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Deri Döşeme */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.deriDoseme}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  deriDoseme: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Deri Döşeme"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Hidrolik Direksiyon */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.hidrolikDireksiyon}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                hidrolikDireksiyon: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Hidrolik Direksiyon"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Elektrikli Camlar */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.elektrikliCam}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  elektrikliCam: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Elektrikli Camlar"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Immobilizer */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.immobilizer}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                immobilizer: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Immobilizer"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Elektrikli Aynalar */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.elektrikliAynalar}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  elektrikliAynalar: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Elektrikli Aynalar"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Isıtmalı Koltuklar */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.isitmalKoltuklar}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                isitmalKoltuklar: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Isıtmalı Koltuklar"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Otomatik Cam */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.otomatikCam}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  otomatikCam: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Otomatik Cam"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Klima */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.klima}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                klima: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Klima"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Otomatik Kapı */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.otomatikKapi}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  otomatikKapi: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Otomatik Kapı"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Merkezi Kilit */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.merkeziKilit}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                merkeziKilit: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Merkezi Kilit"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Hidrolik Direksiyon */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.hidrolikDireksiyon}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  hidrolikDireksiyon: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Hidrolik Direksiyon"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Okul Aracı */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.okulAraci}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                okulAraci: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Okul Aracı"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Merkezi Kilit */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.merkeziKilit}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  merkeziKilit: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Merkezi Kilit"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Otomatik Cam */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.otomatikCam}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                otomatikCam: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Otomatik Cam"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Hız Sabitleme */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.hizSabitleme}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  hizSabitleme: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Hız Sabitleme"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Otomatik Kapı */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.otomatikKapi}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                otomatikKapi: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Otomatik Kapı"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Sunroof */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.sunroof}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  sunroof: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Sunroof"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Park Sensörü */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.parkSensoru}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                parkSensoru: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Park Sensörü"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Soğutucu / Frigo */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.sogutucuFrigo}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  sogutucuFrigo: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#0284c7" }}
+                          />
+                        }
+                        label="Soğutucu / Frigo"
+                        sx={{ m: 0 }}
+                      />
+                    </Box>
+                  </CardContent>
+                </Card>
 
-                  {/* Radio - Teyp */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.radioTeyp}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                radioTeyp: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Radio - Teyp"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                {/* Multimedya & Teknoloji */}
+                <Card
+                  variant="outlined"
+                  sx={{
+                    mb: 3,
+                    borderRadius: 3,
+                    background: "#ffffff",
+                    border: "1px solid #f0f0f0",
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+                      transform: "translateY(-2px)",
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 3,
+                        fontWeight: 600,
+                        color: "#2c3e50",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        borderBottom: "2px solid #f8f9fa",
+                        paddingBottom: 2,
+                      }}
+                    >
+                      📱 Multimedya & Teknoloji
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(200px, 1fr))",
+                        gap: 2,
+                      }}
+                    >
+                      {/* Radio - Teyp */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.radioTeyp}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  radioTeyp: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#9333ea" }}
+                          />
+                        }
+                        label="Radio - Teyp"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Spoyler */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.spoyler}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                spoyler: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Spoyler"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* CD Çalar */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.cdCalar}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  cdCalar: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#9333ea" }}
+                          />
+                        }
+                        label="CD Çalar"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Sunroof */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.sunroof}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                sunroof: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Sunroof"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* DVD Player */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.dvdPlayer}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  dvdPlayer: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#9333ea" }}
+                          />
+                        }
+                        label="DVD Player"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Turizm Paketi */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.turizmPaketi}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                turizmPaketi: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Turizm Paketi"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Müzik Sistemi */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.muzikSistemi}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  muzikSistemi: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#9333ea" }}
+                          />
+                        }
+                        label="Müzik Sistemi"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* TV / Navigasyon */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.tvNavigasyon}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                tvNavigasyon: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="TV / Navigasyon"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* TV - Navigasyon */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.tvNavigasyon}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  tvNavigasyon: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#9333ea" }}
+                          />
+                        }
+                        label="TV - Navigasyon"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Xenon Far */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.xenonFar}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                xenonFar: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Xenon Far"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Yol Bilgisayarı */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.yolBilgisayari}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  yolBilgisayari: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#9333ea" }}
+                          />
+                        }
+                        label="Yol Bilgisayarı"
+                        sx={{ m: 0 }}
+                      />
+                    </Box>
+                  </CardContent>
+                </Card>
 
-                  {/* Yağmur Sensörü */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.yagmurSensoru}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                yagmurSensoru: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Yağmur Sensörü"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                {/* Diğer Özellikler */}
+                <Card
+                  variant="outlined"
+                  sx={{
+                    mb: 3,
+                    borderRadius: 3,
+                    background: "#ffffff",
+                    border: "1px solid #f0f0f0",
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+                      transform: "translateY(-2px)",
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 3,
+                        fontWeight: 600,
+                        color: "#2c3e50",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        borderBottom: "2px solid #f8f9fa",
+                        paddingBottom: 2,
+                      }}
+                    >
+                      ⚡ Diğer Özellikler
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(200px, 1fr))",
+                        gap: 2,
+                      }}
+                    >
+                      {/* Alaşım Jant */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.alasimJant}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  alasimJant: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Alaşım Jant"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Yan Hava Yastığı */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.yanHavaYastigi}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                yanHavaYastigi: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Yan Hava Yastığı"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Spoyler */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.spoyler}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  spoyler: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Spoyler"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Yokuş Kalkış Desteği */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.yokusKalkisDestegi}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                yokusKalkisDestegi: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Yokuş Kalkış Desteği"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Xenon Far */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.xenonFar}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  xenonFar: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Xenon Far"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Yol Bilgisayarı */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.yolBilgisayari}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                yolBilgisayari: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Yol Bilgisayarı"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Far Sis */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.farSis}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  farSis: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Far Sis"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Soğutucu / Frigo */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.sogutucuFrigo}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                sogutucuFrigo: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Soğutucu / Frigo"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Far Sensörü */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.farSensoru}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  farSensoru: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Far Sensörü"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* DVD Player */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.dvdPlayer}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                dvdPlayer: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="DVD Player"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Far Yıkama Sistemi */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.farYikamaSistemi}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  farYikamaSistemi: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Far Yıkama Sistemi"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Müzik Sistemi */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.muzikSistemi}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                muzikSistemi: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Müzik Sistemi"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Yağmur Sensörü */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.yagmurSensoru}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  yagmurSensoru: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Yağmur Sensörü"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Geri Görüş Kamerası */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.geriGorusKamerasi}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                geriGorusKamerasi: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Geri Görüş Kamerası"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Çeki Demiri */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.cekiDemiri}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  cekiDemiri: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Çeki Demiri"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* El Freni */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.elFreni}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                elFreni: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="El Freni"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Turizm Paketi */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.turizmPaketi}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  turizmPaketi: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Turizm Paketi"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Ayak Freni */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.ayakFreni}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                ayakFreni: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Ayak Freni"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Okul Aracı */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.okulAraci}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  okulAraci: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Okul Aracı"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Bagaj Hacmi */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.bagajHacmi}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                bagajHacmi: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Bagaj Hacmi"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Bagaj Hacmi */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.bagajHacmi}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  bagajHacmi: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Geniş Bagaj Hacmi"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Sigortali */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.sigortali}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                sigortali: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Sigortali"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
+                      {/* Sigortali */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.sigortali}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  sigortali: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Sigortali"
+                        sx={{ m: 0 }}
+                      />
 
-                  {/* Garantili */}
-                  <Box>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.garantili}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                garantili: e.target.checked,
-                              },
-                            }))
-                          }
-                          sx={{ color: "primary.main" }}
-                        />
-                      }
-                      label="Garantili"
-                      sx={{ m: 0 }}
-                    />
-                  </Box>
-
-                  {/* Deri Döşeme */}
-                  <Box sx={{ minWidth: 200 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.deriDoseme}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                deriDoseme: e.target.checked,
-                              },
-                            }))
-                          }
-                        />
-                      }
-                      label="Deri Döşeme"
-                    />
-                  </Box>
-
-                  {/* Elektrikli Aynalar */}
-                  <Box sx={{ minWidth: 200 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.elektrikliAynalar}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                elektrikliAynalar: e.target.checked,
-                              },
-                            }))
-                          }
-                        />
-                      }
-                      label="Elektrikli Aynalar"
-                    />
-                  </Box>
-
-                  {/* Elektrikli Cam */}
-                  <Box sx={{ minWidth: 200 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.elektrikliCam}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                elektrikliCam: e.target.checked,
-                              },
-                            }))
-                          }
-                        />
-                      }
-                      label="Elektrikli Cam"
-                    />
-                  </Box>
-
-                  {/* ESP */}
-                  <Box sx={{ minWidth: 200 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.esp}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                esp: e.target.checked,
-                              },
-                            }))
-                          }
-                        />
-                      }
-                      label="ESP"
-                    />
-                  </Box>
-
-                  {/* Far (Sis) */}
-                  <Box sx={{ minWidth: 200 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.farSis}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                farSis: e.target.checked,
-                              },
-                            }))
-                          }
-                        />
-                      }
-                      label="Far (Sis)"
-                    />
-                  </Box>
-
-                  {/* Far Sensörü */}
-                  <Box sx={{ minWidth: 200 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.farSensoru}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                farSensoru: e.target.checked,
-                              },
-                            }))
-                          }
-                        />
-                      }
-                      label="Far Sensörü"
-                    />
-                  </Box>
-
-                  {/* Hız Sabitleme */}
-                  <Box sx={{ minWidth: 200 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.hizSabitleme}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                hizSabitleme: e.target.checked,
-                              },
-                            }))
-                          }
-                        />
-                      }
-                      label="Hız Sabitleme"
-                    />
-                  </Box>
-
-                  {/* Klima */}
-                  <Box sx={{ minWidth: 200 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.klima}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                klima: e.target.checked,
-                              },
-                            }))
-                          }
-                        />
-                      }
-                      label="Klima"
-                    />
-                  </Box>
-
-                  {/* Soğutucu / Frigo */}
-                  <Box sx={{ minWidth: 200 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.detailFeatures.sogutucuFrigo}
-                          onChange={(e) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              detailFeatures: {
-                                ...prev.detailFeatures,
-                                sogutucuFrigo: e.target.checked,
-                              },
-                            }))
-                          }
-                        />
-                      }
-                      label="Soğutucu / Frigo"
-                    />
-                  </Box>
-                </Box>
+                      {/* Garantili */}
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={formData.detailFeatures.garantili}
+                            onChange={(e) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                detailFeatures: {
+                                  ...prev.detailFeatures,
+                                  garantili: e.target.checked,
+                                },
+                              }))
+                            }
+                            sx={{ color: "#16a34a" }}
+                          />
+                        }
+                        label="Garantili"
+                        sx={{ m: 0 }}
+                      />
+                    </Box>
+                  </CardContent>
+                </Card>
               </CardContent>
             </Card>
 
@@ -2795,7 +2725,66 @@ const CreateMinibusAdForm: React.FC = () => {
                         Vitrin Fotoğrafı Seç
                       </Button>
                     </label>
-                    {formData.showcasePhoto && (
+
+                    {/* Vitrin fotoğrafı önizlemesi */}
+                    {showcasePreview && (
+                      <Box sx={{ mt: 3 }}>
+                        <Box
+                          sx={{
+                            position: "relative",
+                            display: "inline-block",
+                            borderRadius: 2,
+                            overflow: "hidden",
+                            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                          }}
+                        >
+                          <img
+                            src={showcasePreview}
+                            alt="Vitrin fotoğrafı önizleme"
+                            style={{
+                              width: "200px",
+                              height: "150px",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              background: "rgba(0,0,0,0.7)",
+                              borderRadius: "50%",
+                              p: 0.5,
+                              cursor: "pointer",
+                              "&:hover": { background: "rgba(0,0,0,0.9)" },
+                            }}
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                showcasePhoto: null,
+                              }));
+                              setShowcasePreview(null);
+                            }}
+                          >
+                            <Typography
+                              sx={{ color: "white", fontSize: "14px" }}
+                            >
+                              ✕
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          color="primary"
+                          sx={{ display: "block", mt: 1 }}
+                        >
+                          Vitrin Fotoğrafı ✓
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {formData.showcasePhoto && !showcasePreview && (
                       <Chip
                         label={formData.showcasePhoto.name}
                         color="primary"
@@ -2866,17 +2855,119 @@ const CreateMinibusAdForm: React.FC = () => {
                     </label>
 
                     {formData.photos.length > 0 && (
-                      <Box sx={{ mt: 2 }}>
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                          {formData.photos.map((photo, index) => (
-                            <Chip
+                      <Box sx={{ mt: 3 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ mb: 2, fontWeight: 600 }}
+                        >
+                          Yüklenen Fotoğraflar ({formData.photos.length}/15)
+                        </Typography>
+
+                        {/* Fotoğraf önizlemeleri grid */}
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fill, minmax(120px, 1fr))",
+                            gap: 2,
+                            maxHeight: "300px",
+                            overflowY: "auto",
+                            p: 1,
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                            background: "#fafafa",
+                          }}
+                        >
+                          {photoPreviews.map((preview, index) => (
+                            <Box
                               key={index}
-                              label={photo.name}
-                              onDelete={() => removePhoto(index)}
-                              color="secondary"
-                            />
+                              sx={{
+                                position: "relative",
+                                borderRadius: 2,
+                                overflow: "hidden",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                                transition: "transform 0.2s ease-in-out",
+                                "&:hover": {
+                                  transform: "scale(1.05)",
+                                  boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+                                },
+                              }}
+                            >
+                              <img
+                                src={preview}
+                                alt={`Fotoğraf ${index + 1}`}
+                                style={{
+                                  width: "100%",
+                                  height: "80px",
+                                  objectFit: "cover",
+                                  display: "block",
+                                }}
+                              />
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  top: 4,
+                                  right: 4,
+                                  background: "rgba(255,0,0,0.8)",
+                                  borderRadius: "50%",
+                                  width: 20,
+                                  height: 20,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  cursor: "pointer",
+                                  "&:hover": { background: "rgba(255,0,0,1)" },
+                                }}
+                                onClick={() => removePhoto(index)}
+                              >
+                                <Typography
+                                  sx={{
+                                    color: "white",
+                                    fontSize: "12px",
+                                    lineHeight: 1,
+                                  }}
+                                >
+                                  ✕
+                                </Typography>
+                              </Box>
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  background: "rgba(0,0,0,0.7)",
+                                  color: "white",
+                                  textAlign: "center",
+                                  py: 0.5,
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{ fontSize: "10px" }}
+                                >
+                                  {index + 1}
+                                </Typography>
+                              </Box>
+                            </Box>
                           ))}
                         </Box>
+
+                        {/* Eski chip görünümü - fallback */}
+                        {photoPreviews.length === 0 && (
+                          <Box
+                            sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}
+                          >
+                            {formData.photos.map((photo, index) => (
+                              <Chip
+                                key={index}
+                                label={photo.name}
+                                onDelete={() => removePhoto(index)}
+                                color="secondary"
+                              />
+                            ))}
+                          </Box>
+                        )}
                       </Box>
                     )}
                   </Card>
