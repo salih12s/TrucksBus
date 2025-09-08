@@ -916,12 +916,21 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       transmission,
       passengerCapacity,
       seatLayout,
+      seatBackScreen,
+      tireCondition,
+      fuelCapacity,
+      exchange,
+      damageRecord,
+      paintChange,
       plateType,
       plateNumber,
       cityId,
       districtId,
       detailedInfo,
       features,
+      drivetrain,
+      gearType,
+      gearCount,
     } = req.body;
 
     // Özellikleri JSON olarak hazırla
@@ -963,11 +972,20 @@ export const createOtobusAd = async (req: Request, res: Response) => {
           transmission: transmission || null,
           passengerCapacity: passengerCapacity || null,
           seatLayout: seatLayout || null,
+          seatBackScreen: seatBackScreen || null,
+          tireCondition: tireCondition ? parseInt(tireCondition) : null,
+          fuelCapacity: fuelCapacity || null,
+          exchange: exchange || null,
+          damageRecord: damageRecord || null,
+          paintChange: paintChange || null,
           plateType: plateType || null,
           plateNumber: plateNumber || null,
           cityId: cityId ? parseInt(cityId) : null,
           districtId: districtId ? parseInt(districtId) : null,
           detailedInfo: detailedInfo || null,
+          drivetrain: drivetrain || null,
+          gearType: gearType || null,
+          gearCount: gearCount || null,
           features: featuresJson || null,
         },
         status: "PENDING",
@@ -977,6 +995,29 @@ export const createOtobusAd = async (req: Request, res: Response) => {
         user: true,
       },
     });
+
+    // Fotoğraf işleme
+    const files = req.files as Express.Multer.File[];
+    if (files && files.length > 0) {
+      console.log(`📷 ${files.length} fotoğraf yükleniyor...`);
+
+      const imagePromises = files.map((file, index) => {
+        const isShowcase = file.fieldname === "showcasePhoto";
+        
+        return prisma.adImage.create({
+          data: {
+            adId: ad.id,
+            imageUrl: `/uploads/${file.filename}`,
+            isPrimary: isShowcase,
+            displayOrder: isShowcase ? 0 : index + 1,
+            altText: `${title} - ${isShowcase ? "Vitrin" : "Fotoğraf"} ${index + 1}`,
+          },
+        });
+      });
+
+      await Promise.all(imagePromises);
+      console.log("✅ Tüm fotoğraflar başarıyla kaydedildi");
+    }
 
     return res.status(201).json({
       message: "Otobüs ilanı başarıyla oluşturuldu ve onay bekliyor",
