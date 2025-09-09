@@ -1,29 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import LoadingScreen from './LoadingScreen';
+import React, { useEffect, useState } from "react";
+import LoadingScreen from "./LoadingScreen";
 
 interface SplashScreenProps {
   children: React.ReactNode;
   duration?: number; // milliseconds
-  showOnFirstVisit?: boolean;
+  showOnRefresh?: boolean; // Her sayfa yenilendiğinde göster
 }
 
 const SplashScreen: React.FC<SplashScreenProps> = ({
   children,
   duration = 3000,
-  showOnFirstVisit = true
+  showOnRefresh = true,
 }) => {
-  const [showSplash, setShowSplash] = useState(false);
-  const [isFirstVisit, setIsFirstVisit] = useState(false);
+  const [showSplash, setShowSplash] = useState(showOnRefresh);
 
   useEffect(() => {
-    // İlk ziyaret kontrolü
-    const hasVisited = localStorage.getItem('trucksbus_visited');
-    
-    if (!hasVisited && showOnFirstVisit) {
-      setIsFirstVisit(true);
+    if (showOnRefresh) {
       setShowSplash(true);
-      localStorage.setItem('trucksbus_visited', 'true');
-      
+
       // Belirtilen süre sonra splash screen'i kapat
       const timer = setTimeout(() => {
         setShowSplash(false);
@@ -31,12 +25,12 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
 
       return () => clearTimeout(timer);
     }
-  }, [duration, showOnFirstVisit]);
+  }, [duration, showOnRefresh]);
 
   // Eğer splash screen gösteriliyorsa
-  if (showSplash && isFirstVisit) {
+  if (showSplash) {
     return (
-      <LoadingScreen 
+      <LoadingScreen
         message="TrucksBus'a Hoş Geldiniz!"
         subMessage="Türkiye'nin en büyük ticari araç platformu..."
       />

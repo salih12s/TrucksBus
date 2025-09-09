@@ -41,7 +41,7 @@ const getInitialState = (): AuthState => {
   const token = getTokenFromStorage(); // Expired token'ları otomatik temizler
   const refreshToken = localStorage.getItem("refreshToken");
   const userStr = localStorage.getItem("user");
-  
+
   let user: User | null = null;
   if (userStr) {
     try {
@@ -51,7 +51,7 @@ const getInitialState = (): AuthState => {
       localStorage.removeItem("user");
     }
   }
-  
+
   return {
     user: user,
     token: token || null,
@@ -237,7 +237,7 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.isAuthenticated = true;
         state.error = null;
-        
+
         // User bilgisini localStorage'a kaydet
         localStorage.setItem("user", JSON.stringify(action.payload));
       })
@@ -248,7 +248,7 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.refreshToken = null;
-        
+
         // Token'ları ve user'ı localStorage'dan da temizle
         clearTokens();
       });

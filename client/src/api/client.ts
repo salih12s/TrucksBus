@@ -1,13 +1,14 @@
-import axios from 'axios';
-import { getTokenFromStorage } from '../utils/tokenUtils';
+import axios from "axios";
+import { getTokenFromStorage } from "../utils/tokenUtils";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 // Create axios instance
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -35,14 +36,17 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = localStorage.getItem("refreshToken");
         if (refreshToken) {
-          const response = await axios.post<{ accessToken: string }>(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken,
-          });
+          const response = await axios.post<{ accessToken: string }>(
+            `${API_BASE_URL}/auth/refresh`,
+            {
+              refreshToken,
+            }
+          );
 
           const { accessToken } = response.data;
-          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem("accessToken", accessToken);
 
           // Retry original request with new token
           if (originalRequest.headers) {
@@ -52,9 +56,9 @@ apiClient.interceptors.response.use(
         }
       } catch {
         // Refresh failed, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
       }
     }
 
