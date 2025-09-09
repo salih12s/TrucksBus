@@ -408,6 +408,13 @@ const AdDetail: React.FC = () => {
       height: "Yükseklik",
       weight: "Ağırlık",
 
+      // Kamyon Formu Alanları
+      loadCapacity: "Yük Kapasitesi",
+      tireCondition: "Lastik Durumu",
+      superstructure: "Üst Yapı",
+      motorPower: "Motor Gücü",
+      cabin: "Kabin",
+
       // Otobüs özellikleri
       passengerCapacity: "Yolcu Kapasitesi",
       doorCount: "Kapı Sayısı",
@@ -927,7 +934,10 @@ const AdDetail: React.FC = () => {
                     }}
                   >
                     {Object.entries(ad.customFields)
-                      .filter(([key]) => key !== "detailFeatures")
+                      .filter(
+                        ([key]) =>
+                          key !== "detailFeatures" && key !== "features"
+                      )
                       .map(([key, value]) => (
                         <Box
                           key={key}
@@ -1000,58 +1010,118 @@ const AdDetail: React.FC = () => {
               </Box>
 
               <Box sx={{ p: 3 }}>
-                {ad.customFields?.detailFeatures &&
-                typeof ad.customFields.detailFeatures === "object" ? (
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fit, minmax(280px, 1fr))",
-                      gap: 1.5,
-                    }}
-                  >
-                    {Object.entries(
-                      ad.customFields.detailFeatures as Record<string, boolean>
-                    )
-                      .filter(([, value]) => value === true)
-                      .map(([key]) => (
+                {(() => {
+                  // detailFeatures kontrolü
+                  const hasDetailFeatures = ad.customFields?.detailFeatures &&
+                    typeof ad.customFields.detailFeatures === "object" &&
+                    Object.values(ad.customFields.detailFeatures as Record<string, boolean>).some(v => v === true);
+
+                  // features kontrolü
+                  const hasFeatures = ad.customFields?.features &&
+                    typeof ad.customFields.features === "object" &&
+                    Object.values(ad.customFields.features as Record<string, boolean>).some(v => v === true);
+
+                  if (!hasDetailFeatures && !hasFeatures) {
+                    return (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontStyle: "italic", textAlign: "center" }}
+                      >
+                        Detaylı özellik bulunmuyor.
+                      </Typography>
+                    );
+                  }
+
+                  return (
+                    <>
+                      {/* detailFeatures rendering */}
+                      {hasDetailFeatures && (
                         <Box
-                          key={key}
                           sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            py: 1,
-                            px: 2,
-                            backgroundColor: "#f8f9fa",
-                            borderRadius: 1,
-                            border: "1px solid #e9ecef",
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                            gap: 1.5,
+                            mb: hasFeatures ? 3 : 0,
                           }}
                         >
-                          <CheckCircle
-                            sx={{ color: "#28a745", fontSize: 16, mr: 1.5 }}
-                          />
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: "#495057",
-                              fontWeight: "500",
-                              fontSize: "0.9rem",
-                            }}
-                          >
-                            {getSpecificationLabel(key)}
-                          </Typography>
+                          {Object.entries(ad.customFields.detailFeatures as Record<string, boolean>)
+                            .filter(([, value]) => value === true)
+                            .map(([key]) => (
+                              <Box
+                                key={key}
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  py: 1,
+                                  px: 2,
+                                  backgroundColor: "#f8f9fa",
+                                  borderRadius: 1,
+                                  border: "1px solid #e9ecef",
+                                }}
+                              >
+                                <CheckCircle
+                                  sx={{ color: "#28a745", fontSize: 16, mr: 1.5 }}
+                                />
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    color: "#495057",
+                                    fontWeight: "500",
+                                    fontSize: "0.9rem",
+                                  }}
+                                >
+                                  {getSpecificationLabel(key)}
+                                </Typography>
+                              </Box>
+                            ))}
                         </Box>
-                      ))}
-                  </Box>
-                ) : (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontStyle: "italic", textAlign: "center" }}
-                  >
-                    Detaylı özellik bulunmuyor.
-                  </Typography>
-                )}
+                      )}
+
+                      {/* features rendering */}
+                      {hasFeatures && (
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                            gap: 1.5,
+                          }}
+                        >
+                          {Object.entries(ad.customFields.features as Record<string, boolean>)
+                            .filter(([, value]) => value === true)
+                            .map(([key]) => (
+                              <Box
+                                key={key}
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  py: 1,
+                                  px: 2,
+                                  backgroundColor: "#f8f9fa",
+                                  borderRadius: 1,
+                                  border: "1px solid #e9ecef",
+                                }}
+                              >
+                                <CheckCircle
+                                  sx={{ color: "#28a745", fontSize: 16, mr: 1.5 }}
+                                />
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    color: "#495057",
+                                    fontWeight: "500",
+                                    fontSize: "0.9rem",
+                                  }}
+                                >
+                                  {getSpecificationLabel(key)}
+                                </Typography>
+                              </Box>
+                            ))}
+                        </Box>
+                      )}
+                    </>
+                  );
+                })()}
               </Box>
             </Paper>
           </Box>

@@ -42,6 +42,15 @@ interface AdminLog {
   createdAt: string;
 }
 
+interface AdminLogResponse {
+  logs: AdminLog[];
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+  };
+}
+
 const AdminLogsPage: React.FC = () => {
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,24 +66,57 @@ const AdminLogsPage: React.FC = () => {
       setLoading(true);
       setError(null);
       const response = await apiClient.get("/admin/logs");
-      setLogs(response.data as AdminLog[]);
+      console.log("Raw API response:", response.data);
+
+      const responseData = response.data as AdminLogResponse | AdminLog[]; // Proper typing
+
+      // API response'un yapısını kontrol et
+      if (
+        responseData &&
+        typeof responseData === "object" &&
+        "logs" in responseData &&
+        Array.isArray(responseData.logs)
+      ) {
+        console.log("Setting logs from response.logs:", responseData.logs);
+        setLogs(responseData.logs);
+      } else if (Array.isArray(responseData)) {
+        // Backward compatibility - direkt array dönerse
+        console.log("Setting logs directly from array:", responseData);
+        setLogs(responseData);
+      } else {
+        console.error("API response format error:", responseData);
+        setLogs([]);
+        setError("Admin logları yüklenirken veri formatı hatası oluştu");
+      }
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Bilinmeyen hata";
       setError("Admin logları yüklenirken bir hata oluştu: " + errorMessage);
       console.error("Error fetching admin logs:", err);
+      setLogs([]); // Hata durumunda boş array
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredLogs = logs.filter(
-    (log) =>
-      log.adminEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (log.targetUserEmail &&
-        log.targetUserEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      log.action.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLogs = React.useMemo(() => {
+    console.log("Current logs state:", logs, "Is array:", Array.isArray(logs));
+
+    if (!Array.isArray(logs)) {
+      console.error("logs is not an array:", typeof logs, logs);
+      return [];
+    }
+
+    return logs.filter(
+      (log) =>
+        log.adminEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (log.targetUserEmail &&
+          log.targetUserEmail
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())) ||
+        log.action.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [logs, searchTerm]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("tr-TR", {
