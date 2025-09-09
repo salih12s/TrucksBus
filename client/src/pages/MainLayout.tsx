@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Card,
@@ -39,6 +39,8 @@ import { useAppSelector, useAppDispatch } from "../hooks/redux";
 import { startConversation } from "../store/messagingSlice";
 import apiClient from "../api/client";
 import ComplaintModal from "../components/complaints/ComplaintModal";
+import ContactPage from "./ContactPage";
+import AboutPage from "./AboutPage";
 
 interface Category {
   id: string;
@@ -100,6 +102,7 @@ interface ApiAdsResponse {
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const [categories, setCategories] = useState<Category[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
@@ -567,7 +570,9 @@ const MainLayout: React.FC = () => {
         }}
       >
         {/* Mobile Drawer */}
-        {isMobile ? (
+        {isMobile &&
+        location.pathname !== "/contact" &&
+        location.pathname !== "/about" ? (
           <Drawer
             anchor="left"
             open={mobileDrawerOpen}
@@ -582,7 +587,9 @@ const MainLayout: React.FC = () => {
           >
             {renderSidebarContent()}
           </Drawer>
-        ) : (
+        ) : location.pathname !== "/contact" &&
+          location.pathname !== "/about" &&
+          !isMobile ? (
           /* Desktop Sidebar */
           <Box
             sx={{
@@ -597,7 +604,7 @@ const MainLayout: React.FC = () => {
           >
             {renderSidebarContent()}
           </Box>
-        )}
+        ) : null}
 
         {/* Main Content Area */}
         <Box
@@ -609,418 +616,433 @@ const MainLayout: React.FC = () => {
             width: "100%",
           }}
         >
-          {/* Mobile Menu Button */}
-          {isMobile && (
-            <Box sx={{ mb: 2 }}>
-              <IconButton
-                onClick={() => setMobileDrawerOpen(true)}
-                sx={{
-                  backgroundColor: "#313B4C",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "#D34237",
-                  },
-                }}
-              >
-                <MenuIcon />
-              </IconButton>
-            </Box>
-          )}
+          {/* Conditional Content Based on URL */}
+          {location.pathname === "/contact" ? (
+            <ContactPage />
+          ) : location.pathname === "/about" ? (
+            <AboutPage />
+          ) : (
+            <>
+              {/* Mobile Menu Button */}
+              {isMobile &&
+                location.pathname !== "/contact" &&
+                location.pathname !== "/about" && (
+                  <Box sx={{ mb: 2 }}>
+                    <IconButton
+                      onClick={() => setMobileDrawerOpen(true)}
+                      sx={{
+                        backgroundColor: "#313B4C",
+                        color: "white",
+                        "&:hover": {
+                          backgroundColor: "#D34237",
+                        },
+                      }}
+                    >
+                      <MenuIcon />
+                    </IconButton>
+                  </Box>
+                )}
 
-          {/* Search Bar */}
-          <Box sx={{ mb: 3 }}>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: "bold",
-                color: "#313B4C",
-                mb: 2,
-                fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
-                textAlign: { xs: "center", md: "left" },
-              }}
-            >
-              Son İlanlar
-            </Typography>
-            <TextField
-              fullWidth
-              placeholder="Araç ara..."
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search sx={{ color: "#D34237" }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "white",
-                  borderRadius: 2,
-                  fontSize: { xs: "0.875rem", sm: "1rem" },
-                },
-              }}
-            />
-          </Box>
-
-          {/* Ads Grid */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: (() => {
-                if (isMobile) {
-                  return "1fr"; // Mobile: 1 sütun
-                } else if (isTablet) {
-                  return sidebarOpen
-                    ? "repeat(auto-fit, minmax(280px, 1fr))" // Tablet sidebar açık: 2-3 sütun
-                    : "repeat(auto-fit, minmax(250px, 1fr))"; // Tablet sidebar kapalı: 3-4 sütun
-                } else {
-                  return sidebarOpen
-                    ? "repeat(3, 1fr)" // Desktop sidebar açık: tam 3 sütun
-                    : "repeat(4, 1fr)"; // Desktop sidebar kapalı: tam 4 sütun
-                }
-              })(),
-              gap: isMobile ? 2 : 3,
-              minChildWidth: isMobile
-                ? "auto"
-                : sidebarOpen
-                ? "280px"
-                : "250px", // Minimum genişlik
-            }}
-          >
-            {Array.isArray(ads) &&
-              ads.map((ad) => (
-                <Card
-                  key={ad.id}
+              {/* Search Bar */}
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="h4"
                   sx={{
-                    borderRadius: 2,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    "&:hover": {
-                      boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                      transform: "translateY(-2px)",
-                    },
-                    transition: "all 0.3s ease",
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    minWidth: isMobile
-                      ? "auto"
-                      : sidebarOpen
-                      ? "280px"
-                      : "250px",
-                    cursor: "pointer",
+                    fontWeight: "bold",
+                    color: "#313B4C",
+                    mb: 2,
+                    fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
+                    textAlign: { xs: "center", md: "left" },
                   }}
                 >
-                  {/* Vitrin Görseli */}
-                  <CardMedia
-                    component="div"
-                    sx={{
-                      height: { xs: 140, sm: 160, md: 180 },
-                      backgroundColor: "#f5f5f5",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundImage: getImageUrl(ad.images)
-                        ? `url(${getImageUrl(ad.images)})`
-                        : "none",
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                      position: "relative",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {!getImageUrl(ad.images) && (
-                      <Box
+                  Son İlanlar
+                </Typography>
+                <TextField
+                  fullWidth
+                  placeholder="Araç ara..."
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search sx={{ color: "#D34237" }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "white",
+                      borderRadius: 2,
+                      fontSize: { xs: "0.875rem", sm: "1rem" },
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Ads Grid */}
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: (() => {
+                    if (isMobile) {
+                      return "1fr"; // Mobile: 1 sütun
+                    } else if (isTablet) {
+                      return sidebarOpen
+                        ? "repeat(auto-fit, minmax(280px, 1fr))" // Tablet sidebar açık: 2-3 sütun
+                        : "repeat(auto-fit, minmax(250px, 1fr))"; // Tablet sidebar kapalı: 3-4 sütun
+                    } else {
+                      return sidebarOpen
+                        ? "repeat(3, 1fr)" // Desktop sidebar açık: tam 3 sütun
+                        : "repeat(4, 1fr)"; // Desktop sidebar kapalı: tam 4 sütun
+                    }
+                  })(),
+                  gap: isMobile ? 2 : 3,
+                  minChildWidth: isMobile
+                    ? "auto"
+                    : sidebarOpen
+                    ? "280px"
+                    : "250px", // Minimum genişlik
+                }}
+              >
+                {Array.isArray(ads) &&
+                  ads.map((ad) => (
+                    <Card
+                      key={ad.id}
+                      sx={{
+                        borderRadius: 2,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        "&:hover": {
+                          boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                          transform: "translateY(-2px)",
+                        },
+                        transition: "all 0.3s ease",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        minWidth: isMobile
+                          ? "auto"
+                          : sidebarOpen
+                          ? "280px"
+                          : "250px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {/* Vitrin Görseli */}
+                      <CardMedia
+                        component="div"
                         sx={{
+                          height: { xs: 140, sm: 160, md: 180 },
+                          backgroundColor: "#f5f5f5",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundImage: getImageUrl(ad.images)
+                            ? `url(${getImageUrl(ad.images)})`
+                            : "none",
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                          position: "relative",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {!getImageUrl(ad.images) && (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              color: "#999",
+                            }}
+                          >
+                            <LocalShipping sx={{ fontSize: 40, mb: 1 }} />
+                            <Typography variant="caption">
+                              Görsel Yok
+                            </Typography>
+                          </Box>
+                        )}
+
+                        {/* Kategori Badge */}
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: 8,
+                            left: 8,
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                            color: "white",
+                            px: 1,
+                            py: 0.3,
+                            borderRadius: 0.5,
+                            fontSize: "0.7rem",
+                          }}
+                        >
+                          {ad.category?.name || "Araç"}
+                        </Box>
+                      </CardMedia>
+
+                      <CardContent
+                        sx={{
+                          flexGrow: 1,
                           display: "flex",
                           flexDirection: "column",
-                          alignItems: "center",
-                          color: "#999",
+                          p: 2,
+                          "&:last-child": { pb: 2 },
                         }}
                       >
-                        <LocalShipping sx={{ fontSize: 40, mb: 1 }} />
-                        <Typography variant="caption">Görsel Yok</Typography>
-                      </Box>
-                    )}
-
-                    {/* Kategori Badge */}
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: 8,
-                        left: 8,
-                        backgroundColor: "rgba(0, 0, 0, 0.7)",
-                        color: "white",
-                        px: 1,
-                        py: 0.3,
-                        borderRadius: 0.5,
-                        fontSize: "0.7rem",
-                      }}
-                    >
-                      {ad.category?.name || "Araç"}
-                    </Box>
-                  </CardMedia>
-
-                  <CardContent
-                    sx={{
-                      flexGrow: 1,
-                      display: "flex",
-                      flexDirection: "column",
-                      p: 2,
-                      "&:last-child": { pb: 2 },
-                    }}
-                  >
-                    {/* İlan Başlığı */}
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: "bold",
-                        color: "#313B4C",
-                        mb: 1,
-                        fontSize: { xs: "0.9rem", sm: "1rem" },
-                        lineHeight: 1.3,
-                        height: "2.6em", // 2 satırlık sabit yükseklik
-                        overflow: "hidden",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                      }}
-                    >
-                      {ad.title || "İlan Başlığı Belirtilmemiş"}
-                    </Typography>
-
-                    {/* Fiyat */}
-                    <Typography
-                      variant="h5"
-                      sx={{
-                        color: "#333",
-                        fontWeight: "bold",
-                        mb: 2,
-                        fontSize: { xs: "1.1rem", sm: "1.25rem" },
-                      }}
-                    >
-                      ₺{formatPrice(ad.price)}
-                    </Typography>
-
-                    {/* Araç Bilgileri */}
-                    <Box sx={{ mb: 2 }}>
-                      {/* Model Yılı */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#666",
-                          mb: 0.8,
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        <strong>Model Yılı:</strong>{" "}
-                        {ad.year || "Belirtilmemiş"}
-                      </Typography>
-
-                      {/* Kilometre */}
-                      {ad.mileage && (
+                        {/* İlan Başlığı */}
                         <Typography
-                          variant="body2"
+                          variant="h6"
                           sx={{
-                            color: "#666",
-                            mb: 0.8,
-                            fontSize: "0.8rem",
+                            fontWeight: "bold",
+                            color: "#313B4C",
+                            mb: 1,
+                            fontSize: { xs: "0.9rem", sm: "1rem" },
+                            lineHeight: 1.3,
+                            height: "2.6em", // 2 satırlık sabit yükseklik
+                            overflow: "hidden",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
                           }}
                         >
-                          <strong>KM:</strong>{" "}
-                          {ad.mileage.toLocaleString("tr-TR")} km
+                          {ad.title || "İlan Başlığı Belirtilmemiş"}
                         </Typography>
-                      )}
 
-                      {/* Konum */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#666",
-                          mb: 0.8,
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        <strong>Şehir/İlçe:</strong>{" "}
-                        {formatLocation(ad.city, ad.district)}
-                      </Typography>
-
-                      {/* İlan Tarihi */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#999",
-                          fontSize: "0.75rem",
-                        }}
-                      >
-                        <strong>İlan Tarihi:</strong>{" "}
-                        {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
-                      </Typography>
-                    </Box>
-
-                    {/* Satıcı Bilgileri */}
-                    <Box
-                      sx={{
-                        backgroundColor: "#f5f5f5",
-                        borderRadius: 1,
-                        p: 1.5,
-                        mb: 2,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
+                        {/* Fiyat */}
                         <Typography
-                          variant="body2"
+                          variant="h5"
                           sx={{
-                            color: "#666",
-                            fontSize: "0.8rem",
+                            color: "#333",
+                            fontWeight: "bold",
+                            mb: 2,
+                            fontSize: { xs: "1.1rem", sm: "1.25rem" },
                           }}
                         >
-                          <strong>İlan Sahibi:</strong>{" "}
-                          {[ad.user.firstName, ad.user.lastName]
-                            .filter(Boolean)
-                            .join(" ") || "Belirtilmemiş"}
+                          ₺{formatPrice(ad.price)}
                         </Typography>
 
-                        {ad.user.phone && (
+                        {/* Araç Bilgileri */}
+                        <Box sx={{ mb: 2 }}>
+                          {/* Model Yılı */}
                           <Typography
                             variant="body2"
                             sx={{
-                              color: "#333",
-                              fontSize: "0.85rem",
-                              fontWeight: "600",
-                              backgroundColor: "#e8e8e8",
-                              px: 0.8,
-                              py: 0.2,
-                              borderRadius: 0.5,
+                              color: "#666",
+                              mb: 0.8,
+                              fontSize: "0.8rem",
                             }}
                           >
-                            {formatPhone(ad.user.phone)}
+                            <strong>Model Yılı:</strong>{" "}
+                            {ad.year || "Belirtilmemiş"}
                           </Typography>
-                        )}
-                      </Box>
-                    </Box>
 
-                    {/* Action Buttons */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 1,
-                        mt: "auto",
-                      }}
-                    >
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        onClick={() => navigate(`/ad/${ad.id}`)}
-                        sx={{
-                          backgroundColor: "#333",
-                          color: "white",
-                          py: 1,
-                          borderRadius: 1,
-                          fontSize: "0.8rem",
-                          "&:hover": {
-                            backgroundColor: "#555",
-                          },
-                        }}
-                      >
-                        Detayları Gör
-                      </Button>
+                          {/* Kilometre */}
+                          {ad.mileage && (
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "#666",
+                                mb: 0.8,
+                                fontSize: "0.8rem",
+                              }}
+                            >
+                              <strong>KM:</strong>{" "}
+                              {ad.mileage.toLocaleString("tr-TR")} km
+                            </Typography>
+                          )}
 
-                      <Box sx={{ display: "flex", gap: 0.5 }}>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => handleComplaint(ad)}
-                          startIcon={<Report />}
+                          {/* Konum */}
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#666",
+                              mb: 0.8,
+                              fontSize: "0.8rem",
+                            }}
+                          >
+                            <strong>Şehir/İlçe:</strong>{" "}
+                            {formatLocation(ad.city, ad.district)}
+                          </Typography>
+
+                          {/* İlan Tarihi */}
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#999",
+                              fontSize: "0.75rem",
+                            }}
+                          >
+                            <strong>İlan Tarihi:</strong>{" "}
+                            {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
+                          </Typography>
+                        </Box>
+
+                        {/* Satıcı Bilgileri */}
+                        <Box
                           sx={{
-                            flex: 1,
-                            fontSize: "0.7rem",
-                            py: 0.3,
-                            borderColor: "#d32f2f",
-                            color: "#d32f2f",
-                            "&:hover": {
-                              borderColor: "#b71c1c",
-                              backgroundColor: "#ffebee",
-                              color: "#b71c1c",
-                            },
+                            backgroundColor: "#f5f5f5",
+                            borderRadius: 1,
+                            p: 1.5,
+                            mb: 2,
                           }}
                         >
-                          Şikayet Et
-                        </Button>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={() => handleStartMessage(ad)}
-                          startIcon={<Message />}
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: "#666",
+                                fontSize: "0.8rem",
+                              }}
+                            >
+                              <strong>İlan Sahibi:</strong>{" "}
+                              {[ad.user.firstName, ad.user.lastName]
+                                .filter(Boolean)
+                                .join(" ") || "Belirtilmemiş"}
+                            </Typography>
+
+                            {ad.user.phone && (
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  color: "#333",
+                                  fontSize: "0.85rem",
+                                  fontWeight: "600",
+                                  backgroundColor: "#e8e8e8",
+                                  px: 0.8,
+                                  py: 0.2,
+                                  borderRadius: 0.5,
+                                }}
+                              >
+                                {formatPhone(ad.user.phone)}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+
+                        {/* Action Buttons */}
+                        <Box
                           sx={{
-                            flex: 1,
-                            fontSize: "0.7rem",
-                            py: 0.3,
-                            borderColor: "#1976d2",
-                            color: "#1976d2",
-                            "&:hover": {
-                              borderColor: "#1565c0",
-                              backgroundColor: "#e3f2fd",
-                              color: "#1565c0",
-                            },
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                            mt: "auto",
                           }}
                         >
-                          Mesaj
-                        </Button>
-                        <Button
-                          variant={
-                            savedAds.has(ad.id) ? "contained" : "outlined"
-                          }
-                          size="small"
-                          onClick={() => handleAddToFavorites(ad.id)}
-                          disabled={savingAdId === ad.id || savedAds.has(ad.id)}
-                          startIcon={
-                            savingAdId === ad.id ? (
-                              <CircularProgress size={12} />
-                            ) : savedAds.has(ad.id) ? (
-                              <CheckCircle />
-                            ) : null
-                          }
-                          sx={{
-                            flex: 1,
-                            fontSize: "0.7rem",
-                            py: 0.3,
-                            borderColor: savedAds.has(ad.id)
-                              ? "#4caf50"
-                              : "#888",
-                            color: savedAds.has(ad.id) ? "white" : "#666",
-                            backgroundColor: savedAds.has(ad.id)
-                              ? "#4caf50"
-                              : "transparent",
-                            "&:hover": {
-                              borderColor: savedAds.has(ad.id)
-                                ? "#4caf50"
-                                : "#666",
-                              backgroundColor: savedAds.has(ad.id)
-                                ? "#4caf50"
-                                : "#f5f5f5",
-                            },
-                            "&:disabled": {
-                              backgroundColor: savedAds.has(ad.id)
-                                ? "#4caf50"
-                                : "transparent",
-                              color: savedAds.has(ad.id) ? "white" : "#999",
-                            },
-                          }}
-                        >
-                          {savedAds.has(ad.id) ? "Kaydedildi" : "Kaydet"}
-                        </Button>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              ))}
-          </Box>
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            onClick={() => navigate(`/ad/${ad.id}`)}
+                            sx={{
+                              backgroundColor: "#333",
+                              color: "white",
+                              py: 1,
+                              borderRadius: 1,
+                              fontSize: "0.8rem",
+                              "&:hover": {
+                                backgroundColor: "#555",
+                              },
+                            }}
+                          >
+                            Detayları Gör
+                          </Button>
+
+                          <Box sx={{ display: "flex", gap: 0.5 }}>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => handleComplaint(ad)}
+                              startIcon={<Report />}
+                              sx={{
+                                flex: 1,
+                                fontSize: "0.7rem",
+                                py: 0.3,
+                                borderColor: "#d32f2f",
+                                color: "#d32f2f",
+                                "&:hover": {
+                                  borderColor: "#b71c1c",
+                                  backgroundColor: "#ffebee",
+                                  color: "#b71c1c",
+                                },
+                              }}
+                            >
+                              Şikayet Et
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => handleStartMessage(ad)}
+                              startIcon={<Message />}
+                              sx={{
+                                flex: 1,
+                                fontSize: "0.7rem",
+                                py: 0.3,
+                                borderColor: "#1976d2",
+                                color: "#1976d2",
+                                "&:hover": {
+                                  borderColor: "#1565c0",
+                                  backgroundColor: "#e3f2fd",
+                                  color: "#1565c0",
+                                },
+                              }}
+                            >
+                              Mesaj
+                            </Button>
+                            <Button
+                              variant={
+                                savedAds.has(ad.id) ? "contained" : "outlined"
+                              }
+                              size="small"
+                              onClick={() => handleAddToFavorites(ad.id)}
+                              disabled={
+                                savingAdId === ad.id || savedAds.has(ad.id)
+                              }
+                              startIcon={
+                                savingAdId === ad.id ? (
+                                  <CircularProgress size={12} />
+                                ) : savedAds.has(ad.id) ? (
+                                  <CheckCircle />
+                                ) : null
+                              }
+                              sx={{
+                                flex: 1,
+                                fontSize: "0.7rem",
+                                py: 0.3,
+                                borderColor: savedAds.has(ad.id)
+                                  ? "#4caf50"
+                                  : "#888",
+                                color: savedAds.has(ad.id) ? "white" : "#666",
+                                backgroundColor: savedAds.has(ad.id)
+                                  ? "#4caf50"
+                                  : "transparent",
+                                "&:hover": {
+                                  borderColor: savedAds.has(ad.id)
+                                    ? "#4caf50"
+                                    : "#666",
+                                  backgroundColor: savedAds.has(ad.id)
+                                    ? "#4caf50"
+                                    : "#f5f5f5",
+                                },
+                                "&:disabled": {
+                                  backgroundColor: savedAds.has(ad.id)
+                                    ? "#4caf50"
+                                    : "transparent",
+                                  color: savedAds.has(ad.id) ? "white" : "#999",
+                                },
+                              }}
+                            >
+                              {savedAds.has(ad.id) ? "Kaydedildi" : "Kaydet"}
+                            </Button>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </Box>
+            </>
+          )}
         </Box>
       </Box>
 

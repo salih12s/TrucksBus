@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Container, Typography, Link, Button } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Facebook,
   Twitter,
@@ -34,8 +35,8 @@ const Footer: React.FC = () => {
                 variant="body2"
                 sx={{ mb: 2, fontSize: "0.85rem", lineHeight: 1.6 }}
               >
-                Türkiye'nin en güvenilir ticari araç alım-satım platformu.
-                Kamyon, otobüs, minibüs ve çekici ilanları tek yerde.
+                Ticari Araçlar alım satım platformu Kamyon,Kamyonet çekici,
+                Treyler Romork Otobüs,Midübüs ,Minübüs,aynı platformda
               </Typography>
 
               {/* Butonlar */}
@@ -89,7 +90,7 @@ const Footer: React.FC = () => {
                     variant="h6"
                     sx={{ color: "#D34237", fontWeight: "bold" }}
                   >
-                    2724
+                    7/24
                   </Typography>
                   <Typography variant="caption">Destek</Typography>
                 </Box>
@@ -292,7 +293,8 @@ const Footer: React.FC = () => {
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/about"
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -303,7 +305,8 @@ const Footer: React.FC = () => {
                 Hakkımızda
               </Link>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/contact"
                 sx={{
                   color: "white",
                   textDecoration: "none",
