@@ -1,2 +1,2 @@
 // Messaging Components
-export { default as MessagingSystem } from "./MessagingSystem";
+export { default as MessagingSystem } from "./MessagingSystemNew";

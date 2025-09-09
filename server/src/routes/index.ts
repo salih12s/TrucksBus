@@ -9,6 +9,7 @@ import notificationRoutes from "./notifications";
 import dopingRoutes from "./doping";
 import favoriteRoutes from "./favorites";
 import complaintRoutes from "./complaint";
+import messagingRoutes from "./messaging";
 
 const router = Router();
 
@@ -23,6 +24,7 @@ router.use("/notifications", notificationRoutes);
 router.use("/doping", dopingRoutes);
 router.use("/favorites", favoriteRoutes);
 router.use("/complaints", complaintRoutes);
+router.use("/messages", messagingRoutes);
 
 // API info endpoint
 router.get("/", (req, res) => {
@@ -39,6 +41,7 @@ router.get("/", (req, res) => {
       notifications: "/api/notifications",
       doping: "/api/doping",
       favorites: "/api/favorites",
+      messages: "/api/messages",
     },
   });
 });

@@ -6,7 +6,9 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor, type RootState, type AppDispatch } from "./store";
 import { getCurrentUser, clearCredentials } from "./store/authSlice";
+import { fetchUnreadCount } from "./store/messagingSlice";
 import { getTokenFromStorage } from "./utils/tokenUtils";
+import socketService, { SocketService } from "./services/socketService";
 
 // Components
 import {
@@ -24,6 +26,7 @@ const AdDetail = React.lazy(() => import("./pages/AdDetail"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 const Notifications = React.lazy(() => import("./pages/Notifications"));
 const Bookmarks = React.lazy(() => import("./pages/Bookmarks"));
+const MessagesPage = React.lazy(() => import("./pages/MessagesPage"));
 const LoginNew = React.lazy(() => import("./components/auth/LoginNew"));
 const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
 const RegisterCorporate = React.lazy(
@@ -105,7 +108,7 @@ const VariantSelection = React.lazy(
 const MyAds = React.lazy(() => import("./pages/MyAds"));
 const Doping = React.lazy(() => import("./pages/Doping"));
 const MessagingSystem = React.lazy(
-  () => import("./components/messaging/MessagingSystem")
+  () => import("./components/messaging/MessagingSystemNew")
 );
 const Complaints = React.lazy(() => import("./pages/Complaints"));
 const AnalyticsDashboard = React.lazy(
@@ -221,6 +224,28 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, [dispatch, token, user, isAuthenticated]);
 
+  // Initialize socket connection and messaging when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user?.id && isInitialized) {
+      // Connect to socket
+      socketService.connect(user.id);
+      
+      // Fetch initial unread count
+      dispatch(fetchUnreadCount());
+
+      // Request notification permission
+      SocketService.requestNotificationPermission();
+
+      return () => {
+        // Disconnect socket when component unmounts or user logs out
+        socketService.disconnect();
+      };
+    } else if (!isAuthenticated && isInitialized) {
+      // Disconnect socket when user logs out
+      socketService.disconnect();
+    }
+  }, [isAuthenticated, user?.id, isInitialized, dispatch]);
+
   // Eğer henüz initialize olmadıysa loading göster
   if (!isInitialized) {
     return (
@@ -315,6 +340,15 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <Bookmarks />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/messages"
+                          element={
+                            <ProtectedRoute>
+                              <MessagesPage />
                             </ProtectedRoute>
                           }
                         />

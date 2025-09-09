@@ -37,6 +37,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
   const { user, isAuthenticated, isLoading } = useAppSelector(
     (state) => state.auth
   );
+  const { unreadCount } = useAppSelector((state) => state.messaging);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -145,7 +146,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                 sx={{ color: "white" }}
                 onClick={() => navigate("/messages")}
               >
-                <Badge badgeContent={3} color="error">
+                <Badge badgeContent={unreadCount} color="error">
                   <MessageIcon />
                 </Badge>
               </IconButton>

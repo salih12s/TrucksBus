@@ -32,9 +32,11 @@ import {
   ChevronRight,
   CheckCircle,
   Report,
+  Message,
 } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
-import { useAppSelector } from "../hooks/redux";
+import { useAppSelector, useAppDispatch } from "../hooks/redux";
+import { startConversation } from "../store/messagingSlice";
 import apiClient from "../api/client";
 import ComplaintModal from "../components/complaints/ComplaintModal";
 
@@ -68,6 +70,7 @@ interface Ad {
     altText?: string;
   }>;
   user: {
+    id: number;
     firstName: string | null;
     lastName: string | null;
     phone: string | null;
@@ -97,6 +100,7 @@ interface ApiAdsResponse {
 
 const MainLayout: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [categories, setCategories] = useState<Category[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -115,7 +119,7 @@ const MainLayout: React.FC = () => {
     title: string;
   } | null>(null);
 
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
@@ -212,6 +216,39 @@ const MainLayout: React.FC = () => {
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
+  };
+
+  // Messaging function
+  const handleStartMessage = async (ad: Ad) => {
+    if (!isAuthenticated) {
+      setSnackbarMessage("Mesaj göndermek için giriş yapmalısınız");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    if (!ad.user || ad.user.id === user?.id) {
+      setSnackbarMessage("Kendi ilanınıza mesaj gönderemezsiniz");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      // Start conversation and navigate to messages page
+      await dispatch(startConversation({
+        adId: ad.id,
+        receiverId: ad.user.id,
+        initialMessage: `Merhaba, "${ad.title}" ilanınız hakkında bilgi almak istiyorum.`
+      }));
+      
+      navigate('/messages');
+    } catch (error) {
+      console.error('Failed to start conversation:', error);
+      setSnackbarMessage("Mesaj gönderilirken hata oluştu");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
   };
 
   const handleComplaint = (ad: Ad) => {
@@ -916,15 +953,18 @@ const MainLayout: React.FC = () => {
                         <Button
                           variant="outlined"
                           size="small"
+                          onClick={() => handleStartMessage(ad)}
+                          startIcon={<Message />}
                           sx={{
                             flex: 1,
                             fontSize: "0.7rem",
                             py: 0.3,
-                            borderColor: "#888",
-                            color: "#666",
+                            borderColor: "#1976d2",
+                            color: "#1976d2",
                             "&:hover": {
-                              borderColor: "#666",
-                              backgroundColor: "#f5f5f5",
+                              borderColor: "#1565c0",
+                              backgroundColor: "#e3f2fd",
+                              color: "#1565c0",
                             },
                           }}
                         >

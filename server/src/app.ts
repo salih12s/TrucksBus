@@ -6,6 +6,8 @@ import morgan from "morgan";
 import path from "path";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
+import { createServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
 import routes from "./routes";
 import {
   generalLimiter,
@@ -19,6 +21,14 @@ import {
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
@@ -204,7 +214,23 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-const server = app.listen(PORT, () => {
+// Socket.io connection handling
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+  
+  // Join user to their personal room for notifications
+  socket.on('join_user_room', (userId) => {
+    socket.join(`user_${userId}`);
+    console.log(`User ${userId} joined their room`);
+  });
+  
+  // Handle disconnect
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`🚛 TrucksBus server running on port ${PORT}`);
   console.log(
     `🔒 Security features: Rate limiting, CORS, Helmet, Input validation`
@@ -212,4 +238,5 @@ const server = app.listen(PORT, () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
+export { io };
 export default app;
