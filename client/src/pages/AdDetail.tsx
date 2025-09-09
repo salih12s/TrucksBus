@@ -415,6 +415,14 @@ const AdDetail: React.FC = () => {
       motorPower: "Motor Gücü",
       cabin: "Kabin",
 
+      // Çekici spesifik alanlar
+      bedCount: "Yatak Sayısı",
+      cabinType: "Kabin Tipi",
+      dorseAvailable: "Dorse Var mı",
+      damageRecord: "Hasar Kaydı",
+      paintChange: "Boya Değişimi",
+      engineCapacity: "Motor Hacmi",
+
       // Otobüs özellikleri
       passengerCapacity: "Yolcu Kapasitesi",
       doorCount: "Kapı Sayısı",
@@ -448,6 +456,37 @@ const AdDetail: React.FC = () => {
       parkSensoru: "Park Sensörü",
       hizSabitleme: "Hız Sabitleme",
       merkeziKilit: "Merkezi Kilit",
+      
+      // Çekici özellikleri (resimdeki İngilizce alanlar)
+      cd: "CD Çalar",
+      ebv: "EBV",
+      gps: "GPS",
+      pto: "PTO",
+      radio: "Radyo",
+      table: "Masa",
+      airBag: "Hava Yastığı",
+      spoiler: "Spoyler",
+      towHook: "Çeki Demiri",
+      retarder: "Retarder",
+      fogLight: "Sis Farı",
+      alloyWheel: "Alaşım Jant",
+      sideAirbag: "Yan Hava Yastığı",
+      heatedSeats: "Isıtmalı Koltuklar",
+      leatherSeat: "Deri Koltuk",
+      airCondition: "Klima",
+      cruiseControl: "Hız Sabitleme",
+      windDeflector: "Rüzgar Deflektörü",
+      centralLock: "Merkezi Kilit",
+      memorySeats: "Hafızalı Koltuklar",
+      tripComputer: "Yol Bilgisayarı",
+      powerSteering: "Hidrolik Direksiyon",
+      electricMirror: "Elektrikli Aynalar",
+      electricWindow: "Elektrikli Camlar",
+      headlightSensor: "Far Sensörü",
+      headlightWasher: "Far Yıkama Sistemi",
+      rainSensor: "Yağmur Sensörü",
+      passengerAirbag: "Yolcu Hava Yastığı",
+      flexibleReadingLight: "Esnek Okuma Lambası",
       muzikSistemi: "Müzik Sistemi",
       otomatikKapi: "Otomatik Kapı",
       turizmPaketi: "Turizm Paketi",
@@ -1012,14 +1051,20 @@ const AdDetail: React.FC = () => {
               <Box sx={{ p: 3 }}>
                 {(() => {
                   // detailFeatures kontrolü
-                  const hasDetailFeatures = ad.customFields?.detailFeatures &&
+                  const hasDetailFeatures =
+                    ad.customFields?.detailFeatures &&
                     typeof ad.customFields.detailFeatures === "object" &&
-                    Object.values(ad.customFields.detailFeatures as Record<string, boolean>).some(v => v === true);
+                    Object.values(
+                      ad.customFields.detailFeatures as Record<string, boolean>
+                    ).some((v) => v === true);
 
                   // features kontrolü
-                  const hasFeatures = ad.customFields?.features &&
+                  const hasFeatures =
+                    ad.customFields?.features &&
                     typeof ad.customFields.features === "object" &&
-                    Object.values(ad.customFields.features as Record<string, boolean>).some(v => v === true);
+                    Object.values(
+                      ad.customFields.features as Record<string, boolean>
+                    ).some((v) => v === true);
 
                   if (!hasDetailFeatures && !hasFeatures) {
                     return (
@@ -1040,12 +1085,18 @@ const AdDetail: React.FC = () => {
                         <Box
                           sx={{
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                            gridTemplateColumns:
+                              "repeat(auto-fit, minmax(280px, 1fr))",
                             gap: 1.5,
                             mb: hasFeatures ? 3 : 0,
                           }}
                         >
-                          {Object.entries(ad.customFields.detailFeatures as Record<string, boolean>)
+                          {Object.entries(
+                            ad.customFields.detailFeatures as Record<
+                              string,
+                              boolean
+                            >
+                          )
                             .filter(([, value]) => value === true)
                             .map(([key]) => (
                               <Box
@@ -1061,7 +1112,11 @@ const AdDetail: React.FC = () => {
                                 }}
                               >
                                 <CheckCircle
-                                  sx={{ color: "#28a745", fontSize: 16, mr: 1.5 }}
+                                  sx={{
+                                    color: "#28a745",
+                                    fontSize: 16,
+                                    mr: 1.5,
+                                  }}
                                 />
                                 <Typography
                                   variant="body2"
@@ -1083,11 +1138,14 @@ const AdDetail: React.FC = () => {
                         <Box
                           sx={{
                             display: "grid",
-                            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                            gridTemplateColumns:
+                              "repeat(auto-fit, minmax(280px, 1fr))",
                             gap: 1.5,
                           }}
                         >
-                          {Object.entries(ad.customFields.features as Record<string, boolean>)
+                          {Object.entries(
+                            ad.customFields.features as Record<string, boolean>
+                          )
                             .filter(([, value]) => value === true)
                             .map(([key]) => (
                               <Box
@@ -1103,7 +1161,11 @@ const AdDetail: React.FC = () => {
                                 }}
                               >
                                 <CheckCircle
-                                  sx={{ color: "#28a745", fontSize: 16, mr: 1.5 }}
+                                  sx={{
+                                    color: "#28a745",
+                                    fontSize: 16,
+                                    mr: 1.5,
+                                  }}
                                 />
                                 <Typography
                                   variant="body2"

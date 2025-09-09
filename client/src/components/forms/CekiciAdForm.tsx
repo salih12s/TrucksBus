@@ -45,6 +45,65 @@ interface District {
   cityId: number;
 }
 
+// Motor hacmi seçenekleri
+const engineCapacityOptions = [
+  { value: "", label: "Motor Hacmi Seçin" },
+  { value: "1300-", label: "1300 cm³'e kadar" },
+  { value: "1301-1600", label: "1301 - 1600 cm³" },
+  { value: "1601-1800", label: "1601 - 1800 cm³" },
+  { value: "1801-2000", label: "1801 - 2000 cm³" },
+  { value: "2001-2500", label: "2001 - 2500 cm³" },
+  { value: "2501-3000", label: "2501 - 3000 cm³" },
+  { value: "3001-3500", label: "3001 - 3500 cm³" },
+  { value: "3501-4000", label: "3501 - 4000 cm³" },
+  { value: "4001-4500", label: "4001 - 4500 cm³" },
+  { value: "4501-5000", label: "4501 - 5000 cm³" },
+  { value: "5001+", label: "5001 cm³ ve üzeri" },
+];
+
+// Motor gücü seçenekleri
+const enginePowerOptions = [
+  { value: "", label: "Motor Gücü Seçin" },
+  { value: "100-", label: "100 hp'ye kadar" },
+  { value: "101-125", label: "101 - 125 hp" },
+  { value: "126-150", label: "126 - 150 hp" },
+  { value: "151-175", label: "151 - 175 hp" },
+  { value: "176-200", label: "176 - 200 hp" },
+  { value: "201-225", label: "201 - 225 hp" },
+  { value: "226-250", label: "226 - 250 hp" },
+  { value: "251-275", label: "251 - 275 hp" },
+  { value: "276-300", label: "276 - 300 hp" },
+  { value: "301-325", label: "301 - 325 hp" },
+  { value: "326-350", label: "326 - 350 hp" },
+  { value: "351-375", label: "351 - 375 hp" },
+  { value: "376-400", label: "376 - 400 hp" },
+  { value: "401-425", label: "401 - 425 hp" },
+  { value: "426-450", label: "426 - 450 hp" },
+  { value: "451-475", label: "451 - 475 hp" },
+  { value: "476-500", label: "476 - 500 hp" },
+  { value: "501+", label: "501 hp ve üzeri" },
+];
+
+// Renk seçenekleri
+const colorOptions = [
+  { value: "", label: "Renk Seçin" },
+  { value: "bej", label: "Bej" },
+  { value: "beyaz", label: "Beyaz" },
+  { value: "bordo", label: "Bordo" },
+  { value: "gri", label: "Gri" },
+  { value: "gumus-gri", label: "Gümüş Gri" },
+  { value: "kirmizi", label: "Kırmızı" },
+  { value: "lacivert", label: "Lacivert" },
+  { value: "mavi", label: "Mavi" },
+  { value: "mor", label: "Mor" },
+  { value: "pembe", label: "Pembe" },
+  { value: "sari", label: "Sarı" },
+  { value: "siyah", label: "Siyah" },
+  { value: "turkuaz", label: "Turkuaz" },
+  { value: "turuncu", label: "Turuncu" },
+  { value: "yesil", label: "Yeşil" },
+];
+
 interface FormData {
   // Temel bilgiler
   title: string;
@@ -222,7 +281,7 @@ const CekiciAdForm: React.FC = () => {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await apiClient.get("/cities");
+        const response = await apiClient.get("/ads/cities");
         setCities(response.data as City[]);
       } catch (error) {
         console.error("Şehirler yüklenirken hata:", error);
@@ -237,7 +296,7 @@ const CekiciAdForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -572,11 +631,7 @@ const CekiciAdForm: React.FC = () => {
                     <MenuItem value="ikinci-el">İkinci El</MenuItem>
                   </Select>
                 </FormControl>
-                <TextField
-                  label="Renk"
-                  value={formData.color}
-                  onChange={(e) => handleInputChange("color", e.target.value)}
-                  required
+                <FormControl
                   sx={{
                     flex: 1,
                     minWidth: 250,
@@ -584,7 +639,21 @@ const CekiciAdForm: React.FC = () => {
                       borderRadius: 3,
                     },
                   }}
-                />
+                  required
+                >
+                  <InputLabel>Renk</InputLabel>
+                  <Select
+                    value={formData.color}
+                    onChange={(e) => handleInputChange("color", e.target.value)}
+                    label="Renk"
+                  >
+                    {colorOptions.map((color) => (
+                      <MenuItem key={color.value} value={color.value}>
+                        {color.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Box>
 
               {/* Yakıt, Vites */}
@@ -685,14 +754,7 @@ const CekiciAdForm: React.FC = () => {
 
               {/* Motor Gücü, Motor Hacmi */}
               <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
-                <TextField
-                  label="Motor Gücü (HP)"
-                  type="number"
-                  value={formData.enginePower}
-                  onChange={(e) =>
-                    handleInputChange("enginePower", e.target.value)
-                  }
-                  required
+                <FormControl
                   sx={{
                     flex: 1,
                     minWidth: 250,
@@ -700,15 +762,24 @@ const CekiciAdForm: React.FC = () => {
                       borderRadius: 3,
                     },
                   }}
-                />
-                <TextField
-                  label="Motor Hacmi (cc)"
-                  type="number"
-                  value={formData.engineCapacity}
-                  onChange={(e) =>
-                    handleInputChange("engineCapacity", e.target.value)
-                  }
                   required
+                >
+                  <InputLabel>Motor Gücü (HP)</InputLabel>
+                  <Select
+                    value={formData.enginePower}
+                    onChange={(e) =>
+                      handleInputChange("enginePower", e.target.value)
+                    }
+                    label="Motor Gücü (HP)"
+                  >
+                    {enginePowerOptions.map((power) => (
+                      <MenuItem key={power.value} value={power.value}>
+                        {power.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl
                   sx={{
                     flex: 1,
                     minWidth: 250,
@@ -716,7 +787,23 @@ const CekiciAdForm: React.FC = () => {
                       borderRadius: 3,
                     },
                   }}
-                />
+                  required
+                >
+                  <InputLabel>Motor Hacmi (cc)</InputLabel>
+                  <Select
+                    value={formData.engineCapacity}
+                    onChange={(e) =>
+                      handleInputChange("engineCapacity", e.target.value)
+                    }
+                    label="Motor Hacmi (cc)"
+                  >
+                    {engineCapacityOptions.map((capacity) => (
+                      <MenuItem key={capacity.value} value={capacity.value}>
+                        {capacity.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Box>
 
               {/* Kabin Tipi, Yatak Sayısı */}
