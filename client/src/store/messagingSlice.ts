@@ -1,5 +1,9 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import * as messagingAPI from '../api/messaging';
+import {
+  createSlice,
+  createAsyncThunk,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
+import * as messagingAPI from "../api/messaging";
 
 export interface Message {
   id: number;
@@ -65,143 +69,200 @@ const initialState: MessagingState = {
   currentConversation: {
     messages: [],
     otherUserId: null,
-    adId: null
+    adId: null,
   },
   unreadCount: 0,
   loading: {
     conversations: false,
     messages: false,
-    sending: false
+    sending: false,
   },
-  error: null
+  error: null,
 };
 
 // Async thunks
 export const fetchConversations = createAsyncThunk(
-  'messaging/fetchConversations',
+  "messaging/fetchConversations",
   async (_, { rejectWithValue }) => {
     try {
       return await messagingAPI.getConversations();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch conversations';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch conversations";
       return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const fetchMessages = createAsyncThunk(
-  'messaging/fetchMessages',
-  async ({ otherUserId, adId }: { otherUserId: number; adId?: number | null }, { rejectWithValue }) => {
+  "messaging/fetchMessages",
+  async (
+    { otherUserId, adId }: { otherUserId: number; adId?: number | null },
+    { rejectWithValue }
+  ) => {
     try {
       const messages = await messagingAPI.getMessages(otherUserId, adId);
       return { messages, otherUserId, adId: adId || null };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch messages';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch messages";
       return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const sendMessage = createAsyncThunk(
-  'messaging/sendMessage',
-  async (messageData: { receiverId: number; content: string; adId?: number | null }, { rejectWithValue }) => {
+  "messaging/sendMessage",
+  async (
+    messageData: { receiverId: number; content: string; adId?: number | null },
+    { rejectWithValue }
+  ) => {
     try {
       return await messagingAPI.sendMessage(messageData);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to send message";
       return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const fetchUnreadCount = createAsyncThunk(
-  'messaging/fetchUnreadCount',
+  "messaging/fetchUnreadCount",
   async (_, { rejectWithValue }) => {
     try {
       const result = await messagingAPI.getUnreadCount();
       return result.count;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch unread count';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch unread count";
       return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const startConversation = createAsyncThunk(
-  'messaging/startConversation',
-  async (data: { adId?: number | null; receiverId: number; initialMessage?: string }, { rejectWithValue }) => {
+  "messaging/startConversation",
+  async (
+    data: { adId?: number | null; receiverId: number; initialMessage?: string },
+    { rejectWithValue }
+  ) => {
     try {
       return await messagingAPI.startConversation({
         receiverId: data.receiverId,
         adId: data.adId,
-        initialMessage: data.initialMessage || 'Merhaba, bu ilanınızla ilgili bilgi almak istiyorum.'
+        initialMessage:
+          data.initialMessage ||
+          "Merhaba, bu ilanınızla ilgili bilgi almak istiyorum.",
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to start conversation';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to start conversation";
       return rejectWithValue(errorMessage);
     }
   }
 );
 
 export const markConversationAsRead = createAsyncThunk(
-  'messaging/markAsRead',
-  async ({ otherUserId, adId }: { otherUserId: number; adId?: number | null }, { rejectWithValue }) => {
+  "messaging/markAsRead",
+  async (
+    { otherUserId, adId }: { otherUserId: number; adId?: number | null },
+    { rejectWithValue }
+  ) => {
     try {
       await messagingAPI.markAsRead(otherUserId, adId);
       return { otherUserId, adId };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to mark as read';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to mark as read";
       return rejectWithValue(errorMessage);
     }
   }
 );
 
 const messagingSlice = createSlice({
-  name: 'messaging',
+  name: "messaging",
   initialState,
   reducers: {
     clearError: (state) => {
       state.error = null;
     },
-    newMessageReceived: (state, action: PayloadAction<Message>) => {
-      const message = action.payload;
-      
-      // Add to current conversation if it matches
+    newMessageReceived: (
+      state,
+      action: PayloadAction<{ message: Message; currentUserId: number }>
+    ) => {
+      const { message, currentUserId } = action.payload;
+      console.log(
+        "New message received in Redux:",
+        message,
+        "Current user:",
+        currentUserId
+      );
+
+      // Add to current conversation if it matches the open conversation
       if (
-        state.currentConversation.otherUserId === message.senderId ||
-        state.currentConversation.otherUserId === message.receiverId
+        state.currentConversation.otherUserId &&
+        (state.currentConversation.otherUserId === message.senderId ||
+          state.currentConversation.otherUserId === message.receiverId) &&
+        state.currentConversation.adId === message.adId
       ) {
         state.currentConversation.messages.push(message);
+        console.log("Message added to current conversation");
       }
-      
-      // Update conversations list
-      const conversationId = `${message.senderId}-${message.adId || 'general'}`;
-      const existingConversation = state.conversations.find(conv => conv.id === conversationId);
-      
+
+      // For conversation list, determine the other user
+      const otherUserId =
+        message.senderId === currentUserId
+          ? message.receiverId
+          : message.senderId;
+      const conversationId = `${otherUserId}-${message.adId || "general"}`;
+
+      const existingConversation = state.conversations.find(
+        (conv) => conv.id === conversationId
+      );
+
       if (existingConversation) {
         existingConversation.lastMessage = message;
         existingConversation.updatedAt = message.createdAt;
-        if (message.receiverId !== state.currentConversation.otherUserId) {
+
+        // Only increment unread count if this message is received (not sent)
+        // and the conversation is not currently open
+        if (
+          message.receiverId === currentUserId &&
+          state.currentConversation.otherUserId !== message.senderId
+        ) {
           existingConversation.unreadCount++;
+          state.unreadCount++;
         }
-      }
-      
-      // Update unread count
-      if (message.receiverId !== state.currentConversation.otherUserId) {
-        state.unreadCount++;
+
+        // Sort conversations by last message time
+        state.conversations.sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+
+        console.log("Conversation updated:", conversationId);
+      } else {
+        console.log(
+          "Conversation not found, may need to refresh conversations"
+        );
+        // Force refresh conversations when a new conversation is detected
+        state.loading.conversations = true;
       }
     },
-    refreshUnreadCount: () => {
-      // This will trigger a fetch of unread count
-      // The actual fetch is handled by the component
+    refreshUnreadCount: (state) => {
+      // Mark that unread count needs to be refreshed
+      state.loading.conversations = true;
     },
     clearCurrentConversation: (state) => {
       state.currentConversation = {
         messages: [],
         otherUserId: null,
-        adId: null
+        adId: null,
       };
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -218,7 +279,7 @@ const messagingSlice = createSlice({
         state.loading.conversations = false;
         state.error = action.payload as string;
       })
-      
+
       // Fetch messages
       .addCase(fetchMessages.pending, (state) => {
         state.loading.messages = true;
@@ -234,7 +295,7 @@ const messagingSlice = createSlice({
         state.loading.messages = false;
         state.error = action.payload as string;
       })
-      
+
       // Send message
       .addCase(sendMessage.pending, (state) => {
         state.loading.sending = true;
@@ -248,39 +309,41 @@ const messagingSlice = createSlice({
         state.loading.sending = false;
         state.error = action.payload as string;
       })
-      
+
       // Fetch unread count
       .addCase(fetchUnreadCount.fulfilled, (state, action) => {
         state.unreadCount = action.payload;
       })
-      
+
       // Start conversation
       .addCase(startConversation.fulfilled, (state, action) => {
-        if ('content' in action.payload) {
+        if ("content" in action.payload) {
           // Message was sent
           state.currentConversation.messages.push(action.payload as Message);
         }
       })
-      
+
       // Mark conversation as read
       .addCase(markConversationAsRead.fulfilled, (state, action) => {
         const { otherUserId, adId } = action.payload;
-        const conversationId = `${otherUserId}-${adId || 'general'}`;
-        const conversation = state.conversations.find(conv => conv.id === conversationId);
-        
+        const conversationId = `${otherUserId}-${adId || "general"}`;
+        const conversation = state.conversations.find(
+          (conv) => conv.id === conversationId
+        );
+
         if (conversation) {
           state.unreadCount -= conversation.unreadCount;
           conversation.unreadCount = 0;
         }
       });
-  }
+  },
 });
 
 export const {
   clearError,
   newMessageReceived,
   refreshUnreadCount,
-  clearCurrentConversation
+  clearCurrentConversation,
 } = messagingSlice.actions;
 
 export default messagingSlice.reducer;

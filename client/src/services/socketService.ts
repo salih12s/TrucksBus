@@ -1,5 +1,5 @@
-import io, { Socket } from 'socket.io-client';
-import { store } from '../store';
+import io, { Socket } from "socket.io-client";
+import { store } from "../store";
 
 class SocketService {
   private socket: Socket | null = null;
@@ -10,55 +10,68 @@ class SocketService {
       return this.socket;
     }
 
-    const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    
+    const serverUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
     this.socket = io(serverUrl, {
-      transports: ['websocket', 'polling'],
-      withCredentials: true
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      forceNew: true,
     });
 
-    this.socket.on('connect', () => {
-      console.log('Connected to socket server');
+    console.log("Attempting to connect to Socket.io server at:", serverUrl);
+
+    this.socket.on("connect", () => {
+      console.log("Connected to socket server");
       this.isConnected = true;
-      
+
       // Join user's personal room for notifications
-      this.socket?.emit('join_user_room', userId);
+      this.socket?.emit("join_user_room", userId);
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from socket server');
+    this.socket.on("disconnect", () => {
+      console.log("Disconnected from socket server");
       this.isConnected = false;
     });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+    this.socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
       this.isConnected = false;
     });
 
     // Listen for new messages
-    this.socket.on('newMessage', (message) => {
-      console.log('New message received:', message);
-      // Dispatch action to update Redux store
-      store.dispatch({ type: 'messages/newMessageReceived', payload: message });
-      
+    this.socket.on("newMessage", (message) => {
+      console.log("New message received:", message);
+
+      // Get current user ID from Redux store
+      const state = store.getState();
+      const currentUserId = state.auth.user?.id;
+
+      // Dispatch action to update Redux store with current user context
+      store.dispatch({
+        type: "messaging/newMessageReceived",
+        payload: { message, currentUserId },
+      });
+
       // Show notification if user is not on messages page
-      if (!window.location.pathname.includes('/messages')) {
-        this.showNotification('Yeni Mesaj', message.content, `/messages`);
+      if (!window.location.pathname.includes("/messages")) {
+        this.showNotification("Yeni Mesaj", message.content, `/messages`);
       }
     });
 
     // Listen for unread count updates
-    this.socket.on('updateUnreadCount', () => {
-      console.log('Unread count update received');
+    this.socket.on("updateUnreadCount", () => {
+      console.log("Unread count update received");
       // Trigger unread count refresh
-      store.dispatch({ type: 'messages/refreshUnreadCount' });
+      import("../store/messagingSlice").then(({ fetchUnreadCount }) => {
+        store.dispatch(fetchUnreadCount());
+      });
     });
 
     // Listen for new notifications
-    this.socket.on('newNotification', () => {
-      console.log('New notification received');
+    this.socket.on("newNotification", () => {
+      console.log("New notification received");
       // Trigger notification refresh
-      store.dispatch({ type: 'notifications/refreshNotifications' });
+      store.dispatch({ type: "notifications/refreshNotifications" });
     });
 
     return this.socket;
@@ -77,11 +90,11 @@ class SocketService {
   }
 
   private showNotification(title: string, body: string, url?: string) {
-    if ('Notification' in window && Notification.permission === 'granted') {
+    if ("Notification" in window && Notification.permission === "granted") {
       const notification = new Notification(title, {
         body,
-        icon: '/Trucksbus.png',
-        badge: '/Trucksbus.png'
+        icon: "/Trucksbus.png",
+        badge: "/Trucksbus.png",
       });
 
       if (url) {
@@ -100,11 +113,11 @@ class SocketService {
 
   // Request notification permission
   static async requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
+    if ("Notification" in window && Notification.permission === "default") {
       const permission = await Notification.requestPermission();
-      return permission === 'granted';
+      return permission === "granted";
     }
-    return Notification.permission === 'granted';
+    return Notification.permission === "granted";
   }
 }
 

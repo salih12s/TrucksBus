@@ -26,8 +26,8 @@ const io = new SocketIOServer(server, {
   cors: {
     origin: process.env.CLIENT_URL || "http://localhost:5173",
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
@@ -215,18 +215,18 @@ process.on("SIGINT", async () => {
 });
 
 // Socket.io connection handling
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-  
+io.on("connection", (socket) => {
+  console.log("🔌 User connected:", socket.id);
+
   // Join user to their personal room for notifications
-  socket.on('join_user_room', (userId) => {
+  socket.on("join_user_room", (userId) => {
     socket.join(`user_${userId}`);
-    console.log(`User ${userId} joined their room`);
+    console.log(`👤 User ${userId} joined their room (socket: ${socket.id})`);
   });
-  
+
   // Handle disconnect
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+  socket.on("disconnect", () => {
+    console.log("❌ User disconnected:", socket.id);
   });
 });
 

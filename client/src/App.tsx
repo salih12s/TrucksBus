@@ -229,7 +229,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isAuthenticated && user?.id && isInitialized) {
       // Connect to socket
       socketService.connect(user.id);
-      
+
       // Fetch initial unread count
       dispatch(fetchUnreadCount());
 

@@ -236,15 +236,17 @@ const MainLayout: React.FC = () => {
 
     try {
       // Start conversation and navigate to messages page
-      await dispatch(startConversation({
-        adId: ad.id,
-        receiverId: ad.user.id,
-        initialMessage: `Merhaba, "${ad.title}" ilanınız hakkında bilgi almak istiyorum.`
-      }));
-      
-      navigate('/messages');
+      await dispatch(
+        startConversation({
+          adId: ad.id,
+          receiverId: ad.user.id,
+          initialMessage: `Merhaba, "${ad.title}" ilanınız hakkında bilgi almak istiyorum.`,
+        })
+      );
+
+      navigate("/messages");
     } catch (error) {
-      console.error('Failed to start conversation:', error);
+      console.error("Failed to start conversation:", error);
       setSnackbarMessage("Mesaj gönderilirken hata oluştu");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);

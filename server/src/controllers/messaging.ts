@@ -1,27 +1,27 @@
-import { Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { io } from '../app';
-import { AuthenticatedRequest } from '../middleware/auth';
+import { Response, NextFunction } from "express";
+import { PrismaClient } from "@prisma/client";
+import { io } from "../app";
+import { AuthenticatedRequest } from "../middleware/auth";
 
 const prisma = new PrismaClient();
 
 // Get conversations for a user
-export const getConversations = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getConversations = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.user?.id;
-    
+
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     // Get all unique conversations (both as sender and receiver)
     const conversations = await prisma.message.findMany({
       where: {
-        OR: [
-          { senderId: userId },
-          { receiverId: userId }
-        ]
+        OR: [{ senderId: userId }, { receiverId: userId }],
       },
       include: {
         sender: {
@@ -29,37 +29,39 @@ export const getConversations = async (req: AuthenticatedRequest, res: Response)
             id: true,
             firstName: true,
             lastName: true,
-            email: true
-          }
+            email: true,
+          },
         },
         receiver: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-            email: true
-          }
+            email: true,
+          },
         },
         ad: {
           select: {
             id: true,
-            title: true
-          }
-        }
+            title: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     });
 
     // Group messages by conversation (other user + ad)
     const conversationMap = new Map();
-    
-    conversations.forEach(message => {
-      const otherUserId = message.senderId === userId ? message.receiverId : message.senderId;
-      const otherUser = message.senderId === userId ? message.receiver : message.sender;
-      const conversationKey = `${otherUserId}-${message.adId || 'general'}`;
-      
+
+    conversations.forEach((message) => {
+      const otherUserId =
+        message.senderId === userId ? message.receiverId : message.senderId;
+      const otherUser =
+        message.senderId === userId ? message.receiver : message.sender;
+      const conversationKey = `${otherUserId}-${message.adId || "general"}`;
+
       if (!conversationMap.has(conversationKey)) {
         conversationMap.set(conversationKey, {
           id: conversationKey,
@@ -67,10 +69,10 @@ export const getConversations = async (req: AuthenticatedRequest, res: Response)
           ad: message.ad,
           lastMessage: message,
           unreadCount: 0,
-          updatedAt: message.createdAt
+          updatedAt: message.createdAt,
         });
       }
-      
+
       // Count unread messages
       if (message.receiverId === userId && !message.isRead) {
         const conversation = conversationMap.get(conversationKey);
@@ -78,25 +80,29 @@ export const getConversations = async (req: AuthenticatedRequest, res: Response)
       }
     });
 
-    const result = Array.from(conversationMap.values()).sort((a, b) => 
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    const result = Array.from(conversationMap.values()).sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
 
     res.json(result);
   } catch (error) {
-    console.error('Error fetching conversations:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching conversations:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // Get messages for a specific conversation
-export const getMessages = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getMessages = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.user?.id;
     const { otherUserId, adId } = req.params;
-    
+
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
@@ -109,11 +115,11 @@ export const getMessages = async (req: AuthenticatedRequest, res: Response): Pro
           {
             OR: [
               { senderId: userId, receiverId: otherUserIdNum },
-              { senderId: otherUserIdNum, receiverId: userId }
-            ]
+              { senderId: otherUserIdNum, receiverId: userId },
+            ],
           },
-          adIdNum ? { adId: adIdNum } : { adId: null }
-        ]
+          adIdNum ? { adId: adIdNum } : { adId: null },
+        ],
       },
       include: {
         sender: {
@@ -121,27 +127,27 @@ export const getMessages = async (req: AuthenticatedRequest, res: Response): Pro
             id: true,
             firstName: true,
             lastName: true,
-            email: true
-          }
+            email: true,
+          },
         },
         receiver: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-            email: true
-          }
+            email: true,
+          },
         },
         ad: {
           select: {
             id: true,
-            title: true
-          }
-        }
+            title: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'asc'
-      }
+        createdAt: "asc",
+      },
     });
 
     // Mark messages as read
@@ -150,33 +156,36 @@ export const getMessages = async (req: AuthenticatedRequest, res: Response): Pro
         senderId: otherUserIdNum,
         receiverId: userId,
         adId: adIdNum,
-        isRead: false
+        isRead: false,
       },
       data: {
-        isRead: true
-      }
+        isRead: true,
+      },
     });
 
     res.json(messages);
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // Send a new message
-export const sendMessage = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const sendMessage = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.user?.id;
     const { receiverId, content, adId } = req.body;
-    
+
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     if (!receiverId || !content) {
-      res.status(400).json({ error: 'Receiver ID and content are required' });
+      res.status(400).json({ error: "Receiver ID and content are required" });
       return;
     }
 
@@ -185,11 +194,11 @@ export const sendMessage = async (req: AuthenticatedRequest, res: Response): Pro
 
     // Check if receiver exists
     const receiver = await prisma.user.findUnique({
-      where: { id: receiverIdNum }
+      where: { id: receiverIdNum },
     });
 
     if (!receiver) {
-      res.status(404).json({ error: 'Receiver not found' });
+      res.status(404).json({ error: "Receiver not found" });
       return;
     }
 
@@ -200,7 +209,7 @@ export const sendMessage = async (req: AuthenticatedRequest, res: Response): Pro
         senderId: userId,
         receiverId: receiverIdNum,
         adId: adIdNum,
-        isRead: false
+        isRead: false,
       },
       include: {
         sender: {
@@ -208,93 +217,108 @@ export const sendMessage = async (req: AuthenticatedRequest, res: Response): Pro
             id: true,
             firstName: true,
             lastName: true,
-            email: true
-          }
+            email: true,
+          },
         },
         receiver: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-            email: true
-          }
+            email: true,
+          },
         },
         ad: {
           select: {
             id: true,
-            title: true
-          }
-        }
-      }
+            title: true,
+          },
+        },
+      },
     });
 
     // Emit real-time message to receiver
     if (io) {
-      io.to(`user_${receiverIdNum}`).emit('newMessage', message);
-      io.to(`user_${receiverIdNum}`).emit('updateUnreadCount');
+      console.log(`📨 Emitting newMessage to user_${receiverIdNum}:`, {
+        messageId: message.id,
+        content: message.content,
+        senderId: message.senderId,
+      });
+      io.to(`user_${receiverIdNum}`).emit("newMessage", message);
+      io.to(`user_${receiverIdNum}`).emit("updateUnreadCount");
+    } else {
+      console.log("❌ Socket.io not available for real-time messaging");
     }
 
     // Create notification for receiver
     await prisma.notification.create({
       data: {
         userId: receiverIdNum,
-        title: 'Yeni Mesaj',
-        message: `${message.sender.firstName || message.sender.email} size bir mesaj gönderdi${message.ad ? ` - ${message.ad.title}` : ''}`,
-        type: 'MESSAGE',
+        title: "Yeni Mesaj",
+        message: `${
+          message.sender.firstName || message.sender.email
+        } size bir mesaj gönderdi${message.ad ? ` - ${message.ad.title}` : ""}`,
+        type: "MESSAGE",
         isRead: false,
-        relatedId: message.id
-      }
+        relatedId: message.id,
+      },
     });
 
     // Emit notification update
     if (io) {
-      io.to(`user_${receiverIdNum}`).emit('newNotification');
+      io.to(`user_${receiverIdNum}`).emit("newNotification");
     }
 
     res.status(201).json(message);
   } catch (error) {
-    console.error('Error sending message:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error sending message:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // Get unread message count
-export const getUnreadCount = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getUnreadCount = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.user?.id;
-    
+
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     const unreadCount = await prisma.message.count({
       where: {
         receiverId: userId,
-        isRead: false
-      }
+        isRead: false,
+      },
     });
 
     res.json({ count: unreadCount });
   } catch (error) {
-    console.error('Error fetching unread count:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching unread count:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // Start a conversation from ad
-export const startConversation = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const startConversation = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.user?.id;
     const { adId, receiverId, initialMessage } = req.body;
-    
+
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     if (!adId || !receiverId) {
-      res.status(400).json({ error: 'Ad ID and receiver ID are required' });
+      res.status(400).json({ error: "Ad ID and receiver ID are required" });
       return;
     }
 
@@ -309,20 +333,20 @@ export const startConversation = async (req: AuthenticatedRequest, res: Response
             id: true,
             firstName: true,
             lastName: true,
-            email: true
-          }
-        }
-      }
+            email: true,
+          },
+        },
+      },
     });
 
     if (!ad) {
-      res.status(404).json({ error: 'Ad not found' });
+      res.status(404).json({ error: "Ad not found" });
       return;
     }
 
     // Check if user is trying to message themselves
     if (ad.userId === userId) {
-      res.status(400).json({ error: 'Cannot message yourself' });
+      res.status(400).json({ error: "Cannot message yourself" });
       return;
     }
 
@@ -334,7 +358,7 @@ export const startConversation = async (req: AuthenticatedRequest, res: Response
           senderId: userId,
           receiverId: ad.userId,
           adId: adIdNum,
-          isRead: false
+          isRead: false,
         },
         include: {
           sender: {
@@ -342,47 +366,49 @@ export const startConversation = async (req: AuthenticatedRequest, res: Response
               id: true,
               firstName: true,
               lastName: true,
-              email: true
-            }
+              email: true,
+            },
           },
           receiver: {
             select: {
               id: true,
               firstName: true,
               lastName: true,
-              email: true
-            }
+              email: true,
+            },
           },
           ad: {
             select: {
               id: true,
-              title: true
-            }
-          }
-        }
+              title: true,
+            },
+          },
+        },
       });
 
       // Emit real-time message
       if (io) {
-        io.to(`user_${ad.userId}`).emit('newMessage', message);
-        io.to(`user_${ad.userId}`).emit('updateUnreadCount');
+        io.to(`user_${ad.userId}`).emit("newMessage", message);
+        io.to(`user_${ad.userId}`).emit("updateUnreadCount");
       }
 
       // Create notification
       await prisma.notification.create({
         data: {
           userId: ad.userId,
-          title: 'Yeni Mesaj',
-          message: `${message.sender.firstName || message.sender.email} ilanınız hakkında size bir mesaj gönderdi - ${ad.title}`,
-          type: 'MESSAGE',
+          title: "Yeni Mesaj",
+          message: `${
+            message.sender.firstName || message.sender.email
+          } ilanınız hakkında size bir mesaj gönderdi - ${ad.title}`,
+          type: "MESSAGE",
           isRead: false,
-          relatedId: message.id
-        }
+          relatedId: message.id,
+        },
       });
 
       // Emit notification update
       if (io) {
-        io.to(`user_${ad.userId}`).emit('newNotification');
+        io.to(`user_${ad.userId}`).emit("newNotification");
       }
 
       res.status(201).json(message);
@@ -395,28 +421,31 @@ export const startConversation = async (req: AuthenticatedRequest, res: Response
       otherUser: ad.user,
       ad: {
         id: ad.id,
-        title: ad.title
-      }
+        title: ad.title,
+      },
     });
   } catch (error) {
-    console.error('Error starting conversation:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error starting conversation:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 // Mark conversation as read
-export const markAsRead = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const markAsRead = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
   try {
     const userId = req.user?.id;
     const { otherUserId, adId } = req.body;
-    
+
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     if (!otherUserId) {
-      res.status(400).json({ error: 'Other user ID is required' });
+      res.status(400).json({ error: "Other user ID is required" });
       return;
     }
 
@@ -429,16 +458,16 @@ export const markAsRead = async (req: AuthenticatedRequest, res: Response): Prom
         senderId: otherUserIdNum,
         receiverId: userId,
         adId: adIdNum,
-        isRead: false
+        isRead: false,
       },
       data: {
-        isRead: true
-      }
+        isRead: true,
+      },
     });
 
     res.json({ success: true });
   } catch (error) {
-    console.error('Error marking messages as read:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error marking messages as read:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
