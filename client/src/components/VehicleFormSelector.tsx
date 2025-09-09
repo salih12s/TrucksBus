@@ -374,7 +374,11 @@ const VehicleFormSelector: React.FC = () => {
     // Otobüs
     case "otobus":
       console.log("✅ Otobüs formu seçildi");
-      return <OtobusAdForm onSubmit={(data) => console.log('Otobus form submitted:', data)} />;
+      return (
+        <OtobusAdForm
+          onSubmit={(data) => console.log("Otobus form submitted:", data)}
+        />
+      );
 
     // Diğer kategoriler için varsayılan form (şimdilik minibüs)
     case "oto-kurtarici-tasiyici":

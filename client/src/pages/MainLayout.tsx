@@ -31,10 +31,12 @@ import {
   ChevronLeft,
   ChevronRight,
   CheckCircle,
+  Report,
 } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
 import { useAppSelector } from "../hooks/redux";
 import apiClient from "../api/client";
+import ComplaintModal from "../components/complaints/ComplaintModal";
 
 interface Category {
   id: string;
@@ -107,6 +109,11 @@ const MainLayout: React.FC = () => {
   const [savingAdId, setSavingAdId] = useState<number | null>(null);
   const [savedAds, setSavedAds] = useState<Set<number>>(new Set());
   const [favoritesCount, setFavoritesCount] = useState(0);
+  const [complaintModalOpen, setComplaintModalOpen] = useState(false);
+  const [selectedAdForComplaint, setSelectedAdForComplaint] = useState<{
+    id: number;
+    title: string;
+  } | null>(null);
 
   const { user } = useAppSelector((state) => state.auth);
   const theme = useTheme();
@@ -205,6 +212,19 @@ const MainLayout: React.FC = () => {
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
+  };
+
+  const handleComplaint = (ad: Ad) => {
+    setSelectedAdForComplaint({
+      id: ad.id,
+      title: ad.title || "İlan",
+    });
+    setComplaintModalOpen(true);
+  };
+
+  const handleCloseComplaintModal = () => {
+    setComplaintModalOpen(false);
+    setSelectedAdForComplaint(null);
   };
 
   useEffect(() => {
@@ -873,26 +893,26 @@ const MainLayout: React.FC = () => {
                       </Button>
 
                       <Box sx={{ display: "flex", gap: 0.5 }}>
-                        {ad.user.phone && (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            href={`tel:${ad.user.phone}`}
-                            sx={{
-                              flex: 1,
-                              fontSize: "0.7rem",
-                              py: 0.3,
-                              borderColor: "#888",
-                              color: "#666",
-                              "&:hover": {
-                                borderColor: "#666",
-                                backgroundColor: "#f5f5f5",
-                              },
-                            }}
-                          >
-                            Ara
-                          </Button>
-                        )}
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleComplaint(ad)}
+                          startIcon={<Report />}
+                          sx={{
+                            flex: 1,
+                            fontSize: "0.7rem",
+                            py: 0.3,
+                            borderColor: "#d32f2f",
+                            color: "#d32f2f",
+                            "&:hover": {
+                              borderColor: "#b71c1c",
+                              backgroundColor: "#ffebee",
+                              color: "#b71c1c",
+                            },
+                          }}
+                        >
+                          Şikayet Et
+                        </Button>
                         <Button
                           variant="outlined"
                           size="small"
@@ -963,6 +983,16 @@ const MainLayout: React.FC = () => {
       </Box>
 
       <Footer />
+
+      {/* Complaint Modal */}
+      {selectedAdForComplaint && (
+        <ComplaintModal
+          open={complaintModalOpen}
+          onClose={handleCloseComplaintModal}
+          adId={selectedAdForComplaint.id}
+          adTitle={selectedAdForComplaint.title}
+        />
+      )}
 
       {/* Snackbar for notifications */}
       <Snackbar

@@ -8,6 +8,7 @@ import feedbackRoutes from "./feedback";
 import notificationRoutes from "./notifications";
 import dopingRoutes from "./doping";
 import favoriteRoutes from "./favorites";
+import complaintRoutes from "./complaint";
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.use("/feedback", feedbackRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/doping", dopingRoutes);
 router.use("/favorites", favoriteRoutes);
+router.use("/complaints", complaintRoutes);
 
 // API info endpoint
 router.get("/", (req, res) => {

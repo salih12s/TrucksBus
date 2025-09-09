@@ -115,6 +115,9 @@ const AdminLogsPage = React.lazy(() => import("./admin/pages/AdminLogsPage"));
 const FeedbackManagement = React.lazy(
   () => import("./admin/pages/FeedbackManagement")
 );
+const ComplaintManagement = React.lazy(
+  () => import("./admin/pages/ComplaintManagement")
+);
 
 import "./App.css";
 
@@ -318,7 +321,11 @@ function App() {
                         path="/categories/otobus/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
                         element={
                           <ProtectedRoute>
-                            <OtobusAdForm onSubmit={(data) => console.log('Otobus form submitted:', data)} />
+                            <OtobusAdForm
+                              onSubmit={(data) =>
+                                console.log("Otobus form submitted:", data)
+                              }
+                            />
                           </ProtectedRoute>
                         }
                       />
@@ -811,6 +818,10 @@ function App() {
                         <Route
                           path="feedback"
                           element={<FeedbackManagement />}
+                        />
+                        <Route
+                          path="complaints"
+                          element={<ComplaintManagement />}
                         />
                         {/* Diğer admin sayfaları buraya eklenecek */}
                       </Route>
