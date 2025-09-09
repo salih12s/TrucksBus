@@ -48,59 +48,28 @@ export const authApi = {
   // Login user
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>("/auth/login", data);
-
-    // Store tokens in localStorage
-    const { accessToken, refreshToken } = response.data.tokens;
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-
     return response.data;
   },
 
   // Register user
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>("/auth/register", data);
-
-    // Store tokens in localStorage
-    const { accessToken, refreshToken } = response.data.tokens;
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
-
     return response.data;
   },
 
   // Logout user
   logout: async (): Promise<void> => {
-    try {
-      await apiClient.post("/auth/logout");
-    } finally {
-      // Always clear local storage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-    }
+    await apiClient.post("/auth/logout");
   },
 
   // Refresh token
-  refreshToken: async (): Promise<{ accessToken: string }> => {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (!refreshToken) {
-      throw new Error("No refresh token available");
-    }
-
+  refreshToken: async (
+    refreshToken: string
+  ): Promise<{ accessToken: string }> => {
     const response = await apiClient.post<{ accessToken: string }>(
       "/auth/refresh",
       { refreshToken }
     );
-
-    // Update access token
-    localStorage.setItem("accessToken", response.data.accessToken);
-
-    return response.data;
-  },
-
-  // Get current user
-  getCurrentUser: async () => {
-    const response = await apiClient.get("/auth/me");
     return response.data;
   },
 
@@ -133,4 +102,38 @@ export const authApi = {
     }>("/auth/stats");
     return response.data;
   },
+};
+
+// Get current user - separate export
+export const getCurrentUser = async (): Promise<{
+  id: number;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  role: string;
+  companyName?: string;
+  taxId?: string;
+  tradeRegistryNo?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  isVerified: boolean;
+}> => {
+  const response = await apiClient.get<{
+    id: number;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    role: string;
+    companyName?: string;
+    taxId?: string;
+    tradeRegistryNo?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    isVerified: boolean;
+  }>("/auth/me");
+  return response.data;
 };

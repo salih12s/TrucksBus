@@ -22,18 +22,33 @@ export const authenticateToken = async (
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(" ")[1];
 
+    console.log("🔍 Auth Debug:");
+    console.log("- Auth Header:", authHeader);
+    console.log(
+      "- Token:",
+      token ? `${token.substring(0, 20)}...` : "NO TOKEN"
+    );
+
     if (!token) {
+      console.log("❌ No token provided");
       res.status(401).json({ error: "Access token is required" });
       return;
     }
 
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_SECRET_ACCESS || process.env.JWT_SECRET;
     if (!secret) {
+      console.log("❌ JWT secret not configured");
       res.status(500).json({ error: "JWT secret not configured" });
       return;
     }
 
+    console.log("🔑 Using JWT secret:", secret ? "✅ Found" : "❌ Missing");
+
     const decoded = jwt.verify(token, secret) as any;
+    console.log("📋 Decoded token:", {
+      userId: decoded.userId,
+      role: decoded.role,
+    });
 
     // Verify user still exists and is active
     const user = await prisma.user.findUnique({
@@ -41,7 +56,10 @@ export const authenticateToken = async (
       select: { id: true, email: true, role: true, isActive: true },
     });
 
+    console.log("👤 User from DB:", user);
+
     if (!user || !user.isActive) {
+      console.log("❌ User not found or inactive");
       res.status(401).json({ error: "Invalid token" });
       return;
     }
@@ -54,9 +72,14 @@ export const authenticateToken = async (
       isAdmin: user.role === "ADMIN",
     };
 
+    console.log("✅ Auth successful:", {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
     next();
   } catch (error) {
-    console.error("Token verification error:", error);
+    console.error("❌ Token verification error:", error);
     res.status(401).json({ error: "Invalid token" });
   }
 };

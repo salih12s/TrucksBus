@@ -1,737 +1,1455 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link as RouterLink } from "react-router-dom";
-import { SEO } from "../components/common";
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   Box,
   Container,
   Typography,
-  Card,
-  CardContent,
-  CardMedia,
   Button,
-  Chip,
+  Paper,
+  Card,
+  CardMedia,
+  CardContent,
   Avatar,
   IconButton,
-  Breadcrumbs,
-  Link,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  DialogActions,
+  Chip,
   Alert,
-  Fab,
-  ImageList,
-  ImageListItem,
-  Skeleton,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  Badge,
 } from "@mui/material";
 import {
   ArrowBack,
+  ArrowBackIos,
+  ArrowForwardIos,
   Phone,
-  Message,
-  Share,
+  Email,
+  CalendarToday,
+  Speed,
+  LocalGasStation,
+  Settings,
+  Palette,
   Favorite,
   FavoriteBorder,
-  LocationOn,
-  CalendarToday,
-  DirectionsCar,
-  Visibility,
+  Share,
+  Print,
   Report,
-  Close,
-  WhatsApp,
-  Email,
-  Facebook,
-  Twitter,
+  PhotoCamera,
+  TrendingUp,
+  Visibility,
+  CompareArrows,
+  CheckCircle,
+  Info,
+  Build,
+  DirectionsCar,
+  LocationOn,
 } from "@mui/icons-material";
-import apiClient from "../api/client";
+import Header from "../components/layout/Header";
+import api from "../api/client";
+import type { RootState } from "../store";
+
+interface AdImage {
+  id: number;
+  imageUrl: string;
+  isPrimary: boolean;
+  displayOrder: number;
+  altText?: string;
+}
 
 interface AdDetail {
-  id: string;
+  id: number;
   title: string;
   description: string;
   price: number;
-  currency: string;
-  location: string;
-  status: string;
-  createdAt: string;
-  viewCount: number;
   year?: number;
   mileage?: number;
-  category: {
-    id: string;
-    name: string;
-    displayName: string;
-  };
-  brand?: {
-    id: string;
-    name: string;
-  };
-  model?: {
-    id: string;
-    name: string;
-  };
-  variant?: {
-    id: string;
-    name: string;
-  };
+  categorySlug: string;
+  brandSlug: string;
+  modelSlug: string;
+  variantSlug?: string;
+  city: { name: string };
+  district: { name: string };
+  condition: string;
+  isExchangeable: boolean;
+  createdAt: string;
+  updatedAt: string;
+  images: AdImage[];
+  customFields: Record<string, unknown>;
+  category: { name: string; slug: string };
+  brand: { name: string; slug: string };
+  model: { name: string; slug: string };
+  variant?: { name: string; slug: string };
+  viewCount: number;
+  isFavorite: boolean;
   user: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
+    id: number;
+    name: string;
     email: string;
-    phone?: string;
+    phone: string;
+    avatar?: string;
+    createdAt: string;
+    totalAds: number;
     isVerified: boolean;
   };
-  images: Array<{
-    id: string;
-    url: string;
-    isPrimary: boolean;
-  }>;
-  customFields: Record<string, string | number | boolean>;
 }
 
 interface SimilarAd {
-  id: string;
+  id: number;
   title: string;
   price: number;
-  currency: string;
-  location: string;
-  images: Array<{
-    url: string;
-    isPrimary: boolean;
-  }>;
+  images: AdImage[];
+  city: { name: string };
+  createdAt: string;
 }
 
 const AdDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
+
   const [ad, setAd] = useState<AdDetail | null>(null);
   const [similarAds, setSimilarAds] = useState<SimilarAd[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [reportReason, setReportReason] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      loadAdDetail(id);
-      loadSimilarAds(id);
-    }
-  }, [id]);
-
-  const loadAdDetail = async (adId: string) => {
+  const fetchAdDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/ads/${adId}`);
-      setAd(response.data as AdDetail);
+      const response = await api.get(`/ads/${id}`);
+      const adData = response.data as AdDetail;
+      setAd(adData);
+      setIsFavorite(adData.isFavorite);
 
-      // Increment view count
-      await apiClient.post(`/ads/${adId}/view`);
-    } catch (error: unknown) {
+      // Benzer ilanları da çek
+      try {
+        const similarResponse = await api.get(`/ads/${id}/similar`);
+        setSimilarAds(similarResponse.data as SimilarAd[]);
+      } catch {
+        setSimilarAds([]);
+      }
+    } catch (err: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "İlan yüklenirken hata oluştu";
+        err instanceof Error ? err.message : "İlan yüklenirken hata oluştu";
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const loadSimilarAds = async (adId: string) => {
-    try {
-      const response = await apiClient.get(`/ads/${adId}/similar`);
-      setSimilarAds(response.data as SimilarAd[]);
-    } catch (error) {
-      console.error("Similar ads loading error:", error);
+  useEffect(() => {
+    if (id) {
+      fetchAdDetail();
     }
-  };
+  }, [id, fetchAdDetail]);
 
-  const handleSendMessage = async () => {
-    if (!ad || !message.trim()) return;
-
-    try {
-      await apiClient.post("/messages", {
-        receiverId: ad.user.id,
-        content: message,
-        adId: ad.id,
-      });
-      setMessageDialogOpen(false);
-      setMessage("");
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Mesaj gönderilirken hata oluştu";
-      setError(errorMessage);
+  const handleFavoriteToggle = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
     }
-  };
-
-  const handleToggleFavorite = async () => {
-    if (!ad) return;
 
     try {
+      setFavoriteLoading(true);
       if (isFavorite) {
-        await apiClient.delete(`/ads/${ad.id}/favorite`);
+        await api.delete(`/favorites/${ad!.id}`);
+        setIsFavorite(false);
       } else {
-        await apiClient.post(`/ads/${ad.id}/favorite`);
+        await api.post(`/favorites/${ad!.id}`);
+        setIsFavorite(true);
       }
-      setIsFavorite(!isFavorite);
-    } catch (error: unknown) {
-      console.error("Favorite toggle error:", error);
+    } catch (err) {
+      console.error("Favorilere eklenirken/çıkarılırken hata:", err);
+    } finally {
+      setFavoriteLoading(false);
     }
   };
 
-  const handleReport = async () => {
-    if (!ad || !reportReason.trim()) return;
-
-    try {
-      await apiClient.post("/complaints", {
-        adId: ad.id,
-        reason: reportReason,
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: ad?.title,
+        text: ad?.description,
+        url: window.location.href,
       });
-      setReportDialogOpen(false);
-      setReportReason("");
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Şikayet gönderilirken hata oluştu";
-      setError(errorMessage);
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link kopyalandı!");
     }
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
+  const formatPrice = (price: number) => {
     return new Intl.NumberFormat("tr-TR", {
       style: "currency",
-      currency: currency || "TRY",
-    }).format(amount);
+      currency: "TRY",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  // Güvenli value render fonksiyonu
+  const renderFieldValue = (value: unknown): string => {
+    if (value === null || value === undefined || value === "") {
+      return "-";
+    }
+
+    if (typeof value === "boolean") {
+      return value ? "Var" : "Yok";
+    }
+
+    if (typeof value === "object") {
+      try {
+        // DetailFeatures objesi için özel parsing
+        if (typeof value === "object" && value !== null) {
+          const obj = value as Record<string, unknown>;
+          if (Object.keys(obj).every((key) => typeof obj[key] === "boolean")) {
+            // Boolean değerlerden oluşan obje ise, true olanları listele
+            const trueValues = Object.entries(obj)
+              .filter(([, val]) => val === true)
+              .map(([key]) => getSpecificationLabel(key));
+            return trueValues.length > 0 ? trueValues.join(", ") : "Yok";
+          }
+        }
+        return JSON.stringify(value);
+      } catch {
+        return "[Object]";
+      }
+    }
+
+    return String(value);
+  };
+
+  // Telefon numarasını formatla (0544 444 44 44)
+  const formatPhoneNumber = (phone: string): string => {
+    if (!phone) return "";
+    
+    // Sadece rakamları al
+    const numbers = phone.replace(/\D/g, "");
+    
+    // Türk telefon numarası formatı (05XXXXXXXXX)
+    if (numbers.length === 11 && numbers.startsWith("05")) {
+      return `${numbers.slice(0, 4)} ${numbers.slice(4, 7)} ${numbers.slice(7, 9)} ${numbers.slice(9, 11)}`;
+    }
+    
+    // Başka formatlar için varsayılan
+    return phone;
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("tr-TR", {
+      day: "2-digit",
+      month: "2-digit",
       year: "numeric",
-      month: "long",
-      day: "numeric",
     });
   };
 
-  const getUserDisplayName = (user: {
-    firstName?: string;
-    lastName?: string;
-    email: string;
-  }) => {
-    if (user.firstName && user.lastName) {
-      return `${user.firstName} ${user.lastName}`;
-    }
-    return user.email.split("@")[0];
+  const getSpecificationIcon = (key: string) => {
+    const iconMap: Record<string, React.ReactElement> = {
+      productionYear: <CalendarToday />,
+      mileage: <Speed />,
+      fuelType: <LocalGasStation />,
+      transmission: <Settings />,
+      enginePower: <Build />,
+      color: <Palette />,
+      condition: <CheckCircle />,
+      isExchangeable: <CompareArrows />,
+    };
+    return iconMap[key] || <Info />;
   };
 
-  const shareUrl = `${window.location.origin}/ads/${id}`;
+  const getSpecificationLabel = (key: string) => {
+    const labelMap: Record<string, string> = {
+      // Genel araç özellikleri
+      productionYear: "Üretim Yılı",
+      mileage: "Kilometre",
+      fuelType: "Yakıt Türü",
+      transmission: "Vites",
+      enginePower: "Motor Gücü",
+      color: "Renk",
+      condition: "Durum",
+      isExchangeable: "Takas",
+
+      // Görseldeki alanlar
+      renk: "Renk",
+      address: "Adres",
+      exchange: "Takas",
+      roofType: "Çatı Tipi",
+      plateType: "Plaka Tipi",
+      districtId: "İlçe",
+      plateNumber: "Plaka Numarası",
+      engineVolume: "Motor Hacmi",
+      detailFeatures: "Detay Özellikler",
+      cityId: "Şehir",
+      chassis: "Şasi",
+      yakitTuru: "Yakıt Türü",
+      durum: "Durum",
+      seatCount: "Koltuk Sayısı",
+      drivetrain: "Çekiş",
+      detailedInfo: "Detaylı Bilgi",
+      vites: "Vites",
+
+      // Kamyon/Tır özellikleri
+      volume: "Hacim",
+      capacity: "Kapasite",
+      material: "Malzeme",
+      hasDamper: "Damper",
+      axleCount: "Aks Sayısı",
+      length: "Uzunluk",
+      width: "Genişlik",
+      height: "Yükseklik",
+      weight: "Ağırlık",
+
+      // Otobüs özellikleri
+      passengerCapacity: "Yolcu Kapasitesi",
+      doorCount: "Kapı Sayısı",
+
+      // Güvenlik ve konfor özellikleri
+      abs: "ABS",
+      asr: "ASR",
+      esp: "ESP",
+      alarm: "Alarm",
+      klima: "Klima",
+      farSis: "Far Sis",
+      cdCalar: "CD Çalar",
+      elFreni: "El Freni",
+      spoyler: "Spoyler",
+      sunroof: "Sunroof",
+      xenonFar: "Xenon Far",
+      ayakFreni: "Ayak Freni",
+      dvdPlayer: "DVD Player",
+      garantili: "Garantili",
+      okulAraci: "Okul Aracı",
+      radioTeyp: "Radyo Teyp",
+      sigortali: "Sigortalı",
+      alasimJant: "Alaşım Jant",
+      bagajHacmi: "Bagaj Hacmi",
+      cekiDemiri: "Çeki Demiri",
+      deriDoseme: "Deri Döşeme",
+      farSensoru: "Far Sensörü",
+      havaYastigi: "Hava Yastığı",
+      immobilizer: "Immobilizer",
+      otomatikCam: "Otomatik Cam",
+      parkSensoru: "Park Sensörü",
+      hizSabitleme: "Hız Sabitleme",
+      merkeziKilit: "Merkezi Kilit",
+      muzikSistemi: "Müzik Sistemi",
+      otomatikKapi: "Otomatik Kapı",
+      turizmPaketi: "Turizm Paketi",
+      tvNavigasyon: "TV Navigasyon",
+      elektrikliCam: "Elektrikli Cam",
+      sogutucuFrigo: "Soğutucu Frigo",
+      yagmurSensoru: "Yağmur Sensörü",
+      yanHavaYastigi: "Yan Hava Yastığı",
+      yolBilgisayari: "Yol Bilgisayarı",
+      farYikamaSistemi: "Far Yıkama Sistemi",
+      havaYastigiYolcu: "Hava Yastığı Yolcu",
+      isitmalKoltuklar: "Isıtmalı Koltuklar",
+      elektrikliAynalar: "Elektrikli Aynalar",
+      geriGorusKamerasi: "Geri Görüş Kamerası",
+      hidrolikDireksiyon: "Hidrolik Direksiyon",
+      yokusKalkisDestegi: "Yokuş Kalkış Desteği",
+    };
+    return labelMap[key] || key.charAt(0).toUpperCase() + key.slice(1);
+  };
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 3 }}>
-        <Skeleton variant="rectangular" height={400} sx={{ mb: 3 }} />
-        <Skeleton variant="text" height={60} sx={{ mb: 2 }} />
-        <Skeleton variant="text" height={40} sx={{ mb: 2 }} />
-        <Skeleton variant="rectangular" height={200} />
-      </Container>
+      <>
+        <Header />
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="80vh"
+        >
+          <CircularProgress size={60} />
+        </Box>
+      </>
     );
   }
 
   if (error || !ad) {
     return (
-      <Container maxWidth="lg" sx={{ py: 3 }}>
-        <Alert severity="error">{error || "İlan bulunamadı"}</Alert>
-        <Button onClick={() => navigate(-1)} sx={{ mt: 2 }}>
-          Geri Dön
-        </Button>
-      </Container>
+      <>
+        <Header />
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error || "İlan bulunamadı"}
+          </Alert>
+          <Button
+            startIcon={<ArrowBack />}
+            onClick={() => navigate("/")}
+            variant="contained"
+          >
+            Ana Sayfaya Dön
+          </Button>
+        </Container>
+      </>
     );
   }
 
+  // Null check'ler
+  if (!ad.images) ad.images = [];
+  if (!ad.category) ad.category = { name: "", slug: "" };
+  if (!ad.brand) ad.brand = { name: "", slug: "" };
+  if (!ad.model) ad.model = { name: "", slug: "" };
+
+  const mainImage = ad.images.find((img) => img.isPrimary) || ad.images[0];
+
   return (
     <>
-      <SEO
-        title={`${ad?.title || "İlan Detayı"} - TrucksBus`}
-        description={`${
-          ad?.description || "Ticari araç ilanı detayları"
-        } - Fiyat: ${
-          ad?.price ? `${ad.price.toLocaleString()} TL` : "Belirtilmemiş"
-        }`}
-        keywords={`${ad?.title}, ${ad?.category}, ${ad?.brand}, ${ad?.model}, ticari araç, alım satım`}
-        url={`https://trucksbus.com/ad/${id}`}
-        type="article"
-        image={ad?.images?.[0]?.url}
-      />
-      <Container maxWidth="lg" sx={{ py: 3 }}>
-        {/* Back Button */}
-        <Box sx={{ mb: 2 }}>
+      <Header />
+      <Container maxWidth="lg" sx={{ py: 3, px: { xs: 2, sm: 3, md: 4 } }}>
+        {/* Geri Dön Butonu */}
+        <Box mb={3}>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate(-1)}
-            color="inherit"
+            variant="outlined"
           >
-            Geri
+            Geri Dön
           </Button>
         </Box>
 
-        {/* Breadcrumbs */}
-        <Breadcrumbs sx={{ mb: 3 }}>
-          <Link component={RouterLink} to="/" color="inherit">
-            Ana Sayfa
-          </Link>
-          <Link
-            component={RouterLink}
-            to={`/category/${ad.category.id}`}
-            color="inherit"
-          >
-            {ad.category.displayName}
-          </Link>
-          <Typography color="text.primary">{ad.title}</Typography>
-        </Breadcrumbs>
-
         <Box
-          sx={{
-            display: "flex",
-            gap: 3,
-            flexDirection: { xs: "column", md: "row" },
-          }}
+          display="flex"
+          gap={4}
+          flexDirection={{ xs: "column", md: "row" }}
+          sx={{ mx: { xs: 0, md: 2 } }}
         >
-          {/* Left Column - Images and Description */}
-          <Box sx={{ flex: { xs: 1, md: 2 } }}>
-            {/* Image Gallery */}
-            <Card sx={{ mb: 3 }}>
-              <CardMedia
-                component="img"
-                height="400"
-                image={
-                  ad.images[selectedImageIndex]?.url ||
-                  "/placeholder-vehicle.jpg"
-                }
-                alt={ad.title}
-                sx={{ objectFit: "cover" }}
-              />
-              {ad.images.length > 1 && (
-                <Box sx={{ p: 2 }}>
-                  <ImageList cols={6} rowHeight={80}>
-                    {ad.images.map((image, index) => (
-                      <ImageListItem
-                        key={image.id}
-                        onClick={() => setSelectedImageIndex(index)}
-                        sx={{
-                          cursor: "pointer",
-                          border: selectedImageIndex === index ? 2 : 1,
-                          borderColor:
-                            selectedImageIndex === index
-                              ? "primary.main"
-                              : "divider",
-                        }}
-                      >
-                        <img
-                          src={image.url}
-                          alt={`${ad.title} ${index + 1}`}
-                          loading="lazy"
-                          style={{ objectFit: "cover", height: "100%" }}
-                        />
-                      </ImageListItem>
-                    ))}
-                  </ImageList>
-                </Box>
-              )}
-            </Card>
+          {/* Sol Taraf - Resimler */}
+          <Box flex={2.5} sx={{ maxWidth: { md: "65%" } }}>
+            {/* Ana Resim */}
+            <Paper
+              elevation={3}
+              sx={{ mb: 3, overflow: "hidden", borderRadius: 2 }}
+            >
+              <Box position="relative">
+                <CardMedia
+                  component="img"
+                  height="500"
+                  image={mainImage ? mainImage.imageUrl : "/placeholder.jpg"}
+                  alt={ad.title || "İlan"}
+                  sx={{ cursor: "pointer", objectFit: "cover" }}
+                  onClick={() => setImageDialogOpen(true)}
+                />
 
-            {/* Title and Basic Info */}
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
+                {/* Resim Badge */}
                 <Box
+                  position="absolute"
+                  top={16}
+                  left={16}
                   sx={{
+                    backgroundColor: "rgba(0,0,0,0.8)",
+                    color: "white",
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    mb: 2,
+                    alignItems: "center",
+                    gap: 1,
                   }}
                 >
-                  <Typography variant="h4" gutterBottom>
-                    {ad.title}
+                  <PhotoCamera />
+                  <Typography variant="body2" fontWeight="bold">
+                    {ad.images?.length || 0} Fotoğraf
                   </Typography>
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <IconButton onClick={handleToggleFavorite}>
-                      {isFavorite ? (
-                        <Favorite color="error" />
-                      ) : (
-                        <FavoriteBorder />
-                      )}
-                    </IconButton>
-                    <IconButton onClick={() => setShareDialogOpen(true)}>
-                      <Share />
-                    </IconButton>
-                    <IconButton onClick={() => setReportDialogOpen(true)}>
-                      <Report />
-                    </IconButton>
-                  </Box>
                 </Box>
 
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <DirectionsCar color="action" />
-                    <Typography>
-                      {ad.category.displayName}
-                      {ad.brand && ` • ${ad.brand.name}`}
-                      {ad.model && ` ${ad.model.name}`}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <LocationOn color="action" />
-                    <Typography>{ad.location}</Typography>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <CalendarToday color="action" />
-                    <Typography>{formatDate(ad.createdAt)}</Typography>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Visibility color="action" />
-                    <Typography>{ad.viewCount} görüntülenme</Typography>
-                  </Box>
-                </Box>
-
-                <Typography variant="h3" color="primary.main" fontWeight="bold">
-                  {formatCurrency(ad.price, ad.currency)}
-                </Typography>
-              </CardContent>
-            </Card>
-
-            {/* Vehicle Specifications */}
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Araç Özellikleri
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableBody>
-                      {ad.year && (
-                        <TableRow>
-                          <TableCell>Model Yılı</TableCell>
-                          <TableCell>{ad.year}</TableCell>
-                        </TableRow>
-                      )}
-                      {ad.mileage && (
-                        <TableRow>
-                          <TableCell>Kilometre</TableCell>
-                          <TableCell>
-                            {ad.mileage.toLocaleString()} km
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {Object.entries(ad.customFields).map(([key, value]) => (
-                        <TableRow key={key}>
-                          <TableCell sx={{ textTransform: "capitalize" }}>
-                            {key}
-                          </TableCell>
-                          <TableCell>{value}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-
-            {/* Description */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Açıklama
-                </Typography>
-                <Typography variant="body1" style={{ whiteSpace: "pre-wrap" }}>
-                  {ad.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-
-          {/* Right Column - Seller Info and Actions */}
-          <Box sx={{ flex: { xs: 1, md: 1 }, minWidth: { md: 300 } }}>
-            {/* Seller Information */}
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Satıcı Bilgileri
-                </Typography>
+                {/* Action Buttons */}
                 <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+                  position="absolute"
+                  top={16}
+                  right={16}
+                  display="flex"
+                  gap={1}
                 >
-                  <Avatar sx={{ width: 56, height: 56 }}>
-                    {getUserDisplayName(ad.user).charAt(0)}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h6">
-                      {getUserDisplayName(ad.user)}
-                    </Typography>
-                    {ad.user.isVerified && (
-                      <Chip label="Doğrulanmış" color="success" size="small" />
+                  <IconButton
+                    sx={{
+                      backgroundColor: "rgba(255,255,255,0.9)",
+                      "&:hover": { backgroundColor: "white" },
+                    }}
+                    onClick={handleShare}
+                  >
+                    <Share />
+                  </IconButton>
+                  <IconButton
+                    sx={{
+                      backgroundColor: "rgba(255,255,255,0.9)",
+                      "&:hover": { backgroundColor: "white" },
+                    }}
+                    onClick={() => window.print()}
+                  >
+                    <Print />
+                  </IconButton>
+                  <IconButton
+                    sx={{
+                      backgroundColor: "rgba(255,255,255,0.9)",
+                      "&:hover": { backgroundColor: "white" },
+                    }}
+                    onClick={handleFavoriteToggle}
+                    disabled={favoriteLoading}
+                    color={isFavorite ? "error" : "default"}
+                  >
+                    {favoriteLoading ? (
+                      <CircularProgress size={24} />
+                    ) : isFavorite ? (
+                      <Favorite />
+                    ) : (
+                      <FavoriteBorder />
+                    )}
+                  </IconButton>
+                </Box>
+              </Box>
+
+              {/* Küçük Resimler */}
+              {ad.images && ad.images.length > 1 && (
+                <Box p={2}>
+                  <Box
+                    display="flex"
+                    gap={1}
+                    flexWrap="wrap"
+                    sx={{ overflowX: "auto" }}
+                  >
+                    {ad.images.slice(0, 8).map((image, index) => (
+                      <Card
+                        key={image.id}
+                        sx={{
+                          cursor: "pointer",
+                          minWidth: 100,
+                          width: 100,
+                          height: 80,
+                          border:
+                            selectedImageIndex === index
+                              ? "3px solid #1976d2"
+                              : "1px solid #e0e0e0",
+                          borderRadius: 1,
+                        }}
+                        onClick={() => {
+                          setSelectedImageIndex(index);
+                          setImageDialogOpen(true);
+                        }}
+                      >
+                        <CardMedia
+                          component="img"
+                          height="80"
+                          image={image.imageUrl}
+                          alt={`${ad.title || "İlan"} - ${index + 1}`}
+                          sx={{ objectFit: "cover" }}
+                        />
+                      </Card>
+                    ))}
+                    {ad.images && ad.images.length > 8 && (
+                      <Card
+                        sx={{
+                          cursor: "pointer",
+                          minWidth: 100,
+                          width: 100,
+                          height: 80,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "rgba(0,0,0,0.8)",
+                          color: "white",
+                          borderRadius: 1,
+                        }}
+                        onClick={() => setImageDialogOpen(true)}
+                      >
+                        <Typography variant="body2" fontWeight="bold">
+                          +{(ad.images?.length || 0) - 8}
+                        </Typography>
+                      </Card>
                     )}
                   </Box>
                 </Box>
+              )}
+            </Paper>
 
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  {ad.user.phone && (
-                    <Button
-                      variant="contained"
-                      startIcon={<Phone />}
-                      href={`tel:${ad.user.phone}`}
-                      fullWidth
+            {/* İlan Detayları - Yeni Konum */}
+            <Paper
+              elevation={0}
+              sx={{
+                mb: 3,
+                borderRadius: 2,
+                border: "1px solid #f0f0f0",
+                backgroundColor: "#fafafa",
+              }}
+            >
+              <Box sx={{ p: 4 }}>
+                <Typography
+                  variant="h4"
+                  fontWeight="600"
+                  gutterBottom
+                  sx={{ color: "#2c3e50", mb: 3, lineHeight: 1.3 }}
+                >
+                  {ad.title || "İlan Başlığı"}
+                </Typography>
+
+                {/* Temel Bilgiler: Şehir, İlçe, Km, Yıl */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                    gap: 2,
+                    mb: 4,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      p: 2,
+                      backgroundColor: "#fff",
+                      borderRadius: 2,
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="#666"
+                      sx={{ fontWeight: "500" }}
                     >
-                      Telefon Et
-                    </Button>
+                      Şehir
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{ color: "#2c3e50", fontWeight: "600" }}
+                    >
+                      {ad.city?.name || "Belirtilmemiş"}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      p: 2,
+                      backgroundColor: "#fff",
+                      borderRadius: 2,
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="#666"
+                      sx={{ fontWeight: "500" }}
+                    >
+                      İlçe
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{ color: "#2c3e50", fontWeight: "600" }}
+                    >
+                      {ad.district?.name || "Belirtilmemiş"}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      p: 2,
+                      backgroundColor: "#fff",
+                      borderRadius: 2,
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="#666"
+                      sx={{ fontWeight: "500" }}
+                    >
+                      Kilometre
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{ color: "#2c3e50", fontWeight: "600" }}
+                    >
+                      {ad.mileage
+                        ? `${ad.mileage.toLocaleString()} km`
+                        : "Belirtilmemiş"}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      p: 2,
+                      backgroundColor: "#fff",
+                      borderRadius: 2,
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="#666"
+                      sx={{ fontWeight: "500" }}
+                    >
+                      Model Yılı
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      sx={{ color: "#2c3e50", fontWeight: "600" }}
+                    >
+                      {ad.year || "Belirtilmemiş"}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  gap={1.5}
+                  mb={4}
+                  flexWrap="wrap"
+                >
+                  {ad.condition && (
+                    <Chip
+                      label={ad.condition}
+                      sx={{
+                        backgroundColor: "#f8f9fa",
+                        color: "#2c3e50",
+                        fontWeight: "500",
+                        border: "1px solid #e0e0e0",
+                      }}
+                      size="medium"
+                      variant="outlined"
+                    />
                   )}
+                  {ad.isExchangeable && (
+                    <Chip
+                      label="Takas Kabul Edilir"
+                      sx={{
+                        backgroundColor: "#f8f9fa",
+                        color: "#2c3e50",
+                        fontWeight: "500",
+                        border: "1px solid #e0e0e0",
+                      }}
+                      size="medium"
+                      variant="outlined"
+                    />
+                  )}
+                  <Chip
+                    icon={<Visibility />}
+                    label={`${ad.viewCount || 0} Görüntülenme`}
+                    sx={{
+                      backgroundColor: "#f8f9fa",
+                      color: "#666",
+                      fontWeight: "500",
+                      border: "1px solid #e0e0e0",
+                    }}
+                    size="medium"
+                    variant="outlined"
+                  />
+                </Box>
+
+                <Box
+                  sx={{
+                    backgroundColor: "#fff",
+                    p: 3,
+                    borderRadius: 2,
+                    border: "1px solid #e0e0e0",
+                    mb: 4,
+                    textAlign: "center",
+                  }}
+                >
+                  <Typography
+                    variant="h2"
+                    sx={{
+                      color: "#2c3e50",
+                      fontWeight: "700",
+                      fontSize: { xs: "2rem", md: "2.5rem" },
+                    }}
+                  >
+                    {ad.price ? formatPrice(ad.price) : "Fiyat belirtilmemiş"}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 2 }}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{ fontWeight: "600", color: "#2c3e50", mb: 2 }}
+                  >
+                    Açıklama
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    paragraph
+                    sx={{
+                      lineHeight: 1.8,
+                      textAlign: "justify",
+                      color: "#555",
+                      backgroundColor: "#fff",
+                      p: 3,
+                      borderRadius: 2,
+                      border: "1px solid #e0e0e0",
+                    }}
+                  >
+                    {ad.description || "Açıklama bulunmuyor."}
+                  </Typography>
+                </Box>
+              </Box>
+            </Paper>
+
+            {/* Araç Özellikleri - Daha Sade Tasarım */}
+            <Paper
+              elevation={1}
+              sx={{ mb: 3, borderRadius: 2, border: "1px solid #f0f0f0" }}
+            >
+              <Box sx={{ p: 3, borderBottom: "1px solid #f5f5f5" }}>
+                <Typography
+                  variant="h6"
+                  fontWeight="600"
+                  sx={{
+                    color: "#2c3e50",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <DirectionsCar sx={{ color: "#3498db" }} />
+                  Araç Özellikleri
+                </Typography>
+              </Box>
+
+              {ad.customFields && Object.keys(ad.customFields).length > 0 ? (
+                <Box sx={{ p: 3 }}>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(300px, 1fr))",
+                      gap: 2,
+                    }}
+                  >
+                    {Object.entries(ad.customFields)
+                      .filter(([key]) => key !== "detailFeatures")
+                      .map(([key, value]) => (
+                        <Box
+                          key={key}
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            py: 1.5,
+                            px: 2,
+                            backgroundColor: "#fafafa",
+                            borderRadius: 1,
+                            border: "1px solid #f0f0f0",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            {getSpecificationIcon(key)}
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: "500", color: "#34495e" }}
+                            >
+                              {getSpecificationLabel(key)}
+                            </Typography>
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: "600",
+                              color: "#2c3e50",
+                              textAlign: "right",
+                            }}
+                          >
+                            {renderFieldValue(value)}
+                          </Typography>
+                        </Box>
+                      ))}
+                  </Box>
+                </Box>
+              ) : (
+                <Box sx={{ p: 3, textAlign: "center" }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontStyle: "italic" }}
+                  >
+                    Araç özellikleri bulunmuyor.
+                  </Typography>
+                </Box>
+              )}
+            </Paper>
+
+            {/* Detaylı Özellikler - Sade ve Şık */}
+            <Paper
+              elevation={0}
+              sx={{ mb: 3, borderRadius: 2, border: "1px solid #e9ecef" }}
+            >
+              <Box sx={{ p: 3, borderBottom: "1px solid #f8f9fa" }}>
+                <Typography
+                  variant="h6"
+                  fontWeight="600"
+                  sx={{ color: "#343a40", fontSize: "1.1rem" }}
+                >
+                  Detaylı Özellikler
+                </Typography>
+              </Box>
+
+              <Box sx={{ p: 3 }}>
+                {ad.customFields?.detailFeatures &&
+                typeof ad.customFields.detailFeatures === "object" ? (
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(280px, 1fr))",
+                      gap: 1.5,
+                    }}
+                  >
+                    {Object.entries(
+                      ad.customFields.detailFeatures as Record<string, boolean>
+                    )
+                      .filter(([, value]) => value === true)
+                      .map(([key]) => (
+                        <Box
+                          key={key}
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            py: 1,
+                            px: 2,
+                            backgroundColor: "#f8f9fa",
+                            borderRadius: 1,
+                            border: "1px solid #e9ecef",
+                          }}
+                        >
+                          <CheckCircle
+                            sx={{ color: "#28a745", fontSize: 16, mr: 1.5 }}
+                          />
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#495057",
+                              fontWeight: "500",
+                              fontSize: "0.9rem",
+                            }}
+                          >
+                            {getSpecificationLabel(key)}
+                          </Typography>
+                        </Box>
+                      ))}
+                  </Box>
+                ) : (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontStyle: "italic", textAlign: "center" }}
+                  >
+                    Detaylı özellik bulunmuyor.
+                  </Typography>
+                )}
+              </Box>
+            </Paper>
+          </Box>
+
+          {/* Sağ Taraf - İlan Sahibi Detayları */}
+          <Box
+            flex={1}
+            sx={{
+              position: "sticky",
+              top: 20,
+              alignSelf: "flex-start",
+              maxHeight: "calc(100vh - 40px)",
+              overflowY: "auto",
+              minWidth: { md: "300px" },
+              maxWidth: { md: "35%" },
+              // Scroll bar'ı gizle
+              "&::-webkit-scrollbar": {
+                display: "none",
+              },
+              "-ms-overflow-style": "none",
+              "scrollbar-width": "none",
+            }}
+          >
+            {/* İlan Sahibi - Yeni Tasarım */}
+            <Paper
+              elevation={1}
+              sx={{ mb: 3, borderRadius: 2, border: "1px solid #f0f0f0" }}
+            >
+              <Box sx={{ p: 3, borderBottom: "1px solid #f5f5f5" }}>
+                <Typography
+                  variant="h6"
+                  fontWeight="600"
+                  sx={{
+                    color: "#2c3e50",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Avatar sx={{ width: 24, height: 24, bgcolor: "#3498db" }}>
+                    <Build sx={{ fontSize: 16 }} />
+                  </Avatar>
+                  İlan Sahibi
+                </Typography>
+              </Box>
+
+              <Box sx={{ p: 3 }}>
+                <Box display="flex" alignItems="center" mb={3}>
+                  <Badge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                    badgeContent={
+                      ad.user?.isVerified ? (
+                        <CheckCircle sx={{ color: "#27ae60", fontSize: 20 }} />
+                      ) : null
+                    }
+                  >
+                    <Avatar
+                      sx={{
+                        width: 60,
+                        height: 60,
+                        mr: 2,
+                        bgcolor: "#3498db",
+                        fontSize: "1.3rem",
+                        fontWeight: "600",
+                      }}
+                      src={ad.user?.avatar || undefined}
+                    >
+                      {ad.user?.name
+                        ? ad.user.name.charAt(0).toUpperCase()
+                        : "U"}
+                    </Avatar>
+                  </Badge>
+                  <Box>
+                    <Typography
+                      variant="h6"
+                      fontWeight="600"
+                      sx={{ color: "#2c3e50" }}
+                    >
+                      {ad.user?.name || "Bilinmeyen Satıcı"}
+                    </Typography>
+                    {ad.user?.isVerified && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          mt: 0.5,
+                        }}
+                      >
+                        <CheckCircle sx={{ color: "#27ae60", fontSize: 16 }} />
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "#27ae60", fontWeight: "500" }}
+                        >
+                          Doğrulanmış Hesap
+                        </Typography>
+                      </Box>
+                    )}
+                    <Typography
+                      variant="body2"
+                      color="#7f8c8d"
+                      sx={{ mt: 0.5 }}
+                    >
+                      Üyelik:{" "}
+                      {ad.user?.createdAt
+                        ? formatDate(ad.user.createdAt)
+                        : "Bilinmiyor"}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 2,
+                    mb: 3,
+                    p: 2,
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: 1,
+                    border: "1px solid #e9ecef",
+                  }}
+                >
+                  <Box sx={{ textAlign: "center" }}>
+                    <Typography
+                      variant="h6"
+                      fontWeight="600"
+                      sx={{ color: "#2c3e50" }}
+                    >
+                      {ad.user?.totalAds || 0}
+                    </Typography>
+                    <Typography variant="caption" color="#7f8c8d">
+                      Toplam İlan
+                    </Typography>
+                  </Box>
+                  <Box sx={{ textAlign: "center" }}>
+                    <Typography
+                      variant="h6"
+                      fontWeight="600"
+                      sx={{ color: "#2c3e50" }}
+                    >
+                      {ad.viewCount || 0}
+                    </Typography>
+                    <Typography variant="caption" color="#7f8c8d">
+                      Görüntülenme
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box display="flex" flexDirection="column" gap={2}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<Phone />}
+                    href={`tel:${ad.user?.phone || ""}`}
+                    fullWidth
+                    disabled={!ad.user?.phone}
+                    sx={{
+                      py: 1.5,
+                      fontSize: "1rem",
+                      fontWeight: "600",
+                      backgroundColor: "#27ae60",
+                      borderRadius: 2,
+                      "&:hover": {
+                        backgroundColor: "#229954",
+                      },
+                      "&:disabled": {
+                        backgroundColor: "#bdc3c7",
+                        color: "#7f8c8d",
+                      },
+                    }}
+                  >
+                    {ad.user?.phone 
+                      ? formatPhoneNumber(ad.user.phone)
+                      : "Telefon Belirtilmemiş"}
+                  </Button>
 
                   <Button
                     variant="outlined"
-                    startIcon={<Message />}
-                    onClick={() => setMessageDialogOpen(true)}
+                    size="large"
+                    startIcon={<Email />}
+                    href={`mailto:${ad.user?.email || ""}`}
                     fullWidth
+                    disabled={!ad.user?.email}
+                    sx={{
+                      py: 1.5,
+                      fontSize: "1rem",
+                      fontWeight: "600",
+                      borderColor: "#3498db",
+                      color: "#3498db",
+                      borderRadius: 2,
+                      "&:hover": {
+                        borderColor: "#2980b9",
+                        backgroundColor: "#ebf3fd",
+                      },
+                      "&:disabled": {
+                        borderColor: "#bdc3c7",
+                        color: "#7f8c8d",
+                      },
+                    }}
                   >
-                    Mesaj Gönder
+                    E-posta Gönder
                   </Button>
 
-                  {ad.user.phone && (
-                    <Button
-                      variant="outlined"
-                      startIcon={<WhatsApp />}
-                      href={`https://wa.me/${ad.user.phone?.replace(
-                        /[^0-9]/g,
-                        ""
-                      )}`}
-                      target="_blank"
-                      fullWidth
-                      color="success"
-                    >
-                      WhatsApp
-                    </Button>
-                  )}
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    startIcon={<Report />}
+                    fullWidth
+                    sx={{
+                      py: 1.5,
+                      fontSize: "1rem",
+                      fontWeight: "bold",
+                      color: "error.main",
+                      borderColor: "error.main",
+                      "&:hover": {
+                        borderColor: "error.dark",
+                        backgroundColor: "error.light",
+                      },
+                    }}
+                  >
+                    Şikayet Et
+                  </Button>
                 </Box>
-              </CardContent>
-            </Card>
+              </Box>
+            </Paper>
 
-            {/* Similar Ads */}
-            {similarAds.length > 0 && (
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Benzer İlanlar
+            {/* Konum Bilgisi */}
+            {ad && (
+              <Paper
+                elevation={3}
+                sx={{
+                  p: 3,
+                  mb: 3,
+                  borderRadius: 2,
+                  background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+                }}
+              >
+                <Box display="flex" alignItems="center" mb={2}>
+                  <LocationOn sx={{ fontSize: 28, color: "#1976d2", mr: 1 }} />
+                  <Typography variant="h6" fontWeight="bold" color="#1976d2">
+                    Konum Bilgisi
                   </Typography>
-                  {similarAds.slice(0, 3).map((similarAd) => (
-                    <Box key={similarAd.id} sx={{ mb: 2 }}>
-                      <Card variant="outlined">
-                        <Box sx={{ display: "flex" }}>
-                          <CardMedia
-                            component="img"
-                            sx={{ width: 80, height: 60 }}
-                            image={
-                              similarAd.images.find((img) => img.isPrimary)
-                                ?.url || "/placeholder-vehicle.jpg"
-                            }
-                            alt={similarAd.title}
-                          />
-                          <CardContent
-                            sx={{ flex: 1, p: 1, "&:last-child": { pb: 1 } }}
-                          >
-                            <Typography variant="body2" noWrap>
-                              {similarAd.title}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              color="primary"
-                              fontWeight="bold"
-                            >
-                              {formatCurrency(
-                                similarAd.price,
-                                similarAd.currency
-                              )}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {similarAd.location}
-                            </Typography>
-                          </CardContent>
-                        </Box>
-                      </Card>
-                    </Box>
-                  ))}
-                </CardContent>
-              </Card>
+                </Box>
+                
+                <Box display="flex" alignItems="center" gap={2} mb={2}>
+                  <Typography variant="body1" color="text.secondary">
+                    📍 {ad?.city?.name} / {ad?.district?.name}
+                  </Typography>
+                </Box>
+
+                {/* Harita Placeholder - Google Maps entegrasyonu için hazır */}
+                <Box
+                  sx={{
+                    height: 200,
+                    backgroundColor: "#f5f5f5",
+                    borderRadius: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px dashed #ddd",
+                  }}
+                >
+                  <Box textAlign="center">
+                    <LocationOn sx={{ fontSize: 48, color: "#bbb", mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      Google Maps entegrasyonu yakında...
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {ad?.city?.name} / {ad?.district?.name}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                  * Harita entegrasyonu geliştirme aşamasındadır
+                </Typography>
+              </Paper>
             )}
+
+            {/* Doping Reklamı */}
+            <Paper
+              elevation={3}
+              sx={{
+                p: 3,
+                mb: 3,
+                borderRadius: 2,
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "white",
+                cursor: "pointer",
+                transition: "transform 0.2s",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                },
+              }}
+              onClick={() => navigate("/doping")}
+            >
+              <Box textAlign="center">
+                <TrendingUp sx={{ fontSize: 48, mb: 2 }} />
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  🚀 İlanınızı Öne Çıkarın!
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2, opacity: 0.9 }}>
+                  Doping paketleri ile ilanınız daha fazla görüntülensin
+                </Typography>
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    backgroundColor: "rgba(255,255,255,0.2)",
+                    "&:hover": { backgroundColor: "rgba(255,255,255,0.3)" },
+                  }}
+                >
+                  Doping Al
+                </Button>
+              </Box>
+            </Paper>
           </Box>
         </Box>
 
-        {/* Floating Action Buttons */}
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 16,
-            right: 16,
-            display: "flex",
-            flexDirection: "column",
-            gap: 1,
-          }}
-        >
-          <Fab color="primary" onClick={() => setMessageDialogOpen(true)}>
-            <Message />
-          </Fab>
-          {ad.user.phone && (
-            <Fab color="success" href={`tel:${ad.user.phone}`}>
-              <Phone />
-            </Fab>
-          )}
-        </Box>
-
-        {/* Message Dialog */}
-        <Dialog
-          open={messageDialogOpen}
-          onClose={() => setMessageDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>
-            Mesaj Gönder
-            <IconButton
-              onClick={() => setMessageDialogOpen(false)}
-              sx={{ position: "absolute", right: 8, top: 8 }}
+        {/* Benzer İlanlar */}
+        {similarAds.length > 0 && (
+          <Paper elevation={2} sx={{ p: 3, mt: 4, borderRadius: 2 }}>
+            <Typography
+              variant="h5"
+              fontWeight="bold"
+              gutterBottom
+              sx={{ color: "#1976d2", mb: 3 }}
             >
-              <Close />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent>
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Mesajınız"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={`${ad.title} hakkında...`}
-              sx={{ mt: 2 }}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setMessageDialogOpen(false)}>İptal</Button>
-            <Button
-              onClick={handleSendMessage}
-              variant="contained"
-              disabled={!message.trim()}
-            >
-              Gönder
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Share Dialog */}
-        <Dialog
-          open={shareDialogOpen}
-          onClose={() => setShareDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Paylaş</DialogTitle>
-          <DialogContent>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
-            >
-              <TextField
-                fullWidth
-                label="İlan Linki"
-                value={shareUrl}
-                InputProps={{
-                  readOnly: true,
-                }}
-              />
-              <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-                <Button
-                  startIcon={<WhatsApp />}
-                  href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`}
-                  target="_blank"
-                  color="success"
+              🔍 Benzer İlanlar
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+              {similarAds.slice(0, 6).map((similarAd) => (
+                <Box
+                  key={similarAd.id}
+                  sx={{ flex: "0 1 auto", minWidth: 200, maxWidth: 250 }}
                 >
-                  WhatsApp
-                </Button>
-                <Button
-                  startIcon={<Facebook />}
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                    shareUrl
-                  )}`}
-                  target="_blank"
-                >
-                  Facebook
-                </Button>
-                <Button
-                  startIcon={<Twitter />}
-                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                    shareUrl
-                  )}&text=${encodeURIComponent(ad.title)}`}
-                  target="_blank"
-                >
-                  Twitter
-                </Button>
-                <Button
-                  startIcon={<Email />}
-                  href={`mailto:?subject=${encodeURIComponent(
-                    ad.title
-                  )}&body=${encodeURIComponent(shareUrl)}`}
-                >
-                  E-posta
-                </Button>
-              </Box>
+                  <Card
+                    sx={{
+                      cursor: "pointer",
+                      transition: "transform 0.2s, box-shadow 0.2s",
+                      "&:hover": {
+                        transform: "translateY(-4px)",
+                        boxShadow: 4,
+                      },
+                    }}
+                    onClick={() => navigate(`/ad/${similarAd.id}`)}
+                  >
+                    <CardMedia
+                      component="img"
+                      height="140"
+                      image={
+                        similarAd.images[0]
+                          ? similarAd.images[0].imageUrl
+                          : "/placeholder.jpg"
+                      }
+                      alt={similarAd.title}
+                      sx={{ objectFit: "cover" }}
+                    />
+                    <CardContent sx={{ p: 2 }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        noWrap
+                        sx={{ mb: 1 }}
+                      >
+                        {similarAd.title}
+                      </Typography>
+                      <Typography
+                        variant="h6"
+                        color="primary"
+                        fontWeight="bold"
+                        sx={{ mb: 1 }}
+                      >
+                        {formatPrice(similarAd.price)}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        📍 {similarAd.city?.name} •{" "}
+                        {formatDate(similarAd.createdAt)}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Box>
+              ))}
             </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShareDialogOpen(false)}>Kapat</Button>
-          </DialogActions>
-        </Dialog>
+          </Paper>
+        )}
 
-        {/* Report Dialog */}
+        {/* Resim Dialog */}
         <Dialog
-          open={reportDialogOpen}
-          onClose={() => setReportDialogOpen(false)}
-          maxWidth="sm"
+          open={imageDialogOpen}
+          onClose={() => setImageDialogOpen(false)}
+          maxWidth="lg"
           fullWidth
+          sx={{ "& .MuiDialog-paper": { borderRadius: 2 } }}
         >
-          <DialogTitle>İlanı Şikayet Et</DialogTitle>
-          <DialogContent>
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Şikayet Sebebi"
-              value={reportReason}
-              onChange={(e) => setReportReason(e.target.value)}
-              placeholder="Şikayet sebebinizi açıklayın..."
-              sx={{ mt: 2 }}
+          <DialogContent sx={{ p: 0, position: "relative" }}>
+            {/* Sol Ok */}
+            {ad.images && ad.images.length > 1 && (
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  left: 16,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  backgroundColor: "rgba(0,0,0,0.6)",
+                  color: "white",
+                  zIndex: 2,
+                  "&:hover": {
+                    backgroundColor: "rgba(0,0,0,0.8)",
+                  },
+                }}
+                onClick={() => {
+                  const newIndex = selectedImageIndex === 0 
+                    ? ad.images.length - 1 
+                    : selectedImageIndex - 1;
+                  setSelectedImageIndex(newIndex);
+                }}
+              >
+                <ArrowBackIos />
+              </IconButton>
+            )}
+
+            {/* Sağ Ok */}
+            {ad.images && ad.images.length > 1 && (
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  right: 16,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  backgroundColor: "rgba(0,0,0,0.6)",
+                  color: "white",
+                  zIndex: 2,
+                  "&:hover": {
+                    backgroundColor: "rgba(0,0,0,0.8)",
+                  },
+                }}
+                onClick={() => {
+                  const newIndex = selectedImageIndex === ad.images.length - 1 
+                    ? 0 
+                    : selectedImageIndex + 1;
+                  setSelectedImageIndex(newIndex);
+                }}
+              >
+                <ArrowForwardIos />
+              </IconButton>
+            )}
+
+            <CardMedia
+              component="img"
+              image={
+                ad.images && ad.images[selectedImageIndex]
+                  ? ad.images[selectedImageIndex].imageUrl
+                  : "/placeholder.jpg"
+              }
+              alt={`${ad.title || "İlan"} - ${selectedImageIndex + 1}`}
+              sx={{
+                width: "100%",
+                maxHeight: "85vh",
+                objectFit: "contain",
+                backgroundColor: "#000",
+              }}
             />
+
+            {/* Resim Navigasyonu */}
+            {ad.images && ad.images.length > 1 && (
+              <Box
+                position="absolute"
+                bottom={20}
+                left="50%"
+                sx={{
+                  transform: "translateX(-50%)",
+                  backgroundColor: "rgba(0,0,0,0.7)",
+                  borderRadius: 2,
+                  p: 1,
+                }}
+              >
+                <Box display="flex" gap={1}>
+                  {ad.images.map((_, index) => (
+                    <Box
+                      key={index}
+                      width={12}
+                      height={12}
+                      borderRadius="50%"
+                      bgcolor={
+                        selectedImageIndex === index
+                          ? "primary.main"
+                          : "grey.400"
+                      }
+                      sx={{
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        "&:hover": { transform: "scale(1.2)" },
+                      }}
+                      onClick={() => setSelectedImageIndex(index)}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setReportDialogOpen(false)}>İptal</Button>
-            <Button
-              onClick={handleReport}
-              color="error"
-              variant="contained"
-              disabled={!reportReason.trim()}
-            >
-              Şikayet Et
-            </Button>
-          </DialogActions>
         </Dialog>
       </Container>
     </>

@@ -107,13 +107,10 @@ const PendingAds: React.FC = () => {
   const [selectedImages, setSelectedImages] = useState<Ad["images"]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // API Base URL'i al
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  // Base64 image handler - images are now stored as base64 in database
   const getImageUrl = (imageUrl: string) => {
-    // imageUrl zaten /uploads/filename.jpg formatında gelir
-    const baseUrl = API_BASE_URL.replace("/api", "");
-    const fullUrl = `${baseUrl}${imageUrl}`;
-    return fullUrl;
+    // imageUrl artık doğrudan base64 formatında geliyor
+    return imageUrl || "/placeholder.jpg";
   };
 
   // Onay bekleyen ilanları yükle

@@ -6,7 +6,12 @@ export const requireAdmin = (
   res: Response,
   next: NextFunction
 ): void => {
+  console.log("🔒 Admin Check:");
+  console.log("- User:", req.user);
+  console.log("- User Role:", req.user?.role);
+
   if (!req.user) {
+    console.log("❌ No user in request");
     res.status(401).json({
       success: false,
       message: "Yetkilendirme gerekli",
@@ -15,6 +20,7 @@ export const requireAdmin = (
   }
 
   if (req.user.role !== "ADMIN") {
+    console.log("❌ User is not admin, role:", req.user.role);
     res.status(403).json({
       success: false,
       message: "Bu işlem için admin yetkisi gerekli",
@@ -22,5 +28,6 @@ export const requireAdmin = (
     return;
   }
 
+  console.log("✅ Admin access granted");
   next();
 };

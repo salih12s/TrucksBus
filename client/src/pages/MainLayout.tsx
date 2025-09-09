@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -93,6 +94,7 @@ interface ApiAdsResponse {
 }
 
 const MainLayout: React.FC = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -120,8 +122,6 @@ const MainLayout: React.FC = () => {
     }
   }, [isMobile]);
 
-  // API Base URL'i al
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const getImageUrl = (images?: Ad["images"]) => {
     if (!images || images.length === 0) return null;
 
@@ -129,11 +129,8 @@ const MainLayout: React.FC = () => {
     const primaryImage = images.find((img) => img.isPrimary);
     const imageToUse = primaryImage || images[0];
 
-    if (imageToUse?.imageUrl) {
-      const baseUrl = API_BASE_URL.replace("/api", "");
-      return `${baseUrl}${imageToUse.imageUrl}`;
-    }
-    return null;
+    // Artık imageUrl doğrudan base64 formatında geliyor
+    return imageToUse?.imageUrl || null;
   };
 
   // Fiyat formatlama fonksiyonu
@@ -860,6 +857,7 @@ const MainLayout: React.FC = () => {
                       <Button
                         fullWidth
                         variant="contained"
+                        onClick={() => navigate(`/ad/${ad.id}`)}
                         sx={{
                           backgroundColor: "#333",
                           color: "white",

@@ -34,7 +34,9 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated, isLoading } = useAppSelector(
+    (state) => state.auth
+  );
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -55,10 +57,15 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
   };
 
   const getUserInitials = () => {
-    if (user?.firstName && user?.lastName) {
+    // User bilgisi yükleniyorsa veya henüz yoksa boş döndür
+    if (isLoading || !user) {
+      return "";
+    }
+
+    if (user.firstName && user.lastName) {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
     }
-    return user?.email?.[0]?.toUpperCase() || "U";
+    return user.email?.[0]?.toUpperCase() || "?";
   };
 
   return (
@@ -190,18 +197,20 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
               </Button>
 
               {/* User Avatar */}
-              <IconButton onClick={handleAvatarClick} sx={{ ml: 1 }}>
-                <Avatar
-                  sx={{
-                    bgcolor: "#D34237",
-                    width: 40,
-                    height: 40,
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  {getUserInitials()}
-                </Avatar>
-              </IconButton>
+              {(user || isLoading) && (
+                <IconButton onClick={handleAvatarClick} sx={{ ml: 1 }}>
+                  <Avatar
+                    sx={{
+                      bgcolor: "#D34237",
+                      width: 40,
+                      height: 40,
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    {isLoading ? "..." : getUserInitials()}
+                  </Avatar>
+                </IconButton>
+              )}
 
               {/* User Menu */}
               <Menu

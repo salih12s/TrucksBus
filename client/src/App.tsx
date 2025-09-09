@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
-import { Provider } from "react-redux";
-import { store } from "./store";
+import { Provider, useDispatch, useSelector } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import { store, persistor, type RootState, type AppDispatch } from "./store";
+import { getCurrentUser } from "./store/authSlice";
 
 // Components
 import { ErrorBoundary, PerformanceMonitor } from "./components/common";
@@ -172,671 +174,713 @@ const LoadingFallback = ({
   </div>
 );
 
+function AuthProvider({ children }: { children: React.ReactNode }) {
+  const dispatch = useDispatch<AppDispatch>();
+  const { token, user, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const [isInitialized, setIsInitialized] = React.useState(false);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      // Token varsa ama user bilgisi yoksa getCurrentUser çağır
+      if (token && !user && isAuthenticated) {
+        await dispatch(getCurrentUser());
+      }
+      setIsInitialized(true);
+    };
+
+    initializeAuth();
+  }, [dispatch, token, user, isAuthenticated]);
+
+  // Eğer henüz initialize olmadıysa loading göster
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function App() {
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <ErrorBoundary>
-          <Router>
-            <div className="min-h-screen bg-gray-50">
-              <React.Suspense fallback={<LoadingFallback />}>
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/" element={<MainLayout />} />
-                  <Route path="/login" element={<LoginNew />} />
-                  <Route path="/register" element={<RegisterNew />} />
-                  <Route
-                    path="/register-corporate"
-                    element={<RegisterCorporate />}
-                  />
-                  <Route path="/ad/:id" element={<AdDetail />} />
-                  <Route
-                    path="/category-selection"
-                    element={<CategorySelection />}
-                  />
+      <PersistGate loading={<LoadingFallback />} persistor={persistor}>
+        <AuthProvider>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <ErrorBoundary>
+              <Router>
+                <div className="min-h-screen bg-gray-50">
+                  <React.Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                      {/* Public Routes */}
+                      <Route path="/" element={<MainLayout />} />
+                      <Route path="/login" element={<LoginNew />} />
+                      <Route path="/register" element={<RegisterNew />} />
+                      <Route
+                        path="/register-corporate"
+                        element={<RegisterCorporate />}
+                      />
+                      <Route path="/ad/:id" element={<AdDetail />} />
+                      <Route
+                        path="/category-selection"
+                        element={<CategorySelection />}
+                      />
 
-                  {/* Brand/Model/Variant Selection Routes */}
-                  <Route
-                    path="/categories/:categorySlug/brands"
-                    element={<BrandSelection />}
-                  />
-                  <Route
-                    path="/categories/:categorySlug/brands/:brandSlug/models"
-                    element={<ModelSelection />}
-                  />
-                  <Route
-                    path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/variants"
-                    element={<VariantSelection />}
-                  />
+                      {/* Brand/Model/Variant Selection Routes */}
+                      <Route
+                        path="/categories/:categorySlug/brands"
+                        element={<BrandSelection />}
+                      />
+                      <Route
+                        path="/categories/:categorySlug/brands/:brandSlug/models"
+                        element={<ModelSelection />}
+                      />
+                      <Route
+                        path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/variants"
+                        element={<VariantSelection />}
+                      />
 
-                  {/* Protected Routes */}
-               
+                      {/* Protected Routes */}
 
-                  <Route
-                    path="/profile"
-                    element={
-                      <ProtectedRoute>
-                        <Profile />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/profile"
+                        element={
+                          <ProtectedRoute>
+                            <Profile />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/notifications"
-                    element={
-                      <ProtectedRoute>
-                        <Notifications />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/notifications"
+                        element={
+                          <ProtectedRoute>
+                            <Notifications />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/bookmarks"
-                    element={
-                      <ProtectedRoute>
-                        <Bookmarks />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/bookmarks"
+                        element={
+                          <ProtectedRoute>
+                            <Bookmarks />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/complaints"
-                    element={
-                      <ProtectedRoute>
-                        <Complaints />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/complaints"
+                        element={
+                          <ProtectedRoute>
+                            <Complaints />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/my-ads"
-                    element={
-                      <ProtectedRoute>
-                        <MyAds />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/my-ads"
+                        element={
+                          <ProtectedRoute>
+                            <MyAds />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/doping"
-                    element={
-                      <ProtectedRoute>
-                        <Doping />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/doping"
+                        element={
+                          <ProtectedRoute>
+                            <Doping />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <CreateAdForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <CreateAdForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Specific vehicle form routes - SPESİFİK ROUTE'LAR ÖNCE GELMELİ */}
-                  <Route
-                    path="/categories/otobus/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <OtobusAdForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Specific vehicle form routes - SPESİFİK ROUTE'LAR ÖNCE GELMELİ */}
+                      <Route
+                        path="/categories/otobus/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <OtobusAdForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/categories/kamyon-kamyonet/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KamyonAdForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/categories/kamyon-kamyonet/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KamyonAdForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/categories/cekici/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <CekiciAdForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/categories/cekici/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <CekiciAdForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/categories/minibus-midibus/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <CreateMinibusAdForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/categories/minibus-midibus/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <CreateMinibusAdForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Dorse Form Routes */}
-                  <Route
-                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <HafriyatTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* Database slug için alternatif route */}
-                  <Route
-                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tip/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <HafriyatTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Dorse Form Routes */}
+                      <Route
+                        path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <HafriyatTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      {/* Database slug için alternatif route */}
+                      <Route
+                        path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tip/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <HafriyatTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <HavuzHardoxTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* Database slug için alternatif route */}
-                  <Route
-                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/havuzhardox-tip/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <HavuzHardoxTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <HavuzHardoxTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      {/* Database slug için alternatif route */}
+                      <Route
+                        path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/havuzhardox-tip/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <HavuzHardoxTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kapakli-tip/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KapakliTipForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* Database slug için alternatif route */}
-                  <Route
-                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kapakl-tip/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KapakliTipForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kapakli-tip/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KapakliTipForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      {/* Database slug için alternatif route */}
+                      <Route
+                        path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kapakl-tip/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KapakliTipForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KayaTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* Database slug için alternatif route */}
-                  <Route
-                    path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tip/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KayaTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KayaTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      {/* Database slug için alternatif route */}
+                      <Route
+                        path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tip/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KayaTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Damperli-Dorse kategorisi için de aynı route'lar */}
-                  <Route
-                    path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <HafriyatTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Damperli-Dorse kategorisi için de aynı route'lar */}
+                      <Route
+                        path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <HafriyatTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <HavuzHardoxTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <HavuzHardoxTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/kapakli-tip/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KapakliTipForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/kapakli-tip/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KapakliTipForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KayaTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/categories/damperli-dorse/brands/:brandSlug/models/:modelSlug/variants/kaya-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KayaTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Karoser Üst Yapı - Kamyon Römork Route */}
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/kamyon-romork/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KamyonRomorkForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Karoser Üst Yapı - Kamyon Römork Route */}
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/:brandSlug/models/:modelSlug/variants/kamyon-romork/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KamyonRomorkForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Karoser Üst Yapı - Damperli Routes */}
-                  {/* Kaya Tipi - hem kaya-tipi hem kaya-tipi variant'larını destekle */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/kaya-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserKayaTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/kaya-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserKayaTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Karoser Üst Yapı - Damperli Routes */}
+                      {/* Kaya Tipi - hem kaya-tipi hem kaya-tipi variant'larını destekle */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/kaya-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserKayaTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/kaya-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserKayaTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Havuz Hardox Tipi */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserHavuzHardoxTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserHavuzHardoxTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Havuz Hardox Tipi */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserHavuzHardoxTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/havuz-hardox-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserHavuzHardoxTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Kapaklı Tip */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/kapakli-tip/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserKapakliTipForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/kapakli-tip/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserKapakliTipForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Kapaklı Tip */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/kapakli-tip/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserKapakliTipForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/kapakli-tip/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserKapakliTipForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Ahşap Kasa */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/ahsap-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserAhsapKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/ahsap-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserAhsapKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* damperli-grup brand slug'ı ve ahşap-kasa model slug'ı için özel route'lar */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/ahşap-kasa/variants/ahşap-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserAhsapKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/damperli-grup/models/ahşap-kasa/variants/ahşap-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserAhsapKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Ahşap Kasa */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli/models/:modelSlug/variants/ahsap-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserAhsapKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/damperli/models/:modelSlug/variants/ahsap-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserAhsapKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      {/* damperli-grup brand slug'ı ve ahşap-kasa model slug'ı için özel route'lar */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli-grup/models/ahşap-kasa/variants/ahşap-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserAhsapKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/damperli-grup/models/ahşap-kasa/variants/ahşap-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserAhsapKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* karoser-ustyapi pattern'i için Sabit Kabin route'ları */}
-                  {/* Açık Kasa */}
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/acik-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <AcikKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/ak-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <AcikKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* karoser-ustyapi pattern'i için Sabit Kabin route'ları */}
+                      {/* Açık Kasa */}
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/acik-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <AcikKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/ak-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <AcikKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Kapalı Kasa */}
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/kapali-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KapaliKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/kk-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KapaliKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/kapal-kasa/variants/kapal-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KapaliKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Kapalı Kasa */}
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/kapali-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KapaliKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/kk-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KapaliKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/sabit-kabin/models/kapal-kasa/variants/kapal-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KapaliKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Özel Kasa */}
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/ozel-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <OzelKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/oz-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <OzelKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ustyapi/brands/sabit-kabin/models/zel-kasa/variants/zel-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <OzelKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Özel Kasa */}
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/ozel-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <OzelKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/sabit-kabin/models/:modelSlug/variants/oz-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <OzelKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ustyapi/brands/sabit-kabin/models/zel-kasa/variants/zel-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <OzelKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Karoser Üst Yapı - Sabit Kabin Routes */}
-                  {/* Açık Kasa - hem acik-kasa hem ak-kasa variant'larını destekle */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/acik-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <AcikKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/ak-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <AcikKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Karoser Üst Yapı - Sabit Kabin Routes */}
+                      {/* Açık Kasa - hem acik-kasa hem ak-kasa variant'larını destekle */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/acik-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <AcikKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/ak-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <AcikKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Kapalı Kasa - hem kapali-kasa hem kk-kasa variant'larını destekle */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/kapali-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KapaliKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/kk-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KapaliKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* kapal-kasa model slug'ı için özel route */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/kapal-kasa/variants/kapal-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KapaliKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Kapalı Kasa - hem kapali-kasa hem kk-kasa variant'larını destekle */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/kapali-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KapaliKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/kk-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KapaliKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      {/* kapal-kasa model slug'ı için özel route */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/kapal-kasa/variants/kapal-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KapaliKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Özel Kasa - hem ozel-kasa hem oz-kasa variant'larını destekle */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/ozel-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <OzelKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/oz-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <OzelKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  {/* zel-kasa model slug'ı için özel route */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/zel-kasa/variants/zel-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <OzelKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Özel Kasa - hem ozel-kasa hem oz-kasa variant'larını destekle */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/ozel-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <OzelKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/:modelSlug/variants/oz-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <OzelKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
+                      {/* zel-kasa model slug'ı için özel route */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/sabit-kabin/models/zel-kasa/variants/zel-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <OzelKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Karoser Üst Yapı - Damperli Brand Route'ları */}
-                  {/* Ahşap Kasa (ahap-kasa - Türkçe karakter olmadan) */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/ahap-kasa/variants/ahap-kasa/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserAhsapKasaForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Karoser Üst Yapı - Damperli Brand Route'ları */}
+                      {/* Ahşap Kasa (ahap-kasa - Türkçe karakter olmadan) */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli-grup/models/ahap-kasa/variants/ahap-kasa/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserAhsapKasaForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Hafriyat Tipi */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/hafriyat-tipi/variants/hafriyat-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <HafriyatTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Hafriyat Tipi */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli-grup/models/hafriyat-tipi/variants/hafriyat-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <HafriyatTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Havuz Hardox Tipi (havuzhardox-tipi - tek kelime) */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/havuzhardox-tipi/variants/havuzhardox-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserHavuzHardoxTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Havuz Hardox Tipi (havuzhardox-tipi - tek kelime) */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli-grup/models/havuzhardox-tipi/variants/havuzhardox-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserHavuzHardoxTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Kapaklı Tip */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/kapakli-tip/variants/kapakli-tip/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserKapakliTipForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Kapaklı Tip */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli-grup/models/kapakli-tip/variants/kapakli-tip/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserKapakliTipForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Kaya Tipi */}
-                  <Route
-                    path="/categories/karoser-ust-yapi/brands/damperli-grup/models/kaya-tipi/variants/kaya-tipi/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <KaroserKayaTipiForm />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Kaya Tipi */}
+                      <Route
+                        path="/categories/karoser-ust-yapi/brands/damperli-grup/models/kaya-tipi/variants/kaya-tipi/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <KaroserKayaTipiForm />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Varyantı olmayan dorse modelleri için model seviyesinde route'lar */}
-                  <Route
-                    path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <VehicleFormSelector />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Varyantı olmayan dorse modelleri için model seviyesinde route'lar */}
+                      <Route
+                        path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <VehicleFormSelector />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Genel route - En son fallback olarak */}
-                  <Route
-                    path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
-                    element={
-                      <ProtectedRoute>
-                        <VehicleFormSelector />
-                      </ProtectedRoute>
-                    }
-                  />
+                      {/* Genel route - En son fallback olarak */}
+                      <Route
+                        path="/categories/:categorySlug/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                        element={
+                          <ProtectedRoute>
+                            <VehicleFormSelector />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/my-ads"
-                    element={
-                      <ProtectedRoute>
-                        <MyAds />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/my-ads"
+                        element={
+                          <ProtectedRoute>
+                            <MyAds />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/messages"
-                    element={
-                      <ProtectedRoute>
-                        <MessagingSystem />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/messages"
+                        element={
+                          <ProtectedRoute>
+                            <MessagingSystem />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  <Route
-                    path="/analytics"
-                    element={
-                      <ProtectedRoute>
-                        <AnalyticsDashboard />
-                      </ProtectedRoute>
-                    }
-                  />
+                      <Route
+                        path="/analytics"
+                        element={
+                          <ProtectedRoute>
+                            <AnalyticsDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                  {/* Admin Routes */}
-                  <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="pending-ads" element={<PendingAds />} />
-                    <Route path="users" element={<UsersPage />} />
-                    <Route path="logs" element={<AdminLogsPage />} />
-                    <Route path="feedback" element={<FeedbackManagement />} />
-                    {/* Diğer admin sayfaları buraya eklenecek */}
-                  </Route>
+                      {/* Admin Routes */}
+                      <Route path="/admin" element={<AdminLayout />}>
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="pending-ads" element={<PendingAds />} />
+                        <Route path="users" element={<UsersPage />} />
+                        <Route path="logs" element={<AdminLogsPage />} />
+                        <Route
+                          path="feedback"
+                          element={<FeedbackManagement />}
+                        />
+                        {/* Diğer admin sayfaları buraya eklenecek */}
+                      </Route>
 
-                  {/* Error Routes */}
-                  <Route
-                    path="/403"
-                    element={
-                      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                        <div className="text-center">
-                          <h1 className="text-4xl font-bold text-red-600 mb-4">
-                            403
-                          </h1>
-                          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                            Yetkisiz Erişim
-                          </h2>
-                          <p className="text-gray-600 mb-4">
-                            Bu sayfaya erişim yetkiniz bulunmamaktadır.
-                          </p>
-                          <Link
-                            to="/"
-                            className="text-blue-600 hover:text-blue-500"
-                          >
-                            Ana sayfaya dön
-                          </Link>
-                        </div>
-                      </div>
-                    }
-                  />
+                      {/* Error Routes */}
+                      <Route
+                        path="/403"
+                        element={
+                          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                            <div className="text-center">
+                              <h1 className="text-4xl font-bold text-red-600 mb-4">
+                                403
+                              </h1>
+                              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                                Yetkisiz Erişim
+                              </h2>
+                              <p className="text-gray-600 mb-4">
+                                Bu sayfaya erişim yetkiniz bulunmamaktadır.
+                              </p>
+                              <Link
+                                to="/"
+                                className="text-blue-600 hover:text-blue-500"
+                              >
+                                Ana sayfaya dön
+                              </Link>
+                            </div>
+                          </div>
+                        }
+                      />
 
-                  <Route
-                    path="*"
-                    element={
-                      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                        <div className="text-center">
-                          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                            404
-                          </h1>
-                          <h2 className="text-2xl font-semibold text-gray-700 mb-2">
-                            Sayfa Bulunamadı
-                          </h2>
-                          <p className="text-gray-600 mb-4">
-                            Aradığınız sayfa mevcut değil.
-                          </p>
-                          <Link
-                            to="/"
-                            className="text-blue-600 hover:text-blue-500"
-                          >
-                            Ana sayfaya dön
-                          </Link>
-                        </div>
-                      </div>
-                    }
-                  />
-                </Routes>
-              </React.Suspense>
+                      <Route
+                        path="*"
+                        element={
+                          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                            <div className="text-center">
+                              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                                404
+                              </h1>
+                              <h2 className="text-2xl font-semibold text-gray-700 mb-2">
+                                Sayfa Bulunamadı
+                              </h2>
+                              <p className="text-gray-600 mb-4">
+                                Aradığınız sayfa mevcut değil.
+                              </p>
+                              <Link
+                                to="/"
+                                className="text-blue-600 hover:text-blue-500"
+                              >
+                                Ana sayfaya dön
+                              </Link>
+                            </div>
+                          </div>
+                        }
+                      />
+                    </Routes>
+                  </React.Suspense>
 
-              {/* Performance Monitor - Only in development */}
-              {process.env.NODE_ENV === "development" && <PerformanceMonitor />}
+                  {/* Performance Monitor - Only in development */}
+                  {process.env.NODE_ENV === "development" && (
+                    <PerformanceMonitor />
+                  )}
 
-              {/* PWA Status */}
-              <PWAStatus />
-            </div>
-          </Router>
-        </ErrorBoundary>
-      </ThemeProvider>
+                  {/* PWA Status */}
+                  <PWAStatus />
+                </div>
+              </Router>
+            </ErrorBoundary>
+          </ThemeProvider>
+        </AuthProvider>
+      </PersistGate>
     </Provider>
   );
 }

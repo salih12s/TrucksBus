@@ -1,7 +1,5 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import fs from "fs";
-import path from "path";
 
 const prisma = new PrismaClient();
 
@@ -112,12 +110,16 @@ export const getAdById = async (req: Request, res: Response) => {
             city: true,
             phone: true,
             email: true,
+            createdAt: true,
+            isVerified: true,
           },
         },
         category: true,
         brand: true,
         model: true,
         variant: true,
+        city: true,
+        district: true,
         images: {
           orderBy: { displayOrder: "asc" },
         },
@@ -134,7 +136,25 @@ export const getAdById = async (req: Request, res: Response) => {
       data: { viewCount: { increment: 1 } },
     });
 
-    return res.json(ad);
+    // User'ın toplam ilanlarını çek
+    const userTotalAds = await prisma.ad.count({
+      where: { 
+        userId: ad.userId,
+        status: 'APPROVED'
+      }
+    });
+
+    // Response'u format et
+    const formattedAd = {
+      ...ad,
+      user: {
+        ...ad.user,
+        name: ad.user.companyName || `${ad.user.firstName || ''} ${ad.user.lastName || ''}`.trim() || 'Bilinmeyen Satıcı',
+        totalAds: userTotalAds,
+      }
+    };
+
+    return res.json(formattedAd);
   } catch (error) {
     console.error("Error fetching ad:", error);
     return res.status(500).json({ error: "Server error" });
@@ -534,19 +554,13 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       },
     });
 
-    // Resim yükleme işlemi
+    // Resim yükleme işlemi (Base64 formatında)
     const files = req.files as any;
     if (files && files.length > 0) {
       console.log(
-        "📷 Resimler yükleniyor:",
+        "📷 Resimler base64 formatında kaydediliyor:",
         files.map((f: any) => f.fieldname)
       );
-
-      // Uploads klasörünün var olduğundan emin ol
-      const uploadsDir = path.join(__dirname, "../../uploads");
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
 
       const imagePromises = [];
       let displayOrder = 0;
@@ -556,23 +570,18 @@ export const createMinibusAd = async (req: Request, res: Response) => {
         (f: any) => f.fieldname === "showcasePhoto"
       );
       if (showcaseFile) {
-        const timestamp = Date.now();
-        const randomNum = Math.floor(Math.random() * 1000);
-        const extension = path.extname(showcaseFile.originalname);
-        const filename = `${timestamp}-${randomNum}${extension}`;
-        const filepath = path.join(uploadsDir, filename);
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          showcaseFile.mimetype
+        };base64,${showcaseFile.buffer.toString("base64")}`;
 
-        // Dosyayı kaydet
-        fs.writeFileSync(filepath, showcaseFile.buffer);
-
-        const imageUrl = `/uploads/${filename}`;
-        console.log("📷 Vitrin resmi kaydedildi:", imageUrl);
+        console.log("📷 Vitrin resmi base64 formatında kaydediliyor");
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl,
+              imageUrl: base64Image,
               isPrimary: true,
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
@@ -587,23 +596,18 @@ export const createMinibusAd = async (req: Request, res: Response) => {
         f.fieldname.startsWith("photo_")
       );
       for (const file of photoFiles) {
-        const timestamp = Date.now();
-        const randomNum = Math.floor(Math.random() * 1000);
-        const extension = path.extname(file.originalname);
-        const filename = `${timestamp}-${randomNum}${extension}`;
-        const filepath = path.join(uploadsDir, filename);
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
 
-        // Dosyayı kaydet
-        fs.writeFileSync(filepath, file.buffer);
-
-        const imageUrl = `/uploads/${filename}`;
-        console.log(`📷 Resim ${displayOrder} kaydedildi:`, imageUrl);
+        console.log(`📷 Resim ${displayOrder} base64 formatında kaydediliyor`);
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl,
+              imageUrl: base64Image,
               isPrimary: false,
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
@@ -616,7 +620,9 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       // Tüm resimleri veritabanına kaydet
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
-        console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
+        console.log(
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+        );
       }
     }
 
@@ -774,15 +780,9 @@ export const createCekiciAd = async (req: Request, res: Response) => {
 
     if (files && files.length > 0) {
       console.log(
-        "� Resimler yükleniyor:",
+        "📷 Resimler base64 formatında kaydediliyor:",
         files.map((f: any) => f.fieldname)
       );
-
-      // Uploads klasörünün var olduğundan emin ol
-      const uploadsDir = path.join(__dirname, "../../uploads");
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
 
       const imagePromises: any[] = [];
       let displayOrder = 0;
@@ -792,23 +792,18 @@ export const createCekiciAd = async (req: Request, res: Response) => {
         (f: any) => f.fieldname === "showcasePhoto"
       );
       if (showcaseFile) {
-        const timestamp = Date.now();
-        const randomNum = Math.floor(Math.random() * 1000);
-        const extension = path.extname(showcaseFile.originalname);
-        const filename = `${timestamp}-${randomNum}${extension}`;
-        const filepath = path.join(uploadsDir, filename);
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          showcaseFile.mimetype
+        };base64,${showcaseFile.buffer.toString("base64")}`;
 
-        // Dosyayı kaydet
-        fs.writeFileSync(filepath, showcaseFile.buffer);
-
-        const imageUrl = `/uploads/${filename}`;
-        console.log("🖼️ Vitrin resmi kaydedildi:", imageUrl);
+        console.log("� Vitrin resmi base64 formatında kaydediliyor");
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl,
+              imageUrl: base64Image,
               isPrimary: true,
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
@@ -823,23 +818,18 @@ export const createCekiciAd = async (req: Request, res: Response) => {
         f.fieldname.startsWith("photo_")
       );
       for (const file of photoFiles) {
-        const timestamp = Date.now();
-        const randomNum = Math.floor(Math.random() * 1000);
-        const extension = path.extname(file.originalname);
-        const filename = `${timestamp}-${randomNum}${extension}`;
-        const filepath = path.join(uploadsDir, filename);
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
 
-        // Dosyayı kaydet
-        fs.writeFileSync(filepath, file.buffer);
-
-        const imageUrl = `/uploads/${filename}`;
-        console.log(`📷 Resim ${displayOrder} kaydedildi:`, imageUrl);
+        console.log(`📷 Resim ${displayOrder} base64 formatında kaydediliyor`);
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl,
+              imageUrl: base64Image,
               isPrimary: false,
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
@@ -852,7 +842,9 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       // Tüm resimleri veritabanına kaydet
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
-        console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
+        console.log(
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+        );
       }
     }
 
@@ -1150,15 +1142,9 @@ export const createKamyonAd = async (req: Request, res: Response) => {
 
     if (files && files.length > 0) {
       console.log(
-        "� Resimler yükleniyor:",
+        "📷 Resimler base64 formatında kaydediliyor:",
         files.map((f: any) => f.fieldname)
       );
-
-      // Uploads klasörünün var olduğundan emin ol
-      const uploadsDir = path.join(__dirname, "../../uploads");
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
 
       const imagePromises: any[] = [];
       let displayOrder = 0;
@@ -1168,23 +1154,18 @@ export const createKamyonAd = async (req: Request, res: Response) => {
         (f: any) => f.fieldname === "showcasePhoto"
       );
       if (showcaseFile) {
-        const timestamp = Date.now();
-        const randomNum = Math.floor(Math.random() * 1000);
-        const extension = path.extname(showcaseFile.originalname);
-        const filename = `${timestamp}-${randomNum}${extension}`;
-        const filepath = path.join(uploadsDir, filename);
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          showcaseFile.mimetype
+        };base64,${showcaseFile.buffer.toString("base64")}`;
 
-        // Dosyayı kaydet
-        fs.writeFileSync(filepath, showcaseFile.buffer);
-
-        const imageUrl = `/uploads/${filename}`;
-        console.log("🖼️ Vitrin resmi kaydedildi:", imageUrl);
+        console.log("� Vitrin resmi base64 formatında kaydediliyor");
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl,
+              imageUrl: base64Image,
               isPrimary: true,
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
@@ -1199,23 +1180,18 @@ export const createKamyonAd = async (req: Request, res: Response) => {
         f.fieldname.startsWith("photo_")
       );
       for (const file of photoFiles) {
-        const timestamp = Date.now();
-        const randomNum = Math.floor(Math.random() * 1000);
-        const extension = path.extname(file.originalname);
-        const filename = `${timestamp}-${randomNum}${extension}`;
-        const filepath = path.join(uploadsDir, filename);
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
 
-        // Dosyayı kaydet
-        fs.writeFileSync(filepath, file.buffer);
-
-        const imageUrl = `/uploads/${filename}`;
-        console.log(`📷 Resim ${displayOrder} kaydedildi:`, imageUrl);
+        console.log(`📷 Resim ${displayOrder} base64 formatında kaydediliyor`);
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl,
+              imageUrl: base64Image,
               isPrimary: false,
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
@@ -1228,7 +1204,9 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       // Tüm resimleri veritabanına kaydet
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
-        console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
+        console.log(
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+        );
       }
     }
 
@@ -1387,15 +1365,9 @@ export const createOtobusAd = async (req: Request, res: Response) => {
 
     if (files && files.length > 0) {
       console.log(
-        "� Resimler yükleniyor:",
+        "📷 Resimler base64 formatında kaydediliyor:",
         files.map((f: any) => f.fieldname)
       );
-
-      // Uploads klasörünün var olduğundan emin ol
-      const uploadsDir = path.join(__dirname, "../../uploads");
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
 
       const imagePromises: any[] = [];
       let displayOrder = 0;
@@ -1405,23 +1377,18 @@ export const createOtobusAd = async (req: Request, res: Response) => {
         (f: any) => f.fieldname === "showcasePhoto"
       );
       if (showcaseFile) {
-        const timestamp = Date.now();
-        const randomNum = Math.floor(Math.random() * 1000);
-        const extension = path.extname(showcaseFile.originalname);
-        const filename = `${timestamp}-${randomNum}${extension}`;
-        const filepath = path.join(uploadsDir, filename);
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          showcaseFile.mimetype
+        };base64,${showcaseFile.buffer.toString("base64")}`;
 
-        // Dosyayı kaydet
-        fs.writeFileSync(filepath, showcaseFile.buffer);
-
-        const imageUrl = `/uploads/${filename}`;
-        console.log("🖼️ Vitrin resmi kaydedildi:", imageUrl);
+        console.log("� Vitrin resmi base64 formatında kaydediliyor");
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl,
+              imageUrl: base64Image,
               isPrimary: true,
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
@@ -1436,23 +1403,18 @@ export const createOtobusAd = async (req: Request, res: Response) => {
         f.fieldname.startsWith("photo_")
       );
       for (const file of photoFiles) {
-        const timestamp = Date.now();
-        const randomNum = Math.floor(Math.random() * 1000);
-        const extension = path.extname(file.originalname);
-        const filename = `${timestamp}-${randomNum}${extension}`;
-        const filepath = path.join(uploadsDir, filename);
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
 
-        // Dosyayı kaydet
-        fs.writeFileSync(filepath, file.buffer);
-
-        const imageUrl = `/uploads/${filename}`;
-        console.log(`📷 Resim ${displayOrder} kaydedildi:`, imageUrl);
+        console.log(`📷 Resim ${displayOrder} base64 formatında kaydediliyor`);
 
         imagePromises.push(
           prisma.adImage.create({
             data: {
               adId: ad.id,
-              imageUrl,
+              imageUrl: base64Image,
               isPrimary: false,
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
@@ -1465,7 +1427,9 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       // Tüm resimleri veritabanına kaydet
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
-        console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
+        console.log(
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+        );
       }
     }
 

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import { authenticateToken } from "../middleware/auth";
+import { requireAdmin } from "../middleware/requireAdmin";
 import * as adController from "../controllers/adController";
 
 const router = Router();
@@ -74,8 +75,23 @@ router.post(
 router.get("/user/my-ads", authenticateToken, adController.getUserAds);
 
 // Admin routes
-router.get("/admin/pending", authenticateToken, adController.getPendingAds);
-router.put("/admin/:id/approve", authenticateToken, adController.approveAd);
-router.put("/admin/:id/reject", authenticateToken, adController.rejectAd);
+router.get(
+  "/admin/pending",
+  authenticateToken,
+  requireAdmin,
+  adController.getPendingAds
+);
+router.put(
+  "/admin/:id/approve",
+  authenticateToken,
+  requireAdmin,
+  adController.approveAd
+);
+router.put(
+  "/admin/:id/reject",
+  authenticateToken,
+  requireAdmin,
+  adController.rejectAd
+);
 
 export default router;
