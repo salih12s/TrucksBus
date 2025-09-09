@@ -27,6 +27,7 @@ const Profile = React.lazy(() => import("./pages/Profile"));
 const Notifications = React.lazy(() => import("./pages/Notifications"));
 const Bookmarks = React.lazy(() => import("./pages/Bookmarks"));
 const MessagesPage = React.lazy(() => import("./pages/MessagesPage"));
+const Dukkanim = React.lazy(() => import("./pages/Dukkanim"));
 const LoginNew = React.lazy(() => import("./components/auth/LoginNew"));
 const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
 const RegisterCorporate = React.lazy(
@@ -324,6 +325,15 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <Profile />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/store"
+                          element={
+                            <ProtectedRoute>
+                              <Dukkanim />
                             </ProtectedRoute>
                           }
                         />

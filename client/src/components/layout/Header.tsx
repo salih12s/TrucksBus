@@ -314,7 +314,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                     <ListItemIcon>
                       <StoreIcon fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText>Mağazam</ListItemText>
+                    <ListItemText>Dükkanım</ListItemText>
                   </MenuItem>
                 )}
 
