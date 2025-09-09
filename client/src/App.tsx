@@ -318,7 +318,7 @@ function App() {
                         path="/categories/otobus/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
                         element={
                           <ProtectedRoute>
-                            <OtobusAdForm />
+                            <OtobusAdForm onSubmit={(data) => console.log('Otobus form submitted:', data)} />
                           </ProtectedRoute>
                         }
                       />

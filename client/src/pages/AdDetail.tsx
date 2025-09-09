@@ -456,7 +456,7 @@ const AdDetail: React.FC = () => {
       parkSensoru: "Park Sensörü",
       hizSabitleme: "Hız Sabitleme",
       merkeziKilit: "Merkezi Kilit",
-      
+
       // Çekici özellikleri (resimdeki İngilizce alanlar)
       cd: "CD Çalar",
       ebv: "EBV",
