@@ -46,8 +46,98 @@ import {
   LocationOn,
 } from "@mui/icons-material";
 import Header from "../components/layout/Header";
+import GoogleMap from "../components/maps/GoogleMap";
 import api from "../api/client";
 import type { RootState } from "../store";
+
+// Türkiye şehir koordinatları (basit bir liste)
+const getCityCoordinates = (cityName: string): { lat: number; lng: number } => {
+  const cityCoords: Record<string, { lat: number; lng: number }> = {
+    Adana: { lat: 37.0, lng: 35.3213 },
+    Adıyaman: { lat: 37.7648, lng: 38.2786 },
+    Afyonkarahisar: { lat: 38.7507, lng: 30.5567 },
+    Ağrı: { lat: 39.7191, lng: 43.0503 },
+    Aksaray: { lat: 38.3687, lng: 34.037 },
+    Amasya: { lat: 40.6499, lng: 35.8353 },
+    Ankara: { lat: 39.9334, lng: 32.8597 },
+    Antalya: { lat: 36.8841, lng: 30.7056 },
+    Ardahan: { lat: 41.1105, lng: 42.7022 },
+    Artvin: { lat: 41.1828, lng: 41.8183 },
+    Aydın: { lat: 37.856, lng: 27.8416 },
+    Balıkesir: { lat: 39.6484, lng: 27.8826 },
+    Bartın: { lat: 41.5811, lng: 32.461 },
+    Batman: { lat: 37.8812, lng: 41.1351 },
+    Bayburt: { lat: 40.2552, lng: 40.2249 },
+    Bilecik: { lat: 40.0567, lng: 30.0665 },
+    Bingöl: { lat: 38.8846, lng: 40.7696 },
+    Bitlis: { lat: 38.3938, lng: 42.1232 },
+    Bolu: { lat: 40.576, lng: 31.6061 },
+    Burdur: { lat: 37.4613, lng: 30.0665 },
+    Bursa: { lat: 40.2669, lng: 29.0634 },
+    Çanakkale: { lat: 40.1553, lng: 26.4142 },
+    Çankırı: { lat: 40.6013, lng: 33.6134 },
+    Çorum: { lat: 40.5506, lng: 34.9556 },
+    Denizli: { lat: 37.7765, lng: 29.0864 },
+    Diyarbakır: { lat: 37.9144, lng: 40.2306 },
+    Düzce: { lat: 40.8438, lng: 31.1565 },
+    Edirne: { lat: 41.6818, lng: 26.5623 },
+    Elazığ: { lat: 38.681, lng: 39.2264 },
+    Erzincan: { lat: 39.75, lng: 39.5 },
+    Erzurum: { lat: 39.9, lng: 41.27 },
+    Eskişehir: { lat: 39.7767, lng: 30.5206 },
+    Gaziantep: { lat: 37.0662, lng: 37.3833 },
+    Giresun: { lat: 40.9128, lng: 38.3895 },
+    Gümüşhane: { lat: 40.4386, lng: 39.5086 },
+    Hakkari: { lat: 37.5833, lng: 43.7333 },
+    Hatay: { lat: 36.4018, lng: 36.3498 },
+    Iğdır: { lat: 39.888, lng: 44.0048 },
+    Isparta: { lat: 37.7648, lng: 30.5566 },
+    İstanbul: { lat: 41.0082, lng: 28.9784 },
+    İzmir: { lat: 38.4192, lng: 27.1287 },
+    Kahramanmaraş: { lat: 37.5858, lng: 36.9371 },
+    Karabük: { lat: 41.2061, lng: 32.6204 },
+    Karaman: { lat: 37.1759, lng: 33.2287 },
+    Kars: { lat: 40.6013, lng: 43.0975 },
+    Kastamonu: { lat: 41.3887, lng: 33.7827 },
+    Kayseri: { lat: 38.7312, lng: 35.4787 },
+    Kırıkkale: { lat: 39.8468, lng: 33.5153 },
+    Kırklareli: { lat: 41.7333, lng: 27.2167 },
+    Kırşehir: { lat: 39.1425, lng: 34.1709 },
+    Kilis: { lat: 36.7184, lng: 37.1212 },
+    Kocaeli: { lat: 40.8533, lng: 29.8815 },
+    Konya: { lat: 37.8667, lng: 32.4833 },
+    Kütahya: { lat: 39.4167, lng: 29.9833 },
+    Malatya: { lat: 38.3552, lng: 38.3095 },
+    Manisa: { lat: 38.6191, lng: 27.4289 },
+    Mardin: { lat: 37.3212, lng: 40.7245 },
+    Mersin: { lat: 36.8, lng: 34.6333 },
+    Muğla: { lat: 37.2153, lng: 28.3636 },
+    Muş: { lat: 38.9462, lng: 41.7539 },
+    Nevşehir: { lat: 38.6939, lng: 34.6857 },
+    Niğde: { lat: 37.9667, lng: 34.6833 },
+    Ordu: { lat: 40.9839, lng: 37.8764 },
+    Osmaniye: { lat: 37.0742, lng: 36.2478 },
+    Rize: { lat: 41.0201, lng: 40.5234 },
+    Sakarya: { lat: 40.694, lng: 30.4358 },
+    Samsun: { lat: 41.2928, lng: 36.3313 },
+    Siirt: { lat: 37.9333, lng: 41.95 },
+    Sinop: { lat: 42.0231, lng: 35.1531 },
+    Sivas: { lat: 39.7477, lng: 37.0179 },
+    Şanlıurfa: { lat: 37.1591, lng: 38.7969 },
+    Şırnak: { lat: 37.4187, lng: 42.4918 },
+    Tekirdağ: { lat: 40.9833, lng: 27.5167 },
+    Tokat: { lat: 40.3167, lng: 36.55 },
+    Trabzon: { lat: 41.0015, lng: 39.7178 },
+    Tunceli: { lat: 39.5401, lng: 39.4846 },
+    Uşak: { lat: 38.6823, lng: 29.4082 },
+    Van: { lat: 38.4891, lng: 43.4089 },
+    Yalova: { lat: 40.65, lng: 29.2667 },
+    Yozgat: { lat: 39.8181, lng: 34.8147 },
+    Zonguldak: { lat: 41.4564, lng: 31.7987 },
+  };
+
+  return cityCoords[cityName] || { lat: 39.9334, lng: 32.8597 }; // Ankara default
+};
 
 interface AdImage {
   id: number;
@@ -117,6 +207,12 @@ const AdDetail: React.FC = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
 
+  // Google Maps için state'ler
+  const [mapCoordinates, setMapCoordinates] = useState({
+    lat: 39.9334,
+    lng: 32.8597, // Ankara default
+  });
+
   const fetchAdDetail = useCallback(async () => {
     try {
       setLoading(true);
@@ -124,6 +220,12 @@ const AdDetail: React.FC = () => {
       const adData = response.data as AdDetail;
       setAd(adData);
       setIsFavorite(adData.isFavorite);
+
+      // Konum koordinatlarını ayarla (Türkiye şehir koordinatları)
+      if (adData.city?.name) {
+        const cityCoordinates = getCityCoordinates(adData.city.name);
+        setMapCoordinates(cityCoordinates);
+      }
 
       // Benzer ilanları da çek
       try {
@@ -226,15 +328,18 @@ const AdDetail: React.FC = () => {
   // Telefon numarasını formatla (0544 444 44 44)
   const formatPhoneNumber = (phone: string): string => {
     if (!phone) return "";
-    
+
     // Sadece rakamları al
     const numbers = phone.replace(/\D/g, "");
-    
+
     // Türk telefon numarası formatı (05XXXXXXXXX)
     if (numbers.length === 11 && numbers.startsWith("05")) {
-      return `${numbers.slice(0, 4)} ${numbers.slice(4, 7)} ${numbers.slice(7, 9)} ${numbers.slice(9, 11)}`;
+      return `${numbers.slice(0, 4)} ${numbers.slice(4, 7)} ${numbers.slice(
+        7,
+        9
+      )} ${numbers.slice(9, 11)}`;
     }
-    
+
     // Başka formatlar için varsayılan
     return phone;
   };
@@ -955,19 +1060,8 @@ const AdDetail: React.FC = () => {
           <Box
             flex={1}
             sx={{
-              position: "sticky",
-              top: 20,
-              alignSelf: "flex-start",
-              maxHeight: "calc(100vh - 40px)",
-              overflowY: "auto",
               minWidth: { md: "300px" },
               maxWidth: { md: "35%" },
-              // Scroll bar'ı gizle
-              "&::-webkit-scrollbar": {
-                display: "none",
-              },
-              "-ms-overflow-style": "none",
-              "scrollbar-width": "none",
             }}
           >
             {/* İlan Sahibi - Yeni Tasarım */}
@@ -1120,7 +1214,7 @@ const AdDetail: React.FC = () => {
                       },
                     }}
                   >
-                    {ad.user?.phone 
+                    {ad.user?.phone
                       ? formatPhoneNumber(ad.user.phone)
                       : "Telefon Belirtilmemiş"}
                   </Button>
@@ -1183,7 +1277,8 @@ const AdDetail: React.FC = () => {
                   p: 3,
                   mb: 3,
                   borderRadius: 2,
-                  background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
+                  background:
+                    "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
                 }}
               >
                 <Box display="flex" alignItems="center" mb={2}>
@@ -1192,38 +1287,29 @@ const AdDetail: React.FC = () => {
                     Konum Bilgisi
                   </Typography>
                 </Box>
-                
+
                 <Box display="flex" alignItems="center" gap={2} mb={2}>
                   <Typography variant="body1" color="text.secondary">
                     📍 {ad?.city?.name} / {ad?.district?.name}
                   </Typography>
                 </Box>
 
-                {/* Harita Placeholder - Google Maps entegrasyonu için hazır */}
-                <Box
-                  sx={{
-                    height: 200,
-                    backgroundColor: "#f5f5f5",
-                    borderRadius: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "2px dashed #ddd",
-                  }}
-                >
-                  <Box textAlign="center">
-                    <LocationOn sx={{ fontSize: 48, color: "#bbb", mb: 1 }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Google Maps entegrasyonu yakında...
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {ad?.city?.name} / {ad?.district?.name}
-                    </Typography>
-                  </Box>
+                {/* Google Maps */}
+                <Box sx={{ borderRadius: 1, overflow: "hidden" }}>
+                  <GoogleMap
+                    center={mapCoordinates}
+                    zoom={12}
+                    cityName={ad?.city?.name || ""}
+                    districtName={ad?.district?.name || ""}
+                  />
                 </Box>
 
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                  * Harita entegrasyonu geliştirme aşamasındadır
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mt: 1, display: "block" }}
+                >
+                  📍 İlan konumu (yaklaşık)
                 </Typography>
               </Paper>
             )}
@@ -1361,9 +1447,10 @@ const AdDetail: React.FC = () => {
                   },
                 }}
                 onClick={() => {
-                  const newIndex = selectedImageIndex === 0 
-                    ? ad.images.length - 1 
-                    : selectedImageIndex - 1;
+                  const newIndex =
+                    selectedImageIndex === 0
+                      ? ad.images.length - 1
+                      : selectedImageIndex - 1;
                   setSelectedImageIndex(newIndex);
                 }}
               >
@@ -1387,9 +1474,10 @@ const AdDetail: React.FC = () => {
                   },
                 }}
                 onClick={() => {
-                  const newIndex = selectedImageIndex === ad.images.length - 1 
-                    ? 0 
-                    : selectedImageIndex + 1;
+                  const newIndex =
+                    selectedImageIndex === ad.images.length - 1
+                      ? 0
+                      : selectedImageIndex + 1;
                   setSelectedImageIndex(newIndex);
                 }}
               >

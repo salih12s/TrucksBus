@@ -138,10 +138,10 @@ export const getAdById = async (req: Request, res: Response) => {
 
     // User'ın toplam ilanlarını çek
     const userTotalAds = await prisma.ad.count({
-      where: { 
+      where: {
         userId: ad.userId,
-        status: 'APPROVED'
-      }
+        status: "APPROVED",
+      },
     });
 
     // Response'u format et
@@ -149,9 +149,12 @@ export const getAdById = async (req: Request, res: Response) => {
       ...ad,
       user: {
         ...ad.user,
-        name: ad.user.companyName || `${ad.user.firstName || ''} ${ad.user.lastName || ''}`.trim() || 'Bilinmeyen Satıcı',
+        name:
+          ad.user.companyName ||
+          `${ad.user.firstName || ""} ${ad.user.lastName || ""}`.trim() ||
+          "Bilinmeyen Satıcı",
         totalAds: userTotalAds,
-      }
+      },
     };
 
     return res.json(formattedAd);
