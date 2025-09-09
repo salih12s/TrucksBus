@@ -5,10 +5,11 @@ import { CssBaseline } from "@mui/material";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor, type RootState, type AppDispatch } from "./store";
-import { getCurrentUser } from "./store/authSlice";
+import { getCurrentUser, clearCredentials } from "./store/authSlice";
+import { getTokenFromStorage } from "./utils/tokenUtils";
 
 // Components
-import { ErrorBoundary, PerformanceMonitor } from "./components/common";
+import { ErrorBoundary, PerformanceMonitor, LoadingScreen, SplashScreen } from "./components/common";
 import { PWAStatus } from "./components/pwa";
 import { ProtectedRoute } from "./components/auth";
 
@@ -163,18 +164,18 @@ const theme = createTheme({
   },
 });
 
-// Loading component
+// Enhanced Loading component
 const LoadingFallback = ({
   message = "Yükleniyor...",
+  subMessage = "İçerik hazırlanıyor..."
 }: {
   message?: string;
+  subMessage?: string;
 }) => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-      <p className="text-gray-600">{message}</p>
-    </div>
-  </div>
+  <LoadingScreen 
+    message={message}
+    subMessage={subMessage}
+  />
 );
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -186,11 +187,35 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      // Token varsa ama user bilgisi yoksa getCurrentUser çağır
-      if (token && !user && isAuthenticated) {
-        await dispatch(getCurrentUser());
+      try {
+        // Token geçerli mi kontrol et
+        const validToken = getTokenFromStorage();
+        
+        if (!validToken && token) {
+          // Token expired ise store'u temizle
+          dispatch(clearCredentials());
+          setIsInitialized(true);
+          return;
+        }
+        
+        // Token varsa ve user yoksa getCurrentUser çağır
+        // (Eğer localStorage'dan user yüklenmediyse)
+        if (token && !user && isAuthenticated) {
+          const result = await dispatch(getCurrentUser());
+          
+          // Eğer getCurrentUser başarısız olursa (token expire vb.) logout yap
+          if (getCurrentUser.rejected.match(result)) {
+            console.log('Token expired or invalid, clearing credentials...');
+            dispatch(clearCredentials());
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        // Hata durumunda credentials'ları temizle
+        dispatch(clearCredentials());
+      } finally {
+        setIsInitialized(true);
       }
-      setIsInitialized(true);
     };
 
     initializeAuth();
@@ -199,12 +224,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   // Eğer henüz initialize olmadıysa loading göster
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
-        </div>
-      </div>
+      <LoadingScreen 
+        message="TrucksBus'a Hoş Geldiniz"
+        subMessage="Sistem hazırlanıyor..."
+      />
     );
   }
 
@@ -213,15 +236,31 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <Provider store={store}>
-      <PersistGate loading={<LoadingFallback />} persistor={persistor}>
+    <SplashScreen duration={4000}>
+      <Provider store={store}>
+        <PersistGate 
+          loading={
+            <LoadingFallback 
+              message="TrucksBus'a Hoş Geldiniz" 
+              subMessage="Verileriniz yükleniyor..." 
+            />
+          } 
+          persistor={persistor}
+        >
         <AuthProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <ErrorBoundary>
               <Router>
                 <div className="min-h-screen bg-gray-50">
-                  <React.Suspense fallback={<LoadingFallback />}>
+                  <React.Suspense 
+                    fallback={
+                      <LoadingFallback 
+                        message="Sayfa Yükleniyor"
+                        subMessage="İçerik hazırlanıyor..."
+                      />
+                    }
+                  >
                     <Routes>
                       {/* Public Routes */}
                       <Route path="/" element={<MainLayout />} />
@@ -893,6 +932,7 @@ function App() {
         </AuthProvider>
       </PersistGate>
     </Provider>
+    </SplashScreen>
   );
 }
 

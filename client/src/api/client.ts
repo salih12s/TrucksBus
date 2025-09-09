@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getTokenFromStorage } from '../utils/tokenUtils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -13,7 +14,7 @@ const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = getTokenFromStorage(); // Expired token'ları otomatik temizler
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }

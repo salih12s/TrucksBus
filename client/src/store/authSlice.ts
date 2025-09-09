@@ -9,6 +9,7 @@ import {
   type RegisterRequest,
   getCurrentUser as getCurrentUserAPI,
 } from "../api/auth";
+import { getTokenFromStorage, clearTokens } from "../utils/tokenUtils";
 
 export interface User {
   id: number;
@@ -35,14 +36,33 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
-const initialState: AuthState = {
-  user: null,
-  token: null,
-  refreshToken: null,
-  isLoading: false,
-  error: null,
-  isAuthenticated: false,
+// Initial state'i localStorage'dan token ile başlat
+const getInitialState = (): AuthState => {
+  const token = getTokenFromStorage(); // Expired token'ları otomatik temizler
+  const refreshToken = localStorage.getItem("refreshToken");
+  const userStr = localStorage.getItem("user");
+  
+  let user: User | null = null;
+  if (userStr) {
+    try {
+      user = JSON.parse(userStr);
+    } catch {
+      // User parse edilemezse localStorage'ı temizle
+      localStorage.removeItem("user");
+    }
+  }
+  
+  return {
+    user: user,
+    token: token || null,
+    refreshToken: refreshToken || null,
+    isLoading: false,
+    error: null,
+    isAuthenticated: Boolean(token && user),
+  };
 };
+
+const initialState: AuthState = getInitialState();
 
 // Async thunks
 export const loginUser = createAsyncThunk(
@@ -126,8 +146,9 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.error = null;
 
-      // Token'ı localStorage'a kaydet
+      // Token ve user'ı localStorage'a kaydet
       localStorage.setItem("accessToken", action.payload.token);
+      localStorage.setItem("user", JSON.stringify(action.payload.user));
     },
     clearCredentials: (state) => {
       state.user = null;
@@ -137,8 +158,7 @@ const authSlice = createSlice({
       state.error = null;
 
       // localStorage'ı temizle
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      clearTokens();
     },
   },
   extraReducers: (builder) => {
@@ -156,12 +176,13 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
 
-        // Token'ları localStorage'a kaydet
+        // Token'ları ve user'ı localStorage'a kaydet
         localStorage.setItem("accessToken", action.payload.tokens.accessToken);
         localStorage.setItem(
           "refreshToken",
           action.payload.tokens.refreshToken
         );
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -181,12 +202,13 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
 
-        // Token'ları localStorage'a kaydet
+        // Token'ları ve user'ı localStorage'a kaydet
         localStorage.setItem("accessToken", action.payload.tokens.accessToken);
         localStorage.setItem(
           "refreshToken",
           action.payload.tokens.refreshToken
         );
+        localStorage.setItem("user", JSON.stringify(action.payload.user));
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -203,8 +225,7 @@ const authSlice = createSlice({
         state.error = null;
 
         // localStorage'ı temizle
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        clearTokens();
       })
       // Get Current User
       .addCase(getCurrentUser.pending, (state) => {
@@ -216,6 +237,9 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.isAuthenticated = true;
         state.error = null;
+        
+        // User bilgisini localStorage'a kaydet
+        localStorage.setItem("user", JSON.stringify(action.payload));
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -224,6 +248,9 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.refreshToken = null;
+        
+        // Token'ları ve user'ı localStorage'dan da temizle
+        clearTokens();
       });
   },
 });
