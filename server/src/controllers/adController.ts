@@ -1295,6 +1295,19 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       gearCount,
     } = req.body;
 
+    // Debug için form verilerini log'la
+    console.log("🚌 Otobüs form verileri:", {
+      condition,
+      color,
+      fuelType,
+      transmission,
+      passengerCapacity,
+      seatLayout,
+      seatBackScreen,
+      tireCondition,
+      fuelCapacity,
+    });
+
     // Özellikleri JSON olarak hazırla
     let featuresJson = null;
     if (features) {

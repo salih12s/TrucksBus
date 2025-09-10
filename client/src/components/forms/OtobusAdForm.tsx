@@ -17,8 +17,11 @@ import {
   Autocomplete,
   Card,
   CardContent,
+  Dialog,
+  DialogContent,
 } from "@mui/material";
-import { PhotoCamera } from "@mui/icons-material";
+import { PhotoCamera, CheckCircle } from "@mui/icons-material";
+import { useNavigate, useParams } from "react-router-dom";
 import Header from "../layout/Header";
 import apiClient from "../../api/client";
 
@@ -27,12 +30,11 @@ interface FormData {
   title: string;
   description: string;
   price: string;
-  category: string;
   condition: string;
 
   // Konum Bilgileri
-  city: string;
-  district: string;
+  cityId: string;
+  districtId: string;
 
   // Araç Bilgileri
   year: string;
@@ -57,23 +59,21 @@ interface FormData {
   showcasePhoto: File | null;
 }
 
-interface OtobusAdFormProps {
-  onSubmit: (data: FormData) => void;
-  isLoading?: boolean;
-}
+const OtobusAdForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
 
-const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
-  onSubmit,
-  isLoading = false,
-}) => {
+  // Loading ve success state'leri
+  const [loading, setLoading] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
     price: "",
-    category: "otobus",
     condition: "",
-    city: "",
-    district: "",
+    cityId: "",
+    districtId: "",
     year: "",
     mileage: "",
     enginePower: "",
@@ -120,7 +120,7 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
 
   const seatArrangementOptions = ["2+1", "2+2"];
 
-  const seatBackScreenOptions = ["7 inç", "9 inç", "10 inç", "Yok"];
+  const seatBackScreenOptions = ["7", "9", "10", "Yok"];
 
   const colorOptions = [
     "Amarant",
@@ -184,11 +184,11 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
   }, []);
 
   useEffect(() => {
-    if (formData.city) {
+    if (formData.cityId) {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/districts?city=${formData.city}`
+            `/ads/cities/${formData.cityId}/districts`
           );
           setDistricts(
             (response.data as Array<{ id: string; name: string }>) || []
@@ -199,7 +199,7 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
       };
       fetchDistricts();
     }
-  }, [formData.city]);
+  }, [formData.cityId]);
 
   const handleInputChange = (
     field: keyof FormData,
@@ -272,11 +272,6 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
     setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const removeShowcasePhoto = () => {
-    setFormData((prev) => ({ ...prev, showcasePhoto: null }));
-    setShowcasePreview("");
-  };
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -284,18 +279,118 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
     if (!formData.description.trim())
       newErrors.description = "Açıklama gerekli";
     if (!formData.price.trim()) newErrors.price = "Fiyat gerekli";
-    if (!formData.city) newErrors.city = "Şehir seçimi gerekli";
-    if (!formData.district) newErrors.district = "İlçe seçimi gerekli";
+    if (!formData.cityId) newErrors.cityId = "Şehir seçimi gerekli";
+    if (!formData.districtId) newErrors.districtId = "İlçe seçimi gerekli";
     if (!formData.year) newErrors.year = "Yıl seçimi gerekli";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const submitData = new FormData();
+
+      // Debug için console.log ekleyelim
+      console.log("🚌 Otobüs form data:", formData);
+
+      // Temel bilgiler
+      submitData.append("title", formData.title);
+      submitData.append("description", formData.description);
+      submitData.append("price", formData.price);
+      if (formData.condition && formData.condition.trim() !== "") {
+        submitData.append("condition", formData.condition);
+      }
+
+      // Konum bilgileri
+      submitData.append("cityId", formData.cityId);
+      submitData.append("districtId", formData.districtId);
+
+      // Araç bilgileri - Boş string kontrolü
+      if (formData.year && formData.year.trim() !== "") {
+        submitData.append("year", formData.year);
+      }
+      if (formData.mileage && formData.mileage.trim() !== "") {
+        submitData.append("mileage", formData.mileage);
+      }
+      if (formData.enginePower && formData.enginePower.trim() !== "") {
+        submitData.append("enginePower", formData.enginePower);
+      }
+      if (formData.fuelType && formData.fuelType.trim() !== "") {
+        submitData.append("fuelType", formData.fuelType);
+      }
+      if (formData.transmission && formData.transmission.trim() !== "") {
+        submitData.append("transmission", formData.transmission);
+      }
+
+      // Otobüs özel bilgileri - Boş string kontrolü ekleyelim
+      if (formData.capacity && formData.capacity.trim() !== "") {
+        submitData.append("passengerCapacity", formData.capacity);
+      }
+      if (formData.seatArrangement && formData.seatArrangement.trim() !== "") {
+        submitData.append("seatLayout", formData.seatArrangement);
+      }
+      if (formData.seatBackScreen && formData.seatBackScreen.trim() !== "") {
+        submitData.append("seatBackScreen", formData.seatBackScreen);
+      }
+      if (formData.color && formData.color.trim() !== "") {
+        submitData.append("color", formData.color);
+      }
+      if (formData.fuelCapacity && formData.fuelCapacity.trim() !== "") {
+        submitData.append("fuelCapacity", formData.fuelCapacity);
+      }
+      if (formData.tireCondition && formData.tireCondition.trim() !== "") {
+        submitData.append("tireCondition", formData.tireCondition);
+      }
+
+      // Özellikler - JSON olarak gönder
+      if (formData.features.length > 0) {
+        // Features array'ini object'e çevir
+        const featuresObject: Record<string, boolean> = {};
+        formData.features.forEach((feature) => {
+          featuresObject[feature] = true;
+        });
+        submitData.append("features", JSON.stringify(featuresObject));
+      }
+
+      // URL parametrelerini ekle
+      if (categorySlug) submitData.append("categorySlug", categorySlug);
+      if (brandSlug) submitData.append("brandSlug", brandSlug);
+      if (modelSlug) submitData.append("modelSlug", modelSlug);
+      if (variantSlug) submitData.append("variantSlug", variantSlug);
+
+      // Vitrin fotoğrafı
+      if (formData.showcasePhoto) {
+        submitData.append("showcasePhoto", formData.showcasePhoto);
+      }
+
+      // Diğer fotoğraflar - server photo_0, photo_1, photo_2 şeklinde bekliyor
+      formData.photos.forEach((photo, index) => {
+        submitData.append(`photo_${index}`, photo);
+      });
+
+      const response = await apiClient.post("/ads/otobus", submitData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        setSubmitSuccess(true);
+      }
+    } catch (error) {
+      console.error("İlan gönderme hatası:", error);
+      // Hata durumunu handle edebiliriz
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -449,26 +544,6 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
                     </Select>
                   </FormControl>
                 </Box>
-
-                <Box>
-                  <FormControl fullWidth error={!!errors.condition}>
-                    <InputLabel>Durumu</InputLabel>
-                    <Select
-                      value={formData.condition}
-                      onChange={(e) =>
-                        handleInputChange("condition", e.target.value)
-                      }
-                      label="Durumu"
-                      sx={{ borderRadius: 3 }}
-                    >
-                      {conditionOptions.map((option) => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
               </CardContent>
             </Card>
 
@@ -508,11 +583,11 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
                     options={cities}
                     getOptionLabel={(option) => option.name}
                     value={
-                      cities.find((city) => city.id === formData.city) || null
+                      cities.find((city) => city.id === formData.cityId) || null
                     }
                     onChange={(_, newValue) => {
-                      handleInputChange("city", newValue?.id || "");
-                      handleInputChange("district", "");
+                      handleInputChange("cityId", newValue?.id || "");
+                      handleInputChange("districtId", "");
                     }}
                     renderInput={(params) => (
                       <TextField
@@ -537,13 +612,13 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
                     getOptionLabel={(option) => option.name}
                     value={
                       districts.find(
-                        (district) => district.id === formData.district
+                        (district) => district.id === formData.districtId
                       ) || null
                     }
                     onChange={(_, newValue) =>
-                      handleInputChange("district", newValue?.id || "")
+                      handleInputChange("districtId", newValue?.id || "")
                     }
-                    disabled={!formData.city}
+                    disabled={!formData.cityId}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -875,275 +950,379 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
               </CardContent>
             </Card>
 
-            {/* 📷 Fotoğraflar */}
+            {/* � Fotoğraflar */}
             <Card
               elevation={6}
               sx={{
                 borderRadius: 3,
                 background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-                border: "1px solid #e1e8ed",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                border: "1px solid #e2e8f0",
+                transition: "all 0.3s ease-in-out",
                 "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
                 },
               }}
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  <Box
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      borderRadius: "50%",
+                      p: 1.5,
+                      mr: 2,
+                    }}
+                  >
+                    <PhotoCamera sx={{ color: "white", fontSize: 28 }} />
+                  </Box>
                   <Typography
                     variant="h5"
                     sx={{
-                      fontWeight: "bold",
-                      color: "primary.main",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
+                      fontWeight: 700,
+                      background:
+                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
                     }}
                   >
-                    📷 Fotoğraflar
+                    Fotoğraflar
                   </Typography>
                 </Box>
 
-                {/* Vitrin Fotoğrafı */}
-                <Box sx={{ mb: 4 }}>
-                  <Typography
-                    variant="h6"
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 4, textAlign: "center", fontStyle: "italic" }}
+                >
+                  Kaliteli fotoğraflar ile ilanınızın dikkat çekmesini sağlayın
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 4,
+                    mt: 3,
+                  }}
+                >
+                  {/* Vitrin Fotoğrafı */}
+                  <Card
+                    variant="outlined"
                     sx={{
-                      mb: 2,
-                      color: "primary.main",
-                      fontWeight: 600,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 1,
+                      p: 3,
+                      borderRadius: 3,
+                      background:
+                        "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                      border: "2px dashed #0284c7",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease-in-out",
+                      "&:hover": {
+                        borderColor: "primary.main",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
+                      },
                     }}
                   >
-                    ⭐ Vitrin Fotoğrafı
-                    <Chip label="Zorunlu" color="error" size="small" />
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 3, textAlign: "center" }}
-                  >
-                    Bu fotoğraf ilanınızın kapak resmi olacak ve arama
-                    sonuçlarında görünecek
-                  </Typography>
-
-                  {!formData.showcasePhoto ? (
-                    <Box>
-                      <input
-                        accept="image/*"
-                        style={{ display: "none" }}
-                        id="showcase-photo"
-                        type="file"
-                        onChange={(e) => handlePhotoUpload(e, true)}
-                      />
-                      <label htmlFor="showcase-photo">
-                        <Button
-                          variant="contained"
-                          component="span"
-                          startIcon={<PhotoCamera />}
-                          sx={{
-                            width: "100%",
-                            py: 3,
-                            fontSize: "1.1rem",
-                            background:
-                              "linear-gradient(45deg, #313B4C 30%, #D34237 90%)",
-                            "&:hover": {
-                              background:
-                                "linear-gradient(45deg, #D34237 30%, #313B4C 90%)",
-                            },
-                          }}
-                        >
-                          Vitrin Fotoğrafı Seç
-                        </Button>
-                      </label>
-                    </Box>
-                  ) : (
-                    <Box sx={{ textAlign: "center" }}>
-                      <Box
-                        sx={{
-                          position: "relative",
-                          display: "inline-block",
-                          borderRadius: 3,
-                          overflow: "hidden",
-                          boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-                          border: "3px solid #4CAF50",
-                        }}
-                      >
-                        <img
-                          src={showcasePreview}
-                          alt="Vitrin Fotoğrafı"
-                          style={{
-                            width: "300px",
-                            height: "200px",
-                            objectFit: "cover",
-                            display: "block",
-                          }}
-                        />
-                        <Button
-                          onClick={removeShowcasePhoto}
-                          sx={{
-                            position: "absolute",
-                            top: 8,
-                            right: 8,
-                            minWidth: "auto",
-                            width: 32,
-                            height: 32,
-                            borderRadius: "50%",
-                            background: "rgba(244, 67, 54, 0.9)",
-                            color: "white",
-                            "&:hover": {
-                              background: "rgba(244, 67, 54, 1)",
-                            },
-                          }}
-                        >
-                          ×
-                        </Button>
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        color="success.main"
-                        sx={{ mt: 2, fontWeight: 600 }}
-                      >
-                        ✅ Vitrin fotoğrafı başarıyla yüklendi
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-
-                {/* Diğer Fotoğraflar */}
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      mb: 2,
-                      color: "primary.main",
-                      fontWeight: 600,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 1,
-                    }}
-                  >
-                    📷 Diğer Fotoğraflar
-                    <Chip label="İsteğe Bağlı" color="info" size="small" />
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 3 }}
-                  >
-                    Otobüsünüzün farklı açılardan fotoğraflarını ekleyin (En
-                    fazla 15 adet)
-                  </Typography>
-                  <input
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    id="other-photos"
-                    type="file"
-                    multiple
-                    onChange={(e) => handlePhotoUpload(e, false)}
-                  />
-                  <label htmlFor="other-photos">
-                    <Button
-                      variant="outlined"
-                      component="span"
-                      startIcon={<PhotoCamera />}
-                      disabled={formData.photos.length >= 15}
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 2,
+                        color: "primary.main",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1,
+                      }}
                     >
-                      Fotoğraf Ekle ({formData.photos.length}/15)
-                    </Button>
-                  </label>
-
-                  {formData.photos.length > 0 && (
-                    <Box sx={{ mt: 3 }}>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{ mb: 2, fontWeight: 600 }}
-                      >
-                        Yüklenen Fotoğraflar ({formData.photos.length}/15)
-                      </Typography>
-
-                      {/* Fotoğraf önizlemeleri grid */}
-                      <Box
+                      🖼️ Vitrin Fotoğrafı
+                      <Chip label="Zorunlu" color="error" size="small" />
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 3 }}
+                    >
+                      Ana fotoğraf olarak kullanılacak en iyi fotoğrafınızı
+                      seçin
+                    </Typography>
+                    <input
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      id="showcase-photo"
+                      type="file"
+                      onChange={(e) => handlePhotoUpload(e, true)}
+                    />
+                    <label htmlFor="showcase-photo">
+                      <Button
+                        variant="contained"
+                        component="span"
+                        startIcon={<PhotoCamera />}
                         sx={{
-                          display: "grid",
-                          gridTemplateColumns:
-                            "repeat(auto-fill, minmax(120px, 1fr))",
-                          gap: 2,
-                          maxHeight: "300px",
-                          overflowY: "auto",
-                          p: 1,
-                          border: "1px solid #e0e0e0",
-                          borderRadius: 2,
-                          background: "#fafafa",
+                          borderRadius: 3,
+                          py: 1.5,
+                          px: 3,
+                          fontWeight: 600,
+                          background:
+                            "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(45deg, #1565c0 30%, #1976d2 90%)",
+                          },
                         }}
                       >
-                        {photoPreviews.map((preview, index) => (
+                        Vitrin Fotoğrafı Seç
+                      </Button>
+                    </label>
+
+                    {/* Vitrin fotoğrafı önizlemesi */}
+                    {showcasePreview && (
+                      <Box sx={{ mt: 3 }}>
+                        <Box
+                          sx={{
+                            position: "relative",
+                            display: "inline-block",
+                            borderRadius: 2,
+                            overflow: "hidden",
+                            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                          }}
+                        >
+                          <img
+                            src={showcasePreview}
+                            alt="Vitrin fotoğrafı önizleme"
+                            style={{
+                              width: "200px",
+                              height: "150px",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
                           <Box
-                            key={index}
                             sx={{
-                              position: "relative",
-                              borderRadius: 2,
-                              overflow: "hidden",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                              transition: "transform 0.2s ease-in-out",
-                              "&:hover": {
-                                transform: "scale(1.05)",
-                                boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
-                              },
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              background: "rgba(0,0,0,0.7)",
+                              borderRadius: "50%",
+                              p: 0.5,
+                              cursor: "pointer",
+                              "&:hover": { background: "rgba(0,0,0,0.9)" },
+                            }}
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                showcasePhoto: null,
+                              }));
+                              setShowcasePreview("");
                             }}
                           >
-                            <img
-                              src={preview}
-                              alt={`Fotoğraf ${index + 1}`}
-                              style={{
-                                width: "100%",
-                                height: "80px",
-                                objectFit: "cover",
-                                display: "block",
-                              }}
-                            />
+                            <Typography
+                              sx={{ color: "white", fontSize: "14px" }}
+                            >
+                              ✕
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <Typography
+                          variant="caption"
+                          color="primary"
+                          sx={{ display: "block", mt: 1 }}
+                        >
+                          Vitrin Fotoğrafı ✓
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {formData.showcasePhoto && !showcasePreview && (
+                      <Chip
+                        label={formData.showcasePhoto.name}
+                        color="primary"
+                        sx={{ ml: 2 }}
+                      />
+                    )}
+                  </Card>
+
+                  {/* Diğer Fotoğraflar */}
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      p: 3,
+                      borderRadius: 3,
+                      background:
+                        "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                      border: "2px dashed #64748b",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease-in-out",
+                      "&:hover": {
+                        borderColor: "primary.main",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 2,
+                        color: "primary.main",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1,
+                      }}
+                    >
+                      📷 Diğer Fotoğraflar
+                      <Chip label="İsteğe Bağlı" color="info" size="small" />
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 3 }}
+                    >
+                      Otobüsünüzün farklı açılardan fotoğraflarını ekleyin (En
+                      fazla 15 adet)
+                    </Typography>
+                    <input
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      id="other-photos"
+                      type="file"
+                      multiple
+                      onChange={(e) => handlePhotoUpload(e, false)}
+                    />
+                    <label htmlFor="other-photos">
+                      <Button
+                        variant="outlined"
+                        component="span"
+                        startIcon={<PhotoCamera />}
+                        disabled={formData.photos.length >= 15}
+                      >
+                        Fotoğraf Ekle ({formData.photos.length}/15)
+                      </Button>
+                    </label>
+
+                    {formData.photos.length > 0 && (
+                      <Box sx={{ mt: 3 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ mb: 2, fontWeight: 600 }}
+                        >
+                          Yüklenen Fotoğraflar ({formData.photos.length}/15)
+                        </Typography>
+
+                        {/* Fotoğraf önizlemeleri grid */}
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fill, minmax(120px, 1fr))",
+                            gap: 2,
+                            maxHeight: "300px",
+                            overflowY: "auto",
+                            p: 1,
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                            background: "#fafafa",
+                          }}
+                        >
+                          {photoPreviews.map((preview, index) => (
                             <Box
+                              key={index}
                               sx={{
-                                position: "absolute",
-                                top: 4,
-                                right: 4,
-                                background: "rgba(255,0,0,0.8)",
-                                borderRadius: "50%",
-                                width: 20,
-                                height: 20,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                cursor: "pointer",
-                                transition: "all 0.2s ease-in-out",
+                                position: "relative",
+                                borderRadius: 2,
+                                overflow: "hidden",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                                transition: "transform 0.2s ease-in-out",
                                 "&:hover": {
-                                  background: "rgba(255,0,0,1)",
-                                  transform: "scale(1.1)",
+                                  transform: "scale(1.05)",
+                                  boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
                                 },
                               }}
-                              onClick={() => removePhoto(index)}
                             >
-                              <Typography
+                              <img
+                                src={preview}
+                                alt={`Fotoğraf ${index + 1}`}
+                                style={{
+                                  width: "100%",
+                                  height: "80px",
+                                  objectFit: "cover",
+                                  display: "block",
+                                }}
+                              />
+                              <Box
                                 sx={{
+                                  position: "absolute",
+                                  top: 4,
+                                  right: 4,
+                                  background: "rgba(255,0,0,0.8)",
+                                  borderRadius: "50%",
+                                  width: 20,
+                                  height: 20,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  cursor: "pointer",
+                                  "&:hover": { background: "rgba(255,0,0,1)" },
+                                }}
+                                onClick={() => removePhoto(index)}
+                              >
+                                <Typography
+                                  sx={{
+                                    color: "white",
+                                    fontSize: "12px",
+                                    lineHeight: 1,
+                                  }}
+                                >
+                                  ✕
+                                </Typography>
+                              </Box>
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  background: "rgba(0,0,0,0.7)",
                                   color: "white",
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  lineHeight: 1,
+                                  textAlign: "center",
+                                  py: 0.5,
                                 }}
                               >
-                                ×
-                              </Typography>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ fontSize: "10px" }}
+                                >
+                                  {index + 1}
+                                </Typography>
+                              </Box>
                             </Box>
+                          ))}
+                        </Box>
+
+                        {/* Eski chip görünümü - fallback */}
+                        {photoPreviews.length === 0 && (
+                          <Box
+                            sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}
+                          >
+                            {formData.photos.map((photo, index) => (
+                              <Chip
+                                key={index}
+                                label={photo.name}
+                                onDelete={() => removePhoto(index)}
+                                color="secondary"
+                              />
+                            ))}
                           </Box>
-                        ))}
+                        )}
                       </Box>
-                    </Box>
-                  )}
+                    )}
+                  </Card>
                 </Box>
               </CardContent>
             </Card>
@@ -1161,30 +1340,79 @@ const OtobusAdForm: React.FC<OtobusAdFormProps> = ({
                 type="submit"
                 variant="contained"
                 size="large"
-                disabled={isLoading}
+                disabled={loading}
                 sx={{
                   minWidth: 250,
                   py: 2,
                   fontSize: "1.2rem",
                   fontWeight: "bold",
                   background:
-                    "linear-gradient(45deg, #313B4C 30%, #D34237 90%)",
+                    "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
                   "&:hover": {
                     background:
-                      "linear-gradient(45deg, #D34237 30%, #313B4C 90%)",
+                      "linear-gradient(45deg, #1565c0 30%, #1976d2 90%)",
                   },
                 }}
               >
-                {isLoading ? (
-                  <CircularProgress size={28} />
-                ) : (
-                  "🚀 İlanı Yayınla"
-                )}
+                {loading ? <CircularProgress size={28} /> : "🚀 İlanı Yayınla"}
               </Button>
             </Box>
           </Box>
         </form>
       </Container>
+
+      {/* Success Modal */}
+      <Dialog
+        open={submitSuccess}
+        onClose={() => setSubmitSuccess(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 2,
+          },
+        }}
+      >
+        <DialogContent sx={{ textAlign: "center", py: 4 }}>
+          <CheckCircle
+            sx={{
+              fontSize: 80,
+              color: "success.main",
+              mb: 2,
+            }}
+          />
+          <Typography variant="h5" component="h2" gutterBottom>
+            İlanınız Başarıyla Oluşturuldu!
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Otobüs ilanınız başarıyla yayınlandı. İlanınızı yönetmek için
+            ilanlarım sayfasına gidebilirsiniz.
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setSubmitSuccess(false);
+                navigate("/");
+              }}
+              sx={{ minWidth: 120 }}
+            >
+              Ana Sayfa
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setSubmitSuccess(false);
+                navigate("/user/ads");
+              }}
+              sx={{ minWidth: 120 }}
+            >
+              İlanlarım
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

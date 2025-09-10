@@ -293,6 +293,84 @@ const AdDetail: React.FC = () => {
     }).format(price);
   };
 
+  // Kategori bazında geçerli alanları filtrele
+  const getValidFieldsForCategory = (categorySlug: string): string[] => {
+    switch (categorySlug) {
+      case "otobus":
+        return [
+          "condition",
+          "color",
+          "fuelType",
+          "transmission",
+          "enginePower",
+          "passengerCapacity",
+          "seatLayout",
+          "seatBackScreen",
+          "fuelCapacity",
+          "tireCondition",
+        ];
+      case "minibus-midibus":
+      case "minibus":
+        return [
+          "condition",
+          "engineVolume",
+          "drivetrain",
+          "color",
+          "seatCount",
+          "roofType",
+          "chassis",
+          "transmission",
+          "fuelType",
+          "exchange",
+          "plateType",
+          "plateNumber",
+          "address",
+          "detailedInfo",
+        ];
+      case "kamyon-kamyonet":
+      case "kamyon":
+        return [
+          "condition",
+          "motorPower",
+          "drivetrain",
+          "color",
+          "loadCapacity",
+          "cabin",
+          "tireCondition",
+          "transmission",
+          "fuelType",
+          "superstructure",
+          "exchange",
+          "plateType",
+          "plateNumber",
+          "address",
+          "detailedInfo",
+        ];
+      case "cekici":
+        return [
+          "condition",
+          "color",
+          "fuelType",
+          "transmission",
+          "enginePower",
+          "engineCapacity",
+          "cabinType",
+          "bedCount",
+          "dorseAvailable",
+          "plateType",
+          "plateNumber",
+          "tireCondition",
+          "damageRecord",
+          "paintChange",
+          "exchange",
+          "detailedInfo",
+        ];
+      default:
+        // Filtreleme yapma, tüm alanları göster
+        return [];
+    }
+  };
+
   // Güvenli value render fonksiyonu
   const renderFieldValue = (value: unknown): string => {
     if (value === null || value === undefined || value === "") {
@@ -423,9 +501,11 @@ const AdDetail: React.FC = () => {
       paintChange: "Boya Değişimi",
       engineCapacity: "Motor Hacmi",
 
-      // Otobüs özellikleri
+      // Otobüs özellikleri - Sadece formda olan alanlar
       passengerCapacity: "Yolcu Kapasitesi",
-      doorCount: "Kapı Sayısı",
+      seatLayout: "Koltuk Düzeni",
+      seatBackScreen: "Koltuk Arkası Ekran",
+      fuelCapacity: "Yakıt Kapasitesi",
 
       // Güvenlik ve konfor özellikleri
       abs: "ABS",
@@ -962,7 +1042,10 @@ const AdDetail: React.FC = () => {
                 </Typography>
               </Box>
 
-              {ad.customFields && Object.keys(ad.customFields).length > 0 ? (
+              {(ad.customFields && Object.keys(ad.customFields).length > 0) ||
+              ad.year ||
+              ad.mileage ||
+              ad.price ? (
                 <Box sx={{ p: 3 }}>
                   <Box
                     sx={{
@@ -972,52 +1055,155 @@ const AdDetail: React.FC = () => {
                       gap: 2,
                     }}
                   >
-                    {Object.entries(ad.customFields)
-                      .filter(
-                        ([key]) =>
-                          key !== "detailFeatures" && key !== "features"
-                      )
-                      .map(([key, value]) => (
+                    {/* Ana alanları göster */}
+                    {ad.year && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          py: 1.5,
+                          px: 2,
+                          backgroundColor: "#fafafa",
+                          borderRadius: 1,
+                          border: "1px solid #f0f0f0",
+                        }}
+                      >
                         <Box
-                          key={key}
                           sx={{
                             display: "flex",
-                            justifyContent: "space-between",
                             alignItems: "center",
-                            py: 1.5,
-                            px: 2,
-                            backgroundColor: "#fafafa",
-                            borderRadius: 1,
-                            border: "1px solid #f0f0f0",
+                            gap: 1,
                           }}
                         >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            {getSpecificationIcon(key)}
-                            <Typography
-                              variant="body2"
-                              sx={{ fontWeight: "500", color: "#34495e" }}
-                            >
-                              {getSpecificationLabel(key)}
-                            </Typography>
-                          </Box>
+                          {getSpecificationIcon("year")}
                           <Typography
                             variant="body2"
-                            sx={{
-                              fontWeight: "600",
-                              color: "#2c3e50",
-                              textAlign: "right",
-                            }}
+                            sx={{ fontWeight: "500", color: "#34495e" }}
                           >
-                            {renderFieldValue(value)}
+                            Model Yılı
                           </Typography>
                         </Box>
-                      ))}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: "600",
+                            color: "#2c3e50",
+                            textAlign: "right",
+                          }}
+                        >
+                          {ad.year}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {ad.mileage && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          py: 1.5,
+                          px: 2,
+                          backgroundColor: "#fafafa",
+                          borderRadius: 1,
+                          border: "1px solid #f0f0f0",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                          }}
+                        >
+                          {getSpecificationIcon("mileage")}
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: "500", color: "#34495e" }}
+                          >
+                            Kilometre
+                          </Typography>
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: "600",
+                            color: "#2c3e50",
+                            textAlign: "right",
+                          }}
+                        >
+                          {ad.mileage?.toLocaleString()} km
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* CustomFields alanlarını göster - Kategori bazında filtrele */}
+                    {ad.customFields &&
+                      Object.entries(ad.customFields)
+                        .filter(([key]) => {
+                          // Genel filtreleme
+                          if (
+                            key === "detailFeatures" ||
+                            key === "features" ||
+                            key === "cityId" ||
+                            key === "districtId"
+                          ) {
+                            return false;
+                          }
+
+                          // Kategori bazında filtreleme - tüm kategoriler için uygula
+                          const validFields = getValidFieldsForCategory(
+                            ad.category?.slug || ""
+                          );
+                          if (validFields.length > 0) {
+                            return validFields.includes(key);
+                          }
+
+                          // Tanımlanmamış kategoriler için tüm alanları göster
+                          return true;
+                        })
+                        .map(([key, value]) => (
+                          <Box
+                            key={key}
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              py: 1.5,
+                              px: 2,
+                              backgroundColor: "#fafafa",
+                              borderRadius: 1,
+                              border: "1px solid #f0f0f0",
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              {getSpecificationIcon(key)}
+                              <Typography
+                                variant="body2"
+                                sx={{ fontWeight: "500", color: "#34495e" }}
+                              >
+                                {getSpecificationLabel(key)}
+                              </Typography>
+                            </Box>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: "600",
+                                color: "#2c3e50",
+                                textAlign: "right",
+                              }}
+                            >
+                              {renderFieldValue(value)}
+                            </Typography>
+                          </Box>
+                        ))}
                   </Box>
                 </Box>
               ) : (
