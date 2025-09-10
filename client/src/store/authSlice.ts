@@ -191,7 +191,7 @@ const authSlice = createSlice({
         };
         state.user = {
           ...user,
-          createdAt: user.createdAt || new Date().toISOString()
+          createdAt: user.createdAt || new Date().toISOString(),
         };
         state.token = action.payload.tokens.accessToken;
         state.refreshToken = action.payload.tokens.refreshToken;
@@ -237,7 +237,7 @@ const authSlice = createSlice({
         };
         state.user = {
           ...user,
-          createdAt: user.createdAt || new Date().toISOString()
+          createdAt: user.createdAt || new Date().toISOString(),
         };
         state.token = action.payload.tokens.accessToken;
         state.refreshToken = action.payload.tokens.refreshToken;
@@ -296,7 +296,7 @@ const authSlice = createSlice({
           };
           state.user = {
             ...user,
-            createdAt: user.createdAt || new Date().toISOString()
+            createdAt: user.createdAt || new Date().toISOString(),
           };
         }
         state.isAuthenticated = true;
