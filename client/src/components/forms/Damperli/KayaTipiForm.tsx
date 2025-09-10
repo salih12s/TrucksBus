@@ -12,23 +12,19 @@ import {
   Button,
   Card,
   CardContent,
+  CardMedia,
   Divider,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Chip,
+  IconButton,
 } from "@mui/material";
-import { CheckCircle } from "@mui/icons-material";
+import { CheckCircle, PhotoCamera, Close } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../layout/Header";
 import apiClient from "../../../api/client";
-
-interface User {
-  id: number;
-  fullName: string;
-  phone: string;
-  email: string;
-}
 
 interface City {
   id: number;
@@ -62,11 +58,6 @@ interface FormData {
   photos: File[];
   showcasePhoto: File | null;
 
-  // İletişim Bilgileri
-  sellerName: string;
-  phone: string;
-  email: string;
-
   // Ekstra
   warranty: string;
   negotiable: string;
@@ -86,10 +77,8 @@ const KayaTipiForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-
-  // User variable'ı sadece form verilerini doldurmak için kullanılıyor
-  console.log("User data loaded:", user?.fullName);
+  const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -111,11 +100,6 @@ const KayaTipiForm: React.FC = () => {
     photos: [],
     showcasePhoto: null,
 
-    // İletişim Bilgileri
-    sellerName: "",
-    phone: "",
-    email: "",
-
     // Ekstra
     warranty: "hayir",
     negotiable: "hayir",
@@ -123,28 +107,6 @@ const KayaTipiForm: React.FC = () => {
 
     detailedInfo: "",
   });
-
-  // Kullanıcı bilgilerini yükle
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await apiClient.get("/auth/profile");
-        const userData = response.data as User;
-        setUser(userData);
-
-        // Form verilerini kullanıcı bilgileriyle doldur
-        setFormData((prev) => ({
-          ...prev,
-          sellerName: userData.fullName || "",
-          phone: userData.phone || "",
-          email: userData.email || "",
-        }));
-      } catch (error) {
-        console.error("Kullanıcı bilgileri yüklenirken hata:", error);
-      }
-    };
-    fetchUser();
-  }, []);
 
   // Şehirleri yükle
   useEffect(() => {
@@ -173,6 +135,9 @@ const KayaTipiForm: React.FC = () => {
         }
       };
       fetchDistricts();
+    } else {
+      setDistricts([]);
+      setFormData((prev) => ({ ...prev, districtId: "" }));
     }
   }, [formData.cityId]);
 
@@ -183,19 +148,48 @@ const KayaTipiForm: React.FC = () => {
     }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      if (e.target.name === "showcasePhoto") {
-        setFormData((prev) => ({
-          ...prev,
-          showcasePhoto: files[0] || null,
-        }));
+  const handlePhotoUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    isShowcase = false
+  ) => {
+    const files = event.target.files;
+    if (files) {
+      if (isShowcase) {
+        const file = files[0];
+        setFormData((prev) => ({ ...prev, showcasePhoto: file }));
+
+        // Vitrin fotoğrafı önizlemesi oluştur
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setShowcasePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
       } else {
-        setFormData((prev) => ({
-          ...prev,
-          photos: [...prev.photos, ...files].slice(0, 10), // Max 10 photo
-        }));
+        const currentPhotos = formData.photos;
+        const newPhotos = Array.from(files);
+        const totalPhotos = currentPhotos.length + newPhotos.length;
+
+        if (totalPhotos <= 15) {
+          setFormData((prev) => ({
+            ...prev,
+            photos: [...currentPhotos, ...newPhotos],
+          }));
+
+          // Yeni fotoğraflar için önizlemeler oluştur
+          const newPreviews: string[] = [];
+          Array.from(files).forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              newPreviews.push(e.target?.result as string);
+              if (newPreviews.length === files.length) {
+                setPhotoPreviews((prev) => [...prev, ...newPreviews]);
+              }
+            };
+            reader.readAsDataURL(file);
+          });
+        } else {
+          alert("En fazla 15 fotoğraf yükleyebilirsiniz");
+        }
       }
     }
   };
@@ -205,6 +199,8 @@ const KayaTipiForm: React.FC = () => {
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index),
     }));
+    // Önizlemeyi de kaldır
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Sayı formatlama fonksiyonları
@@ -491,50 +487,6 @@ const KayaTipiForm: React.FC = () => {
             </Box>
 
             <Divider sx={{ my: 4 }} />
-
-            {/* İletişim Bilgileri */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📞 İletişim Bilgileri
-            </Typography>
-
-            <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
-              <TextField
-                fullWidth
-                label="Satıcı Adı *"
-                value={formData.sellerName}
-                onChange={(e) =>
-                  handleInputChange("sellerName", e.target.value)
-                }
-                disabled
-                helperText="Profil bilgilerinizden otomatik olarak doldurulmuştur"
-                required
-              />
-
-              <Box
-                sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-              >
-                <TextField
-                  fullWidth
-                  label="Telefon *"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  disabled
-                  helperText="Profil bilgilerinizden otomatik olarak doldurulmuştur"
-                  required
-                />
-
-                <TextField
-                  fullWidth
-                  type="email"
-                  label="E-posta"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  disabled
-                  helperText="Profil bilgilerinizden otomatik olarak doldurulmuştur"
-                />
-              </Box>
-            </Box>
-
             <Divider sx={{ my: 4 }} />
 
             {/* Ek Seçenekler */}
@@ -595,90 +547,318 @@ const KayaTipiForm: React.FC = () => {
 
             <Divider sx={{ my: 4 }} />
 
-            {/* Fotoğraflar */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📸 Fotoğraflar
-            </Typography>
-
-            {/* Vitrin Fotoğrafı */}
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Vitrin Fotoğrafı
-                </Typography>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  name="showcasePhoto"
-                  style={{ marginBottom: "16px" }}
-                />
-                {formData.showcasePhoto && (
-                  <Box sx={{ mt: 2 }}>
-                    <img
-                      src={URL.createObjectURL(formData.showcasePhoto)}
-                      alt="Vitrin"
-                      style={{
-                        width: "200px",
-                        height: "150px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Diğer Fotoğraflar */}
-            <Card sx={{ mb: 4 }}>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Diğer Fotoğraflar (En fazla 10 adet)
-                </Typography>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleFileChange}
-                  style={{ marginBottom: "16px" }}
-                />
-
-                {formData.photos.length > 0 && (
+            {/* 📸 Fotoğraflar */}
+            <Card
+              elevation={6}
+              sx={{
+                borderRadius: 3,
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+                border: "1px solid #e2e8f0",
+                transition: "all 0.3s ease-in-out",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                },
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
                   <Box
-                    sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 2 }}
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      borderRadius: "50%",
+                      p: 1.5,
+                      mr: 2,
+                    }}
                   >
-                    {formData.photos.map((photo, index) => (
-                      <Box key={index} sx={{ position: "relative" }}>
-                        <img
-                          src={URL.createObjectURL(photo)}
-                          alt={`Fotoğraf ${index + 1}`}
-                          style={{
-                            width: "150px",
-                            height: "100px",
-                            objectFit: "cover",
-                            borderRadius: "8px",
-                          }}
-                        />
-                        <Button
-                          size="small"
-                          onClick={() => removePhoto(index)}
+                    <PhotoCamera sx={{ color: "white", fontSize: 28 }} />
+                  </Box>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                      background:
+                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                    }}
+                  >
+                    Fotoğraflar
+                  </Typography>
+                </Box>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 4, textAlign: "center", fontStyle: "italic" }}
+                >
+                  Kaliteli fotoğraflar ile ilanınızın dikkat çekmesini sağlayın
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                    gap: 4,
+                    mt: 3,
+                  }}
+                >
+                  {/* Vitrin Fotoğrafı */}
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      p: 3,
+                      borderRadius: 3,
+                      background:
+                        "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                      border: "2px dashed #0284c7",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease-in-out",
+                      "&:hover": {
+                        borderColor: "primary.main",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 2,
+                        color: "primary.main",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1,
+                      }}
+                    >
+                      🖼️ Vitrin Fotoğrafı
+                      <Chip label="Zorunlu" color="error" size="small" />
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 3 }}
+                    >
+                      Ana fotoğraf olarak kullanılacak en iyi fotoğrafınızı
+                      seçin
+                    </Typography>
+                    <input
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      id="showcase-photo"
+                      type="file"
+                      onChange={(e) => handlePhotoUpload(e, true)}
+                    />
+                    <label htmlFor="showcase-photo">
+                      <Button
+                        variant="contained"
+                        component="span"
+                        startIcon={<PhotoCamera />}
+                        sx={{
+                          borderRadius: 3,
+                          py: 1.5,
+                          px: 3,
+                          fontWeight: 600,
+                          background:
+                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)",
+                          },
+                        }}
+                      >
+                        Fotoğraf Seç
+                      </Button>
+                    </label>
+
+                    {/* Vitrin Fotoğrafı Önizlemesi */}
+                    {showcasePreview && (
+                      <Box sx={{ mt: 3 }}>
+                        <Card
+                          elevation={3}
                           sx={{
-                            position: "absolute",
-                            top: -10,
-                            right: -10,
-                            minWidth: "auto",
-                            backgroundColor: "red",
-                            color: "white",
-                            "&:hover": { backgroundColor: "darkred" },
+                            position: "relative",
+                            borderRadius: 2,
+                            overflow: "hidden",
                           }}
                         >
-                          ×
-                        </Button>
+                          <CardMedia
+                            component="img"
+                            height="200"
+                            image={showcasePreview}
+                            alt="Vitrin fotoğrafı önizlemesi"
+                            sx={{ objectFit: "cover" }}
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                showcasePhoto: null,
+                              }));
+                              setShowcasePreview(null);
+                            }}
+                            sx={{
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              backgroundColor: "rgba(255,255,255,0.9)",
+                              "&:hover": {
+                                backgroundColor: "rgba(255,255,255,1)",
+                              },
+                            }}
+                          >
+                            <Close fontSize="small" />
+                          </IconButton>
+                        </Card>
                       </Box>
-                    ))}
-                  </Box>
-                )}
+                    )}
+                  </Card>
+
+                  {/* Diğer Fotoğraflar */}
+                  <Card
+                    variant="outlined"
+                    sx={{
+                      p: 3,
+                      borderRadius: 3,
+                      background:
+                        "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                      border: "2px dashed #16a34a",
+                      textAlign: "center",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease-in-out",
+                      "&:hover": {
+                        borderColor: "success.main",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 2,
+                        color: "success.main",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1,
+                      }}
+                    >
+                      📷 Diğer Fotoğraflar
+                      <Chip
+                        label={`${formData.photos.length}/15`}
+                        color="success"
+                        size="small"
+                      />
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 3 }}
+                    >
+                      Aracınızın farklı açılardan fotoğraflarını ekleyin (En
+                      fazla 15 adet)
+                    </Typography>
+                    <input
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      id="other-photos"
+                      type="file"
+                      multiple
+                      onChange={(e) => handlePhotoUpload(e, false)}
+                    />
+                    <label htmlFor="other-photos">
+                      <Button
+                        variant="contained"
+                        component="span"
+                        startIcon={<PhotoCamera />}
+                        disabled={formData.photos.length >= 15}
+                        sx={{
+                          borderRadius: 3,
+                          py: 1.5,
+                          px: 3,
+                          fontWeight: 600,
+                          background:
+                            "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                          },
+                          "&:disabled": {
+                            background: "#9ca3af",
+                          },
+                        }}
+                      >
+                        {formData.photos.length >= 15
+                          ? "Maksimum Fotoğraf"
+                          : "Fotoğraf Ekle"}
+                      </Button>
+                    </label>
+
+                    {/* Diğer Fotoğraflar Önizlemesi */}
+                    {photoPreviews.length > 0 && (
+                      <Box sx={{ mt: 3 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ mb: 2, fontWeight: 600 }}
+                        >
+                          Yüklenen Fotoğraflar ({formData.photos.length})
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fill, minmax(120px, 1fr))",
+                            gap: 2,
+                            maxHeight: 300,
+                            overflowY: "auto",
+                          }}
+                        >
+                          {photoPreviews.map((preview, index) => (
+                            <Card
+                              key={index}
+                              elevation={2}
+                              sx={{
+                                position: "relative",
+                                borderRadius: 2,
+                                overflow: "hidden",
+                              }}
+                            >
+                              <CardMedia
+                                component="img"
+                                height="100"
+                                image={preview}
+                                alt={`Fotoğraf ${index + 1}`}
+                                sx={{ objectFit: "cover" }}
+                              />
+                              <IconButton
+                                size="small"
+                                onClick={() => removePhoto(index)}
+                                sx={{
+                                  position: "absolute",
+                                  top: 4,
+                                  right: 4,
+                                  backgroundColor: "rgba(255,255,255,0.9)",
+                                  "&:hover": {
+                                    backgroundColor: "rgba(255,255,255,1)",
+                                  },
+                                }}
+                              >
+                                <Close fontSize="small" />
+                              </IconButton>
+                            </Card>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Card>
+                </Box>
               </CardContent>
             </Card>
 

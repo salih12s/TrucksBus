@@ -429,7 +429,44 @@ function App() {
                           }
                         />
 
-                        {/* Dorse Form Routes */}
+                        {/* Dorse Form Routes - Damperli Marka Routes */}
+                        <Route
+                          path="/categories/dorse/brands/damperli/models/hafriyat-tipi/variants/:variantSlug/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <HafriyatTipiForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/categories/dorse/brands/damperli/models/havuz-hardox-tipi/variants/:variantSlug/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <HavuzHardoxTipiForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/categories/dorse/brands/damperli/models/kapakli-tip/variants/:variantSlug/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <KapakliTipForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/categories/dorse/brands/damperli/models/kaya-tipi/variants/:variantSlug/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <KayaTipiForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* Generic dorse routes for other brands */}
                         <Route
                           path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/hafriyat-tipi/create-ad"
                           element={
