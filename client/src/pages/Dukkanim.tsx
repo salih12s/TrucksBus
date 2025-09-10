@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Container,
@@ -6,118 +6,343 @@ import {
   Card,
   CardContent,
   CardMedia,
-  Avatar,
   Button,
-  Chip,
   Paper,
-  IconButton,
-  Tab,
-  Tabs,
-  Divider,
-  LinearProgress,
-  Badge,
+  CircularProgress,
   Alert,
+  IconButton,
+  Chip,
+  Tooltip,
+  Avatar,
+  Modal,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Divider,
 } from "@mui/material";
 import {
-  Store,
-  Edit,
-  Settings,
-  TrendingUp,
-  Visibility,
-  Star,
-  Phone,
-  Email,
-  LocationOn,
-  Business,
-  VerifiedUser,
-  DirectionsCar,
-  Schedule,
-  PhotoCamera,
   AddCircle,
+  Edit,
+  Delete,
+  Visibility,
+  LocationOn,
+  Settings,
+  CameraAlt,
+  Close,
+  Save,
 } from "@mui/icons-material";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import type { RootState } from "../store";
+import type { User } from "../store/authSlice";
+import apiClient from "../api/client";
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
+interface AdImage {
+  id: number;
+  url: string;
+  isPrimary: boolean;
+  displayOrder: number;
 }
 
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
 
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface City {
+  id: number;
+  name: string;
+  plateCode: string;
+}
+
+interface District {
+  id: number;
+  name: string;
+  cityId: number;
+}
+
+interface Ad {
+  id: number;
+  title: string;
+  price: number | null;
+  location?: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "SOLD" | "EXPIRED";
+  viewCount: number;
+  year: number | null;
+  mileage: number | null;
+  images: AdImage[];
+  category: Category;
+  brand: Brand | null;
+  model: Model | null;
+  variant: Variant | null;
+  city: City | null;
+  district: District | null;
+  createdAt: string;
+  updatedAt: string;
+  userId: number;
+  categoryId: number;
+  brandId: number | null;
+  modelId: number | null;
+  variantId: number | null;
+  description: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  isPromoted: boolean;
+  promotedUntil: string | null;
+  customFields: Record<string, unknown> | null;
+  chassisType: string | null;
+  cityId: number | null;
+  color: string | null;
+  detailFeatures: Record<string, unknown> | null;
+  districtId: number | null;
+  driveType: string | null;
+  engineCapacity: string | null;
+  fuelType: string | null;
+  isExchangeable: boolean | null;
+  plateNumber: string | null;
+  plateType: string | null;
+  roofType: string | null;
+  seatCount: string | null;
+  transmissionType: string | null;
+  vehicleCondition: string | null;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
 }
 
 const Dukkanim: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [userAds, setUserAds] = useState<Ad[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [cities, setCities] = useState<City[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    companyName: "",
+    address: "",
+    cityId: null as number | null,
+    districtId: null as number | null,
+    profileImageUrl: "",
+  });
+  const navigate = useNavigate();
+
   const user = useSelector((state: RootState) => state.auth.user);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const deleteAd = async (adId: number) => {
+    try {
+      await apiClient.delete(`/ads/${adId}`);
+      setUserAds((prevAds) => prevAds.filter((ad) => ad.id !== adId));
+    } catch (error) {
+      console.error("Ad delete error:", error);
+      alert("İlan silinirken bir hata oluştu");
+    }
   };
 
-  // Mock data - gerçek uygulamada API'den gelecek
-  const storeData = {
-    storeName: user?.companyName || user?.firstName || "TrucksBus Mağazası",
-    storeDescription: "Türkiye'nin en güvenilir ticari araç satış mağazası. 15 yıllık deneyimimizle kaliteli hizmet sunuyoruz.",
-    logo: "/public/Trucksbus.png",
-    coverImage: "/public/BrandsImage/FORD.png",
-    rating: 4.8,
-    reviewCount: 142,
-    totalAds: 28,
-    activeAds: 24,
-    totalViews: 15420,
-    responseRate: 95,
-    joinDate: "2020-03-15",
-    location: "İstanbul, Türkiye",
-    phone: "+90 (212) 555 0123",
-    email: "info@trucksbus.com",
-    workingHours: "Pazartesi - Cumartesi: 09:00 - 18:00",
-    isVerified: true,
-    specialties: ["Kamyon", "Çekici", "Otobüs", "Minibüs"],
+  const fetchStoreData = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Kullanıcının ilanlarını getir
+      const adsResponse = await apiClient.get("/ads/user/my-ads?limit=50");
+      const { ads } = adsResponse.data as { ads: Ad[]; pagination: Pagination };
+      setUserAds(ads);
+    } catch (error) {
+      console.error("Store data fetch error:", error);
+      setError("Mağaza verileri yüklenirken bir hata oluştu");
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchStoreData();
+    fetchCities();
+    if (user) {
+      setFormData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        phone: user.phone || "",
+        companyName: user.companyName || "",
+        address: user.address || "",
+        cityId: null,
+        districtId: null,
+        profileImageUrl: user.profileImageUrl || "",
+      });
+    }
+  }, [fetchStoreData, user]);
+
+  const fetchCities = async () => {
+    try {
+      const response = await apiClient.get("/cities");
+      setCities(response.data as City[]);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+    }
   };
 
-  const mockAds = [
-    {
-      id: 1,
-      title: "2018 Ford Transit Kamyon",
-      price: "750,000 TL",
-      image: "/public/BrandsImage/FORD.png",
-      location: "İstanbul",
-      views: 1250,
-      status: "active",
-    },
-    {
-      id: 2,
-      title: "2020 Mercedes Actros Çekici",
-      price: "1,200,000 TL",
-      image: "/public/BrandsImage/Mercedes.png",
-      location: "Ankara",
-      views: 890,
-      status: "active",
-    },
-    {
-      id: 3,
-      title: "2019 Iveco Daily Minibüs",
-      price: "450,000 TL",
-      image: "/public/BrandsImage/Iveco-Otoyol.png",
-      location: "İzmir",
-      views: 650,
-      status: "pending",
-    },
-  ];
+  const fetchDistricts = async (cityId: number) => {
+    try {
+      const response = await apiClient.get(`/cities/${cityId}/districts`);
+      setDistricts(response.data as District[]);
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string | number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleCityChange = (cityId: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      cityId,
+      districtId: null,
+    }));
+    fetchDistricts(cityId);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+
+      const updateData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        companyName: formData.companyName,
+        address: formData.address,
+        profileImageUrl: formData.profileImageUrl,
+      };
+
+      const response = await apiClient.put("/auth/profile", updateData);
+
+      // Redux store'u güncelle
+      const responseData = response.data as { user: User };
+      const updatedUser = { ...user!, ...responseData.user };
+
+      // localStorage'u da güncelle
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      setSettingsOpen(false);
+    } catch (error: unknown) {
+      console.error("Error updating profile:", error);
+      setError("Profil güncellenirken bir hata oluştu");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleProfileImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formDataUpload = new FormData();
+    formDataUpload.append("profileImage", file);
+
+    try {
+      const response = await apiClient.post(
+        "/users/upload-profile-image",
+        formDataUpload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      const responseData = response.data as { imageUrl: string };
+      const imageUrl = responseData.imageUrl;
+      setFormData((prev) => ({
+        ...prev,
+        profileImageUrl: imageUrl,
+      }));
+    } catch (error: unknown) {
+      console.error("Error uploading image:", error);
+      setError("Resim yüklenirken bir hata oluştu");
+    }
+  };
+
+  const formatPrice = (price: number | null | undefined) => {
+    if (!price) return "Fiyat belirtilmemiş";
+    return price.toLocaleString("tr-TR");
+  };
+
+  const formatLocation = (city: City | null, district: District | null) => {
+    if (city && district) {
+      return `${city.name} / ${district.name}`;
+    } else if (city) {
+      return city.name;
+    }
+    return "Konum belirtilmemiş";
+  };
+
+  const getImageUrl = (images: AdImage[]) => {
+    if (!images || images.length === 0) {
+      return "/Trucksbus.png";
+    }
+
+    const primaryImage = images.find((img) => img.isPrimary);
+    const imageUrl = primaryImage ? primaryImage.url : images[0].url;
+    return imageUrl;
+  };
+
+  if (loading) {
+    return (
+      <Container
+        maxWidth="lg"
+        sx={{ py: 3, display: "flex", justifyContent: "center" }}
+      >
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 3 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 3 }}>
@@ -131,413 +356,716 @@ const Dukkanim: React.FC = () => {
           mb: 3,
         }}
       >
-        {/* Cover Image */}
+        {/* Header Background */}
         <Box
           sx={{
             height: 200,
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            background: "linear-gradient(135deg, #313B4C 0%, #586575 100%)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             position: "relative",
           }}
         >
-          <IconButton
+          {/* Profil Resmi */}
+          <Box
             sx={{
               position: "absolute",
-              top: 16,
-              right: 16,
-              bgcolor: "rgba(255,255,255,0.9)",
-              "&:hover": { bgcolor: "rgba(255,255,255,1)" },
+              left: 30,
+              top: "50%",
+              transform: "translateY(-50%)",
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
             }}
           >
-            <PhotoCamera />
-          </IconButton>
+            <Box sx={{ position: "relative" }}>
+              <Avatar
+                src={user?.profileImageUrl || undefined}
+                sx={{
+                  width: 80,
+                  height: 80,
+                  fontSize: "2rem",
+                  fontWeight: "bold",
+                  border: "3px solid white",
+                  backgroundColor: "#fff",
+                  color: "#313B4C",
+                }}
+              >
+                {!user?.profileImageUrl &&
+                  (user?.firstName?.[0] || user?.email?.[0] || "U")}
+              </Avatar>
+              <IconButton
+                sx={{
+                  position: "absolute",
+                  bottom: -5,
+                  right: -5,
+                  backgroundColor: "white",
+                  width: 30,
+                  height: 30,
+                  "&:hover": { backgroundColor: "#f5f5f5" },
+                }}
+                onClick={() => {
+                  // TODO: Profil resmi upload işlemi
+                  console.log("Upload profile image");
+                }}
+              >
+                <CameraAlt fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
+
+          {/* İsim */}
           <Typography
             variant="h3"
             sx={{
               color: "white",
               fontWeight: "bold",
-              textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
+              textAlign: "center",
             }}
           >
-            🚛 {storeData.storeName}
+            {user?.companyName ||
+              `${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+              "Dükkanım"}
           </Typography>
+
+          {/* Ayarlar Butonu */}
+          <Box
+            sx={{
+              position: "absolute",
+              right: 30,
+              top: "50%",
+              transform: "translateY(-50%)",
+            }}
+          >
+            <Button
+              variant="contained"
+              startIcon={<Settings />}
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.2)",
+                color: "white",
+                backdropFilter: "blur(10px)",
+                "&:hover": { backgroundColor: "rgba(255,255,255,0.3)" },
+                borderRadius: 2,
+              }}
+              onClick={() => setSettingsOpen(true)}
+            >
+              Ayarlar
+            </Button>
+          </Box>
         </Box>
 
-        {/* Store Info */}
+        {/* Company Info */}
         <Box sx={{ p: 3 }}>
-          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 3, mb: 3 }}>
-            <Badge
-              overlap="circular"
-              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              badgeContent={
-                storeData.isVerified ? (
-                  <VerifiedUser sx={{ color: "#27ae60", fontSize: 28 }} />
-                ) : null
-              }
-            >
-              <Avatar
-                src={storeData.logo}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              mb: 2,
+            }}
+          >
+            <Box>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                {user?.companyName
+                  ? "Türkiye'nin en güvenilir ticari araç satış mağazalarından biri."
+                  : "Bireysel satıcı - Güvenilir araç satışları."}
+              </Typography>
+
+              <Box
                 sx={{
-                  width: 100,
-                  height: 100,
-                  border: "4px solid #fff",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                  mt: -5,
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  alignItems: "center",
                 }}
               >
-                <Store sx={{ fontSize: 50 }} />
-              </Avatar>
-            </Badge>
-
-            <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                <Typography variant="h4" fontWeight="bold" sx={{ color: "#2c3e50" }}>
-                  {storeData.storeName}
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Üye olma tarihi:</strong>{" "}
+                  {user?.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString("tr-TR")
+                    : "Bilinmiyor"}
                 </Typography>
-                {storeData.isVerified && (
+
+                <Chip
+                  icon={<Visibility />}
+                  label={`${userAds.length} aktif ilan`}
+                  size="small"
+                  variant="outlined"
+                />
+
+                {user?.phone && (
                   <Chip
-                    icon={<VerifiedUser />}
-                    label="Doğrulanmış Mağaza"
+                    icon={<LocationOn />}
+                    label="İletişim bilgileri mevcut"
+                    size="small"
                     color="success"
                     variant="outlined"
                   />
                 )}
               </Box>
-
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 2, lineHeight: 1.6 }}>
-                {storeData.storeDescription}
-              </Typography>
-
-              <Box sx={{ display: "flex", alignItems: "center", gap: 3, mb: 2 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <Star sx={{ color: "#f39c12", fontSize: 20 }} />
-                  <Typography variant="h6" fontWeight="bold">
-                    {storeData.rating}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    ({storeData.reviewCount} değerlendirme)
-                  </Typography>
-                </Box>
-                <Divider orientation="vertical" flexItem />
-                <Typography variant="body2" color="text.secondary">
-                  {storeData.joinDate} tarihinden beri üye
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {storeData.specialties.map((specialty) => (
-                  <Chip
-                    key={specialty}
-                    label={specialty}
-                    size="small"
-                    variant="outlined"
-                    sx={{ color: "#3498db", borderColor: "#3498db" }}
-                  />
-                ))}
-              </Box>
             </Box>
 
-            <Box sx={{ display: "flex", gap: 1 }}>
-              <Button
-                variant="contained"
-                startIcon={<Edit />}
-                sx={{ bgcolor: "#3498db", "&:hover": { bgcolor: "#2980b9" } }}
-              >
-                Düzenle
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<Settings />}
-                sx={{ borderColor: "#95a5a6", color: "#95a5a6" }}
-              >
-                Ayarlar
-              </Button>
-            </Box>
+            <Button
+              variant="contained"
+              startIcon={<AddCircle />}
+              sx={{
+                backgroundColor: "#27ae60",
+                "&:hover": { backgroundColor: "#219a52" },
+                borderRadius: 2,
+              }}
+              onClick={() => navigate("/create-ad")}
+            >
+              Yeni İlan
+            </Button>
           </Box>
         </Box>
       </Paper>
 
-      {/* Stats Cards */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(4, 1fr)" },
-          gap: 3,
-          mb: 3,
-        }}
-      >
-        <Card sx={{ textAlign: "center", p: 2, bgcolor: "#e8f5e8" }}>
-          <DirectionsCar sx={{ fontSize: 40, color: "#27ae60", mb: 1 }} />
-          <Typography variant="h4" fontWeight="bold" color="#27ae60">
-            {storeData.totalAds}
+      {/* İlanlarım Section */}
+      <Box sx={{ mb: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+          <Typography variant="h5" fontWeight="bold">
+            İlanlarım ({userAds.length})
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Toplam İlan
-          </Typography>
-        </Card>
-        <Card sx={{ textAlign: "center", p: 2, bgcolor: "#fff3e0" }}>
-          <Visibility sx={{ fontSize: 40, color: "#f39c12", mb: 1 }} />
-          <Typography variant="h4" fontWeight="bold" color="#f39c12">
-            {storeData.totalViews.toLocaleString()}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Toplam Görüntüleme
-          </Typography>
-        </Card>
-        <Card sx={{ textAlign: "center", p: 2, bgcolor: "#e3f2fd" }}>
-          <TrendingUp sx={{ fontSize: 40, color: "#3498db", mb: 1 }} />
-          <Typography variant="h4" fontWeight="bold" color="#3498db">
-            %{storeData.responseRate}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Yanıt Oranı
-          </Typography>
-        </Card>
-        <Card sx={{ textAlign: "center", p: 2, bgcolor: "#fce4ec" }}>
-          <Star sx={{ fontSize: 40, color: "#e91e63", mb: 1 }} />
-          <Typography variant="h4" fontWeight="bold" color="#e91e63">
-            {storeData.rating}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Ortalama Puan
-          </Typography>
-        </Card>
-      </Box>
 
-      {/* Tabs Section */}
-      <Paper sx={{ borderRadius: 2 }}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs value={tabValue} onChange={handleTabChange}>
-            <Tab label="İlanlarım" />
-            <Tab label="İletişim Bilgileri" />
-            <Tab label="İstatistikler" />
-            <Tab label="Ayarlar" />
-          </Tabs>
+          {/* İstatistik kartları */}
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Chip
+              label={`${
+                userAds.filter((ad) => ad.status === "APPROVED").length
+              } Onaylı`}
+              color="success"
+              variant="outlined"
+            />
+            <Chip
+              label={`${
+                userAds.filter((ad) => ad.status === "PENDING").length
+              } Beklemede`}
+              color="warning"
+              variant="outlined"
+            />
+            <Chip
+              label={`${userAds.reduce(
+                (sum, ad) => sum + (ad.viewCount || 0),
+                0
+              )} Toplam Görüntülenme`}
+              color="info"
+              variant="outlined"
+            />
+          </Box>
         </Box>
 
-        <TabPanel value={tabValue} index={0}>
-          {/* İlanlarım */}
-          <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography variant="h6" fontWeight="bold">
-              Aktif İlanlarım ({storeData.activeAds})
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddCircle />}
-              sx={{ bgcolor: "#27ae60", "&:hover": { bgcolor: "#229954" } }}
-            >
-              Yeni İlan Ekle
-            </Button>
-          </Box>
-
+        {userAds.length > 0 ? (
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
-              gap: 3,
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                md: "repeat(3, 1fr)",
+                lg: "repeat(4, 1fr)",
+              },
+              gap: 2,
             }}
           >
-            {mockAds.map((ad) => (
-              <Card key={ad.id} sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={ad.image}
-                  alt={ad.title}
-                  sx={{ objectFit: "cover" }}
-                />
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant="h6" gutterBottom>
-                    {ad.title}
+            {userAds.map((ad) => (
+              <Card
+                key={ad.id}
+                sx={{
+                  maxWidth: 280,
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 2,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                    transform: "translateY(-2px)",
+                  },
+                }}
+              >
+                {/* Kategori Badge */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    left: 8,
+                    backgroundColor: "rgba(0,0,0,0.7)",
+                    color: "white",
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    fontSize: "0.75rem",
+                    fontWeight: "bold",
+                    zIndex: 1,
+                  }}
+                >
+                  {ad.category?.name || "Kategori"}
+                </Box>
+
+                {/* Resim */}
+                <Box
+                  sx={{ position: "relative", cursor: "pointer" }}
+                  onClick={() => navigate(`/ad/${ad.id}`)}
+                >
+                  <CardMedia
+                    component="img"
+                    height="180"
+                    image={getImageUrl(ad.images)}
+                    alt={ad.title}
+                    sx={{
+                      objectFit: "cover",
+                      backgroundColor: "#f5f5f5",
+                    }}
+                  />
+                </Box>
+
+                <CardContent sx={{ p: 2 }}>
+                  {/* Başlık */}
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: "bold",
+                      color: "#333",
+                      mb: 1,
+                      fontSize: "1rem",
+                      lineHeight: 1.2,
+                      height: "2.4em",
+                      overflow: "hidden",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => navigate(`/ad/${ad.id}`)}
+                  >
+                    {ad.title || "İlan Başlığı Belirtilmemiş"}
                   </Typography>
-                  <Typography variant="h5" color="primary" fontWeight="bold" gutterBottom>
-                    {ad.price}
+
+                  {/* Fiyat */}
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      color: "#2e7d32",
+                      fontWeight: "bold",
+                      mb: 2,
+                      fontSize: "1.25rem",
+                    }}
+                  >
+                    ₺{formatPrice(ad.price)}
                   </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                    <LocationOn sx={{ fontSize: 16, color: "text.secondary" }} />
-                    <Typography variant="body2" color="text.secondary">
-                      {ad.location}
+
+                  {/* Bilgiler */}
+                  <Box sx={{ mb: 2 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#666",
+                        mb: 0.5,
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      <strong>Model Yılı:</strong> {ad.year || "Belirtilmemiş"}
+                    </Typography>
+
+                    {ad.mileage && (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#666",
+                          mb: 0.5,
+                          fontSize: "0.85rem",
+                        }}
+                      >
+                        <strong>KM:</strong>{" "}
+                        {ad.mileage.toLocaleString("tr-TR")} km
+                      </Typography>
+                    )}
+
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#666",
+                        mb: 0.5,
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      <strong>Şehir/İlçe:</strong>{" "}
+                      {formatLocation(ad.city, ad.district)}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#999",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      <strong>İlan Tarihi:</strong>{" "}
+                      {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Chip
-                      label={ad.status === "active" ? "Aktif" : "Beklemede"}
-                      color={ad.status === "active" ? "success" : "warning"}
-                      size="small"
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      {ad.views} görüntüleme
+
+                  {/* Alt Bilgiler */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 2,
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#666", fontSize: "0.8rem" }}
+                    >
+                      <strong>İlan Sahibi:</strong> {user?.firstName}{" "}
+                      {user?.lastName}
                     </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#666", fontSize: "0.8rem" }}
+                    >
+                      {user?.phone || "0545 835 13 61"}
+                    </Typography>
+                  </Box>
+
+                  {/* Detayları Gör Butonu */}
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#333",
+                      color: "white",
+                      mb: 1,
+                      "&:hover": {
+                        backgroundColor: "#555",
+                      },
+                    }}
+                    onClick={() => navigate(`/ad/${ad.id}`)}
+                  >
+                    Detayları Gör
+                  </Button>
+
+                  {/* Alt Butonlar */}
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      startIcon={<Visibility />}
+                      sx={{ flex: 1, fontSize: "0.75rem" }}
+                    >
+                      Şikayet Et
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                      sx={{ flex: 1, fontSize: "0.75rem" }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}/ad/${ad.id}`
+                        );
+                        alert("İlan linki kopyalandı!");
+                      }}
+                    >
+                      Mesaj
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      sx={{ flex: 1, fontSize: "0.75rem" }}
+                      onClick={() => navigate(`/edit-ad/${ad.id}`)}
+                    >
+                      Kaydet
+                    </Button>
+                  </Box>
+
+                  {/* Admin Butonları (İlan Sahibi İçin) */}
+                  <Box
+                    sx={{ display: "flex", gap: 1, mt: 1 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Tooltip title="İlanı Düzenle">
+                      <IconButton
+                        size="small"
+                        sx={{
+                          backgroundColor: "#f5f5f5",
+                          "&:hover": { backgroundColor: "#e0e0e0" },
+                          flex: 1,
+                        }}
+                        onClick={() => navigate(`/edit-ad/${ad.id}`)}
+                      >
+                        <Edit fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="İlanı Sil">
+                      <IconButton
+                        size="small"
+                        sx={{
+                          backgroundColor: "#ffe6e6",
+                          "&:hover": { backgroundColor: "#ffcccc" },
+                          color: "#d32f2f",
+                          flex: 1,
+                        }}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Bu ilanı silmek istediğinizden emin misiniz?"
+                            )
+                          ) {
+                            deleteAd(ad.id);
+                          }
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                 </CardContent>
               </Card>
             ))}
           </Box>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={1}>
-          {/* İletişim Bilgileri */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-              gap: 3,
-            }}
-          >
-            <Card sx={{ p: 3, height: "100%" }}>
-              <Typography variant="h6" gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Business sx={{ color: "#3498db" }} />
-                Mağaza Bilgileri
-              </Typography>
-              <Box sx={{ mt: 2, space: 2 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                  <LocationOn sx={{ color: "#e74c3c" }} />
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">Adres</Typography>
-                    <Typography variant="body1">{storeData.location}</Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                  <Phone sx={{ color: "#27ae60" }} />
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">Telefon</Typography>
-                    <Typography variant="body1">{storeData.phone}</Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                  <Email sx={{ color: "#f39c12" }} />
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">E-posta</Typography>
-                    <Typography variant="body1">{storeData.email}</Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Schedule sx={{ color: "#9b59b6" }} />
-                  <Box>
-                    <Typography variant="body2" color="text.secondary">Çalışma Saatleri</Typography>
-                    <Typography variant="body1">{storeData.workingHours}</Typography>
-                  </Box>
-                </Box>
-              </Box>
-            </Card>
-            <Card sx={{ p: 3, height: "100%" }}>
-              <Typography variant="h6" gutterBottom>
-                Mağaza Açıklaması
-              </Typography>
-              <Typography variant="body1" sx={{ lineHeight: 1.7, mb: 3 }}>
-                {storeData.storeDescription}
-              </Typography>
-              <Button variant="outlined" fullWidth>
-                Açıklamayı Düzenle
-              </Button>
-            </Card>
-          </Box>
-        </TabPanel>
-
-        <TabPanel value={tabValue} index={2}>
-          {/* İstatistikler */}
-          <Typography variant="h6" gutterBottom>
-            Mağaza Performansı
-          </Typography>
-          
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-              gap: 3,
-            }}
-          >
-            <Card sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Bu Ay Görüntülenme
-              </Typography>
-              <Typography variant="h3" color="primary" fontWeight="bold" gutterBottom>
-                2,450
-              </Typography>
-              <LinearProgress 
-                variant="determinate" 
-                value={75} 
-                sx={{ height: 8, borderRadius: 4, mb: 1 }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                Geçen aya göre %15 artış
-              </Typography>
-            </Card>
-            <Card sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Mesaj Yanıt Oranı
-              </Typography>
-              <Typography variant="h3" color="success.main" fontWeight="bold" gutterBottom>
-                %{storeData.responseRate}
-              </Typography>
-              <LinearProgress 
-                variant="determinate" 
-                value={storeData.responseRate} 
-                color="success"
-                sx={{ height: 8, borderRadius: 4, mb: 1 }}
-              />
-              <Typography variant="body2" color="text.secondary">
-                Ortalama yanıt süresi: 2 saat
-              </Typography>
-            </Card>
-          </Box>
-
-          <Alert severity="info" sx={{ mt: 3 }}>
-            <Typography variant="body2">
-              <strong>İpucu:</strong> Daha yüksek görünürlük için ilanlarınızı düzenli olarak güncelleyin ve mesajlara hızlı yanıt verin.
+        ) : (
+          <Box sx={{ textAlign: "center", py: 8 }}>
+            <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+              Henüz hiç ilanınız bulunmuyor
             </Typography>
-          </Alert>
-        </TabPanel>
+            <Button
+              variant="contained"
+              startIcon={<AddCircle />}
+              sx={{
+                mt: 2,
+                backgroundColor: "#313B4C",
+                "&:hover": {
+                  backgroundColor: "#586575",
+                },
+              }}
+              onClick={() => navigate("/create-ad")}
+            >
+              İlk İlanını Oluştur
+            </Button>
+          </Box>
+        )}
+      </Box>
 
-        <TabPanel value={tabValue} index={3}>
-          {/* Ayarlar */}
-          <Typography variant="h6" gutterBottom>
-            Mağaza Ayarları
+      {/* Ayarlar Modal */}
+      <Modal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Box
+          sx={{
+            width: { xs: "90%", sm: "70%", md: "50%" },
+            maxWidth: 600,
+            maxHeight: "90vh",
+            overflow: "auto",
+            backgroundColor: "white",
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 3,
+          }}
+        >
+          {/* Modal Header */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 3,
+            }}
+          >
+            <Typography variant="h5" fontWeight="bold">
+              Profil Ayarları
+            </Typography>
+            <IconButton onClick={() => setSettingsOpen(false)}>
+              <Close />
+            </IconButton>
+          </Box>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* Profil Resmi */}
+          <Box sx={{ mb: 3, textAlign: "center" }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Profil Resmi
+            </Typography>
+            <Box sx={{ position: "relative", display: "inline-block" }}>
+              <Avatar
+                src={formData.profileImageUrl || undefined}
+                sx={{
+                  width: 100,
+                  height: 100,
+                  fontSize: "2.5rem",
+                  fontWeight: "bold",
+                  backgroundColor: "#f5f5f5",
+                  color: "#666",
+                }}
+              >
+                {!formData.profileImageUrl && (formData.firstName?.[0] || "U")}
+              </Avatar>
+
+              <IconButton
+                component="label"
+                sx={{
+                  position: "absolute",
+                  bottom: -5,
+                  right: -5,
+                  backgroundColor: "primary.main",
+                  color: "white",
+                  width: 35,
+                  height: 35,
+                  "&:hover": { backgroundColor: "primary.dark" },
+                }}
+              >
+                <CameraAlt />
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleProfileImageUpload}
+                />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Kişisel Bilgiler */}
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Kişisel Bilgiler
           </Typography>
+
           <Box
             sx={{
               display: "grid",
               gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-              gap: 3,
+              gap: 2,
+              mb: 3,
             }}
           >
-            <Card sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Bildirim Ayarları
-              </Typography>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <Button variant="outlined" fullWidth sx={{ justifyContent: "flex-start" }}>
-                  E-posta Bildirimleri
-                </Button>
-                <Button variant="outlined" fullWidth sx={{ justifyContent: "flex-start" }}>
-                  SMS Bildirimleri
-                </Button>
-                <Button variant="outlined" fullWidth sx={{ justifyContent: "flex-start" }}>
-                  Push Bildirimleri
-                </Button>
-              </Box>
-            </Card>
-            <Card sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Gizlilik Ayarları
-              </Typography>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <Button variant="outlined" fullWidth sx={{ justifyContent: "flex-start" }}>
-                  Profil Görünürlüğü
-                </Button>
-                <Button variant="outlined" fullWidth sx={{ justifyContent: "flex-start" }}>
-                  İletişim Bilgileri
-                </Button>
-                <Button variant="outlined" fullWidth sx={{ justifyContent: "flex-start" }}>
-                  İlan Ayarları
-                </Button>
-              </Box>
-            </Card>
+            <TextField
+              label="Ad"
+              value={formData.firstName}
+              onChange={(e) => handleInputChange("firstName", e.target.value)}
+              fullWidth
+            />
+
+            <TextField
+              label="Soyad"
+              value={formData.lastName}
+              onChange={(e) => handleInputChange("lastName", e.target.value)}
+              fullWidth
+            />
+
+            <TextField
+              label="Telefon"
+              value={formData.phone}
+              onChange={(e) => handleInputChange("phone", e.target.value)}
+              fullWidth
+            />
+
+            <TextField
+              label="Şirket Adı"
+              value={formData.companyName}
+              onChange={(e) => handleInputChange("companyName", e.target.value)}
+              fullWidth
+            />
           </Box>
-        </TabPanel>
-      </Paper>
+
+          <Divider sx={{ mb: 3 }} />
+
+          {/* Adres Bilgileri */}
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Adres Bilgileri
+          </Typography>
+
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              gap: 2,
+              mb: 2,
+            }}
+          >
+            <FormControl fullWidth>
+              <InputLabel>Şehir</InputLabel>
+              <Select
+                value={formData.cityId || ""}
+                onChange={(e) => handleCityChange(Number(e.target.value))}
+                label="Şehir"
+              >
+                {cities.map((city) => (
+                  <MenuItem key={city.id} value={city.id}>
+                    {city.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth disabled={!formData.cityId}>
+              <InputLabel>İlçe</InputLabel>
+              <Select
+                value={formData.districtId || ""}
+                onChange={(e) =>
+                  handleInputChange("districtId", Number(e.target.value))
+                }
+                label="İlçe"
+              >
+                {districts.map((district) => (
+                  <MenuItem key={district.id} value={district.id}>
+                    {district.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          <TextField
+            label="Adres"
+            value={formData.address}
+            onChange={(e) => handleInputChange("address", e.target.value)}
+            fullWidth
+            multiline
+            rows={3}
+            sx={{ mb: 3 }}
+          />
+
+          {/* Kaydet Butonu */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+            <Button variant="outlined" onClick={() => setSettingsOpen(false)}>
+              İptal
+            </Button>
+
+            <Button
+              variant="contained"
+              startIcon={saving ? <CircularProgress size={20} /> : <Save />}
+              onClick={handleSaveProfile}
+              disabled={saving}
+            >
+              {saving ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </Container>
   );
 };

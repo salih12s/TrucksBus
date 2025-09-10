@@ -42,7 +42,6 @@ import { useAppSelector } from "@/hooks/redux";
 import type { RootState } from "@/store";
 import * as dopingApi from "@/api/doping";
 import { authApi } from "@/api/auth";
-import Header from "@/components/layout/Header";
 
 const Profile: React.FC = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
@@ -228,7 +227,6 @@ const Profile: React.FC = () => {
 
   return (
     <>
-      <Header />
       <Container maxWidth="xl" sx={{ py: 3, px: { xs: 1, sm: 3 } }}>
         {/* Alert */}
         {alert && (

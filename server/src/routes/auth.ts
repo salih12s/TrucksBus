@@ -20,6 +20,7 @@ router.post("/logout", authLimiter, AuthController.logout);
 // Protected routes
 router.get("/me", authenticateToken, AuthController.getCurrentUser);
 router.get("/stats", authenticateToken, AuthController.getUserStats);
+router.put("/profile", authenticateToken, AuthController.updateProfile);
 router.put(
   "/update-password",
   authenticateToken,

@@ -344,6 +344,8 @@ export const getUserAds = async (req: Request, res: Response) => {
         brand: true,
         model: true,
         variant: true,
+        city: true,
+        district: true,
         images: {
           orderBy: { displayOrder: "asc" },
         },

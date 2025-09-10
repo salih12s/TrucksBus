@@ -41,6 +41,12 @@ import apiClient from "../api/client";
 import ComplaintModal from "../components/complaints/ComplaintModal";
 import ContactPage from "./ContactPage";
 import AboutPage from "./AboutPage";
+import Profile from "./Profile";
+import MyAds from "./MyAds";
+import Doping from "./Doping";
+import MessagesPage from "./MessagesPage";
+import Complaints from "./Complaints";
+import Dukkanim from "./Dukkanim";
 
 interface Category {
   id: string;
@@ -126,6 +132,20 @@ const MainLayout: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
+
+  // Define avatar menu pages that don't need sidebar
+  const avatarMenuPages = [
+    "/profile",
+    "/my-ads",
+    "/doping",
+    "/messages",
+    "/complaints",
+    "/store",
+  ];
+  const isAvatarMenuPage = avatarMenuPages.includes(location.pathname);
+  const isContactOrAboutPage =
+    location.pathname === "/contact" || location.pathname === "/about";
+  const shouldHideSidebar = isAvatarMenuPage || isContactOrAboutPage;
 
   // Mobile'da sidebar varsayılan olarak kapalı
   useEffect(() => {
@@ -570,9 +590,7 @@ const MainLayout: React.FC = () => {
         }}
       >
         {/* Mobile Drawer */}
-        {isMobile &&
-        location.pathname !== "/contact" &&
-        location.pathname !== "/about" ? (
+        {isMobile && !shouldHideSidebar ? (
           <Drawer
             anchor="left"
             open={mobileDrawerOpen}
@@ -587,9 +605,7 @@ const MainLayout: React.FC = () => {
           >
             {renderSidebarContent()}
           </Drawer>
-        ) : location.pathname !== "/contact" &&
-          location.pathname !== "/about" &&
-          !isMobile ? (
+        ) : !shouldHideSidebar && !isMobile ? (
           /* Desktop Sidebar */
           <Box
             sx={{
@@ -621,27 +637,37 @@ const MainLayout: React.FC = () => {
             <ContactPage />
           ) : location.pathname === "/about" ? (
             <AboutPage />
+          ) : location.pathname === "/profile" && isAuthenticated ? (
+            <Profile />
+          ) : location.pathname === "/my-ads" && isAuthenticated ? (
+            <MyAds />
+          ) : location.pathname === "/doping" && isAuthenticated ? (
+            <Doping />
+          ) : location.pathname === "/messages" && isAuthenticated ? (
+            <MessagesPage />
+          ) : location.pathname === "/complaints" && isAuthenticated ? (
+            <Complaints />
+          ) : location.pathname === "/store" && isAuthenticated ? (
+            <Dukkanim />
           ) : (
             <>
               {/* Mobile Menu Button */}
-              {isMobile &&
-                location.pathname !== "/contact" &&
-                location.pathname !== "/about" && (
-                  <Box sx={{ mb: 2 }}>
-                    <IconButton
-                      onClick={() => setMobileDrawerOpen(true)}
-                      sx={{
-                        backgroundColor: "#313B4C",
-                        color: "white",
-                        "&:hover": {
-                          backgroundColor: "#D34237",
-                        },
-                      }}
-                    >
-                      <MenuIcon />
-                    </IconButton>
-                  </Box>
-                )}
+              {isMobile && !shouldHideSidebar && (
+                <Box sx={{ mb: 2 }}>
+                  <IconButton
+                    onClick={() => setMobileDrawerOpen(true)}
+                    sx={{
+                      backgroundColor: "#313B4C",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "#D34237",
+                      },
+                    }}
+                  >
+                    <MenuIcon />
+                  </IconButton>
+                </Box>
+              )}
 
               {/* Search Bar */}
               <Box sx={{ mb: 3 }}>

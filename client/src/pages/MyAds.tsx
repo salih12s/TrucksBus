@@ -34,7 +34,6 @@ import {
   Add as AddIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/layout/Header";
 import { getMyAds, deleteAd, type Ad, type AdImage } from "../api/ads";
 
 const MyAds: React.FC = () => {
@@ -181,7 +180,6 @@ const MyAds: React.FC = () => {
 
   return (
     <Box>
-      <Header />
       <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
         <Box
           sx={{

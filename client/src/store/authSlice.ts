@@ -20,11 +20,13 @@ export interface User {
   role: string;
   companyName?: string;
   taxId?: string;
-  tradeRegistryNo?: string;
-  address?: string;
+  companyPhone?: string;
+  profileImageUrl?: string;
   city?: string;
-  country?: string;
+  district?: string;
+  address?: string;
   isVerified: boolean;
+  createdAt?: string;
 }
 
 interface AuthState {
@@ -107,7 +109,7 @@ export const logoutUser = createAsyncThunk(
 );
 
 // Get current user
-export const getCurrentUser = createAsyncThunk<User, void>(
+export const getCurrentUser = createAsyncThunk(
   "auth/getCurrentUser",
   async (_, { rejectWithValue, getState }) => {
     try {
@@ -170,7 +172,27 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
+        const user = action.payload.user as {
+          id: number;
+          email: string;
+          firstName?: string;
+          lastName?: string;
+          phone?: string;
+          role: string;
+          companyName?: string;
+          taxId?: string;
+          companyPhone?: string;
+          profileImageUrl?: string;
+          city?: string;
+          district?: string;
+          address?: string;
+          isVerified: boolean;
+          createdAt?: string;
+        };
+        state.user = {
+          ...user,
+          createdAt: user.createdAt || new Date().toISOString()
+        };
         state.token = action.payload.tokens.accessToken;
         state.refreshToken = action.payload.tokens.refreshToken;
         state.isAuthenticated = true;
@@ -182,7 +204,7 @@ const authSlice = createSlice({
           "refreshToken",
           action.payload.tokens.refreshToken
         );
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
+        localStorage.setItem("user", JSON.stringify(state.user));
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -196,7 +218,27 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
+        const user = action.payload.user as {
+          id: number;
+          email: string;
+          firstName?: string;
+          lastName?: string;
+          phone?: string;
+          role: string;
+          companyName?: string;
+          taxId?: string;
+          companyPhone?: string;
+          profileImageUrl?: string;
+          city?: string;
+          district?: string;
+          address?: string;
+          isVerified: boolean;
+          createdAt?: string;
+        };
+        state.user = {
+          ...user,
+          createdAt: user.createdAt || new Date().toISOString()
+        };
         state.token = action.payload.tokens.accessToken;
         state.refreshToken = action.payload.tokens.refreshToken;
         state.isAuthenticated = true;
@@ -208,7 +250,7 @@ const authSlice = createSlice({
           "refreshToken",
           action.payload.tokens.refreshToken
         );
-        localStorage.setItem("user", JSON.stringify(action.payload.user));
+        localStorage.setItem("user", JSON.stringify(state.user));
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -234,12 +276,34 @@ const authSlice = createSlice({
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
+        if (action.payload) {
+          const user = action.payload as {
+            id: number;
+            email: string;
+            firstName?: string;
+            lastName?: string;
+            phone?: string;
+            role: string;
+            companyName?: string;
+            taxId?: string;
+            companyPhone?: string;
+            profileImageUrl?: string;
+            city?: string;
+            district?: string;
+            address?: string;
+            isVerified: boolean;
+            createdAt?: string;
+          };
+          state.user = {
+            ...user,
+            createdAt: user.createdAt || new Date().toISOString()
+          };
+        }
         state.isAuthenticated = true;
         state.error = null;
 
         // User bilgisini localStorage'a kaydet
-        localStorage.setItem("user", JSON.stringify(action.payload));
+        localStorage.setItem("user", JSON.stringify(state.user));
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.isLoading = false;

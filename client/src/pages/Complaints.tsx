@@ -30,7 +30,6 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { feedbackAPI, type Feedback } from "../api/feedback";
-import Header from "../components/layout/Header";
 
 const Complaints: React.FC = () => {
   const navigate = useNavigate();
@@ -176,7 +175,6 @@ const Complaints: React.FC = () => {
 
   return (
     <Box>
-      <Header />
       <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
         <Box
           sx={{

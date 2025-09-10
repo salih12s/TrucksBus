@@ -10,6 +10,7 @@ import dopingRoutes from "./doping";
 import favoriteRoutes from "./favorites";
 import complaintRoutes from "./complaint";
 import messagingRoutes from "./messaging";
+import citiesRoutes from "./cities";
 
 const router = Router();
 
@@ -25,6 +26,7 @@ router.use("/doping", dopingRoutes);
 router.use("/favorites", favoriteRoutes);
 router.use("/complaints", complaintRoutes);
 router.use("/messages", messagingRoutes);
+router.use("/cities", citiesRoutes);
 
 // API info endpoint
 router.get("/", (req, res) => {

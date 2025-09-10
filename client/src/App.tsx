@@ -23,11 +23,8 @@ import { ProtectedRoute } from "./components/auth";
 // Pages - Lazy loaded for better performance
 const MainLayout = React.lazy(() => import("./pages/MainLayout"));
 const AdDetail = React.lazy(() => import("./pages/AdDetail"));
-const Profile = React.lazy(() => import("./pages/Profile"));
 const Notifications = React.lazy(() => import("./pages/Notifications"));
 const Bookmarks = React.lazy(() => import("./pages/Bookmarks"));
-const MessagesPage = React.lazy(() => import("./pages/MessagesPage"));
-const Dukkanim = React.lazy(() => import("./pages/Dukkanim"));
 const LoginNew = React.lazy(() => import("./components/auth/LoginNew"));
 const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
 const RegisterCorporate = React.lazy(
@@ -106,12 +103,9 @@ const ModelSelection = React.lazy(
 const VariantSelection = React.lazy(
   () => import("./components/ads/VariantSelection")
 );
-const MyAds = React.lazy(() => import("./pages/MyAds"));
-const Doping = React.lazy(() => import("./pages/Doping"));
 const MessagingSystem = React.lazy(
   () => import("./components/messaging/MessagingSystemNew")
 );
-const Complaints = React.lazy(() => import("./pages/Complaints"));
 const AnalyticsDashboard = React.lazy(
   () => import("./components/analytics/AnalyticsDashboard")
 );
@@ -292,6 +286,57 @@ function App() {
                         <Route path="/" element={<MainLayout />} />
                         <Route path="/contact" element={<MainLayout />} />
                         <Route path="/about" element={<MainLayout />} />
+
+                        {/* Avatar Menu Pages - Protected but handled in MainLayout */}
+                        <Route
+                          path="/profile"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/my-ads"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/doping"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/messages"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/complaints"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/store"
+                          element={
+                            <ProtectedRoute>
+                              <MainLayout />
+                            </ProtectedRoute>
+                          }
+                        />
+
                         <Route path="/login" element={<LoginNew />} />
                         <Route path="/register" element={<RegisterNew />} />
                         <Route
@@ -321,24 +366,6 @@ function App() {
                         {/* Protected Routes */}
 
                         <Route
-                          path="/profile"
-                          element={
-                            <ProtectedRoute>
-                              <Profile />
-                            </ProtectedRoute>
-                          }
-                        />
-
-                        <Route
-                          path="/store"
-                          element={
-                            <ProtectedRoute>
-                              <Dukkanim />
-                            </ProtectedRoute>
-                          }
-                        />
-
-                        <Route
                           path="/notifications"
                           element={
                             <ProtectedRoute>
@@ -352,42 +379,6 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <Bookmarks />
-                            </ProtectedRoute>
-                          }
-                        />
-
-                        <Route
-                          path="/messages"
-                          element={
-                            <ProtectedRoute>
-                              <MessagesPage />
-                            </ProtectedRoute>
-                          }
-                        />
-
-                        <Route
-                          path="/complaints"
-                          element={
-                            <ProtectedRoute>
-                              <Complaints />
-                            </ProtectedRoute>
-                          }
-                        />
-
-                        <Route
-                          path="/my-ads"
-                          element={
-                            <ProtectedRoute>
-                              <MyAds />
-                            </ProtectedRoute>
-                          }
-                        />
-
-                        <Route
-                          path="/doping"
-                          element={
-                            <ProtectedRoute>
-                              <Doping />
                             </ProtectedRoute>
                           }
                         />
@@ -863,15 +854,6 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <VehicleFormSelector />
-                            </ProtectedRoute>
-                          }
-                        />
-
-                        <Route
-                          path="/my-ads"
-                          element={
-                            <ProtectedRoute>
-                              <MyAds />
                             </ProtectedRoute>
                           }
                         />

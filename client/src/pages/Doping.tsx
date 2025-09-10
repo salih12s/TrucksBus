@@ -27,7 +27,6 @@ import {
   LocalOffer as OfferIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/layout/Header";
 import {
   getDopingPackages,
   getUserDopings,
@@ -139,7 +138,6 @@ const Doping: React.FC = () => {
   if (loading) {
     return (
       <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
-        <Header />
         <Container
           maxWidth="lg"
           sx={{
@@ -158,8 +156,6 @@ const Doping: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
-      <Header />
-
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Header Section */}
         <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 2 }}>

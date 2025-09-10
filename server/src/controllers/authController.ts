@@ -671,4 +671,60 @@ export class AuthController {
       res.status(500).json({ error: "Internal server error" });
     }
   }
+
+  // Update user profile
+  static async updateProfile(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user!.id;
+      const {
+        firstName,
+        lastName,
+        phone,
+        companyName,
+        address,
+        city,
+        profileImageUrl,
+      } = req.body;
+
+      // Update user profile
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          firstName,
+          lastName,
+          phone,
+          companyName,
+          address,
+          city,
+          profileImageUrl,
+          updatedAt: new Date(),
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          role: true,
+          companyName: true,
+          taxId: true,
+          tradeRegistryNo: true,
+          address: true,
+          city: true,
+          country: true,
+          isVerified: true,
+          profileImageUrl: true,
+          createdAt: true,
+        },
+      });
+
+      res.json({
+        message: "Profile updated successfully",
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.error("Update profile error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
 }
