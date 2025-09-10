@@ -1585,7 +1585,11 @@ export const createDorseAd = async (req: Request, res: Response) => {
           istiapHaddi: istiapHaddi || null,
           uzatilabilirProfil: uzatilabilirProfil || null,
           dingilSayisi: dingilSayisi || null,
-          rampaMekanizmasi: rampaMekanizmasi ? (typeof rampaMekanizmasi === 'string' ? rampaMekanizmasi : JSON.stringify(rampaMekanizmasi)) : null,
+          rampaMekanizmasi: rampaMekanizmasi
+            ? typeof rampaMekanizmasi === "string"
+              ? rampaMekanizmasi
+              : JSON.stringify(rampaMekanizmasi)
+            : null,
         },
         status: "PENDING",
       },

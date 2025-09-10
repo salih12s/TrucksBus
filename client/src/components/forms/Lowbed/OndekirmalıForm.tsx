@@ -1,4 +1,4 @@
-  import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -78,13 +78,7 @@ interface FormData {
 }
 
 // Lastik Durumu Seçenekleri
-const TIRE_CONDITIONS = [
-  "%90-100",
-  "%75-89",
-  "%50-74",
-  "%25-49",
-  "%0-24"
-];
+const TIRE_CONDITIONS = ["%90-100", "%75-89", "%50-74", "%25-49", "%0-24"];
 
 // Rampa Mekanizması Seçenekleri
 const RAMPA_MEKANIZMASI = ["Hidrolik", "Pnömatik", "Manuel"];
@@ -253,7 +247,10 @@ const OndekirmalıForm: React.FC = () => {
 
       // Rampa mekanizması
       if (formData.rampaMekanizmasi.length > 0) {
-        submitData.append("rampaMekanizmasi", JSON.stringify(formData.rampaMekanizmasi));
+        submitData.append(
+          "rampaMekanizmasi",
+          JSON.stringify(formData.rampaMekanizmasi)
+        );
       }
 
       // Konum
@@ -299,7 +296,7 @@ const OndekirmalıForm: React.FC = () => {
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f5f5f5" }}>
       <Header />
-      
+
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Typography variant="h4" gutterBottom>
           Öndekirmalı Dorse İlanı Ver
@@ -351,7 +348,9 @@ const OndekirmalıForm: React.FC = () => {
                   setFormData({ ...formData, price: e.target.value })
                 }
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">TL</InputAdornment>
+                  endAdornment: (
+                    <InputAdornment position="end">TL</InputAdornment>
+                  ),
                 }}
                 required
                 sx={{ flex: 1 }}
@@ -375,7 +374,9 @@ const OndekirmalıForm: React.FC = () => {
                   setFormData({ ...formData, havuzDerinligi: e.target.value })
                 }
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">m</InputAdornment>
+                  endAdornment: (
+                    <InputAdornment position="end">m</InputAdornment>
+                  ),
                 }}
                 sx={{ flex: 1 }}
               />
@@ -387,7 +388,9 @@ const OndekirmalıForm: React.FC = () => {
                   setFormData({ ...formData, havuzGenisligi: e.target.value })
                 }
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">m</InputAdornment>
+                  endAdornment: (
+                    <InputAdornment position="end">m</InputAdornment>
+                  ),
                 }}
                 sx={{ flex: 1 }}
               />
@@ -399,7 +402,9 @@ const OndekirmalıForm: React.FC = () => {
                   setFormData({ ...formData, havuzUzunlugu: e.target.value })
                 }
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">m</InputAdornment>
+                  endAdornment: (
+                    <InputAdornment position="end">m</InputAdornment>
+                  ),
                 }}
                 sx={{ flex: 1 }}
               />
@@ -413,7 +418,9 @@ const OndekirmalıForm: React.FC = () => {
                   setFormData({ ...formData, istiapHaddi: e.target.value })
                 }
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">ton</InputAdornment>
+                  endAdornment: (
+                    <InputAdornment position="end">ton</InputAdornment>
+                  ),
                 }}
                 sx={{ flex: 1 }}
               />
@@ -451,7 +458,10 @@ const OndekirmalıForm: React.FC = () => {
                 row
                 value={formData.uzatilabilirProfil}
                 onChange={(e) =>
-                  setFormData({ ...formData, uzatilabilirProfil: e.target.value })
+                  setFormData({
+                    ...formData,
+                    uzatilabilirProfil: e.target.value,
+                  })
                 }
               >
                 <FormControlLabel value="Var" control={<Radio />} label="Var" />
@@ -603,7 +613,10 @@ const OndekirmalıForm: React.FC = () => {
             {/* Fotoğraf Önizlemeleri */}
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
               {photoPreviews.map((preview, index) => (
-                <Card key={index} sx={{ width: 120, height: 80, position: "relative" }}>
+                <Card
+                  key={index}
+                  sx={{ width: 120, height: 80, position: "relative" }}
+                >
                   <CardMedia
                     component="img"
                     height="80"
@@ -645,8 +658,16 @@ const OndekirmalıForm: React.FC = () => {
                   setFormData({ ...formData, warranty: e.target.value })
                 }
               >
-                <FormControlLabel value="Evet" control={<Radio />} label="Evet" />
-                <FormControlLabel value="Hayır" control={<Radio />} label="Hayır" />
+                <FormControlLabel
+                  value="Evet"
+                  control={<Radio />}
+                  label="Evet"
+                />
+                <FormControlLabel
+                  value="Hayır"
+                  control={<Radio />}
+                  label="Hayır"
+                />
               </RadioGroup>
             </FormControl>
 
@@ -659,8 +680,16 @@ const OndekirmalıForm: React.FC = () => {
                   setFormData({ ...formData, negotiable: e.target.value })
                 }
               >
-                <FormControlLabel value="Evet" control={<Radio />} label="Evet" />
-                <FormControlLabel value="Hayır" control={<Radio />} label="Hayır" />
+                <FormControlLabel
+                  value="Evet"
+                  control={<Radio />}
+                  label="Evet"
+                />
+                <FormControlLabel
+                  value="Hayır"
+                  control={<Radio />}
+                  label="Hayır"
+                />
               </RadioGroup>
             </FormControl>
 
@@ -673,8 +702,16 @@ const OndekirmalıForm: React.FC = () => {
                   setFormData({ ...formData, exchange: e.target.value })
                 }
               >
-                <FormControlLabel value="Evet" control={<Radio />} label="Evet" />
-                <FormControlLabel value="Hayır" control={<Radio />} label="Hayır" />
+                <FormControlLabel
+                  value="Evet"
+                  control={<Radio />}
+                  label="Evet"
+                />
+                <FormControlLabel
+                  value="Hayır"
+                  control={<Radio />}
+                  label="Hayır"
+                />
               </RadioGroup>
             </FormControl>
 
@@ -695,11 +732,7 @@ const OndekirmalıForm: React.FC = () => {
           <Button variant="outlined" onClick={() => navigate(-1)}>
             İptal
           </Button>
-          <Button
-            variant="contained"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
+          <Button variant="contained" onClick={handleSubmit} disabled={loading}>
             {loading ? "Yayınlanıyor..." : "İlanı Yayınla"}
           </Button>
         </Box>
@@ -715,7 +748,8 @@ const OndekirmalıForm: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Typography>
-            Öndekirmalı dorse ilanınız başarıyla yayınlandı. İlanınızı "İlanlarım" sayfasından görüntüleyebilirsiniz.
+            Öndekirmalı dorse ilanınız başarıyla yayınlandı. İlanınızı
+            "İlanlarım" sayfasından görüntüleyebilirsiniz.
           </Typography>
         </DialogContent>
         <DialogActions>

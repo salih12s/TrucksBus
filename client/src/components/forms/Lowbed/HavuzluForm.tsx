@@ -166,7 +166,10 @@ const HavuzluForm: React.FC = () => {
   };
 
   // Fotoğraf upload
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>, isShowcase = false) => {
+  const handlePhotoUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    isShowcase = false
+  ) => {
     const files = event.target.files;
     if (!files) return;
 
@@ -182,17 +185,17 @@ const HavuzluForm: React.FC = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const preview = e.target?.result as string;
-      
+
       if (isShowcase) {
-        setFormData(prev => ({ ...prev, showcasePhoto: file }));
+        setFormData((prev) => ({ ...prev, showcasePhoto: file }));
         setShowcasePreview(preview);
       } else {
         if (formData.photos.length >= 15) {
           alert("En fazla 15 fotoğraf yükleyebilirsiniz");
           return;
         }
-        setFormData(prev => ({ ...prev, photos: [...prev.photos, file] }));
-        setPhotoPreviews(prev => [...prev, preview]);
+        setFormData((prev) => ({ ...prev, photos: [...prev.photos, file] }));
+        setPhotoPreviews((prev) => [...prev, preview]);
       }
     };
     reader.readAsDataURL(file);
@@ -201,14 +204,14 @@ const HavuzluForm: React.FC = () => {
   // Fotoğraf silme
   const removePhoto = (index: number, isShowcase = false) => {
     if (isShowcase) {
-      setFormData(prev => ({ ...prev, showcasePhoto: null }));
+      setFormData((prev) => ({ ...prev, showcasePhoto: null }));
       setShowcasePreview(null);
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        photos: prev.photos.filter((_, i) => i !== index)
+        photos: prev.photos.filter((_, i) => i !== index),
       }));
-      setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
+      setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
     }
   };
 
@@ -236,7 +239,10 @@ const HavuzluForm: React.FC = () => {
       submitData.append("dingilSayisi", formData.dingilSayisi);
 
       // Rampa mekanizması
-      submitData.append("rampaMekanizmasi", JSON.stringify(formData.rampaMekanizmasi));
+      submitData.append(
+        "rampaMekanizmasi",
+        JSON.stringify(formData.rampaMekanizmasi)
+      );
 
       // Konum
       submitData.append("cityId", formData.cityId);
@@ -441,7 +447,9 @@ const HavuzluForm: React.FC = () => {
             </FormControl>
 
             <FormControl component="fieldset">
-              <FormLabel component="legend">Rampa Mekanizması (Seçim yapılmadı)</FormLabel>
+              <FormLabel component="legend">
+                Rampa Mekanizması (Seçim yapılmadı)
+              </FormLabel>
               <FormGroup row>
                 {RAMPA_MEKANIZMASI.map((rampa) => (
                   <FormControlLabel
@@ -523,11 +531,7 @@ const HavuzluForm: React.FC = () => {
                   sx={{ ml: 1 }}
                 />
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mb: 2 }}
-              >
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 İlk bakışta dikkat çeken en iyi fotoğrafınızı seçin
               </Typography>
 
@@ -592,17 +596,17 @@ const HavuzluForm: React.FC = () => {
                   sx={{ ml: 1 }}
                 />
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mb: 2 }}
-              >
-                Aracınızın farklı açılardan fotoğraflarını ekleyin (Maksimum 15 adet)
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Aracınızın farklı açılardan fotoğraflarını ekleyin (Maksimum 15
+                adet)
               </Typography>
 
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
                 {photoPreviews.map((preview, index) => (
-                  <Card key={index} sx={{ position: "relative", width: 120, height: 120 }}>
+                  <Card
+                    key={index}
+                    sx={{ position: "relative", width: 120, height: 120 }}
+                  >
                     <CardMedia
                       component="img"
                       height="120"
@@ -637,7 +641,10 @@ const HavuzluForm: React.FC = () => {
                   sx={{
                     border: "2px dashed #4caf50",
                     color: "#4caf50",
-                    "&:hover": { border: "2px dashed #388e3c", color: "#388e3c" },
+                    "&:hover": {
+                      border: "2px dashed #388e3c",
+                      color: "#388e3c",
+                    },
                   }}
                 >
                   Fotoğraf Ekle

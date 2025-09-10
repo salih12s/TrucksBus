@@ -95,7 +95,8 @@ const VehicleFormSelector: React.FC = () => {
             return <HavuzluForm />;
           } else if (
             modelSlug === "ondekirmalı" ||
-            modelSlug === "onde-kirmalı"
+            modelSlug === "onde-kirmalı" ||
+            modelSlug === "onden-kirmali"
           ) {
             console.log("✅ Öndekirmalı Lowbed Dorse formu seçildi");
             return <OndekirmalıForm />;
@@ -113,8 +114,10 @@ const VehicleFormSelector: React.FC = () => {
           return <HavuzluForm />;
         case "lowbed-lowbed-ondekirmalı":
         case "lowbed-lowbed-onde-kirmalı":
+        case "lowbed-lowbed-onden-kirmali":
         case "ondekirmalı":
         case "onde-kirmalı":
+        case "onden-kirmali":
           console.log(
             "✅ Öndekirmalı Lowbed Dorse formu seçildi (direct variant)"
           );
