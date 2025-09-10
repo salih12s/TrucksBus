@@ -368,6 +368,13 @@ const AdDetail: React.FC = () => {
       color: <Palette />,
       condition: <CheckCircle />,
       isExchangeable: <CompareArrows />,
+      // Dorse özel iconları
+      genislik: <DirectionsCar />,
+      uzunluk: <DirectionsCar />,
+      lastikDurumu: <Speed />,
+      devrilmeYonu: <Settings />,
+      warranty: <CheckCircle />,
+      negotiable: <CompareArrows />,
     };
     return iconMap[key] || <Info />;
   };
@@ -434,6 +441,14 @@ const AdDetail: React.FC = () => {
       doorCount: "Kapı Sayısı",
       seatLayout: "Koltuk Düzeni",
       seatBackScreen: "Koltuk Arkası Ekran",
+
+      // Dorse/Damperli özellikleri
+      genislik: "Genişlik (m)",
+      uzunluk: "Uzunluk (m)",
+      lastikDurumu: "Lastik Durumu (%)",
+      devrilmeYonu: "Devrilme Yönü",
+      warranty: "Garanti",
+      negotiable: "Pazarlık",
 
       // Güvenlik ve konfor özellikleri
       abs: "ABS",

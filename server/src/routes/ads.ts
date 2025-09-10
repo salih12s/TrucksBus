@@ -18,6 +18,7 @@ router.get("/cities/:cityId/districts", adController.getDistricts);
 
 // İlan CRUD routes
 router.get("/", adController.getAds);
+router.get("/:id/similar", adController.getSimilarAds);
 router.get("/:id", adController.getAdById);
 router.post("/", authenticateToken, adController.createAd);
 router.put("/:id", authenticateToken, adController.updateAd);

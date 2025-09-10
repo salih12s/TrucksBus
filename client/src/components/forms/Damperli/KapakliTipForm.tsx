@@ -500,11 +500,7 @@ const KapakliTipForm: React.FC = () => {
                   sx={{ ml: 1 }}
                 />
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mb: 2 }}
-              >
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 İlk bakışta dikkat çeken en iyi fotoğrafınızı seçin
               </Typography>
 
@@ -575,11 +571,7 @@ const KapakliTipForm: React.FC = () => {
                   sx={{ ml: 1 }}
                 />
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mb: 2 }}
-              >
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Dorsenizin farklı açılardan fotoğraflarını ekleyin (en fazla 15
                 adet)
               </Typography>
@@ -684,9 +676,7 @@ const KapakliTipForm: React.FC = () => {
               <InputLabel>Garanti</InputLabel>
               <Select
                 value={formData.warranty}
-                onChange={(e) =>
-                  handleInputChange("warranty", e.target.value)
-                }
+                onChange={(e) => handleInputChange("warranty", e.target.value)}
                 label="Garanti"
               >
                 <MenuItem value="evet">Evet</MenuItem>
@@ -712,9 +702,7 @@ const KapakliTipForm: React.FC = () => {
               <InputLabel>Takas</InputLabel>
               <Select
                 value={formData.exchange}
-                onChange={(e) =>
-                  handleInputChange("exchange", e.target.value)
-                }
+                onChange={(e) => handleInputChange("exchange", e.target.value)}
                 label="Takas"
               >
                 <MenuItem value="evet">Evet</MenuItem>
@@ -732,9 +720,7 @@ const KapakliTipForm: React.FC = () => {
             rows={4}
             label="Detaylı Bilgi"
             value={formData.detailedInfo}
-            onChange={(e) =>
-              handleInputChange("detailedInfo", e.target.value)
-            }
+            onChange={(e) => handleInputChange("detailedInfo", e.target.value)}
             placeholder="Dorseniz hakkında ek bilgiler..."
             sx={{ mb: 4 }}
           />

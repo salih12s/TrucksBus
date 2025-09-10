@@ -63,15 +63,19 @@ const VehicleFormSelector: React.FC = () => {
     if (variantSlug) {
       switch (variantSlug) {
         case "hafriyat-tipi":
+        case "damperli-damperli-hafriyat-tip":
           console.log("✅ Hafriyat Tipi Dorse formu seçildi (variant)");
           return <HafriyatTipiForm />;
         case "havuz-hardox-tipi":
+        case "damperli-damperli-havuz-hardox-tip":
           console.log("✅ Havuz Hardox Tipi Dorse formu seçildi (variant)");
           return <HavuzHardoxTipiForm />;
         case "kapakli-tip":
+        case "damperli-damperli-kapakli-tip":
           console.log("✅ Kapaklı Tip Dorse formu seçildi (variant)");
           return <KapakliTipForm />;
         case "kaya-tipi":
+        case "damperli-damperli-kaya-tip":
           console.log("✅ Kaya Tipi Dorse formu seçildi (variant)");
           return <KayaTipiForm />;
         case "tanker":
@@ -374,11 +378,7 @@ const VehicleFormSelector: React.FC = () => {
     // Otobüs
     case "otobus":
       console.log("✅ Otobüs formu seçildi");
-      return (
-        <OtobusAdForm
-          onSubmit={(data) => console.log("Otobus form submitted:", data)}
-        />
-      );
+      return <OtobusAdForm />;
 
     // Diğer kategoriler için varsayılan form (şimdilik minibüs)
     case "oto-kurtarici-tasiyici":

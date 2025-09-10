@@ -1552,6 +1552,8 @@ export const createDorseAd = async (req: Request, res: Response) => {
         description,
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
+        cityId: cityId ? parseInt(cityId) : null,
+        districtId: districtId ? parseInt(districtId) : null,
         customFields: {
           genislik: genislik || null,
           uzunluk: uzunluk || null,
@@ -1564,8 +1566,6 @@ export const createDorseAd = async (req: Request, res: Response) => {
           phone: phone || null,
           email: email || null,
           detailedInfo: detailedInfo || null,
-          cityId: cityId ? parseInt(cityId) : null,
-          districtId: districtId ? parseInt(districtId) : null,
           categorySlug: categorySlug || null,
           brandSlug: brandSlug || null,
           modelSlug: modelSlug || null,
@@ -1578,6 +1578,78 @@ export const createDorseAd = async (req: Request, res: Response) => {
         user: true,
       },
     });
+
+    // Resim yükleme işlemi (Base64 formatında)
+    const files = req.files as any;
+    if (files && files.length > 0) {
+      console.log(
+        "📷 Dorse resimleri base64 formatında kaydediliyor:",
+        files.map((f: any) => f.fieldname)
+      );
+
+      const imagePromises = [];
+      let displayOrder = 0;
+
+      // Vitrin resmini bul ve işle
+      const showcaseFile = files.find(
+        (f: any) => f.fieldname === "showcasePhoto"
+      );
+      if (showcaseFile) {
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          showcaseFile.mimetype
+        };base64,${showcaseFile.buffer.toString("base64")}`;
+
+        console.log("📷 Vitrin resmi base64 formatında kaydediliyor");
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: true,
+              displayOrder: 0,
+              altText: `${title} - Vitrin Resmi`,
+            },
+          })
+        );
+        displayOrder = 1;
+      }
+
+      // Diğer resimleri işle
+      const photoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("photo_")
+      );
+      for (const file of photoFiles) {
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
+
+        console.log(
+          `📷 Dorse resim ${displayOrder} base64 formatında kaydediliyor`
+        );
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: false,
+              displayOrder,
+              altText: `${title} - Resim ${displayOrder}`,
+            },
+          })
+        );
+        displayOrder++;
+      }
+
+      // Tüm resimleri paralel olarak kaydet
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        console.log(`✅ ${imagePromises.length} resim başarıyla kaydedildi`);
+      }
+    }
 
     return res.status(201).json({
       message: "Dorse ilanı başarıyla oluşturuldu ve onay bekliyor",
@@ -1728,5 +1800,60 @@ export const createKaroserAd = async (req: Request, res: Response) => {
       error: "İlan oluşturulurken hata oluştu",
       details: error.message,
     });
+  }
+};
+
+// Benzer ilanları getir
+export const getSimilarAds = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const adId = parseInt(id);
+
+    // Önce mevcut ilanı bul
+    const currentAd = await prisma.ad.findUnique({
+      where: { id: adId },
+      include: { category: true },
+    });
+
+    if (!currentAd) {
+      return res.status(404).json({ error: "İlan bulunamadı" });
+    }
+
+    // Benzer ilanları bul (aynı kategori, farklı ID)
+    const similarAds = await prisma.ad.findMany({
+      where: {
+        categoryId: currentAd.categoryId,
+        id: { not: adId },
+        status: "APPROVED",
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+            city: true,
+            phone: true,
+          },
+        },
+        category: true,
+        brand: true,
+        model: true,
+        variant: true,
+        city: true,
+        district: true,
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 6, // En fazla 6 benzer ilan
+    });
+
+    return res.json({ similarAds });
+  } catch (error) {
+    console.error("Benzer ilanlar getirilirken hata:", error);
+    return res.status(500).json({ error: "Server error" });
   }
 };

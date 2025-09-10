@@ -678,7 +678,8 @@ const HavuzHardoxTipiForm: React.FC = () => {
                   <Box
                     sx={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(200px, 1fr))",
                       gap: 2,
                       mt: 2,
                     }}
@@ -699,7 +700,9 @@ const HavuzHardoxTipiForm: React.FC = () => {
                             right: 8,
                             backgroundColor: "rgba(244, 67, 54, 0.8)",
                             color: "white",
-                            "&:hover": { backgroundColor: "rgba(244, 67, 54, 1)" },
+                            "&:hover": {
+                              backgroundColor: "rgba(244, 67, 54, 1)",
+                            },
                           }}
                           onClick={() => removePhoto(index)}
                           size="small"

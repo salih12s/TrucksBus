@@ -225,17 +225,21 @@ const KayaTipiForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
+      console.log("🚀 Form gönderiliyor, formData:", formData);
+
       // Temel bilgileri ekle (price'ı parse ederek)
       Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "photos" && key !== "showcasePhoto" && value) {
+        if (key !== "photos" && key !== "showcasePhoto") {
           // Price değerini parse et
-          if (key === "price") {
+          if (key === "price" && value) {
             const parsedValue = parseFormattedNumber(value.toString());
             if (parsedValue) {
               submitData.append(key, parsedValue);
+              console.log(`✅ ${key}: ${parsedValue}`);
             }
-          } else {
+          } else if (value) {
             submitData.append(key, value.toString());
+            console.log(`✅ ${key}: ${value}`);
           }
         }
       });
