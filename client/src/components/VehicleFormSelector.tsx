@@ -85,12 +85,39 @@ const VehicleFormSelector: React.FC = () => {
           console.log("✅ Silobas Dorse formu seçildi (variant)");
           return <SilobasForm />;
         case "lowbed":
+          console.log(
+            "✅ Lowbed variant algılandı, model kontrol ediliyor:",
+            modelSlug
+          );
+          // Lowbed markası altında model kontrolü
+          if (modelSlug === "havuzlu") {
+            console.log("✅ Havuzlu Lowbed Dorse formu seçildi");
+            return <HavuzluForm />;
+          } else if (
+            modelSlug === "ondekirmalı" ||
+            modelSlug === "onde-kirmalı"
+          ) {
+            console.log("✅ Öndekirmalı Lowbed Dorse formu seçildi");
+            return <OndekirmalıForm />;
+          } else {
+            console.log(
+              "⚠️ Bilinmeyen Lowbed model:",
+              modelSlug,
+              "- Havuzlu açılıyor"
+            );
+            return <HavuzluForm />;
+          }
+        case "lowbed-lowbed-havuzlu":
         case "havuzlu":
-          console.log("✅ Havuzlu Lowbed Dorse formu seçildi (variant)");
+          console.log("✅ Havuzlu Lowbed Dorse formu seçildi (direct variant)");
           return <HavuzluForm />;
+        case "lowbed-lowbed-ondekirmalı":
+        case "lowbed-lowbed-onde-kirmalı":
         case "ondekirmalı":
         case "onde-kirmalı":
-          console.log("✅ Öndekirmalı Lowbed Dorse formu seçildi (variant)");
+          console.log(
+            "✅ Öndekirmalı Lowbed Dorse formu seçildi (direct variant)"
+          );
           return <OndekirmalıForm />;
         case "kuruyuk":
         case "kapakli":

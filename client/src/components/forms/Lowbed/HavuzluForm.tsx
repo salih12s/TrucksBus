@@ -20,8 +20,15 @@ import {
   RadioGroup,
   FormLabel,
   InputAdornment,
+  Card,
+  CardContent,
+  CardMedia,
+  IconButton,
+  Chip,
+  Checkbox,
+  FormGroup,
 } from "@mui/material";
-import { CheckCircle } from "@mui/icons-material";
+import { CheckCircle, PhotoCamera, Close } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import Header from "../../layout/Header";
 import apiClient from "../../../api/client";
@@ -53,6 +60,9 @@ interface FormData {
   uzatilabilirProfil: string;
   dingilSayisi: string;
 
+  // Rampa Mekanizması
+  rampaMekanizmasi: string[];
+
   // Konum
   cityId: string;
   districtId: string;
@@ -60,11 +70,6 @@ interface FormData {
   // Fotoğraflar
   photos: File[];
   showcasePhoto: File | null;
-
-  // İletişim Bilgileri
-  sellerName: string;
-  phone: string;
-  email: string;
 
   // Ekstra
   warranty: string;
@@ -77,6 +82,9 @@ interface FormData {
 // Lastik Durumu Seçenekleri
 const TIRE_CONDITIONS = ["%90-100", "%75-89", "%50-74", "%25-49", "%0-24"];
 
+// Rampa Mekanizması Seçenekleri
+const RAMPA_MEKANIZMASI = ["Hidrolik", "Pnömatik", "Manuel"];
+
 const HavuzluForm: React.FC = () => {
   const navigate = useNavigate();
 
@@ -84,6 +92,8 @@ const HavuzluForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -97,13 +107,11 @@ const HavuzluForm: React.FC = () => {
     istiapHaddi: "",
     uzatilabilirProfil: "",
     dingilSayisi: "",
+    rampaMekanizmasi: [],
     cityId: "",
     districtId: "",
     photos: [],
     showcasePhoto: null,
-    sellerName: "",
-    phone: "",
-    email: "",
     warranty: "",
     negotiable: "",
     exchange: "",
@@ -141,6 +149,69 @@ const HavuzluForm: React.FC = () => {
     fetchDistricts(cityId);
   };
 
+  // Rampa mekanizması seçimi
+  const handleRampaChange = (value: string) => {
+    const currentValues = formData.rampaMekanizmasi;
+    if (currentValues.includes(value)) {
+      setFormData({
+        ...formData,
+        rampaMekanizmasi: currentValues.filter((item) => item !== value),
+      });
+    } else {
+      setFormData({
+        ...formData,
+        rampaMekanizmasi: [...currentValues, value],
+      });
+    }
+  };
+
+  // Fotoğraf upload
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>, isShowcase = false) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    const file = files[0];
+    if (!file) return;
+
+    // File size check (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Fotoğraf boyutu 5MB'dan küçük olmalıdır");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const preview = e.target?.result as string;
+      
+      if (isShowcase) {
+        setFormData(prev => ({ ...prev, showcasePhoto: file }));
+        setShowcasePreview(preview);
+      } else {
+        if (formData.photos.length >= 15) {
+          alert("En fazla 15 fotoğraf yükleyebilirsiniz");
+          return;
+        }
+        setFormData(prev => ({ ...prev, photos: [...prev.photos, file] }));
+        setPhotoPreviews(prev => [...prev, preview]);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Fotoğraf silme
+  const removePhoto = (index: number, isShowcase = false) => {
+    if (isShowcase) {
+      setFormData(prev => ({ ...prev, showcasePhoto: null }));
+      setShowcasePreview(null);
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        photos: prev.photos.filter((_, i) => i !== index)
+      }));
+      setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
   // Form gönderimi
   const handleSubmit = async () => {
     setLoading(true);
@@ -164,14 +235,12 @@ const HavuzluForm: React.FC = () => {
       submitData.append("uzatilabilirProfil", formData.uzatilabilirProfil);
       submitData.append("dingilSayisi", formData.dingilSayisi);
 
+      // Rampa mekanizması
+      submitData.append("rampaMekanizmasi", JSON.stringify(formData.rampaMekanizmasi));
+
       // Konum
       submitData.append("cityId", formData.cityId);
       submitData.append("districtId", formData.districtId);
-
-      // İletişim bilgileri
-      submitData.append("sellerName", formData.sellerName);
-      submitData.append("phone", formData.phone);
-      submitData.append("email", formData.email);
 
       // Ekstra
       submitData.append("warranty", formData.warranty);
@@ -180,13 +249,13 @@ const HavuzluForm: React.FC = () => {
       submitData.append("detailedInfo", formData.detailedInfo);
 
       // Fotoğrafları ekle
-      formData.photos.forEach((photo) => {
-        submitData.append("photos", photo);
-      });
-
       if (formData.showcasePhoto) {
         submitData.append("showcasePhoto", formData.showcasePhoto);
       }
+
+      formData.photos.forEach((photo, index) => {
+        submitData.append(`photo_${index}`, photo);
+      });
 
       const response = await apiClient.post("/ads/dorse", submitData, {
         headers: {
@@ -206,7 +275,7 @@ const HavuzluForm: React.FC = () => {
   // Başarı dialogu
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/profile/my-ads");
+    navigate("/dashboard");
   };
 
   return (
@@ -283,20 +352,6 @@ const HavuzluForm: React.FC = () => {
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                label="Havuz Derinliği"
-                value={formData.havuzDerinligi}
-                onChange={(e) =>
-                  setFormData({ ...formData, havuzDerinligi: e.target.value })
-                }
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">m</InputAdornment>
-                  ),
-                }}
-                sx={{ flex: 1 }}
-              />
-
               <TextField
                 label="Havuz Genişliği"
                 value={formData.havuzGenisligi}
@@ -384,6 +439,25 @@ const HavuzluForm: React.FC = () => {
                 <FormControlLabel value="Yok" control={<Radio />} label="Yok" />
               </RadioGroup>
             </FormControl>
+
+            <FormControl component="fieldset">
+              <FormLabel component="legend">Rampa Mekanizması (Seçim yapılmadı)</FormLabel>
+              <FormGroup row>
+                {RAMPA_MEKANIZMASI.map((rampa) => (
+                  <FormControlLabel
+                    key={rampa}
+                    control={
+                      <Checkbox
+                        checked={formData.rampaMekanizmasi.includes(rampa)}
+                        onChange={() => handleRampaChange(rampa)}
+                        name={rampa}
+                      />
+                    }
+                    label={rampa}
+                  />
+                ))}
+              </FormGroup>
+            </FormControl>
           </Box>
         </Paper>
 
@@ -430,43 +504,153 @@ const HavuzluForm: React.FC = () => {
 
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            İletişim Bilgileri
+            📸 Fotoğraflar
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField
-              fullWidth
-              label="Satıcı Adı"
-              value={formData.sellerName}
-              onChange={(e) =>
-                setFormData({ ...formData, sellerName: e.target.value })
-              }
-              required
-            />
+          {/* Vitrin Fotoğrafı */}
+          <Card sx={{ mb: 3, border: "2px solid #e3f2fd" }}>
+            <CardContent>
+              <Typography
+                variant="h6"
+                sx={{ mb: 2, display: "flex", alignItems: "center" }}
+              >
+                ⭐ Vitrin Fotoğrafı
+                <Chip
+                  label="Zorunlu"
+                  size="small"
+                  color="primary"
+                  sx={{ ml: 1 }}
+                />
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
+                İlk bakışta dikkat çeken en iyi fotoğrafınızı seçin
+              </Typography>
 
-            <Box sx={{ display: "flex", gap: 2 }}>
-              <TextField
-                label="Telefon"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-                required
-                sx={{ flex: 1 }}
-              />
+              {showcasePreview ? (
+                <Card sx={{ position: "relative", maxWidth: 300 }}>
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={showcasePreview}
+                    alt="Vitrin fotoğrafı"
+                    sx={{ objectFit: "cover" }}
+                  />
+                  <IconButton
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      backgroundColor: "rgba(0,0,0,0.6)",
+                      color: "white",
+                      "&:hover": { backgroundColor: "rgba(0,0,0,0.8)" },
+                    }}
+                    onClick={() => removePhoto(0, true)}
+                  >
+                    <Close />
+                  </IconButton>
+                </Card>
+              ) : (
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<PhotoCamera />}
+                  sx={{
+                    height: 100,
+                    border: "2px dashed #ccc",
+                    "&:hover": { border: "2px dashed #1976d2" },
+                  }}
+                >
+                  Vitrin Fotoğrafı Seç
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => handlePhotoUpload(e, true)}
+                  />
+                </Button>
+              )}
+            </CardContent>
+          </Card>
 
-              <TextField
-                label="E-posta"
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                sx={{ flex: 1 }}
-              />
-            </Box>
-          </Box>
+          {/* Diğer Fotoğraflar */}
+          <Card sx={{ mb: 4, border: "2px solid #e8f5e8" }}>
+            <CardContent>
+              <Typography
+                variant="h6"
+                sx={{ mb: 2, display: "flex", alignItems: "center" }}
+              >
+                📷 Diğer Fotoğraflar
+                <Chip
+                  label={`${formData.photos.length}/15`}
+                  size="small"
+                  color="secondary"
+                  sx={{ ml: 1 }}
+                />
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
+                Aracınızın farklı açılardan fotoğraflarını ekleyin (Maksimum 15 adet)
+              </Typography>
+
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
+                {photoPreviews.map((preview, index) => (
+                  <Card key={index} sx={{ position: "relative", width: 120, height: 120 }}>
+                    <CardMedia
+                      component="img"
+                      height="120"
+                      image={preview}
+                      alt={`Fotoğraf ${index + 1}`}
+                      sx={{ objectFit: "cover" }}
+                    />
+                    <IconButton
+                      sx={{
+                        position: "absolute",
+                        top: 4,
+                        right: 4,
+                        backgroundColor: "rgba(0,0,0,0.6)",
+                        color: "white",
+                        width: 24,
+                        height: 24,
+                        "&:hover": { backgroundColor: "rgba(0,0,0,0.8)" },
+                      }}
+                      onClick={() => removePhoto(index)}
+                    >
+                      <Close sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Card>
+                ))}
+              </Box>
+
+              {formData.photos.length < 15 && (
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<PhotoCamera />}
+                  sx={{
+                    border: "2px dashed #4caf50",
+                    color: "#4caf50",
+                    "&:hover": { border: "2px dashed #388e3c", color: "#388e3c" },
+                  }}
+                >
+                  Fotoğraf Ekle
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => handlePhotoUpload(e, false)}
+                  />
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         </Paper>
 
         <Paper sx={{ p: 3, mb: 3 }}>

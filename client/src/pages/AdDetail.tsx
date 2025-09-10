@@ -44,6 +44,9 @@ import {
   Build,
   DirectionsCar,
   LocationOn,
+  FitnessCenter,
+  UnfoldMore,
+  Height,
 } from "@mui/icons-material";
 import Header from "../components/layout/Header";
 import GoogleMap from "../components/maps/GoogleMap";
@@ -375,6 +378,14 @@ const AdDetail: React.FC = () => {
       devrilmeYonu: <Settings />,
       warranty: <CheckCircle />,
       negotiable: <CompareArrows />,
+      // Lowbed özel iconları
+      havuzDerinligi: <Height />,
+      havuzGenisligi: <DirectionsCar />,
+      havuzUzunlugu: <DirectionsCar />,
+      istiapHaddi: <FitnessCenter />,
+      uzatilabilirProfil: <UnfoldMore />,
+      dingilSayisi: <Settings />,
+      rampaMekanizmasi: <Build />,
     };
     return iconMap[key] || <Info />;
   };
@@ -449,6 +460,15 @@ const AdDetail: React.FC = () => {
       devrilmeYonu: "Devrilme Yönü",
       warranty: "Garanti",
       negotiable: "Pazarlık",
+
+      // Lowbed özellikleri
+      havuzDerinligi: "Havuz Derinliği (m)",
+      havuzGenisligi: "Havuz Genişliği (m)",
+      havuzUzunlugu: "Havuz Uzunluğu (m)",
+      istiapHaddi: "İstiap Haddi (ton)",
+      uzatilabilirProfil: "Uzatılabilir Profil",
+      dingilSayisi: "Dingil Sayısı",
+      rampaMekanizmasi: "Rampa Mekanizması",
 
       // Güvenlik ve konfor özellikleri
       abs: "ABS",
