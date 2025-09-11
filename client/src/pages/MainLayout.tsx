@@ -316,25 +316,27 @@ const MainLayout: React.FC = () => {
     const fetchData = async () => {
       try {
         console.log("=== STARTING API CALLS ===");
-        
-        const [categoriesRes, adsRes, brandsRes, citiesRes] = await Promise.all([
-          apiClient.get("/categories").catch(err => {
-            console.error("Categories API error:", err);
-            return { data: [] };
-          }),
-          apiClient.get("/ads?status=APPROVED").catch(err => {
-            console.error("Ads API error:", err);
-            return { data: { ads: [] } };
-          }),
-          apiClient.get("/brands").catch(err => {
-            console.error("Brands API error:", err);
-            return { data: [] };
-          }),
-          apiClient.get("/cities").catch(err => {
-            console.error("Cities API error:", err);
-            return { data: [] };
-          }),
-        ]);
+
+        const [categoriesRes, adsRes, brandsRes, citiesRes] = await Promise.all(
+          [
+            apiClient.get("/categories").catch((err) => {
+              console.error("Categories API error:", err);
+              return { data: [] };
+            }),
+            apiClient.get("/ads?status=APPROVED").catch((err) => {
+              console.error("Ads API error:", err);
+              return { data: { ads: [] } };
+            }),
+            apiClient.get("/brands").catch((err) => {
+              console.error("Brands API error:", err);
+              return { data: [] };
+            }),
+            apiClient.get("/cities").catch((err) => {
+              console.error("Cities API error:", err);
+              return { data: [] };
+            }),
+          ]
+        );
 
         console.log("=== RAW API RESPONSES ===");
         console.log("Categories response:", categoriesRes);
@@ -354,7 +356,7 @@ const MainLayout: React.FC = () => {
             ? adsResponse.ads
             : []
           : Array.isArray(adsRes.data)
-          ? adsRes.data as Ad[]
+          ? (adsRes.data as Ad[])
           : [];
 
         const brandsData = Array.isArray(brandsRes.data) ? brandsRes.data : [];
@@ -372,7 +374,7 @@ const MainLayout: React.FC = () => {
         console.log("Ads:", adsData.length, adsData);
         console.log("Brands:", brandsData.length, brandsData);
         console.log("Cities:", citiesData.length, citiesData);
-        
+
         if (adsData.length > 0) {
           console.log("First ad sample:", adsData[0]);
           console.log("First ad images:", adsData[0].images);
@@ -435,7 +437,7 @@ const MainLayout: React.FC = () => {
       yearMax,
       selectedBrand,
       selectedCity,
-      totalAds: ads.length
+      totalAds: ads.length,
     });
 
     if (
@@ -456,13 +458,22 @@ const MainLayout: React.FC = () => {
 
       // Kategori filtresi - slug ile eşleştir
       if (selectedCategory) {
-        const selectedCategoryName = categories.find(cat => cat.slug === selectedCategory)?.name;
+        const selectedCategoryName = categories.find(
+          (cat) => cat.slug === selectedCategory
+        )?.name;
         if (selectedCategoryName) {
           filtered = filtered.filter((ad) => {
-            const categoryMatch = ad.category?.name?.toLowerCase() === selectedCategoryName.toLowerCase();
+            const categoryMatch =
+              ad.category?.name?.toLowerCase() ===
+              selectedCategoryName.toLowerCase();
             return categoryMatch;
           });
-          console.log("After category filter:", filtered.length, "Category:", selectedCategoryName);
+          console.log(
+            "After category filter:",
+            filtered.length,
+            "Category:",
+            selectedCategoryName
+          );
         }
       }
 
@@ -471,11 +482,19 @@ const MainLayout: React.FC = () => {
         const searchLower = searchTerm.toLowerCase();
         filtered = filtered.filter((ad) => {
           const titleMatch = ad.title?.toLowerCase().includes(searchLower);
-          const brandMatch = ad.brand?.name?.toLowerCase().includes(searchLower);
-          const modelMatch = ad.model?.name?.toLowerCase().includes(searchLower);
+          const brandMatch = ad.brand?.name
+            ?.toLowerCase()
+            .includes(searchLower);
+          const modelMatch = ad.model?.name
+            ?.toLowerCase()
+            .includes(searchLower);
           const cityMatch = ad.city?.name?.toLowerCase().includes(searchLower);
-          const districtMatch = ad.district?.name?.toLowerCase().includes(searchLower);
-          const locationMatch = ad.location?.toLowerCase().includes(searchLower);
+          const districtMatch = ad.district?.name
+            ?.toLowerCase()
+            .includes(searchLower);
+          const locationMatch = ad.location
+            ?.toLowerCase()
+            .includes(searchLower);
 
           return (
             titleMatch ||
@@ -486,7 +505,12 @@ const MainLayout: React.FC = () => {
             locationMatch
           );
         });
-        console.log("After search filter:", filtered.length, "Search term:", searchTerm);
+        console.log(
+          "After search filter:",
+          filtered.length,
+          "Search term:",
+          searchTerm
+        );
       }
 
       // Fiyat aralığı filtresi
@@ -520,10 +544,16 @@ const MainLayout: React.FC = () => {
       // Marka filtresi - ID ile eşleştir
       if (selectedBrand) {
         filtered = filtered.filter((ad) => {
-          const brandMatch = ad.brand?.id?.toString() === selectedBrand.toString();
+          const brandMatch =
+            ad.brand?.id?.toString() === selectedBrand.toString();
           return brandMatch;
         });
-        console.log("After brand filter:", filtered.length, "Brand ID:", selectedBrand);
+        console.log(
+          "After brand filter:",
+          filtered.length,
+          "Brand ID:",
+          selectedBrand
+        );
       }
 
       // Şehir filtresi - ID ile eşleştir
@@ -532,7 +562,12 @@ const MainLayout: React.FC = () => {
           const cityMatch = ad.city?.id?.toString() === selectedCity.toString();
           return cityMatch;
         });
-        console.log("After city filter:", filtered.length, "City ID:", selectedCity);
+        console.log(
+          "After city filter:",
+          filtered.length,
+          "City ID:",
+          selectedCity
+        );
       }
 
       setFilteredAds(filtered);
@@ -548,7 +583,7 @@ const MainLayout: React.FC = () => {
     yearMax,
     selectedBrand,
     selectedCity,
-    categories
+    categories,
   ]);
 
   // Favorites count'u yükle
@@ -1146,11 +1181,11 @@ const MainLayout: React.FC = () => {
                     filteredAdsCount: filteredAds.length,
                     totalAdsCount: ads.length,
                     isArray: Array.isArray(filteredAds),
-                    firstAd: filteredAds[0]
+                    firstAd: filteredAds[0],
                   });
                   return null;
                 })()}
-                
+
                 {!Array.isArray(filteredAds) ? (
                   <Typography>İlanlar yükleniyor...</Typography>
                 ) : filteredAds.length === 0 ? (

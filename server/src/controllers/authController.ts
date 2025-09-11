@@ -727,4 +727,213 @@ export class AuthController {
       res.status(500).json({ error: "Internal server error" });
     }
   }
+
+  // Forgot password - generate JWT reset token
+  static async forgotPassword(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        res.status(400).json({ error: "Email is required" });
+        return;
+      }
+
+      // Find user by email
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          isActive: true,
+        },
+      });
+
+      // Always return success message (security best practice)
+      // Don't reveal whether email exists or not
+      const successMessage =
+        "Eğer bu e-posta adresine kayıtlı bir hesap varsa, şifre sıfırlama bağlantısı gönderilecektir.";
+
+      if (!user || !user.isActive) {
+        res.json({ message: successMessage });
+        return;
+      }
+
+      // Generate JWT reset token (expires in 1 hour)
+      const secret = process.env.JWT_SECRET_ACCESS;
+      if (!secret) {
+        throw new Error("JWT_SECRET_ACCESS is not defined");
+      }
+
+      const resetToken = jwt.sign(
+        {
+          userId: user.id,
+          email: user.email,
+          type: "password_reset",
+        },
+        secret,
+        { expiresIn: "1h" }
+      );
+
+      // In a real application, you would send an email here
+      // For now, we'll just log the reset link
+      const resetLink = `${
+        process.env.FRONTEND_URL || "http://localhost:5174"
+      }/reset-password?token=${resetToken}`;
+      console.log("Password reset link for", email, ":", resetLink);
+
+      // TODO: Implement email sending
+      // await sendPasswordResetEmail(user.email, resetLink);
+
+      res.json({ message: successMessage });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  // Verify reset token
+  static async verifyResetToken(req: Request, res: Response) {
+    try {
+      const { token } = req.query;
+
+      if (!token) {
+        res.status(400).json({ error: "Reset token is required" });
+        return;
+      }
+
+      const secret = process.env.JWT_SECRET_ACCESS;
+      if (!secret) {
+        throw new Error("JWT_SECRET_ACCESS is not defined");
+      }
+
+      // Verify JWT token
+      const decoded = jwt.verify(token as string, secret) as any;
+
+      // Check if it's a password reset token
+      if (decoded.type !== "password_reset") {
+        res.status(400).json({ error: "Invalid token type" });
+        return;
+      }
+
+      // Verify user still exists and is active
+      const user = await prisma.user.findUnique({
+        where: {
+          id: decoded.userId,
+          isActive: true,
+        },
+        select: {
+          id: true,
+          email: true,
+        },
+      });
+
+      if (!user) {
+        res.status(400).json({ error: "Invalid token or user not found" });
+        return;
+      }
+
+      res.json({ message: "Token is valid", userId: user.id });
+    } catch (error) {
+      console.error("Verify reset token error:", error);
+      if (error instanceof jwt.JsonWebTokenError) {
+        res.status(400).json({ error: "Invalid or expired reset token" });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
+
+  // Reset password
+  static async resetPassword(req: Request, res: Response) {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        res.status(400).json({ error: "Token and new password are required" });
+        return;
+      }
+
+      if (newPassword.length < 8) {
+        res.status(400).json({
+          error: "Password must be at least 8 characters long",
+        });
+        return;
+      }
+
+      // Password strength validation
+      const passwordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+      if (!passwordRegex.test(newPassword)) {
+        res.status(400).json({
+          error:
+            "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character",
+        });
+        return;
+      }
+
+      const secret = process.env.JWT_SECRET_ACCESS;
+      if (!secret) {
+        throw new Error("JWT_SECRET_ACCESS is not defined");
+      }
+
+      // Verify JWT token
+      const decoded = jwt.verify(token, secret) as any;
+
+      // Check if it's a password reset token
+      if (decoded.type !== "password_reset") {
+        res.status(400).json({ error: "Invalid token type" });
+        return;
+      }
+
+      // Find user and verify they're still active
+      const user = await prisma.user.findUnique({
+        where: {
+          id: decoded.userId,
+          isActive: true,
+        },
+        select: {
+          id: true,
+          email: true,
+        },
+      });
+
+      if (!user) {
+        res.status(400).json({ error: "Invalid token or user not found" });
+        return;
+      }
+
+      // Hash new password
+      const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+      // Update password
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordHash,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Log the password reset
+      await AdminLogController.logActivity(
+        user.id,
+        user.email,
+        "PASSWORD_RESET",
+        "User reset their password via forgot password flow"
+      );
+
+      res.json({
+        message: "Password reset successfully",
+      });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      if (error instanceof jwt.JsonWebTokenError) {
+        res.status(400).json({ error: "Invalid or expired reset token" });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    }
+  }
 }

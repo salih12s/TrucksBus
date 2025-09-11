@@ -30,6 +30,12 @@ const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
 const RegisterCorporate = React.lazy(
   () => import("./components/auth/RegisterCorporate")
 );
+const ForgotPassword = React.lazy(
+  () => import("./components/auth/ForgotPassword")
+);
+const ResetPassword = React.lazy(
+  () => import("./components/auth/ResetPassword")
+);
 const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
 const CreateMinibusAdForm = React.lazy(
   () => import("./components/ads/CreateMinibusAdForm")
@@ -151,6 +157,7 @@ const HelpGuide = React.lazy(() => import("./pages/legal/HelpGuide"));
 // Admin Components
 const AdminLayout = React.lazy(() => import("./admin/components/AdminLayout"));
 const AdminDashboard = React.lazy(() => import("./admin/pages/AdminDashboard"));
+const AllAds = React.lazy(() => import("./admin/pages/AllAds"));
 const PendingAds = React.lazy(() => import("./admin/pages/PendingAds"));
 const UsersPage = React.lazy(() => import("./admin/pages/UsersPage"));
 const AdminLogsPage = React.lazy(() => import("./admin/pages/AdminLogsPage"));
@@ -380,6 +387,14 @@ function App() {
                         <Route
                           path="/register-corporate"
                           element={<RegisterCorporate />}
+                        />
+                        <Route
+                          path="/forgot-password"
+                          element={<ForgotPassword />}
+                        />
+                        <Route
+                          path="/reset-password"
+                          element={<ResetPassword />}
                         />
                         <Route path="/ad/:id" element={<AdDetail />} />
                         <Route
@@ -1067,6 +1082,7 @@ function App() {
                         {/* Admin Routes */}
                         <Route path="/admin" element={<AdminLayout />}>
                           <Route index element={<AdminDashboard />} />
+                          <Route path="all-ads" element={<AllAds />} />
                           <Route path="pending-ads" element={<PendingAds />} />
                           <Route path="users" element={<UsersPage />} />
                           <Route path="logs" element={<AdminLogsPage />} />

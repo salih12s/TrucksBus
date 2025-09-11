@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -7,6 +7,27 @@ import {
   Paper,
   IconButton,
   Avatar,
+  Button,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  TextField,
+  InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   People as PeopleIcon,
@@ -16,54 +37,174 @@ import {
   Refresh,
   TrendingUp,
   Message,
+  Delete as DeleteIcon,
+  Visibility as VisibilityIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
+import apiClient from "../../api/client";
 
 interface DashboardStats {
-  totalUsers: number;
-  totalAds: number;
-  activeAds: number;
-  pendingAds: number;
-  todayRegistrations: number;
-  thisWeekRegistrations: number;
-  totalMessages: number;
+  totalStats: {
+    totalUsers: number;
+    totalAds: number;
+    activeAds: number;
+    pendingAds: number;
+    rejectedAds: number;
+    activeUsers: number;
+    totalMessages: number;
+  };
+  timeBasedStats: {
+    todayUsers: number;
+    thisWeekUsers: number;
+    thisMonthUsers: number;
+    thisMonthAds: number;
+  };
+  adsByCategory: Array<{
+    categoryId: number;
+    categoryName: string;
+    count: number;
+  }>;
+  recentAds: Array<{
+    id: number;
+    title: string;
+    status: string;
+    createdAt: string;
+    user: {
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+    category: {
+      name: string;
+    };
+  }>;
+}
+
+interface Ad {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  status: string;
+  createdAt: string;
+  user: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    companyName?: string;
+  };
+  category: {
+    name: string;
+  };
+  city?: {
+    name: string;
+  };
 }
 
 const AdminDashboard: React.FC = () => {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalUsers: 0,
-    totalAds: 0,
-    activeAds: 0,
-    pendingAds: 0,
-    todayRegistrations: 0,
-    thisWeekRegistrations: 0,
-    totalMessages: 0,
-  });
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tabValue, setTabValue] = useState(0);
+
+  // All Ads Tab State
+  const [allAds, setAllAds] = useState<Ad[]>([]);
+  const [adsLoading, setAdsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedAdId, setSelectedAdId] = useState<number | null>(null);
+  const [alert, setAlert] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  const fetchAllAds = useCallback(async () => {
+    try {
+      setAdsLoading(true);
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (searchTerm) params.append("search", searchTerm);
+      params.append("limit", "50");
+
+      const response = await apiClient.get(`/ads/admin/all?${params}`);
+      setAllAds((response.data as { ads: Ad[] }).ads);
+    } catch (error) {
+      console.error("İlanlar yüklenirken hata:", error);
+      setAlert({ type: "error", message: "İlanlar yüklenirken hata oluştu" });
+    } finally {
+      setAdsLoading(false);
+    }
+  }, [statusFilter, searchTerm]);
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
+  useEffect(() => {
+    if (tabValue === 1) {
+      fetchAllAds();
+    }
+  }, [tabValue, fetchAllAds]);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // Backend'den dashboard verilerini çek
-      // Şimdilik mock data kullanalım
-      setTimeout(() => {
-        setStats({
-          totalUsers: 13,
-          totalAds: 2,
-          activeAds: 2,
-          pendingAds: 0,
-          todayRegistrations: 0,
-          thisWeekRegistrations: 0,
-          totalMessages: 16,
-        });
-        setLoading(false);
-      }, 1000);
+      const response = await apiClient.get("/ads/admin/stats");
+      setStats(response.data as DashboardStats);
     } catch (error) {
       console.error("Dashboard verileri yüklenirken hata:", error);
+      setAlert({
+        type: "error",
+        message: "Dashboard verileri yüklenirken hata oluştu",
+      });
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAd = async () => {
+    if (!selectedAdId) return;
+
+    try {
+      await apiClient.delete(`/ads/admin/${selectedAdId}/force-delete`);
+      setAlert({ type: "success", message: "İlan başarıyla silindi" });
+      fetchAllAds();
+      fetchDashboardData(); // Refresh stats
+    } catch (error) {
+      console.error("İlan silinirken hata:", error);
+      setAlert({ type: "error", message: "İlan silinirken hata oluştu" });
+    } finally {
+      setDeleteDialogOpen(false);
+      setSelectedAdId(null);
+    }
+  };
+
+  const getStatusColor = (
+    status: string
+  ): "success" | "warning" | "error" | "default" => {
+    switch (status) {
+      case "APPROVED":
+        return "success";
+      case "PENDING":
+        return "warning";
+      case "REJECTED":
+        return "error";
+      default:
+        return "default";
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "APPROVED":
+        return "Onaylandı";
+      case "PENDING":
+        return "Bekliyor";
+      case "REJECTED":
+        return "Reddedildi";
+      default:
+        return status;
     }
   };
 
@@ -125,7 +266,7 @@ const AdminDashboard: React.FC = () => {
     </Card>
   );
 
-  return (
+  const renderDashboardTab = () => (
     <Box>
       {/* Header */}
       <Box
@@ -177,25 +318,25 @@ const AdminDashboard: React.FC = () => {
       >
         <StatCard
           title="Toplam Kullanıcı"
-          value={stats.totalUsers}
+          value={stats?.totalStats.totalUsers || 0}
           icon={<PeopleIcon />}
           color="#ff5252"
         />
         <StatCard
           title="Toplam İlan"
-          value={stats.totalAds}
+          value={stats?.totalStats.totalAds || 0}
           icon={<AssignmentIcon />}
           color="#2196f3"
         />
         <StatCard
           title="Aktif İlan"
-          value={stats.activeAds}
+          value={stats?.totalStats.activeAds || 0}
           icon={<CheckCircleIcon />}
           color="#4caf50"
         />
         <StatCard
           title="Onay Bekleyen"
-          value={stats.pendingAds}
+          value={stats?.totalStats.pendingAds || 0}
           icon={<WarningIcon />}
           color="#ff9800"
         />
@@ -210,9 +351,6 @@ const AdminDashboard: React.FC = () => {
         >
           Aktivite Özeti
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Bugün, bu hafta ve mesaj hacmi
-        </Typography>
 
         <Box
           sx={{
@@ -226,19 +364,19 @@ const AdminDashboard: React.FC = () => {
         >
           <StatCard
             title="Bugün Kayıt"
-            value={stats.todayRegistrations}
+            value={stats?.timeBasedStats.todayUsers || 0}
             icon={<PeopleIcon />}
             color="#4caf50"
           />
           <StatCard
             title="Bu Hafta"
-            value={stats.thisWeekRegistrations}
+            value={stats?.timeBasedStats.thisWeekUsers || 0}
             icon={<TrendingUp />}
             color="#2196f3"
           />
           <StatCard
             title="Toplam Mesaj"
-            value={stats.totalMessages}
+            value={stats?.totalStats.totalMessages || 0}
             icon={<Message />}
             color="#9c27b0"
           />
@@ -252,12 +390,242 @@ const AdminDashboard: React.FC = () => {
           component="h3"
           sx={{ fontWeight: "bold", mb: 2 }}
         >
-          Son Aktiviteler
+          Son Eklenen İlanlar
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Yakında güncel aktivite listesi burada görünecek...
-        </Typography>
+        {stats?.recentAds && stats.recentAds.length > 0 ? (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {stats.recentAds.map((ad) => (
+              <Box
+                key={ad.id}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  p: 2,
+                  backgroundColor: "#f5f5f5",
+                  borderRadius: 1,
+                }}
+              >
+                <Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                    {ad.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {ad.user.firstName} {ad.user.lastName} • {ad.category.name}
+                  </Typography>
+                </Box>
+                <Chip
+                  label={getStatusText(ad.status)}
+                  color={getStatusColor(ad.status)}
+                  size="small"
+                />
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            Henüz ilan eklenmemiş...
+          </Typography>
+        )}
       </Paper>
+    </Box>
+  );
+
+  const renderAllAdsTab = () => (
+    <Box>
+      {/* Header */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
+          Tüm İlanlar
+        </Typography>
+        <Button
+          onClick={fetchAllAds}
+          startIcon={<Refresh />}
+          variant="outlined"
+        >
+          Yenile
+        </Button>
+      </Box>
+
+      {/* Filters */}
+      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+        <TextField
+          placeholder="İlan ara..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          size="small"
+          sx={{ minWidth: 200 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel>Durum</InputLabel>
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            label="Durum"
+          >
+            <MenuItem value="all">Tümü</MenuItem>
+            <MenuItem value="APPROVED">Onaylandı</MenuItem>
+            <MenuItem value="PENDING">Bekliyor</MenuItem>
+            <MenuItem value="REJECTED">Reddedildi</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+
+      {/* Alert */}
+      {alert && (
+        <Alert
+          severity={alert.type}
+          onClose={() => setAlert(null)}
+          sx={{ mb: 3 }}
+        >
+          {alert.message}
+        </Alert>
+      )}
+
+      {/* Ads Table */}
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>İlan Başlığı</TableCell>
+              <TableCell>Kategori</TableCell>
+              <TableCell>Satıcı</TableCell>
+              <TableCell>Durum</TableCell>
+              <TableCell>Fiyat</TableCell>
+              <TableCell>Tarih</TableCell>
+              <TableCell>İşlemler</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {adsLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  Yükleniyor...
+                </TableCell>
+              </TableRow>
+            ) : allAds.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  İlan bulunamadı
+                </TableCell>
+              </TableRow>
+            ) : (
+              allAds.map((ad) => (
+                <TableRow key={ad.id}>
+                  <TableCell>
+                    <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+                      {ad.title}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      ID: {ad.id}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>{ad.category.name}</TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {ad.user.companyName ||
+                        `${ad.user.firstName} ${ad.user.lastName}`}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {ad.user.email}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={getStatusText(ad.status)}
+                      color={getStatusColor(ad.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {ad.price
+                      ? `₺${ad.price.toLocaleString()}`
+                      : "Belirtilmemiş"}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => window.open(`/ad/${ad.id}`, "_blank")}
+                        title="İlanı görüntüle"
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setSelectedAdId(ad.id);
+                          setDeleteDialogOpen(true);
+                        }}
+                        title="İlanı sil"
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+
+  return (
+    <Box>
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+        <Tabs
+          value={tabValue}
+          onChange={(_, newValue) => setTabValue(newValue)}
+        >
+          <Tab label="Dashboard" />
+          <Tab label="Tüm İlanlar" />
+        </Tabs>
+      </Box>
+
+      {/* Tab Content */}
+      {tabValue === 0 && renderDashboardTab()}
+      {tabValue === 1 && renderAllAdsTab()}
+
+      {/* Delete Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>İlanı Sil</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bu ilanı kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem
+            geri alınamaz.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>İptal</Button>
+          <Button onClick={handleDeleteAd} color="error" variant="contained">
+            Sil
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

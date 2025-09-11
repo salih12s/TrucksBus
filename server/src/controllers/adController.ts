@@ -2335,3 +2335,290 @@ export const createOtoKurtariciCokluAd = async (
     });
   }
 };
+
+// Admin: Tüm ilanları getir (filtreli)
+export const getAllAdsForAdmin = async (req: Request, res: Response) => {
+  try {
+    const {
+      status,
+      categoryId,
+      userId,
+      page = 1,
+      limit = 20,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      search,
+    } = req.query;
+
+    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+
+    const where: any = {};
+
+    if (status && status !== "all") where.status = status;
+    if (categoryId) where.categoryId = parseInt(categoryId as string);
+    if (userId) where.userId = parseInt(userId as string);
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search as string, mode: "insensitive" } },
+        { description: { contains: search as string, mode: "insensitive" } },
+        {
+          user: {
+            OR: [
+              {
+                firstName: { contains: search as string, mode: "insensitive" },
+              },
+              { lastName: { contains: search as string, mode: "insensitive" } },
+              { email: { contains: search as string, mode: "insensitive" } },
+              {
+                companyName: {
+                  contains: search as string,
+                  mode: "insensitive",
+                },
+              },
+            ],
+          },
+        },
+      ];
+    }
+
+    const ads = await prisma.ad.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            companyName: true,
+          },
+        },
+        category: true,
+        brand: true,
+        model: true,
+        variant: true,
+        city: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        district: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+      orderBy: {
+        [sortBy as string]: sortOrder as "asc" | "desc",
+      },
+      skip,
+      take: parseInt(limit as string),
+    });
+
+    const total = await prisma.ad.count({ where });
+
+    res.json({
+      ads,
+      pagination: {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        total,
+        pages: Math.ceil(total / parseInt(limit as string)),
+      },
+    });
+  } catch (error) {
+    console.error("Admin tüm ilanları getirme hatası:", error);
+    res.status(500).json({ error: "İlanlar alınırken hata oluştu" });
+  }
+};
+
+// Admin: Dashboard istatistikleri
+export const getAdminStats = async (req: Request, res: Response) => {
+  try {
+    // Toplam istatistikler
+    const totalAds = await prisma.ad.count();
+    const activeAds = await prisma.ad.count({ where: { status: "APPROVED" } });
+    const pendingAds = await prisma.ad.count({ where: { status: "PENDING" } });
+    const rejectedAds = await prisma.ad.count({
+      where: { status: "REJECTED" },
+    });
+
+    // Kullanıcı istatistikleri
+    const totalUsers = await prisma.user.count();
+    const activeUsers = await prisma.user.count({ where: { isActive: true } });
+
+    // Bu ay ve bu hafta kayıtları
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfWeek = new Date(
+      today.setDate(today.getDate() - today.getDay())
+    );
+
+    const thisMonthUsers = await prisma.user.count({
+      where: {
+        createdAt: {
+          gte: startOfMonth,
+        },
+      },
+    });
+
+    const thisWeekUsers = await prisma.user.count({
+      where: {
+        createdAt: {
+          gte: startOfWeek,
+        },
+      },
+    });
+
+    // Bugün kayıt olanlar
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const todayUsers = await prisma.user.count({
+      where: {
+        createdAt: {
+          gte: startOfDay,
+        },
+      },
+    });
+
+    // Bu ay eklenen ilanlar
+    const thisMonthAds = await prisma.ad.count({
+      where: {
+        createdAt: {
+          gte: startOfMonth,
+        },
+      },
+    });
+
+    // Toplam mesaj sayısı
+    const totalMessages = await prisma.message.count();
+
+    // Kategori bazlı ilan dağılımı
+    const adsByCategory = await prisma.ad.groupBy({
+      by: ["categoryId"],
+      _count: true,
+    });
+
+    // Kategori isimlerini ayrı olarak çek
+    const categories = await prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    // Kategori adlarını ekle
+    const adsByCategoryWithNames = adsByCategory.map((item) => {
+      const category = categories.find((cat) => cat.id === item.categoryId);
+      return {
+        categoryId: item.categoryId,
+        categoryName: category?.name || "Bilinmeyen",
+        count: item._count,
+      };
+    });
+
+    // Son aktiviteler
+    const recentAds = await prisma.ad.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        category: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    res.json({
+      totalStats: {
+        totalAds,
+        activeAds,
+        pendingAds,
+        rejectedAds,
+        totalUsers,
+        activeUsers,
+        totalMessages,
+      },
+      timeBasedStats: {
+        todayUsers,
+        thisWeekUsers,
+        thisMonthUsers,
+        thisMonthAds,
+      },
+      adsByCategory: adsByCategoryWithNames,
+      recentAds,
+    });
+  } catch (error) {
+    console.error("Admin istatistikleri hatası:", error);
+    res.status(500).json({ error: "İstatistikler alınırken hata oluştu" });
+  }
+};
+
+// Admin: İlanı zorla sil
+export const forceDeleteAd = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const adminId = (req as any).user.id;
+    const adminEmail = (req as any).user.email;
+
+    // İlanı bul
+    const ad = await prisma.ad.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        user: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    if (!ad) {
+      res.status(404).json({ error: "İlan bulunamadı" });
+      return;
+    }
+
+    // İlanı sil
+    await prisma.ad.delete({
+      where: { id: parseInt(id) },
+    });
+
+    // Admin aktivitesini logla
+    console.log(
+      `Admin ${adminEmail} (ID: ${adminId}) deleted ad "${ad.title}" (ID: ${id}) by user ${ad.user.email}`
+    );
+
+    res.json({
+      message: "İlan başarıyla silindi",
+      deletedAd: {
+        id: ad.id,
+        title: ad.title,
+        userEmail: ad.user.email,
+      },
+    });
+  } catch (error) {
+    console.error("Admin ilan silme hatası:", error);
+    res.status(500).json({ error: "İlan silinirken hata oluştu" });
+  }
+};

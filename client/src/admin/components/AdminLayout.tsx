@@ -35,7 +35,7 @@ const drawerWidth = 280;
 
 const menuItems = [
   { text: "Dashboard", icon: <DashboardIcon />, path: "/admin" },
-  { text: "Tüm İlanlar", icon: <AssignmentIcon />, path: "/admin/ads" },
+  { text: "Tüm İlanlar", icon: <AssignmentIcon />, path: "/admin/all-ads" },
   {
     text: "Onay Bekleyen İlanlar",
     icon: <HourglassIcon />,

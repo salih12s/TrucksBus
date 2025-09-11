@@ -98,6 +98,18 @@ router.get(
   requireAdmin,
   adController.getPendingAds
 );
+router.get(
+  "/admin/all",
+  authenticateToken,
+  requireAdmin,
+  adController.getAllAdsForAdmin
+);
+router.get(
+  "/admin/stats",
+  authenticateToken,
+  requireAdmin,
+  adController.getAdminStats
+);
 router.put(
   "/admin/:id/approve",
   authenticateToken,
@@ -109,6 +121,12 @@ router.put(
   authenticateToken,
   requireAdmin,
   adController.rejectAd
+);
+router.delete(
+  "/admin/:id/force-delete",
+  authenticateToken,
+  requireAdmin,
+  adController.forceDeleteAd
 );
 
 export default router;
