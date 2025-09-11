@@ -18,6 +18,8 @@ import {
   Dialog,
   DialogContent,
   Badge,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -572,6 +574,9 @@ const AdDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const [ad, setAd] = useState<AdDetail | null>(null);
   const [similarAds, setSimilarAds] = useState<SimilarAd[]>([]);
@@ -1043,13 +1048,18 @@ const AdDetail: React.FC = () => {
   return (
     <>
       <Header />
-      <Container maxWidth="lg" sx={{ py: 3, px: { xs: 2, sm: 3, md: 4 } }}>
+      <Container maxWidth="lg" sx={{ 
+        py: isMobile ? 2 : 3, 
+        px: { xs: 1, sm: 2, md: 3, lg: 4 } 
+      }}>
         {/* Geri Dön Butonu */}
-        <Box mb={3}>
+        <Box mb={isMobile ? 2 : 3}>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate(-1)}
             variant="outlined"
+            size={isMobile ? "small" : "medium"}
+            sx={{ fontSize: isMobile ? "0.8rem" : "0.875rem" }}
           >
             Geri Dön
           </Button>
@@ -1057,7 +1067,7 @@ const AdDetail: React.FC = () => {
 
         <Box
           display="flex"
-          gap={4}
+          gap={isMobile ? 2 : 4}
           flexDirection={{ xs: "column", md: "row" }}
           sx={{ mx: { xs: 0, md: 2 } }}
         >
