@@ -1,5 +1,5 @@
-import React from "react";
-import { Box, Container, Typography, Link, Button } from "@mui/material";
+ import React from "react";
+import { Box, Container, Typography, Link, Button, useMediaQuery, useTheme } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import {
   Facebook,
@@ -17,6 +17,9 @@ import {
 } from "@mui/icons-material";
 
 const Footer: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -27,41 +30,61 @@ const Footer: React.FC = () => {
   return (
     <Box sx={{ backgroundColor: "#313B4C", color: "white", mt: "auto" }}>
       {/* Ana Footer İçeriği */}
-      <Container maxWidth="xl" sx={{ py: 2 }}>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+      <Container maxWidth="xl" sx={{ py: isMobile ? 1 : 2 }}>
+        <Box sx={{ 
+          display: "flex", 
+          flexWrap: "wrap", 
+          gap: isMobile ? 1 : 2,
+          flexDirection: isMobile ? 'column' : 'row'
+        }}>
           {/* Sol Kısım - Şirket Bilgileri */}
-          <Box sx={{ flex: "1 1 250px", minWidth: 220 }}>
+          <Box sx={{ 
+            flex: isMobile ? "1" : "1 1 250px", 
+            minWidth: isMobile ? "auto" : 220,
+            mb: isMobile ? 2 : 0
+          }}>
             <Box sx={{ mb: 1.5 }}>
               <Typography
-                variant="h6"
+                variant={isMobile ? "h6" : "h6"}
                 sx={{
                   color: "#D34237",
                   fontWeight: "bold",
                   mb: 0.5,
-                  fontSize: "1.1rem",
+                  fontSize: isMobile ? "1rem" : "1.1rem",
                 }}
               >
                 Trucksbus
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ mb: 1.5, fontSize: "0.8rem", lineHeight: 1.5 }}
+                sx={{ 
+                  mb: 1.5, 
+                  fontSize: isMobile ? "0.75rem" : "0.8rem", 
+                  lineHeight: 1.5 
+                }}
               >
                 Ticari Araçlar alım satım platformu Kamyon,Kamyonet çekici,
                 Treyler Romork Otobüs,Midübüs ,Minübüs,aynı platformda
               </Typography>
 
               {/* Butonlar */}
-              <Box sx={{ display: "flex", gap: 0.8, mb: 1.5 }}>
+              <Box sx={{ 
+                display: "flex", 
+                gap: 0.8, 
+                mb: 1.5,
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'flex-start' : 'center'
+              }}>
                 <Button
                   variant="contained"
-                  size="small"
+                  size={isMobile ? "medium" : "small"}
                   sx={{
                     backgroundColor: "#D34237",
                     color: "white",
-                    fontSize: "0.75rem",
-                    py: 0.5,
-                    px: 1.5,
+                    fontSize: isMobile ? "0.8rem" : "0.75rem",
+                    py: isMobile ? 0.7 : 0.5,
+                    px: isMobile ? 2 : 1.5,
+                    width: isMobile ? '100%' : 'auto',
                     "&:hover": { backgroundColor: "#B73429" },
                   }}
                 >
@@ -69,13 +92,14 @@ const Footer: React.FC = () => {
                 </Button>
                 <Button
                   variant="outlined"
-                  size="small"
+                  size={isMobile ? "medium" : "small"}
                   sx={{
                     borderColor: "white",
                     color: "white",
-                    fontSize: "0.75rem",
-                    py: 0.5,
-                    px: 1.5,
+                    fontSize: isMobile ? "0.8rem" : "0.75rem",
+                    py: isMobile ? 0.7 : 0.5,
+                    px: isMobile ? 2 : 1.5,
+                    width: isMobile ? '100%' : 'auto',
                     "&:hover": {
                       backgroundColor: "rgba(255,255,255,0.1)",
                       borderColor: "white",
@@ -87,19 +111,23 @@ const Footer: React.FC = () => {
               </Box>
 
               {/* İstatistikler */}
-              <Box sx={{ display: "flex", gap: 2 }}>
+              <Box sx={{ 
+                display: "flex", 
+                gap: isMobile ? 1 : 2,
+                justifyContent: isMobile ? 'space-around' : 'flex-start'
+              }}>
                 <Box sx={{ textAlign: "center" }}>
                   <Typography
                     variant="subtitle1"
                     sx={{
                       color: "#D34237",
                       fontWeight: "bold",
-                      fontSize: "1rem",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
                     }}
                   >
                     1200+
                   </Typography>
-                  <Typography variant="caption" sx={{ fontSize: "0.7rem" }}>
+                  <Typography variant="caption" sx={{ fontSize: isMobile ? "0.65rem" : "0.7rem" }}>
                     Doğrulanmış İlan
                   </Typography>
                 </Box>
@@ -109,12 +137,12 @@ const Footer: React.FC = () => {
                     sx={{
                       color: "#D34237",
                       fontWeight: "bold",
-                      fontSize: "1rem",
+                      fontSize: isMobile ? "0.9rem" : "1rem",
                     }}
                   >
                     7/24
                   </Typography>
-                  <Typography variant="caption" sx={{ fontSize: "0.7rem" }}>
+                  <Typography variant="caption" sx={{ fontSize: isMobile ? "0.65rem" : "0.7rem" }}>
                     Destek
                   </Typography>
                 </Box>
@@ -122,22 +150,27 @@ const Footer: React.FC = () => {
             </Box>
 
             {/* İletişim Bilgileri */}
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8 }}>
+            <Box sx={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: 0.8,
+              mb: isMobile ? 2 : 0
+            }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
-                <Phone sx={{ fontSize: 14, color: "#D34237" }} />
-                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+                <Phone sx={{ fontSize: isMobile ? 16 : 14, color: "#D34237" }} />
+                <Typography variant="body2" sx={{ fontSize: isMobile ? "0.85rem" : "0.8rem" }}>
                   +90 (555) 123 45 67
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
-                <Email sx={{ fontSize: 14, color: "#D34237" }} />
-                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+                <Email sx={{ fontSize: isMobile ? 16 : 14, color: "#D34237" }} />
+                <Typography variant="body2" sx={{ fontSize: isMobile ? "0.85rem" : "0.8rem" }}>
                   info@trucksbus.com
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
-                <LocationOn sx={{ fontSize: 14, color: "#D34237" }} />
-                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
+                <LocationOn sx={{ fontSize: isMobile ? 16 : 14, color: "#D34237" }} />
+                <Typography variant="body2" sx={{ fontSize: isMobile ? "0.85rem" : "0.8rem" }}>
                   İstanbul, Türkiye
                 </Typography>
               </Box>
@@ -145,14 +178,18 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Hızlı Linkler */}
-          <Box sx={{ flex: "1 1 140px", minWidth: 120 }}>
+          <Box sx={{ 
+            flex: isMobile ? "1" : "1 1 140px", 
+            minWidth: isMobile ? "auto" : 120,
+            mb: isMobile ? 2 : 0
+          }}>
             <Typography
               variant="h6"
               sx={{
                 color: "#D34237",
                 fontWeight: "bold",
                 mb: 1.5,
-                fontSize: "1rem",
+                fontSize: isMobile ? "0.95rem" : "1rem",
               }}
             >
               • Hızlı Linkler
@@ -165,7 +202,7 @@ const Footer: React.FC = () => {
                 sx={{
                   color: "white",
                   textDecoration: "none",
-                  fontSize: "0.85rem",
+                  fontSize: isMobile ? "0.9rem" : "0.85rem",
                   "&:hover": { color: "#D34237" },
                 }}
               >
@@ -227,14 +264,18 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Kategoriler */}
-          <Box sx={{ flex: "1 1 140px", minWidth: 120 }}>
+          <Box sx={{ 
+            flex: isMobile ? "1" : "1 1 140px", 
+            minWidth: isMobile ? "auto" : 120,
+            mb: isMobile ? 2 : 0
+          }}>
             <Typography
               variant="h6"
               sx={{
                 color: "#D34237",
                 fontWeight: "bold",
                 mb: 1.5,
-                fontSize: "1rem",
+                fontSize: isMobile ? "0.95rem" : "1rem",
               }}
             >
               • Kategoriler
