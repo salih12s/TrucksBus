@@ -32,8 +32,6 @@ import {
   CloudUpload,
   Close,
   Person,
-  Phone,
-  Email,
   LocationOn,
   AttachMoney,
   LocalLaundryService,
@@ -54,11 +52,6 @@ interface TekstilFormData {
   // Konum
   city: string;
   district: string;
-
-  // İletişim Bilgileri
-  sellerName: string;
-  sellerPhone: string;
-  sellerEmail: string;
 
   // Ekstra
   warranty: boolean;
@@ -102,9 +95,6 @@ const TekstilForm: React.FC = () => {
     takasli: "Hayır",
     city: "",
     district: "",
-    sellerName: "",
-    sellerPhone: "",
-    sellerEmail: "",
     warranty: false,
     negotiable: false,
     exchange: false,
@@ -160,21 +150,6 @@ const TekstilForm: React.FC = () => {
     } finally {
       setLoadingDistricts(false);
     }
-  };
-
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    if (numbers.length <= 11) {
-      return numbers
-        .replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4")
-        .trim();
-    }
-    return value;
-  };
-
-  const handlePhoneChange = (value: string) => {
-    const formattedPhone = formatPhoneNumber(value);
-    setFormData((prev) => ({ ...prev, sellerPhone: formattedPhone }));
   };
 
   const handleInputChange = (
@@ -241,10 +216,6 @@ const TekstilForm: React.FC = () => {
         }
         break;
       case 2: // İletişim & Fiyat
-        if (!formData.sellerPhone.trim()) {
-          setError("Telefon numarası gereklidir");
-          return false;
-        }
         if (!formData.price.trim()) {
           setError("Fiyat bilgisi gereklidir");
           return false;
@@ -295,14 +266,6 @@ const TekstilForm: React.FC = () => {
       // Konum bilgileri
       formDataToSend.append("city", formData.city);
       formDataToSend.append("district", formData.district);
-
-      // İletişim bilgileri
-      formDataToSend.append("seller_name", formData.sellerName);
-      formDataToSend.append(
-        "seller_phone",
-        formData.sellerPhone.replace(/\s/g, "")
-      );
-      formDataToSend.append("seller_email", formData.sellerEmail);
 
       // Ekstra özellikler
       formDataToSend.append("warranty", formData.warranty ? "true" : "false");
@@ -562,61 +525,8 @@ const TekstilForm: React.FC = () => {
               sx={{ display: "flex", alignItems: "center", gap: 1 }}
             >
               <Person color="primary" />
-              İletişim & Fiyat Bilgileri
+              Fiyat & Konum Bilgileri
             </Typography>
-
-            <TextField
-              fullWidth
-              label="Ad Soyad"
-              value={formData.sellerName}
-              onChange={(e) => handleInputChange("sellerName", e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Person />
-                  </InputAdornment>
-                ),
-              }}
-              required
-            />
-
-            <Box
-              sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-            >
-              <TextField
-                fullWidth
-                label="Telefon"
-                value={formData.sellerPhone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                placeholder="0xxx xxx xx xx"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                type="email"
-                value={formData.sellerEmail}
-                onChange={(e) =>
-                  handleInputChange("sellerEmail", e.target.value)
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-            </Box>
 
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}

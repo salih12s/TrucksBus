@@ -13,6 +13,8 @@ import {
   Divider,
   ListItemIcon,
   ListItemText,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
@@ -23,6 +25,7 @@ import {
   ExitToApp as LogoutIcon,
   Dashboard as DashboardIcon,
   Store as StoreIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import { useAppSelector, useAppDispatch } from "../../hooks/redux";
 import { logoutUser } from "../../store/authSlice";
@@ -31,9 +34,17 @@ import NotificationDropdown from "../NotificationDropdown";
 
 interface HeaderProps {
   favoritesCount?: number;
+  searchTerm?: string;
+  onSearchChange?: (value: string) => void;
+  showSearch?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
+const Header: React.FC<HeaderProps> = ({
+  favoritesCount = 0,
+  searchTerm = "",
+  onSearchChange,
+  showSearch = false,
+}) => {
   const { user, isAuthenticated, isLoading } = useAppSelector(
     (state) => state.auth
   );
@@ -126,6 +137,66 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
             <span style={{ color: "white" }}> ile Mutlu Kalın</span>
           </Typography>
         </Box>
+
+        {/* Search Bar - Center */}
+        {showSearch && (
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              px: 4,
+              mx: 2,
+              ml: { xs: 0, sm: 8, md: 64 },
+            }}
+          >
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Araç ara..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "#D34237" }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                maxWidth: 400,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  borderRadius: 25,
+                  fontSize: "0.875rem",
+                  height: 40,
+                  transition: "all 0.3s ease",
+                  border: "2px solid transparent",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  },
+                  "&.Mui-focused": {
+                    backgroundColor: "white",
+                    border: "2px solid #D34237",
+                    boxShadow: "0 4px 12px rgba(211, 66, 55, 0.2)",
+                  },
+                  "& fieldset": {
+                    border: "none",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  padding: "8px 12px",
+                  "&::placeholder": {
+                    color: "#666",
+                    opacity: 0.8,
+                  },
+                },
+              }}
+            />
+          </Box>
+        )}
 
         {/* Right side content */}
         <Box

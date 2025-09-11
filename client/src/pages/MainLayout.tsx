@@ -10,7 +10,6 @@ import {
   ListItemIcon,
   ListItemText,
   TextField,
-  InputAdornment,
   CardMedia,
   Button,
   IconButton,
@@ -20,9 +19,12 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import {
-  Search,
   LocalShipping,
   DirectionsBus,
   Build,
@@ -33,6 +35,7 @@ import {
   CheckCircle,
   Report,
   Message,
+  ViewList,
 } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
 import { useAppSelector, useAppDispatch } from "../hooks/redux";
@@ -87,6 +90,7 @@ interface Ad {
     name: string;
   };
   brand?: {
+    id: number;
     name: string;
   };
   model?: {
@@ -112,6 +116,17 @@ const MainLayout: React.FC = () => {
   const dispatch = useAppDispatch();
   const [categories, setCategories] = useState<Category[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
+  const [filteredAds, setFilteredAds] = useState<Ad[]>([]);
+  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
+  const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [yearMin, setYearMin] = useState("");
+  const [yearMax, setYearMax] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -155,6 +170,14 @@ const MainLayout: React.FC = () => {
       setSidebarOpen(true);
     }
   }, [isMobile]);
+
+  // Category navigation handler
+  const handleCategoryClick = (categorySlug: string | null) => {
+    setSelectedCategory(categorySlug);
+    if (isMobile) {
+      setMobileDrawerOpen(false);
+    }
+  };
 
   const getImageUrl = (images?: Ad["images"]) => {
     if (!images || images.length === 0) return null;
@@ -292,10 +315,32 @@ const MainLayout: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesRes, adsRes] = await Promise.all([
-          apiClient.get("/categories"),
-          apiClient.get("/ads?status=APPROVED"), // Sadece onaylanmış ilanları çek
+        console.log("=== STARTING API CALLS ===");
+        
+        const [categoriesRes, adsRes, brandsRes, citiesRes] = await Promise.all([
+          apiClient.get("/categories").catch(err => {
+            console.error("Categories API error:", err);
+            return { data: [] };
+          }),
+          apiClient.get("/ads?status=APPROVED").catch(err => {
+            console.error("Ads API error:", err);
+            return { data: { ads: [] } };
+          }),
+          apiClient.get("/brands").catch(err => {
+            console.error("Brands API error:", err);
+            return { data: [] };
+          }),
+          apiClient.get("/cities").catch(err => {
+            console.error("Cities API error:", err);
+            return { data: [] };
+          }),
         ]);
+
+        console.log("=== RAW API RESPONSES ===");
+        console.log("Categories response:", categoriesRes);
+        console.log("Ads response:", adsRes);
+        console.log("Brands response:", brandsRes);
+        console.log("Cities response:", citiesRes);
 
         // Güvenli veri kontrolü
         const categoriesData = Array.isArray(categoriesRes.data)
@@ -303,22 +348,39 @@ const MainLayout: React.FC = () => {
           : [];
 
         // Backend response format: { ads: [], pagination: {} }
-        const adsResponse = adsRes.data as ApiAdsResponse;
+        const adsResponse = adsRes.data as unknown as ApiAdsResponse;
         const adsData = adsResponse?.ads
           ? Array.isArray(adsResponse.ads)
             ? adsResponse.ads
             : []
           : Array.isArray(adsRes.data)
-          ? adsRes.data
+          ? adsRes.data as Ad[]
           : [];
+
+        const brandsData = Array.isArray(brandsRes.data) ? brandsRes.data : [];
+
+        const citiesData = Array.isArray(citiesRes.data) ? citiesRes.data : [];
 
         setCategories(categoriesData as Category[]);
         setAds(adsData as Ad[]);
+        setBrands(brandsData);
+        setCities(citiesData);
 
-        // Debug: Check if images are coming from API
-        console.log("Ads data:", adsData);
+        // Debug: Check all fetched data
+        console.log("=== API DATA FETCH RESULTS ===");
+        console.log("Categories:", categoriesData.length, categoriesData);
+        console.log("Ads:", adsData.length, adsData);
+        console.log("Brands:", brandsData.length, brandsData);
+        console.log("Cities:", citiesData.length, citiesData);
+        
         if (adsData.length > 0) {
+          console.log("First ad sample:", adsData[0]);
           console.log("First ad images:", adsData[0].images);
+          console.log("First ad category:", adsData[0].category);
+          console.log("First ad brand:", adsData[0].brand);
+          console.log("First ad city:", adsData[0].city);
+        } else {
+          console.warn("No ads found in API response!");
         }
       } catch (error) {
         console.error("Data fetch error:", error);
@@ -361,6 +423,133 @@ const MainLayout: React.FC = () => {
 
     fetchData();
   }, []);
+
+  // Gelişmiş filtreleme
+  useEffect(() => {
+    console.log("Filtering with:", {
+      selectedCategory,
+      searchTerm,
+      priceMin,
+      priceMax,
+      yearMin,
+      yearMax,
+      selectedBrand,
+      selectedCity,
+      totalAds: ads.length
+    });
+
+    if (
+      !selectedCategory &&
+      !searchTerm &&
+      !priceMin &&
+      !priceMax &&
+      !yearMin &&
+      !yearMax &&
+      !selectedBrand &&
+      !selectedCity
+    ) {
+      setFilteredAds(ads);
+      console.log("No filters applied, showing all ads:", ads.length);
+    } else {
+      let filtered = [...ads];
+      console.log("Starting with ads:", filtered.length);
+
+      // Kategori filtresi - slug ile eşleştir
+      if (selectedCategory) {
+        const selectedCategoryName = categories.find(cat => cat.slug === selectedCategory)?.name;
+        if (selectedCategoryName) {
+          filtered = filtered.filter((ad) => {
+            const categoryMatch = ad.category?.name?.toLowerCase() === selectedCategoryName.toLowerCase();
+            return categoryMatch;
+          });
+          console.log("After category filter:", filtered.length, "Category:", selectedCategoryName);
+        }
+      }
+
+      // Arama terimi filtresi
+      if (searchTerm.trim()) {
+        const searchLower = searchTerm.toLowerCase();
+        filtered = filtered.filter((ad) => {
+          const titleMatch = ad.title?.toLowerCase().includes(searchLower);
+          const brandMatch = ad.brand?.name?.toLowerCase().includes(searchLower);
+          const modelMatch = ad.model?.name?.toLowerCase().includes(searchLower);
+          const cityMatch = ad.city?.name?.toLowerCase().includes(searchLower);
+          const districtMatch = ad.district?.name?.toLowerCase().includes(searchLower);
+          const locationMatch = ad.location?.toLowerCase().includes(searchLower);
+
+          return (
+            titleMatch ||
+            brandMatch ||
+            modelMatch ||
+            cityMatch ||
+            districtMatch ||
+            locationMatch
+          );
+        });
+        console.log("After search filter:", filtered.length, "Search term:", searchTerm);
+      }
+
+      // Fiyat aralığı filtresi
+      if (priceMin || priceMax) {
+        filtered = filtered.filter((ad) => {
+          const price = ad.price;
+          if (price === null || price === undefined) return false;
+
+          const minCheck = !priceMin || price >= parseFloat(priceMin);
+          const maxCheck = !priceMax || price <= parseFloat(priceMax);
+
+          return minCheck && maxCheck;
+        });
+        console.log("After price filter:", filtered.length);
+      }
+
+      // Yıl aralığı filtresi
+      if (yearMin || yearMax) {
+        filtered = filtered.filter((ad) => {
+          const year = ad.year;
+          if (year === null || year === undefined) return false;
+
+          const minCheck = !yearMin || year >= parseInt(yearMin);
+          const maxCheck = !yearMax || year <= parseInt(yearMax);
+
+          return minCheck && maxCheck;
+        });
+        console.log("After year filter:", filtered.length);
+      }
+
+      // Marka filtresi - ID ile eşleştir
+      if (selectedBrand) {
+        filtered = filtered.filter((ad) => {
+          const brandMatch = ad.brand?.id?.toString() === selectedBrand.toString();
+          return brandMatch;
+        });
+        console.log("After brand filter:", filtered.length, "Brand ID:", selectedBrand);
+      }
+
+      // Şehir filtresi - ID ile eşleştir
+      if (selectedCity) {
+        filtered = filtered.filter((ad) => {
+          const cityMatch = ad.city?.id?.toString() === selectedCity.toString();
+          return cityMatch;
+        });
+        console.log("After city filter:", filtered.length, "City ID:", selectedCity);
+      }
+
+      setFilteredAds(filtered);
+      console.log("Final filtered ads:", filtered.length);
+    }
+  }, [
+    ads,
+    selectedCategory,
+    searchTerm,
+    priceMin,
+    priceMax,
+    yearMin,
+    yearMax,
+    selectedBrand,
+    selectedCity,
+    categories
+  ]);
 
   // Favorites count'u yükle
   useEffect(() => {
@@ -470,15 +659,87 @@ const MainLayout: React.FC = () => {
 
       {/* Categories List - Always visible */}
       <List sx={{ p: 0 }}>
+        {/* Tümünü Göster Seçeneği */}
+        <ListItem
+          onClick={() => handleCategoryClick(null)}
+          sx={{
+            cursor: "pointer",
+            borderRadius: 2,
+            mb: 1,
+            p: sidebarOpen || isMobile ? 2 : 1,
+            border:
+              selectedCategory === null
+                ? "2px solid #D34237"
+                : "1px solid transparent",
+            backgroundColor:
+              selectedCategory === null ? "rgba(211,66,55,0.1)" : "transparent",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            position: "relative",
+            overflow: "hidden",
+            justifyContent: sidebarOpen || isMobile ? "flex-start" : "center",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: "-100%",
+              width: "100%",
+              height: "100%",
+              background:
+                "linear-gradient(90deg, transparent, rgba(211,66,55,0.1), transparent)",
+              transition: "left 0.5s ease",
+            },
+            "&:hover": {
+              borderColor: "#D34237",
+              backgroundColor: "rgba(211,66,55,0.1)",
+              transform: "translateX(8px)",
+              "&::before": {
+                left: "100%",
+              },
+            },
+          }}
+        >
+          <ListItemIcon
+            sx={{
+              color: selectedCategory === null ? "#D34237" : "#333",
+              transition: "color 0.3s ease",
+              minWidth: "auto",
+              mr: sidebarOpen || isMobile ? 2 : 0,
+            }}
+          >
+            <ViewList />
+          </ListItemIcon>
+          {(sidebarOpen || isMobile) && (
+            <ListItemText
+              primary="Tümünü Göster"
+              sx={{
+                color: selectedCategory === null ? "#D34237" : "#333",
+                fontWeight: selectedCategory === null ? 600 : 400,
+                "& .MuiListItemText-primary": {
+                  fontSize: "0.95rem",
+                  fontWeight: "inherit",
+                },
+              }}
+            />
+          )}
+        </ListItem>
+
         {categories.map((category) => (
           <ListItem
             key={category.id}
+            onClick={() => handleCategoryClick(category.slug)}
             sx={{
               cursor: "pointer",
               borderRadius: 2,
               mb: 1,
               p: sidebarOpen || isMobile ? 2 : 1,
-              border: "1px solid transparent",
+              border:
+                selectedCategory === category.slug
+                  ? "2px solid #D34237"
+                  : "1px solid transparent",
+              backgroundColor:
+                selectedCategory === category.slug
+                  ? "rgba(211,66,55,0.1)"
+                  : "transparent",
               transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               position: "relative",
               overflow: "hidden",
@@ -575,7 +836,12 @@ const MainLayout: React.FC = () => {
         padding: 0,
       }}
     >
-      <Header favoritesCount={favoritesCount} />
+      <Header
+        favoritesCount={favoritesCount}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        showSearch={true}
+      />
 
       <Box
         sx={{
@@ -669,7 +935,7 @@ const MainLayout: React.FC = () => {
                 </Box>
               )}
 
-              {/* Search Bar */}
+              {/* Page Title and Filters */}
               <Box sx={{ mb: 3 }}>
                 <Typography
                   variant="h4"
@@ -681,26 +947,173 @@ const MainLayout: React.FC = () => {
                     textAlign: { xs: "center", md: "left" },
                   }}
                 >
-                  Son İlanlar
+                  Anasayfa Vitrini
                 </Typography>
-                <TextField
-                  fullWidth
-                  placeholder="Araç ara..."
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search sx={{ color: "#D34237" }} />
-                      </InputAdornment>
-                    ),
-                  }}
+
+                {/* Advanced Filters */}
+                <Box
                   sx={{
-                    "& .MuiOutlinedInput-root": {
-                      backgroundColor: "white",
-                      borderRadius: 2,
-                      fontSize: { xs: "0.875rem", sm: "1rem" },
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "1fr 1fr",
+                      md: "1fr 1fr 1fr 1fr",
                     },
+                    gap: 2,
+                    mb: 2,
                   }}
-                />
+                >
+                  {/* Price Range */}
+                  <TextField
+                    size="small"
+                    placeholder="Min Fiyat"
+                    type="number"
+                    value={priceMin}
+                    onChange={(e) => setPriceMin(e.target.value)}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: 1,
+                      },
+                    }}
+                  />
+                  <TextField
+                    size="small"
+                    placeholder="Max Fiyat"
+                    type="number"
+                    value={priceMax}
+                    onChange={(e) => setPriceMax(e.target.value)}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: 1,
+                      },
+                    }}
+                  />
+
+                  {/* Year Range */}
+                  <TextField
+                    size="small"
+                    placeholder="Min Yıl"
+                    type="number"
+                    value={yearMin}
+                    onChange={(e) => setYearMin(e.target.value)}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: 1,
+                      },
+                    }}
+                  />
+                  <TextField
+                    size="small"
+                    placeholder="Max Yıl"
+                    type="number"
+                    value={yearMax}
+                    onChange={(e) => setYearMax(e.target.value)}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                        borderRadius: 1,
+                      },
+                    }}
+                  />
+                </Box>
+
+                {/* Brand and City Filters */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                    gap: 2,
+                    mb: 2,
+                  }}
+                >
+                  <FormControl size="small" fullWidth>
+                    <InputLabel>Marka Seç</InputLabel>
+                    <Select
+                      value={selectedBrand}
+                      label="Marka Seç"
+                      onChange={(e) => setSelectedBrand(e.target.value)}
+                      sx={{
+                        backgroundColor: "white",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <MenuItem value="">Tümü</MenuItem>
+                      {brands.map((brand) => (
+                        <MenuItem key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <FormControl size="small" fullWidth>
+                    <InputLabel>Şehir Seç</InputLabel>
+                    <Select
+                      value={selectedCity}
+                      label="Şehir Seç"
+                      onChange={(e) => setSelectedCity(e.target.value)}
+                      sx={{
+                        backgroundColor: "white",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <MenuItem value="">Tümü</MenuItem>
+                      {cities.map((city) => (
+                        <MenuItem key={city.id} value={city.id}>
+                          {city.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                {/* Clear Filters Button */}
+                {(selectedCategory ||
+                  searchTerm ||
+                  priceMin ||
+                  priceMax ||
+                  yearMin ||
+                  yearMax ||
+                  selectedBrand ||
+                  selectedCity) && (
+                  <Box sx={{ textAlign: "center", mb: 2 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        setSelectedCategory("");
+                        setSearchTerm("");
+                        setPriceMin("");
+                        setPriceMax("");
+                        setYearMin("");
+                        setYearMax("");
+                        setSelectedBrand("");
+                        setSelectedCity("");
+                      }}
+                      sx={{
+                        color: "#D34237",
+                        borderColor: "#D34237",
+                        "&:hover": {
+                          borderColor: "#B12E23",
+                          backgroundColor: "rgba(211, 66, 55, 0.04)",
+                        },
+                      }}
+                    >
+                      Filtreleri Temizle
+                    </Button>
+                  </Box>
+                )}
+
+                {/* Filter Results Count */}
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#666", textAlign: "center", mb: 2 }}
+                >
+                  {filteredAds.length} ilan bulundu
+                </Typography>
               </Box>
 
               {/* Ads Grid */}
@@ -728,8 +1141,22 @@ const MainLayout: React.FC = () => {
                     : "250px", // Minimum genişlik
                 }}
               >
-                {Array.isArray(ads) &&
-                  ads.map((ad) => (
+                {(() => {
+                  console.log("=== RENDERING ADS ===", {
+                    filteredAdsCount: filteredAds.length,
+                    totalAdsCount: ads.length,
+                    isArray: Array.isArray(filteredAds),
+                    firstAd: filteredAds[0]
+                  });
+                  return null;
+                })()}
+                
+                {!Array.isArray(filteredAds) ? (
+                  <Typography>İlanlar yükleniyor...</Typography>
+                ) : filteredAds.length === 0 ? (
+                  <Typography>Henüz ilan bulunmuyor.</Typography>
+                ) : (
+                  filteredAds.map((ad) => (
                     <Card
                       key={ad.id}
                       sx={{
@@ -1065,7 +1492,8 @@ const MainLayout: React.FC = () => {
                         </Box>
                       </CardContent>
                     </Card>
-                  ))}
+                  ))
+                )}
               </Box>
             </>
           )}

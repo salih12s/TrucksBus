@@ -14,9 +14,11 @@ import {
   Alert,
   CircularProgress,
   Container,
+  IconButton,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import CloseIcon from "@mui/icons-material/Close";
 import Header from "../../layout/Header";
 import apiClient from "../../../api/client";
 
@@ -65,11 +67,6 @@ interface FormData {
   // Fotoğraflar
   photos: File[];
   showcasePhoto: File | null;
-
-  // İletişim Bilgileri
-  sellerName: string;
-  phone: string;
-  email: string;
 
   // Ekstra
   warranty: string;
@@ -127,9 +124,6 @@ const SilobasForm: React.FC = () => {
     districtId: "",
     photos: [],
     showcasePhoto: null,
-    sellerName: "",
-    phone: "",
-    email: "",
     warranty: "yok",
     negotiable: "hayır",
     exchange: "hayır",
@@ -140,6 +134,10 @@ const SilobasForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+
+  // Photo preview states
+  const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   // Şehirleri yükle
   useEffect(() => {
@@ -159,7 +157,9 @@ const SilobasForm: React.FC = () => {
     const fetchDistricts = async () => {
       if (formData.cityId) {
         try {
-          const response = await apiClient.get(`/ads/cities/${formData.cityId}/districts`);
+          const response = await apiClient.get(
+            `/ads/cities/${formData.cityId}/districts`
+          );
           setDistricts(response.data as District[]);
         } catch (error) {
           console.error("İlçeler yüklenirken hata:", error);
@@ -171,54 +171,48 @@ const SilobasForm: React.FC = () => {
     fetchDistricts();
   }, [formData.cityId]);
 
-  const formatPhoneNumber = (value: string) => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
-    if (digits.length <= 8)
-      return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
-    if (digits.length <= 10)
-      return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(
-        6,
-        8
-      )} ${digits.slice(8)}`;
-    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(
-      6,
-      8
-    )} ${digits.slice(8, 10)}`;
-  };
-
   const handleInputChange = (
     field: keyof FormData,
     value: string | File[] | File | null
   ) => {
-    if (field === "phone" && typeof value === "string") {
-      const formatted = formatPhoneNumber(value);
-      setFormData((prev) => ({ ...prev, [field]: formatted }));
-    } else {
-      setFormData((prev) => ({ ...prev, [field]: value }));
-    }
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 0) {
-      setFormData((prev) => ({ ...prev, photos: [...prev.photos, ...files] }));
+      const file = files[0];
+
+      // Base64 formatına çevir
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+
+        // İlk resmi showcase olarak belirle
+        if (!formData.showcasePhoto) {
+          setFormData((prev) => ({ ...prev, showcasePhoto: file }));
+          setShowcasePreview(base64String);
+        } else {
+          // Diğer resimleri photos array'ine ekle
+          setFormData((prev) => ({ ...prev, photos: [...prev.photos, file] }));
+          setPhotoPreviews((prev) => [...prev, base64String]);
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleShowcasePhotoUpload = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0] || null;
-    setFormData((prev) => ({ ...prev, showcasePhoto: file }));
-  };
-
-  const removePhoto = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      photos: prev.photos.filter((_, i) => i !== index),
-    }));
+  const removePhoto = (index: number, isShowcase: boolean = false) => {
+    if (isShowcase) {
+      setFormData((prev) => ({ ...prev, showcasePhoto: null }));
+      setShowcasePreview(null);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        photos: prev.photos.filter((_, i) => i !== index),
+      }));
+      setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+    }
   };
 
   const validateForm = (): string[] => {
@@ -236,9 +230,6 @@ const SilobasForm: React.FC = () => {
     if (!formData.silobasTuru) newErrors.push("Silobas türü zorunludur");
     if (!formData.cityId) newErrors.push("Şehir zorunludur");
     if (!formData.districtId) newErrors.push("İlçe zorunludur");
-    if (!formData.sellerName.trim()) newErrors.push("Satıcı adı zorunludur");
-    if (!formData.phone.trim()) newErrors.push("Telefon zorunludur");
-    if (!formData.email.trim()) newErrors.push("E-posta zorunludur");
 
     return newErrors;
   };
@@ -275,11 +266,6 @@ const SilobasForm: React.FC = () => {
       // Konum
       submitData.append("cityId", formData.cityId);
       submitData.append("districtId", formData.districtId);
-
-      // İletişim
-      submitData.append("sellerName", formData.sellerName);
-      submitData.append("phone", formData.phone);
-      submitData.append("email", formData.email);
 
       // Ekstra
       submitData.append("warranty", formData.warranty);
@@ -519,96 +505,141 @@ const SilobasForm: React.FC = () => {
               </FormControl>
             </Box>
 
-            {/* Fotoğraflar */}
+            {/* Fotoğraf Ekleme */}
             <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              Fotoğraflar
+              Fotoğraf Ekle
             </Typography>
 
-            <Box sx={{ mb: 2 }}>
+            <Box
+              sx={{
+                border: "2px dashed #e0e0e0",
+                borderRadius: "12px",
+                padding: "24px",
+                textAlign: "center",
+                background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  borderColor: "#1976d2",
+                  background:
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  color: "white",
+                },
+                mb: 3,
+              }}
+              component="label"
+            >
+              <PhotoCameraIcon sx={{ fontSize: 48, mb: 2, color: "inherit" }} />
+              <Typography variant="h6" gutterBottom>
+                Fotoğraf Yükle
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2 }}>
+                İlk yüklediğiniz fotoğraf vitrin fotoğrafı olacaktır
+              </Typography>
               <Button
-                component="label"
-                variant="outlined"
-                startIcon={<CloudUploadIcon />}
-                sx={{ mr: 2 }}
+                variant="contained"
+                startIcon={<PhotoCameraIcon />}
+                sx={{
+                  background:
+                    "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)",
+                  "&:hover": {
+                    background:
+                      "linear-gradient(45deg, #FE6B8B 60%, #FF8E53 100%)",
+                  },
+                }}
               >
-                Vitrin Fotoğrafı Yükle
-                <VisuallyHiddenInput
-                  type="file"
-                  accept="image/*"
-                  onChange={handleShowcasePhotoUpload}
-                />
+                Fotoğraf Seç
               </Button>
-              {formData.showcasePhoto && (
-                <Chip
-                  label={formData.showcasePhoto.name}
-                  onDelete={() => handleInputChange("showcasePhoto", null)}
-                  sx={{ ml: 1 }}
-                />
-              )}
+              <VisuallyHiddenInput
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                multiple
+              />
             </Box>
 
-            <Box sx={{ mb: 2 }}>
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<CloudUploadIcon />}
-              >
-                Diğer Fotoğrafları Yükle
-                <VisuallyHiddenInput
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                />
-              </Button>
-            </Box>
+            {/* Fotoğraf Önizlemeleri */}
+            {(showcasePreview || photoPreviews.length > 0) && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Yüklenen Fotoğraflar
+                </Typography>
 
-            {formData.photos.length > 0 && (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-                {formData.photos.map((photo, index) => (
-                  <Chip
-                    key={index}
-                    label={photo.name}
-                    onDelete={() => removePhoto(index)}
-                  />
-                ))}
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                  {/* Vitrin Fotoğrafı */}
+                  {showcasePreview && (
+                    <Box sx={{ position: "relative" }}>
+                      <Box
+                        component="img"
+                        src={showcasePreview}
+                        sx={{
+                          width: 120,
+                          height: 120,
+                          objectFit: "cover",
+                          borderRadius: 2,
+                          border: "3px solid #4caf50",
+                        }}
+                      />
+                      <Chip
+                        label="VİTRİN"
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          left: -8,
+                          background: "#4caf50",
+                          color: "white",
+                          fontWeight: "bold",
+                        }}
+                      />
+                      <IconButton
+                        onClick={() => removePhoto(0, true)}
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          right: -8,
+                          background: "rgba(255,255,255,0.9)",
+                          "&:hover": { background: "rgba(255,255,255,1)" },
+                        }}
+                        size="small"
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
+
+                  {/* Diğer Fotoğraflar */}
+                  {photoPreviews.map((preview, index) => (
+                    <Box key={index} sx={{ position: "relative" }}>
+                      <Box
+                        component="img"
+                        src={preview}
+                        sx={{
+                          width: 120,
+                          height: 120,
+                          objectFit: "cover",
+                          borderRadius: 2,
+                          border: "2px solid #e0e0e0",
+                        }}
+                      />
+                      <IconButton
+                        onClick={() => removePhoto(index)}
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          right: -8,
+                          background: "rgba(255,255,255,0.9)",
+                          "&:hover": { background: "rgba(255,255,255,1)" },
+                        }}
+                        size="small"
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
               </Box>
             )}
-
-            {/* İletişim Bilgileri */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              İletişim Bilgileri
-            </Typography>
-
-            <TextField
-              fullWidth
-              label="Satıcı Adı"
-              value={formData.sellerName}
-              onChange={(e) => handleInputChange("sellerName", e.target.value)}
-              margin="normal"
-              required
-            />
-
-            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <TextField
-                fullWidth
-                label="Telefon"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                margin="normal"
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                margin="normal"
-                required
-              />
-            </Box>
 
             {/* Ekstra Bilgiler */}
             <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>

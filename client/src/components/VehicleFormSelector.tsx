@@ -86,12 +86,18 @@ const VehicleFormSelector: React.FC = () => {
           console.log("✅ Kaya Tipi Dorse formu seçildi (variant)");
           return <KayaTipiForm />;
         case "tanker":
+        case "tanker-tanker":
+        case "tanker-tanker-tanker":
           console.log("✅ Tanker Dorse formu seçildi (variant)");
           return <TankerForm />;
         case "silobas":
+        case "silobas-silobas":
+        case "silobas-silobas-silobas":
           console.log("✅ Silobas Dorse formu seçildi (variant)");
           return <SilobasForm />;
         case "tekstil":
+        case "tekstil-tekstil":
+        case "tekstil-tekstil-tekstil":
           console.log("✅ Tekstil Dorse formu seçildi (variant)");
           return <TekstilForm />;
         case "lowbed":
@@ -179,12 +185,18 @@ const VehicleFormSelector: React.FC = () => {
           console.log("✅ Kaya Tipi Dorse formu seçildi (tam slug)");
           return <KayaTipiForm />;
         case "tanker":
+        case "tanker-tanker":
+        case "tanker-tanker-tanker":
           console.log("✅ Tanker Dorse formu seçildi (tam slug)");
           return <TankerForm />;
         case "silobas":
+        case "silobas-silobas":
+        case "silobas-silobas-silobas":
           console.log("✅ Silobas Dorse formu seçildi (tam slug)");
           return <SilobasForm />;
         case "tekstil":
+        case "tekstil-tekstil":
+        case "tekstil-tekstil-tekstil":
           console.log("✅ Tekstil Dorse formu seçildi (tam slug)");
           return <TekstilForm />;
         case "lowbed":
@@ -245,6 +257,12 @@ const VehicleFormSelector: React.FC = () => {
       ) {
         console.log("✅ Silobas Dorse formu seçildi (içerik)");
         return <SilobasForm />;
+      } else if (
+        modelLower.includes("tekstil") ||
+        modelLower.includes("textile")
+      ) {
+        console.log("✅ Tekstil Dorse formu seçildi (içerik)");
+        return <TekstilForm />;
       } else if (
         modelLower.includes("lowbed") ||
         modelLower.includes("havuzlu")

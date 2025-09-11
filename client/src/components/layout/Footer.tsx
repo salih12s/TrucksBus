@@ -17,30 +17,42 @@ import {
 } from "@mui/icons-material";
 
 const Footer: React.FC = () => {
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <Box sx={{ backgroundColor: "#313B4C", color: "white", mt: "auto" }}>
       {/* Ana Footer İçeriği */}
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 2 }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
           {/* Sol Kısım - Şirket Bilgileri */}
-          <Box sx={{ flex: "1 1 300px", minWidth: 280 }}>
-            <Box sx={{ mb: 2 }}>
+          <Box sx={{ flex: "1 1 250px", minWidth: 220 }}>
+            <Box sx={{ mb: 1.5 }}>
               <Typography
                 variant="h6"
-                sx={{ color: "#D34237", fontWeight: "bold", mb: 1 }}
+                sx={{
+                  color: "#D34237",
+                  fontWeight: "bold",
+                  mb: 0.5,
+                  fontSize: "1.1rem",
+                }}
               >
                 Trucksbus
               </Typography>
               <Typography
                 variant="body2"
-                sx={{ mb: 2, fontSize: "0.85rem", lineHeight: 1.6 }}
+                sx={{ mb: 1.5, fontSize: "0.8rem", lineHeight: 1.5 }}
               >
                 Ticari Araçlar alım satım platformu Kamyon,Kamyonet çekici,
                 Treyler Romork Otobüs,Midübüs ,Minübüs,aynı platformda
               </Typography>
 
               {/* Butonlar */}
-              <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+              <Box sx={{ display: "flex", gap: 0.8, mb: 1.5 }}>
                 <Button
                   variant="contained"
                   size="small"
@@ -75,45 +87,57 @@ const Footer: React.FC = () => {
               </Box>
 
               {/* İstatistikler */}
-              <Box sx={{ display: "flex", gap: 3 }}>
+              <Box sx={{ display: "flex", gap: 2 }}>
                 <Box sx={{ textAlign: "center" }}>
                   <Typography
-                    variant="h6"
-                    sx={{ color: "#D34237", fontWeight: "bold" }}
+                    variant="subtitle1"
+                    sx={{
+                      color: "#D34237",
+                      fontWeight: "bold",
+                      fontSize: "1rem",
+                    }}
                   >
                     1200+
                   </Typography>
-                  <Typography variant="caption">Doğrulanmış İlan</Typography>
+                  <Typography variant="caption" sx={{ fontSize: "0.7rem" }}>
+                    Doğrulanmış İlan
+                  </Typography>
                 </Box>
                 <Box sx={{ textAlign: "center" }}>
                   <Typography
-                    variant="h6"
-                    sx={{ color: "#D34237", fontWeight: "bold" }}
+                    variant="subtitle1"
+                    sx={{
+                      color: "#D34237",
+                      fontWeight: "bold",
+                      fontSize: "1rem",
+                    }}
                   >
                     7/24
                   </Typography>
-                  <Typography variant="caption">Destek</Typography>
+                  <Typography variant="caption" sx={{ fontSize: "0.7rem" }}>
+                    Destek
+                  </Typography>
                 </Box>
               </Box>
             </Box>
 
             {/* İletişim Bilgileri */}
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Phone sx={{ fontSize: 16, color: "#D34237" }} />
-                <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                <Phone sx={{ fontSize: 14, color: "#D34237" }} />
+                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
                   +90 (555) 123 45 67
                 </Typography>
               </Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Email sx={{ fontSize: 16, color: "#D34237" }} />
-                <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                <Email sx={{ fontSize: 14, color: "#D34237" }} />
+                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
                   info@trucksbus.com
                 </Typography>
               </Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <LocationOn sx={{ fontSize: 16, color: "#D34237" }} />
-                <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                <LocationOn sx={{ fontSize: 14, color: "#D34237" }} />
+                <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
                   İstanbul, Türkiye
                 </Typography>
               </Box>
@@ -121,16 +145,23 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Hızlı Linkler */}
-          <Box sx={{ flex: "1 1 200px", minWidth: 160 }}>
+          <Box sx={{ flex: "1 1 140px", minWidth: 120 }}>
             <Typography
               variant="h6"
-              sx={{ color: "#D34237", fontWeight: "bold", mb: 2 }}
+              sx={{
+                color: "#D34237",
+                fontWeight: "bold",
+                mb: 1.5,
+                fontSize: "1rem",
+              }}
             >
               • Hızlı Linkler
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -141,7 +172,9 @@ const Footer: React.FC = () => {
                 Ana Sayfa
               </Link>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/listings"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -152,7 +185,9 @@ const Footer: React.FC = () => {
                 Tüm İlanlar
               </Link>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/categories"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -163,7 +198,9 @@ const Footer: React.FC = () => {
                 Kategoriler
               </Link>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/favorites"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -174,7 +211,9 @@ const Footer: React.FC = () => {
                 Favorilerim
               </Link>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/my-listings"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -188,10 +227,15 @@ const Footer: React.FC = () => {
           </Box>
 
           {/* Kategoriler */}
-          <Box sx={{ flex: "1 1 200px", minWidth: 160 }}>
+          <Box sx={{ flex: "1 1 140px", minWidth: 120 }}>
             <Typography
               variant="h6"
-              sx={{ color: "#D34237", fontWeight: "bold", mb: 2 }}
+              sx={{
+                color: "#D34237",
+                fontWeight: "bold",
+                mb: 1.5,
+                fontSize: "1rem",
+              }}
             >
               • Kategoriler
             </Typography>
@@ -199,7 +243,9 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <LocalShipping sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  href="#"
+                  component={RouterLink}
+                  to="/categories/kamyon"
+                  onClick={scrollToTop}
                   sx={{
                     color: "white",
                     textDecoration: "none",
@@ -213,7 +259,9 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <DirectionsBus sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  href="#"
+                  component={RouterLink}
+                  to="/categories/otobus"
+                  onClick={scrollToTop}
                   sx={{
                     color: "white",
                     textDecoration: "none",
@@ -227,7 +275,9 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <DirectionsBus sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  href="#"
+                  component={RouterLink}
+                  to="/categories/minibus"
+                  onClick={scrollToTop}
                   sx={{
                     color: "white",
                     textDecoration: "none",
@@ -241,7 +291,9 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <LocalShipping sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  href="#"
+                  component={RouterLink}
+                  to="/categories/cekici"
+                  onClick={scrollToTop}
                   sx={{
                     color: "white",
                     textDecoration: "none",
@@ -255,7 +307,9 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Build sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  href="#"
+                  component={RouterLink}
+                  to="/categories/dorse"
+                  onClick={scrollToTop}
                   sx={{
                     color: "white",
                     textDecoration: "none",
@@ -269,7 +323,9 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Engineering sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  href="#"
+                  component={RouterLink}
+                  to="/categories/romork"
+                  onClick={scrollToTop}
                   sx={{
                     color: "white",
                     textDecoration: "none",
@@ -283,11 +339,150 @@ const Footer: React.FC = () => {
             </Box>
           </Box>
 
-          {/* Kurumsal */}
-          <Box sx={{ flex: "1 1 200px", minWidth: 160 }}>
+          {/* Gizlilik ve Kullanım */}
+          <Box sx={{ flex: "1 1 160px", minWidth: 140 }}>
             <Typography
               variant="h6"
-              sx={{ color: "#D34237", fontWeight: "bold", mb: 2 }}
+              sx={{
+                color: "#D34237",
+                fontWeight: "bold",
+                mb: 1.5,
+                fontSize: "1rem",
+              }}
+            >
+              • Gizlilik ve Kullanım
+            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Link
+                component={RouterLink}
+                to="/privacy-policy"
+                onClick={scrollToTop}
+                sx={{
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.85rem",
+                  "&:hover": { color: "#D34237" },
+                }}
+              >
+                Gizlilik Politikası
+              </Link>
+              <Link
+                component={RouterLink}
+                to="/terms-of-service"
+                onClick={scrollToTop}
+                sx={{
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.85rem",
+                  "&:hover": { color: "#D34237" },
+                }}
+              >
+                Hizmet Şartları
+              </Link>
+              <Link
+                component={RouterLink}
+                to="/kvkk"
+                onClick={scrollToTop}
+                sx={{
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.85rem",
+                  "&:hover": { color: "#D34237" },
+                }}
+              >
+                KVKK Bildirimi
+              </Link>
+              <Link
+                component={RouterLink}
+                to="/contracts-and-rules"
+                onClick={scrollToTop}
+                sx={{
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.85rem",
+                  "&:hover": { color: "#D34237" },
+                }}
+              >
+                Sözleşmeler ve Kurallar
+              </Link>
+              <Link
+                component={RouterLink}
+                to="/account-agreement"
+                onClick={scrollToTop}
+                sx={{
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.85rem",
+                  "&:hover": { color: "#D34237" },
+                }}
+              >
+                Hesap Sözleşmesi
+              </Link>
+              <Link
+                component={RouterLink}
+                to="/usage-conditions"
+                onClick={scrollToTop}
+                sx={{
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.85rem",
+                  "&:hover": { color: "#D34237" },
+                }}
+              >
+                Kullanım Koşulları
+              </Link>
+              <Link
+                component={RouterLink}
+                to="/personal-data-protection"
+                onClick={scrollToTop}
+                sx={{
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.85rem",
+                  "&:hover": { color: "#D34237" },
+                }}
+              >
+                Kişisel Verilerin Korunması
+              </Link>
+              <Link
+                component={RouterLink}
+                to="/cookie-policy"
+                onClick={scrollToTop}
+                sx={{
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.85rem",
+                  "&:hover": { color: "#D34237" },
+                }}
+              >
+                Çerez Yönetimi
+              </Link>
+              <Link
+                component={RouterLink}
+                to="/help-guide"
+                onClick={scrollToTop}
+                sx={{
+                  color: "white",
+                  textDecoration: "none",
+                  fontSize: "0.85rem",
+                  "&:hover": { color: "#D34237" },
+                }}
+              >
+                Yardım ve İşlem Rehberi
+              </Link>
+            </Box>
+          </Box>
+
+          {/* Kurumsal */}
+          <Box sx={{ flex: "1 1 140px", minWidth: 120 }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: "#D34237",
+                fontWeight: "bold",
+                mb: 1.5,
+                fontSize: "1rem",
+              }}
             >
               • Kurumsal
             </Typography>
@@ -295,6 +490,7 @@ const Footer: React.FC = () => {
               <Link
                 component={RouterLink}
                 to="/about"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -307,6 +503,7 @@ const Footer: React.FC = () => {
               <Link
                 component={RouterLink}
                 to="/contact"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -317,7 +514,9 @@ const Footer: React.FC = () => {
                 İletişim
               </Link>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/privacy-policy"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -328,7 +527,9 @@ const Footer: React.FC = () => {
                 Gizlilik Politikası
               </Link>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/terms"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",
@@ -339,7 +540,9 @@ const Footer: React.FC = () => {
                 Kullanım Şartları
               </Link>
               <Link
-                href="#"
+                component={RouterLink}
+                to="/kvkk"
+                onClick={scrollToTop}
                 sx={{
                   color: "white",
                   textDecoration: "none",

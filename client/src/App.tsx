@@ -129,6 +129,25 @@ const AnalyticsDashboard = React.lazy(
   () => import("./components/analytics/AnalyticsDashboard")
 );
 
+// Legal Pages
+const PrivacyPolicy = React.lazy(() => import("./pages/legal/PrivacyPolicy"));
+const TermsOfService = React.lazy(() => import("./pages/legal/TermsOfService"));
+const KVKK = React.lazy(() => import("./pages/legal/KVKK"));
+const ContractsAndRules = React.lazy(
+  () => import("./pages/legal/ContractsAndRules")
+);
+const AccountAgreement = React.lazy(
+  () => import("./pages/legal/AccountAgreement")
+);
+const UsageConditions = React.lazy(
+  () => import("./pages/legal/UsageConditions")
+);
+const PersonalDataProtection = React.lazy(
+  () => import("./pages/legal/PersonalDataProtection")
+);
+const CookiePolicy = React.lazy(() => import("./pages/legal/CookiePolicy"));
+const HelpGuide = React.lazy(() => import("./pages/legal/HelpGuide"));
+
 // Admin Components
 const AdminLayout = React.lazy(() => import("./admin/components/AdminLayout"));
 const AdminDashboard = React.lazy(() => import("./admin/pages/AdminDashboard"));
@@ -1012,6 +1031,38 @@ function App() {
                             </ProtectedRoute>
                           }
                         />
+
+                        {/* Legal Pages */}
+                        <Route
+                          path="/privacy-policy"
+                          element={<PrivacyPolicy />}
+                        />
+                        <Route
+                          path="/terms-of-service"
+                          element={<TermsOfService />}
+                        />
+                        <Route path="/kvkk" element={<KVKK />} />
+                        <Route
+                          path="/contracts-and-rules"
+                          element={<ContractsAndRules />}
+                        />
+                        <Route
+                          path="/account-agreement"
+                          element={<AccountAgreement />}
+                        />
+                        <Route
+                          path="/usage-conditions"
+                          element={<UsageConditions />}
+                        />
+                        <Route
+                          path="/personal-data-protection"
+                          element={<PersonalDataProtection />}
+                        />
+                        <Route
+                          path="/cookie-policy"
+                          element={<CookiePolicy />}
+                        />
+                        <Route path="/help-guide" element={<HelpGuide />} />
 
                         {/* Admin Routes */}
                         <Route path="/admin" element={<AdminLayout />}>
