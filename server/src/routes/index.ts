@@ -11,10 +11,12 @@ import favoriteRoutes from "./favorites";
 import complaintRoutes from "./complaint";
 import messagingRoutes from "./messaging";
 import citiesRoutes from "./cities";
+import debugRoutes from "./debug";
 
 const router = Router();
 
 // Mount route modules
+router.use("/debug", debugRoutes);
 router.use("/auth", authRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/brands", brandRoutes);
