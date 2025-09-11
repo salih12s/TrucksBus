@@ -101,7 +101,7 @@ export const getBrandsByCategory = async (req: Request, res: Response) => {
       },
     });
 
-    const brands = categoryBrands.map((cb) => cb.brand);
+    const brands = categoryBrands.map((cb: any) => cb.brand);
     return res.json(brands);
   } catch (error) {
     console.error("Error fetching brands:", error);
@@ -154,7 +154,7 @@ export const getModelsByBrand = async (req: Request, res: Response) => {
     );
     console.log(
       `📋 Models:`,
-      models.map((m) => m.name)
+      models.map((m: any) => m.name)
     );
 
     return res.json(models);

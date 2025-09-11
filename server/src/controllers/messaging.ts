@@ -55,7 +55,7 @@ export const getConversations = async (
     // Group messages by conversation (other user + ad)
     const conversationMap = new Map();
 
-    conversations.forEach((message) => {
+    conversations.forEach((message: any) => {
       const otherUserId =
         message.senderId === userId ? message.receiverId : message.senderId;
       const otherUser =

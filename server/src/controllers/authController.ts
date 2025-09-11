@@ -646,7 +646,7 @@ export class AuthController {
       });
 
       const totalViews = userAds.reduce(
-        (sum, ad) => sum + (ad.viewCount || 0),
+        (sum: number, ad: any) => sum + (ad.viewCount || 0),
         0
       );
 

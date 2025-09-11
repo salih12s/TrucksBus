@@ -107,7 +107,7 @@ export const getUserFeedbacks = async (
     });
 
     // Transform data to match frontend expectations
-    const transformedFeedbacks = feedbacks.map((feedback) => ({
+    const transformedFeedbacks = feedbacks.map((feedback: any) => ({
       ...feedback,
       title: feedback.subject,
       description: feedback.content,
@@ -161,7 +161,7 @@ export const getAllFeedbacks = async (
     ]);
 
     // Transform data to match frontend expectations
-    const transformedFeedbacks = feedbacks.map((feedback) => ({
+    const transformedFeedbacks = feedbacks.map((feedback: any) => ({
       ...feedback,
       title: feedback.subject,
       description: feedback.content,
