@@ -50,6 +50,7 @@ interface FormData {
   color: string;
   fuelCapacity: string;
   tireCondition: string;
+  detailedInfo: string;
 
   // Özellikler
   features: string[];
@@ -85,6 +86,7 @@ const OtobusAdForm: React.FC = () => {
     color: "",
     fuelCapacity: "",
     tireCondition: "",
+    detailedInfo: "",
     features: [],
     photos: [],
     showcasePhoto: null,
@@ -349,6 +351,10 @@ const OtobusAdForm: React.FC = () => {
       }
       if (formData.tireCondition && formData.tireCondition.trim() !== "") {
         submitData.append("tireCondition", formData.tireCondition);
+      }
+
+      if (formData.detailedInfo && formData.detailedInfo.trim() !== "") {
+        submitData.append("detailedInfo", formData.detailedInfo);
       }
 
       // Özellikler - JSON olarak gönder
@@ -869,6 +875,28 @@ const OtobusAdForm: React.FC = () => {
                     }
                     placeholder="85"
                     inputProps={{ min: 0, max: 100 }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                        "&:hover fieldset": {
+                          borderColor: "primary.main",
+                        },
+                      },
+                    }}
+                  />
+                </Box>
+
+                <Box>
+                  <TextField
+                    fullWidth
+                    label="Detaylı Bilgi"
+                    multiline
+                    rows={4}
+                    value={formData.detailedInfo}
+                    onChange={(e) =>
+                      handleInputChange("detailedInfo", e.target.value)
+                    }
+                    placeholder="Otobüs hakkında detaylı açıklama yazın..."
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,

@@ -200,133 +200,372 @@ interface SimilarAd {
 const getCategorySpecificFields = (categorySlug: string): string[] => {
   const fieldConfigs: Record<string, string[]> = {
     // Kamyon - tam araç bilgileri
-    'kamyon': [
-      'productionYear', 'mileage', 'fuelType', 'transmission', 'enginePower', 
-      'color', 'condition', 'isExchangeable', 'loadCapacity', 'tireCondition', 
-      'superstructure', 'motorPower', 'cabin', 'drivetrain'
+    kamyon: [
+      "cabin",
+      "color",
+      "address",
+      "exchange",
+      "features",
+      "fuelType",
+      "condition",
+      "plateType",
+      "drivetrain",
+      "motorPower",
+      "plateNumber",
+      "detailedInfo",
+      "loadCapacity",
+      "transmission",
+      "tireCondition",
+      "superstructure",
+      "productionYear",
+      "mileage",
+      "isExchangeable",
     ],
-    
-    // Çekici - tam araç bilgileri + çekici özel  
-    'cekici': [
-      'productionYear', 'mileage', 'fuelType', 'transmission', 'enginePower',
-      'color', 'condition', 'isExchangeable', 'bedCount', 'cabinType', 
-      'dorseAvailable', 'damageRecord', 'paintChange', 'engineCapacity',
-      'tireCondition'
+
+    // Kamyon & Kamyonet slug'ı için aynı konfigurasyon
+    "kamyon-kamyonet": [
+      "cabin",
+      "color",
+      "address",
+      "exchange",
+      "features",
+      "fuelType",
+      "condition",
+      "plateType",
+      "drivetrain",
+      "motorPower",
+      "plateNumber",
+      "detailedInfo",
+      "loadCapacity",
+      "transmission",
+      "tireCondition",
+      "superstructure",
+      "productionYear",
+      "mileage",
+      "isExchangeable",
     ],
-    
+
+    // Çekici - tam araç bilgileri + çekici özel
+    cekici: [
+      "color",
+      "bedCount",
+      "exchange",
+      "features",
+      "fuelType",
+      "cabinType",
+      "condition",
+      "plateType",
+      "enginePower",
+      "paintChange",
+      "plateNumber",
+      "damageRecord",
+      "detailedInfo",
+      "transmission",
+      "tireCondition",
+      "dorseAvailable",
+      "engineCapacity",
+      "productionYear",
+      "mileage",
+      "isExchangeable",
+    ],
+
     // Otobüs - tam araç bilgileri + otobüs özel
-    'otobus': [
-      'productionYear', 'mileage', 'fuelType', 'transmission', 'enginePower',
-      'color', 'condition', 'isExchangeable', 'capacity', 'seatArrangement',
-      'seatBackScreen', 'fuelCapacity', 'tireCondition'
+    otobus: [
+      "color",
+      "exchange",
+      "features",
+      "fuelType",
+      "gearType",
+      "condition",
+      "gearCount",
+      "plateType",
+      "drivetrain",
+      "seatLayout",
+      "paintChange",
+      "plateNumber",
+      "damageRecord",
+      "detailedInfo",
+      "fuelCapacity",
+      "transmission",
+      "tireCondition",
+      "seatBackScreen",
+      "passengerCapacity",
+      "productionYear",
+      "mileage",
+      "isExchangeable",
     ],
-    
+
     // Minibüs - tam araç bilgileri + minibüs özel
-    'minibus': [
-      'productionYear', 'mileage', 'fuelType', 'transmission', 'engineVolume',
-      'color', 'condition', 'isExchangeable', 'seatCount', 'drivetrain',
-      'roofType', 'chassis'
+    minibus: [
+      "color",
+      "chassis",
+      "exchange",
+      "fuelType",
+      "roofType",
+      "condition",
+      "plateType",
+      "seatCount",
+      "drivetrain",
+      "plateNumber",
+      "detailedInfo",
+      "engineVolume",
+      "transmission",
+      "detailFeatures",
+      "address",
+      "productionYear",
+      "mileage",
+      "isExchangeable",
     ],
-    
+
+    // Minibüs & Midibüs slug'ı için aynı konfigurasyon
+    "minibus-midibus": [
+      "color",
+      "chassis",
+      "exchange",
+      "fuelType",
+      "roofType",
+      "condition",
+      "plateType",
+      "seatCount",
+      "drivetrain",
+      "plateNumber",
+      "detailedInfo",
+      "engineVolume",
+      "transmission",
+      "detailFeatures",
+      "address",
+      "productionYear",
+      "mileage",
+      "isExchangeable",
+    ],
+
+    // Genel Dorse kategorisi
+    dorse: [
+      "uzunluk",
+      "exchange",
+      "genislik",
+      "warranty",
+      "negotiable",
+      "detailedInfo",
+      "devrilmeYonu",
+      "lastikDurumu",
+      "productionYear",
+      "condition",
+      "isExchangeable",
+    ],
+
     // Dorse alt kategorileri - araç harici bilgiler
-    'kaya-tipi': [
-      'productionYear', 'condition', 'isExchangeable', 'genislik', 'uzunluk', 
-      'lastikDurumu', 'devrilmeYonu', 'warranty', 'negotiable'
+    "kaya-tipi": [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "genislik",
+      "uzunluk",
+      "lastikDurumu",
+      "devrilmeYonu",
+      "warranty",
+      "negotiable",
     ],
-    
-    'kapakli-tip': [
-      'productionYear', 'condition', 'isExchangeable', 'genislik', 'uzunluk',
-      'lastikDurumu', 'devrilmeYonu', 'warranty', 'negotiable'
+
+    "kapakli-tip": [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "genislik",
+      "uzunluk",
+      "lastikDurumu",
+      "devrilmeYonu",
+      "warranty",
+      "negotiable",
     ],
-    
-    'hafriyat-tipi': [
-      'productionYear', 'condition', 'isExchangeable', 'genislik', 'uzunluk',
-      'lastikDurumu', 'devrilmeYonu', 'warranty', 'negotiable'
+
+    "hafriyat-tipi": [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "genislik",
+      "uzunluk",
+      "lastikDurumu",
+      "devrilmeYonu",
+      "warranty",
+      "negotiable",
     ],
-    
-    'havuz-hardox-tipi': [
-      'productionYear', 'condition', 'isExchangeable', 'genislik', 'uzunlugu',
-      'lastikDurumu', 'devrilmeYonu', 'warranty', 'negotiable'
+
+    "havuz-hardox-tipi": [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "genislik",
+      "uzunlugu",
+      "lastikDurumu",
+      "devrilmeYonu",
+      "warranty",
+      "negotiable",
     ],
-    
+
     // Tanker - sıvı taşıma özel
-    'tanker': [
-      'productionYear', 'condition', 'isExchangeable', 'hacim', 'gozSayisi',
-      'lastikDurumu', 'renk', 'warranty', 'negotiable'
+    tanker: [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "hacim",
+      "gozSayisi",
+      "lastikDurumu",
+      "renk",
+      "warranty",
+      "negotiable",
     ],
-    
+
     // Oto kurtarıcı/taşıyıcı - özel platform bilgileri
-    'tekli-arac': [
-      'productionYear', 'mileage', 'fuelType', 'condition', 'isExchangeable',
-      'engineVolume', 'maxPower', 'maxTorque', 'platformLength', 'platformWidth',
-      'maxVehicleCapacity', 'loadCapacity'
+    "tekli-arac": [
+      "productionYear",
+      "mileage",
+      "fuelType",
+      "condition",
+      "isExchangeable",
+      "engineVolume",
+      "maxPower",
+      "maxTorque",
+      "platformLength",
+      "platformWidth",
+      "maxVehicleCapacity",
+      "loadCapacity",
     ],
-    
-    'coklu-arac': [
-      'productionYear', 'mileage', 'fuelType', 'condition', 'isExchangeable',
-      'engineVolume', 'maxPower', 'maxTorque', 'platformLength', 'platformWidth',
-      'maxVehicleCapacity', 'loadCapacity'
+
+    "coklu-arac": [
+      "productionYear",
+      "mileage",
+      "fuelType",
+      "condition",
+      "isExchangeable",
+      "engineVolume",
+      "maxPower",
+      "maxTorque",
+      "platformLength",
+      "platformWidth",
+      "maxVehicleCapacity",
+      "loadCapacity",
     ],
-    
-    // Genel dorse kategorisi
-    'dorse': [
-      'productionYear', 'condition', 'isExchangeable', 'genislik', 'uzunluk', 
-      'lastikDurumu', 'devrilmeYonu', 'warranty', 'negotiable'
-    ],
-    
+
     // Damperli genel
-    'damperli': [
-      'productionYear', 'condition', 'isExchangeable', 'genislik', 'uzunluk',
-      'lastikDurumu', 'devrilmeYonu', 'warranty', 'negotiable'
+    damperli: [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "genislik",
+      "uzunluk",
+      "lastikDurumu",
+      "devrilmeYonu",
+      "warranty",
+      "negotiable",
     ],
-    
+
     // Lowbed benzeri - platform bilgileri
-    'lowbed': [
-      'productionYear', 'condition', 'isExchangeable', 'platformLength', 
-      'platformWidth', 'loadCapacity', 'warranty', 'negotiable'
+    lowbed: [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "platformLength",
+      "platformWidth",
+      "loadCapacity",
+      "warranty",
+      "negotiable",
     ],
-    
+
     // Konteyner taşıyıcı
-    'konteyner-tasiyici': [
-      'productionYear', 'condition', 'isExchangeable', 'loadCapacity',
-      'warranty', 'negotiable'
+    "konteyner-tasiyici": [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "loadCapacity",
+      "warranty",
+      "negotiable",
     ],
-    
+
     // Kapalı kasa alt kategorileri - hacim ve boyut bilgileri
-    'kapali-kasa': [
-      'productionYear', 'condition', 'isExchangeable', 'volume', 'loadCapacity',
-      'warranty', 'negotiable'
+    "kapali-kasa": [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "volume",
+      "loadCapacity",
+      "warranty",
+      "negotiable",
     ],
-    
-    'acik-kasa': [
-      'productionYear', 'condition', 'isExchangeable', 'loadCapacity',
-      'warranty', 'negotiable'
+
+    "acik-kasa": [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "loadCapacity",
+      "warranty",
+      "negotiable",
     ],
-    
-    'silobas': [
-      'productionYear', 'condition', 'isExchangeable', 'hacim', 'loadCapacity',
-      'warranty', 'negotiable'
+
+    silobas: [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "hacim",
+      "loadCapacity",
+      "warranty",
+      "negotiable",
     ],
-    
-    'tekstil': [
-      'productionYear', 'condition', 'isExchangeable', 'loadCapacity',
-      'warranty', 'negotiable'
+
+    tekstil: [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "loadCapacity",
+      "warranty",
+      "negotiable",
     ],
-    
-    'ahsap-kasa': [
-      'productionYear', 'condition', 'isExchangeable', 'loadCapacity',
-      'warranty', 'negotiable'
+
+    "ahsap-kasa": [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "loadCapacity",
+      "warranty",
+      "negotiable",
     ],
-    
-    'ozel-kasa': [
-      'productionYear', 'condition', 'isExchangeable', 'loadCapacity',
-      'warranty', 'negotiable'
-    ]
+
+    "ozel-kasa": [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+      "loadCapacity",
+      "warranty",
+      "negotiable",
+    ],
+
+    // Oto kurtarıcı taşıyıcı
+    "oto-kurtarici-tasiyici": [
+      "year",
+      "mileage",
+      "engineVolume", 
+      "maxPower",
+      "maxTorque",
+      "fuelType",
+      "platformLength",
+      "platformWidth", 
+      "maxVehicleCapacity",
+      "loadCapacity",
+      "plateNumber",
+      "exchange",
+      "address",
+      "detailedInfo",
+      "features"
+    ],
   };
-  
-  return fieldConfigs[categorySlug] || [
-    'productionYear', 'condition', 'isExchangeable'
-  ];
+
+  return (
+    fieldConfigs[categorySlug] || [
+      "productionYear",
+      "condition",
+      "isExchangeable",
+    ]
+  );
 };
 
 const AdDetail: React.FC = () => {
@@ -357,8 +596,25 @@ const AdDetail: React.FC = () => {
 
       // Debug için console.log ekleyelim
       console.log("📸 İlan verileri:", adData);
-      console.log("📸 İmages array:", adData.images);
-      console.log("📸 İmages length:", adData.images?.length);
+      console.log(
+        "📸 Custom Fields Keys:",
+        Object.keys(adData.customFields || {})
+      );
+      console.log("📸 Custom Fields:", adData.customFields);
+
+      // Null olmayan alanları göster
+      const nonNullFields = Object.entries(adData.customFields || {})
+        .filter(
+          ([, value]) => value !== null && value !== undefined && value !== ""
+        )
+        .map(([key, value]) => `${key}: ${JSON.stringify(value)}`);
+      console.log("📸 Non-null Fields:", nonNullFields);
+
+      // Category slug ve allowed fields debug
+      const categorySlug = adData.category?.slug || adData.categorySlug || "";
+      const allowedFields = getCategorySpecificFields(categorySlug);
+      console.log("📸 Category Slug:", categorySlug);
+      console.log("📸 Allowed Fields:", allowedFields);
 
       setAd(adData);
       setIsFavorite(adData.isFavorite);
@@ -504,7 +760,7 @@ const AdDetail: React.FC = () => {
       color: <Palette />,
       condition: <CheckCircle />,
       isExchangeable: <CompareArrows />,
-      
+
       // Çekici özel iconları
       bedCount: <Build />,
       cabinType: <DirectionsCar />,
@@ -512,19 +768,19 @@ const AdDetail: React.FC = () => {
       damageRecord: <Build />,
       paintChange: <Palette />,
       engineCapacity: <Build />,
-      
-      // Otobüs özel iconları  
+
+      // Otobüs özel iconları
       capacity: <DirectionsCar />,
       seatArrangement: <DirectionsCar />,
       seatBackScreen: <CheckCircle />,
       fuelCapacity: <LocalGasStation />,
-      
+
       // Minibüs özel iconları
       engineVolume: <Build />,
       seatCount: <DirectionsCar />,
       roofType: <DirectionsCar />,
       chassis: <DirectionsCar />,
-      
+
       // Dorse özel iconları
       genislik: <DirectionsCar />,
       uzunluk: <DirectionsCar />,
@@ -532,20 +788,22 @@ const AdDetail: React.FC = () => {
       devrilmeYonu: <Settings />,
       warranty: <CheckCircle />,
       negotiable: <CompareArrows />,
-      
+
       // Tanker özel iconları
       hacim: <LocalGasStation />,
       gozSayisi: <Settings />,
       renk: <Palette />,
-      
+
       // Platform/Kurtarıcı özel iconları
+      year: <CalendarToday />,
       maxPower: <Build />,
       maxTorque: <Build />,
+      plateNumber: <Info />,
       platformLength: <DirectionsCar />,
       platformWidth: <DirectionsCar />,
       maxVehicleCapacity: <FitnessCenter />,
       loadCapacity: <FitnessCenter />,
-      
+
       // Lowbed özel iconları
       havuzDerinligi: <Height />,
       havuzGenisligi: <DirectionsCar />,
@@ -554,7 +812,7 @@ const AdDetail: React.FC = () => {
       uzatilabilirProfil: <UnfoldMore />,
       dingilSayisi: <Settings />,
       rampaMekanizmasi: <Build />,
-      
+
       // Genel
       tireCondition: <Speed />,
       exchange: <CompareArrows />,
@@ -672,7 +930,7 @@ const AdDetail: React.FC = () => {
       hizSabitleme: "Hız Sabitleme",
       merkeziKilit: "Merkezi Kilit",
 
-      // Çekici özellikleri 
+      // Çekici özellikleri
       cd: "CD Çalar",
       ebv: "EBV",
       gps: "GPS",
@@ -687,18 +945,19 @@ const AdDetail: React.FC = () => {
       alloyWheel: "Alaşım Jant",
       sideAirbag: "Yan Hava Yastığı",
       heatedSeats: "Isıtmalı Koltuklar",
-      
+
       // Tanker özellikleri
       hacim: "Hacim (Litre)",
       gozSayisi: "Göz Sayısı",
-      
+
       // Platform/Kurtarıcı özellikleri
+      year: "Üretim Yılı",
       maxPower: "Maksimum Güç",
       maxTorque: "Maksimum Tork",
       platformLength: "Platform Uzunluğu",
       platformWidth: "Platform Genişliği",
       maxVehicleCapacity: "Maks. Araç Kapasitesi",
-      
+
       // Otobüs ek özellikleri
       seatArrangement: "Koltuk Düzeni",
       fuelCapacity: "Yakıt Kapasitesi",
@@ -1025,9 +1284,11 @@ const AdDetail: React.FC = () => {
                       {ad.district?.name || "Belirtilmemiş"}
                     </Typography>
                   </Box>
-                  
+
                   {/* Kilometre - sadece belirli kategorilerde göster */}
-                  {getCategorySpecificFields(ad.categorySlug).includes('mileage') && (
+                  {getCategorySpecificFields(
+                    ad.category?.slug || ad.categorySlug || ""
+                  ).includes("mileage") && (
                     <Box
                       sx={{
                         textAlign: "center",
@@ -1054,9 +1315,11 @@ const AdDetail: React.FC = () => {
                       </Typography>
                     </Box>
                   )}
-                  
+
                   {/* Model Yılı - çoğu kategoride var */}
-                  {getCategorySpecificFields(ad.categorySlug).includes('productionYear') && (
+                  {getCategorySpecificFields(
+                    ad.category?.slug || ad.categorySlug || ""
+                  ).includes("productionYear") && (
                     <Box
                       sx={{
                         textAlign: "center",
@@ -1090,32 +1353,38 @@ const AdDetail: React.FC = () => {
                   mb={4}
                   flexWrap="wrap"
                 >
-                  {ad.condition && getCategorySpecificFields(ad.categorySlug).includes('condition') && (
-                    <Chip
-                      label={ad.condition}
-                      sx={{
-                        backgroundColor: "#f8f9fa",
-                        color: "#2c3e50",
-                        fontWeight: "500",
-                        border: "1px solid #e0e0e0",
-                      }}
-                      size="medium"
-                      variant="outlined"
-                    />
-                  )}
-                  {ad.isExchangeable && getCategorySpecificFields(ad.categorySlug).includes('isExchangeable') && (
-                    <Chip
-                      label="Takas Kabul Edilir"
-                      sx={{
-                        backgroundColor: "#f8f9fa",
-                        color: "#2c3e50",
-                        fontWeight: "500",
-                        border: "1px solid #e0e0e0",
-                      }}
-                      size="medium"
-                      variant="outlined"
-                    />
-                  )}
+                  {ad.condition &&
+                    getCategorySpecificFields(
+                      ad.category?.slug || ad.categorySlug || ""
+                    ).includes("condition") && (
+                      <Chip
+                        label={ad.condition}
+                        sx={{
+                          backgroundColor: "#f8f9fa",
+                          color: "#2c3e50",
+                          fontWeight: "500",
+                          border: "1px solid #e0e0e0",
+                        }}
+                        size="medium"
+                        variant="outlined"
+                      />
+                    )}
+                  {ad.isExchangeable &&
+                    getCategorySpecificFields(
+                      ad.category?.slug || ad.categorySlug || ""
+                    ).includes("isExchangeable") && (
+                      <Chip
+                        label="Takas Kabul Edilir"
+                        sx={{
+                          backgroundColor: "#f8f9fa",
+                          color: "#2c3e50",
+                          fontWeight: "500",
+                          border: "1px solid #e0e0e0",
+                        }}
+                        size="medium"
+                        variant="outlined"
+                      />
+                    )}
                   <Chip
                     icon={<Visibility />}
                     label={`${ad.viewCount || 0} Görüntülenme`}
@@ -1211,12 +1480,20 @@ const AdDetail: React.FC = () => {
                     }}
                   >
                     {Object.entries(ad.customFields)
-                      .filter(([key]) => {
+                      .filter(([key, value]) => {
                         // Kategoriye özel alanları filtrele
-                        const allowedFields = getCategorySpecificFields(ad.categorySlug);
-                        return allowedFields.includes(key) && 
-                               key !== "detailFeatures" && 
-                               key !== "features";
+                        const allowedFields = getCategorySpecificFields(
+                          ad.category?.slug || ad.categorySlug || ""
+                        );
+                        return (
+                          allowedFields.includes(key) &&
+                          key !== "detailFeatures" &&
+                          key !== "cityId" &&
+                          key !== "districtId" &&
+                          value !== null &&
+                          value !== undefined &&
+                          value !== ""
+                        );
                       })
                       .map(([key, value]) => (
                         <Box
@@ -1224,12 +1501,15 @@ const AdDetail: React.FC = () => {
                           sx={{
                             display: "flex",
                             justifyContent: "space-between",
-                            alignItems: "center",
+                            alignItems:
+                              key === "detailedInfo" ? "flex-start" : "center",
                             py: 1.5,
                             px: 2,
                             backgroundColor: "#fafafa",
                             borderRadius: 1,
                             border: "1px solid #f0f0f0",
+                            minHeight: key === "detailedInfo" ? "auto" : "48px",
+                            gap: 2,
                           }}
                         >
                           <Box
@@ -1253,6 +1533,14 @@ const AdDetail: React.FC = () => {
                               fontWeight: "600",
                               color: "#2c3e50",
                               textAlign: "right",
+                              maxWidth: "200px",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              display: "-webkit-box",
+                              WebkitLineClamp: key === "detailedInfo" ? 3 : 1,
+                              WebkitBoxOrient: "vertical",
+                              wordBreak: "break-word",
+                              hyphens: "auto",
                             }}
                           >
                             {renderFieldValue(value)}

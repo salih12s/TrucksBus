@@ -117,7 +117,6 @@ const MainLayout: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [filteredAds, setFilteredAds] = useState<Ad[]>([]);
-  const [brands, setBrands] = useState<{ id: number; name: string }[]>([]);
   const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -125,7 +124,6 @@ const MainLayout: React.FC = () => {
   const [priceMax, setPriceMax] = useState("");
   const [yearMin, setYearMin] = useState("");
   const [yearMax, setYearMax] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -317,7 +315,7 @@ const MainLayout: React.FC = () => {
       try {
         console.log("=== STARTING API CALLS ===");
 
-        const [categoriesRes, adsRes, brandsRes, citiesRes] = await Promise.all(
+        const [categoriesRes, adsRes, citiesRes] = await Promise.all(
           [
             apiClient.get("/categories").catch((err) => {
               console.error("Categories API error:", err);
@@ -326,10 +324,6 @@ const MainLayout: React.FC = () => {
             apiClient.get("/ads?status=APPROVED").catch((err) => {
               console.error("Ads API error:", err);
               return { data: { ads: [] } };
-            }),
-            apiClient.get("/brands").catch((err) => {
-              console.error("Brands API error:", err);
-              return { data: [] };
             }),
             apiClient.get("/cities").catch((err) => {
               console.error("Cities API error:", err);
@@ -341,7 +335,6 @@ const MainLayout: React.FC = () => {
         console.log("=== RAW API RESPONSES ===");
         console.log("Categories response:", categoriesRes);
         console.log("Ads response:", adsRes);
-        console.log("Brands response:", brandsRes);
         console.log("Cities response:", citiesRes);
 
         // Güvenli veri kontrolü
@@ -359,20 +352,16 @@ const MainLayout: React.FC = () => {
           ? (adsRes.data as Ad[])
           : [];
 
-        const brandsData = Array.isArray(brandsRes.data) ? brandsRes.data : [];
-
         const citiesData = Array.isArray(citiesRes.data) ? citiesRes.data : [];
 
         setCategories(categoriesData as Category[]);
         setAds(adsData as Ad[]);
-        setBrands(brandsData);
         setCities(citiesData);
 
         // Debug: Check all fetched data
         console.log("=== API DATA FETCH RESULTS ===");
         console.log("Categories:", categoriesData.length, categoriesData);
         console.log("Ads:", adsData.length, adsData);
-        console.log("Brands:", brandsData.length, brandsData);
         console.log("Cities:", citiesData.length, citiesData);
 
         if (adsData.length > 0) {
@@ -435,7 +424,6 @@ const MainLayout: React.FC = () => {
       priceMax,
       yearMin,
       yearMax,
-      selectedBrand,
       selectedCity,
       totalAds: ads.length,
     });
@@ -447,7 +435,6 @@ const MainLayout: React.FC = () => {
       !priceMax &&
       !yearMin &&
       !yearMax &&
-      !selectedBrand &&
       !selectedCity
     ) {
       setFilteredAds(ads);
@@ -541,21 +528,6 @@ const MainLayout: React.FC = () => {
         console.log("After year filter:", filtered.length);
       }
 
-      // Marka filtresi - ID ile eşleştir
-      if (selectedBrand) {
-        filtered = filtered.filter((ad) => {
-          const brandMatch =
-            ad.brand?.id?.toString() === selectedBrand.toString();
-          return brandMatch;
-        });
-        console.log(
-          "After brand filter:",
-          filtered.length,
-          "Brand ID:",
-          selectedBrand
-        );
-      }
-
       // Şehir filtresi - ID ile eşleştir
       if (selectedCity) {
         filtered = filtered.filter((ad) => {
@@ -581,7 +553,6 @@ const MainLayout: React.FC = () => {
     priceMax,
     yearMin,
     yearMax,
-    selectedBrand,
     selectedCity,
     categories,
   ]);
@@ -1055,35 +1026,8 @@ const MainLayout: React.FC = () => {
                   />
                 </Box>
 
-                {/* Brand and City Filters */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-                    gap: 2,
-                    mb: 2,
-                  }}
-                >
-                  <FormControl size="small" fullWidth>
-                    <InputLabel>Marka Seç</InputLabel>
-                    <Select
-                      value={selectedBrand}
-                      label="Marka Seç"
-                      onChange={(e) => setSelectedBrand(e.target.value)}
-                      sx={{
-                        backgroundColor: "white",
-                        borderRadius: 1,
-                      }}
-                    >
-                      <MenuItem value="">Tümü</MenuItem>
-                      {brands.map((brand) => (
-                        <MenuItem key={brand.id} value={brand.id}>
-                          {brand.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
+                {/* City Filter */}
+                <Box sx={{ mb: 2 }}>
                   <FormControl size="small" fullWidth>
                     <InputLabel>Şehir Seç</InputLabel>
                     <Select
@@ -1112,7 +1056,6 @@ const MainLayout: React.FC = () => {
                   priceMax ||
                   yearMin ||
                   yearMax ||
-                  selectedBrand ||
                   selectedCity) && (
                   <Box sx={{ textAlign: "center", mb: 2 }}>
                     <Button
@@ -1125,7 +1068,6 @@ const MainLayout: React.FC = () => {
                         setPriceMax("");
                         setYearMin("");
                         setYearMax("");
-                        setSelectedBrand("");
                         setSelectedCity("");
                       }}
                       sx={{
