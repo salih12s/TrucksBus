@@ -16,6 +16,9 @@ RUN npm install --prefix client
 # Copy source code
 COPY . .
 
+# Generate Prisma client
+RUN npm run db:generate --prefix server
+
 # Build applications
 RUN npm run build --prefix server
 RUN npm run build --prefix client
