@@ -898,7 +898,7 @@ const MainLayout: React.FC = () => {
         <Box
           sx={{
             flex: 1,
-            p: isMobile ? 2 : 3,
+            p: isMobile ? 1 : isTablet ? 2 : 3,
             transition: "all 0.3s ease",
             minHeight: "calc(100vh - 120px)",
             width: "100%",
@@ -1097,25 +1097,14 @@ const MainLayout: React.FC = () => {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: (() => {
-                    if (isMobile) {
-                      return "1fr"; // Mobile: 1 sütun
-                    } else if (isTablet) {
-                      return sidebarOpen
-                        ? "repeat(auto-fit, minmax(280px, 1fr))" // Tablet sidebar açık: 2-3 sütun
-                        : "repeat(auto-fit, minmax(250px, 1fr))"; // Tablet sidebar kapalı: 3-4 sütun
-                    } else {
-                      return sidebarOpen
-                        ? "repeat(3, 1fr)" // Desktop sidebar açık: tam 3 sütun
-                        : "repeat(4, 1fr)"; // Desktop sidebar kapalı: tam 4 sütun
-                    }
-                  })(),
-                  gap: isMobile ? 2 : 3,
-                  minChildWidth: isMobile
-                    ? "auto"
-                    : sidebarOpen
-                    ? "280px"
-                    : "250px", // Minimum genişlik
+                  gridTemplateColumns: {
+                    xs: "1fr", // Mobile: 1 sütun
+                    sm: "repeat(auto-fill, minmax(280px, 1fr))", // Small tablet: responsive
+                    md: sidebarOpen ? "repeat(2, 1fr)" : "repeat(3, 1fr)", // Medium: 2-3 sütun
+                    lg: sidebarOpen ? "repeat(3, 1fr)" : "repeat(4, 1fr)", // Large: 3-4 sütun
+                  },
+                  gap: { xs: 1.5, sm: 2, md: 3 },
+                  width: "100%",
                 }}
               >
                 {(() => {
@@ -1147,12 +1136,9 @@ const MainLayout: React.FC = () => {
                         height: "100%",
                         display: "flex",
                         flexDirection: "column",
-                        minWidth: isMobile
-                          ? "auto"
-                          : sidebarOpen
-                          ? "280px"
-                          : "250px",
                         cursor: "pointer",
+                        width: "100%",
+                        maxWidth: "100%",
                       }}
                     >
                       {/* Vitrin Görseli */}
@@ -1256,7 +1242,7 @@ const MainLayout: React.FC = () => {
                             sx={{
                               color: "#666",
                               mb: 0.8,
-                              fontSize: "0.8rem",
+                              fontSize: { xs: "0.75rem", sm: "0.8rem" },
                             }}
                           >
                             <strong>Model Yılı:</strong>{" "}
@@ -1270,7 +1256,7 @@ const MainLayout: React.FC = () => {
                               sx={{
                                 color: "#666",
                                 mb: 0.8,
-                                fontSize: "0.8rem",
+                                fontSize: { xs: "0.75rem", sm: "0.8rem" },
                               }}
                             >
                               <strong>KM:</strong>{" "}
@@ -1284,7 +1270,7 @@ const MainLayout: React.FC = () => {
                             sx={{
                               color: "#666",
                               mb: 0.8,
-                              fontSize: "0.8rem",
+                              fontSize: { xs: "0.75rem", sm: "0.8rem" },
                             }}
                           >
                             <strong>Şehir/İlçe:</strong>{" "}
@@ -1368,9 +1354,9 @@ const MainLayout: React.FC = () => {
                             sx={{
                               backgroundColor: "#333",
                               color: "white",
-                              py: 1,
+                              py: { xs: 0.8, sm: 1 },
                               borderRadius: 1,
-                              fontSize: "0.8rem",
+                              fontSize: { xs: "0.7rem", sm: "0.8rem" },
                               "&:hover": {
                                 backgroundColor: "#555",
                               },
@@ -1379,7 +1365,11 @@ const MainLayout: React.FC = () => {
                             Detayları Gör
                           </Button>
 
-                          <Box sx={{ display: "flex", gap: 0.5 }}>
+                          <Box sx={{ 
+                            display: "flex", 
+                            gap: { xs: 0.25, sm: 0.5 },
+                            flexDirection: { xs: "column", sm: "row" }
+                          }}>
                             <Button
                               variant="outlined"
                               size="small"
@@ -1387,8 +1377,8 @@ const MainLayout: React.FC = () => {
                               startIcon={<Report />}
                               sx={{
                                 flex: 1,
-                                fontSize: "0.7rem",
-                                py: 0.3,
+                                fontSize: { xs: "0.6rem", sm: "0.7rem" },
+                                py: { xs: 0.2, sm: 0.3 },
                                 borderColor: "#d32f2f",
                                 color: "#d32f2f",
                                 "&:hover": {
@@ -1398,7 +1388,7 @@ const MainLayout: React.FC = () => {
                                 },
                               }}
                             >
-                              Şikayet Et
+                              {isMobile ? "Şikayet" : "Şikayet Et"}
                             </Button>
                             <Button
                               variant="outlined"
@@ -1407,8 +1397,8 @@ const MainLayout: React.FC = () => {
                               startIcon={<Message />}
                               sx={{
                                 flex: 1,
-                                fontSize: "0.7rem",
-                                py: 0.3,
+                                fontSize: { xs: "0.6rem", sm: "0.7rem" },
+                                py: { xs: 0.2, sm: 0.3 },
                                 borderColor: "#1976d2",
                                 color: "#1976d2",
                                 "&:hover": {
@@ -1438,8 +1428,8 @@ const MainLayout: React.FC = () => {
                               }
                               sx={{
                                 flex: 1,
-                                fontSize: "0.7rem",
-                                py: 0.3,
+                                fontSize: { xs: "0.6rem", sm: "0.7rem" },
+                                py: { xs: 0.2, sm: 0.3 },
                                 borderColor: savedAds.has(ad.id)
                                   ? "#4caf50"
                                   : "#888",

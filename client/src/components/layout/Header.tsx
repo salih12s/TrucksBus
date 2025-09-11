@@ -15,6 +15,8 @@ import {
   ListItemText,
   TextField,
   InputAdornment,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
@@ -53,6 +55,11 @@ const Header: React.FC<HeaderProps> = ({
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+
+  // Responsive hooks
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
 
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -113,9 +120,9 @@ const Header: React.FC<HeaderProps> = ({
             src="/Trucksbus.png"
             alt="TrucksBus"
             style={{
-              height: 120, // Büyütüldü (40'tan 55'e)
+              height: isMobile ? 80 : isTablet ? 100 : 120,
               filter: "brightness(0) invert(1)", // Beyaz renk
-              marginRight: 16,
+              marginRight: isMobile ? 8 : 16,
               transition: "all 0.3s ease",
             }}
           />
@@ -124,9 +131,10 @@ const Header: React.FC<HeaderProps> = ({
             component="div"
             sx={{
               fontWeight: "bold",
-              fontSize: "1.5rem",
-              marginLeft: 2, // Yazıyı sağa kaydır
+              fontSize: isMobile ? "1.1rem" : isTablet ? "1.3rem" : "1.5rem",
+              marginLeft: isMobile ? 1 : 2,
               transition: "all 0.3s ease",
+              display: isMobile ? "none" : "block", // Mobilde text gizle
               "&:hover": {
                 textShadow: "0 2px 4px rgba(0,0,0,0.3)",
               },
@@ -139,22 +147,22 @@ const Header: React.FC<HeaderProps> = ({
         </Box>
 
         {/* Search Bar - Center */}
-        {showSearch && (
+        {showSearch && !isMobile && (
           <Box
             sx={{
               flex: 1,
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              px: 4,
-              mx: 2,
-              ml: { xs: 0, sm: 8, md: 64 },
+              px: isMobile ? 1 : isTablet ? 2 : 4,
+              mx: isMobile ? 0.5 : isTablet ? 1 : 2,
+              ml: { xs: 0, sm: 4, md: 32, lg: 64 },
             }}
           >
             <TextField
               fullWidth
               size="small"
-              placeholder="Araç ara..."
+              placeholder={isMobile ? "Ara..." : "Araç ara..."}
               value={searchTerm}
               onChange={(e) => onSearchChange?.(e.target.value)}
               InputProps={{
@@ -165,12 +173,12 @@ const Header: React.FC<HeaderProps> = ({
                 ),
               }}
               sx={{
-                maxWidth: 400,
+                maxWidth: isMobile ? 250 : isTablet ? 350 : 400,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "rgba(255, 255, 255, 0.9)",
                   borderRadius: 25,
-                  fontSize: "0.875rem",
-                  height: 40,
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
+                  height: isMobile ? 36 : 40,
                   transition: "all 0.3s ease",
                   border: "2px solid transparent",
                   "&:hover": {
@@ -203,7 +211,7 @@ const Header: React.FC<HeaderProps> = ({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 2,
+            gap: isMobile ? 0.5 : isTablet ? 1 : 2,
             marginLeft: "auto", // Push to right
             position: "relative",
             zIndex: 2,
@@ -214,11 +222,14 @@ const Header: React.FC<HeaderProps> = ({
               {/* Authenticated user toolbar */}
               <IconButton
                 color="inherit"
-                sx={{ color: "white" }}
+                sx={{ 
+                  color: "white",
+                  padding: isMobile ? "6px" : "8px"
+                }}
                 onClick={() => navigate("/messages")}
               >
                 <Badge badgeContent={unreadCount} color="error">
-                  <MessageIcon />
+                  <MessageIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
                 </Badge>
               </IconButton>
 
@@ -226,7 +237,10 @@ const Header: React.FC<HeaderProps> = ({
 
               <IconButton
                 color="inherit"
-                sx={{ color: "white" }}
+                sx={{ 
+                  color: "white",
+                  padding: isMobile ? "6px" : "8px"
+                }}
                 onClick={() => navigate("/bookmarks")}
               >
                 <Badge
@@ -239,7 +253,7 @@ const Header: React.FC<HeaderProps> = ({
                     },
                   }}
                 >
-                  <BookmarkIcon />
+                  <BookmarkIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
                 </Badge>
               </IconButton>
 
@@ -251,7 +265,7 @@ const Header: React.FC<HeaderProps> = ({
                 <FeedbackIcon />
               </IconButton>
 
-              {/* Post Ad button - always visible */}
+              {/* Post Ad button - responsive */}
               <Button
                 variant="contained"
                 component={RouterLink}
@@ -260,12 +274,15 @@ const Header: React.FC<HeaderProps> = ({
                   backgroundColor: "#D34237",
                   color: "white",
                   ml: 1,
+                  fontSize: isMobile ? "0.75rem" : "0.875rem",
+                  padding: isMobile ? "4px 8px" : "6px 16px",
+                  minWidth: isMobile ? "auto" : "64px",
                   "&:hover": {
                     backgroundColor: "#B73429",
                   },
                 }}
               >
-                İlan Ver
+                {isMobile ? "İlan" : "İlan Ver"}
               </Button>
 
               {/* User Avatar */}
@@ -274,9 +291,9 @@ const Header: React.FC<HeaderProps> = ({
                   <Avatar
                     sx={{
                       bgcolor: "#D34237",
-                      width: 40,
-                      height: 40,
-                      fontSize: "0.9rem",
+                      width: isMobile ? 32 : 40,
+                      height: isMobile ? 32 : 40,
+                      fontSize: isMobile ? "0.75rem" : "0.9rem",
                     }}
                   >
                     {isLoading ? "..." : getUserInitials()}
@@ -408,12 +425,15 @@ const Header: React.FC<HeaderProps> = ({
                 to="/login"
                 sx={{
                   color: "white",
+                  fontSize: isMobile ? "0.75rem" : "0.875rem",
+                  padding: isMobile ? "4px 8px" : "6px 16px",
+                  minWidth: isMobile ? "auto" : "64px",
                   "&:hover": {
                     backgroundColor: "rgba(255,255,255,0.1)",
                   },
                 }}
               >
-                Giriş Yap
+                {isMobile ? "Giriş" : "Giriş Yap"}
               </Button>
 
               <Button
@@ -423,12 +443,16 @@ const Header: React.FC<HeaderProps> = ({
                 sx={{
                   backgroundColor: "#D34237",
                   color: "white",
+                  fontSize: isMobile ? "0.75rem" : "0.875rem",
+                  padding: isMobile ? "4px 8px" : "6px 16px",
+                  minWidth: isMobile ? "auto" : "64px",
+                  ml: isMobile ? 0.5 : 1,
                   "&:hover": {
                     backgroundColor: "#B73429",
                   },
                 }}
               >
-                İlan Ver
+                {isMobile ? "İlan" : "İlan Ver"}
               </Button>
 
               <Button
