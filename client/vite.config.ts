@@ -75,7 +75,7 @@ export default defineConfig({
     // API proxy
     proxy: {
       "/api": {
-        target: process.env.VITE_PROXY_TARGET || "https://trucksbus.up.railway.app",
+        target: process.env.VITE_PROXY_TARGET || "https://trucksbus-production.up.railway.app",
         changeOrigin: true,
         secure: true,
       },

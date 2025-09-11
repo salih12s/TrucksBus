@@ -109,11 +109,38 @@ const corsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Origin", "Accept"],
+  exposedHeaders: ["Content-Length", "X-Foo", "X-Bar"],
   optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+  preflightContinue: false,
 };
 
 app.use(cors(corsOptions));
+
+// Additional CORS headers for stubborn browsers
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+    "https://trucksbus.com.tr",
+    "http://trucksbus.com.tr", 
+    "https://www.trucksbus.com.tr",
+    "http://www.trucksbus.com.tr"
+  ];
+  
+  if (allowedOrigins.includes(origin || "") || !origin) {
+    res.header("Access-Control-Allow-Origin", origin || "*");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Expose-Headers", "Content-Length, X-JSON");
+  }
+  
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
