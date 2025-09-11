@@ -132,6 +132,15 @@ model Ad {
   isPromoted       Boolean           @default(false) @map("is_promoted")
   promotedUntil    DateTime?         @map("promoted_until")
   customFields     Json?             @map("custom_fields")
+  engineVolume     Int?              @map("engine_volume")
+  maxPower         Int?              @map("max_power")
+  maxTorque        String?           @map("max_torque")
+  platformLength   String?           @map("platform_length")
+  platformWidth    String?           @map("platform_width")
+  maxVehicleCapacity String?         @map("max_vehicle_capacity")
+  loadCapacity     String?           @map("load_capacity")
+  address          String?
+  detailedInfo     String?           @map("detailed_info")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
   chassisType      ChassisType?      @map("chassis_type")
@@ -170,6 +179,7 @@ model AdImage {
   adId         Int     @map("ad_id")
   imageUrl     String  @map("image_url")
   isPrimary    Boolean @default(false) @map("is_primary")
+  isShowcase   Boolean @default(false) @map("is_showcase")
   displayOrder Int     @map("display_order")
   altText      String? @map("alt_text")
   ad           Ad      @relation(fields: [adId], references: [id], onDelete: Cascade)
@@ -356,6 +366,7 @@ enum FuelType {
   GASOLINE
   GASOLINE_LPG
   DIESEL
+  DIESEL_LPG
   ELECTRIC
   HYBRID
 }

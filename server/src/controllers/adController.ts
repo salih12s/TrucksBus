@@ -1877,3 +1877,461 @@ export const getSimilarAds = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Server error" });
   }
 };
+
+// İlan oluştur (Oto Kurtarıcı - Tekli Araç)
+export const createOtoKurtariciTekliAd = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    console.log("🚛 Oto Kurtarıcı Tekli İlanı API'ye istek geldi");
+    console.log("📦 Request body:", req.body);
+    console.log("📦 Content-Type:", req.headers["content-type"]);
+
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+    }
+
+    const {
+      title,
+      description,
+      year,
+      price,
+      mileage,
+      maxPower,
+      maxTorque,
+      fuelType,
+      platformLength,
+      platformWidth,
+      maxVehicleCapacity,
+      loadCapacity,
+      plateNumber,
+      exchange,
+      cityId,
+      districtId,
+      address,
+      detailedInfo,
+      features,
+    } = req.body;
+
+    // Fuel type enum mapping
+    const fuelTypeMap: Record<string, string> = {
+      benzin: "GASOLINE",
+      dizel: "DIESEL",
+      elektrik: "ELECTRIC",
+      hybrid: "HYBRID",
+    };
+
+    // Özellikleri JSON olarak hazırla
+    let featuresJson = null;
+    if (features) {
+      try {
+        featuresJson =
+          typeof features === "string" ? JSON.parse(features) : features;
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        featuresJson = features;
+      }
+    }
+
+    // Oto Kurtarıcı kategorisini bul
+    const otoKurtariciCategory = await prisma.category.findFirst({
+      where: {
+        OR: [
+          { slug: "oto-kurtarici-tasiyici" },
+          { slug: "oto-kurtarici" },
+          { name: { contains: "Oto Kurtarıcı" } },
+          { name: { contains: "Kurtarıcı" } },
+        ],
+      },
+    });
+
+    if (!otoKurtariciCategory) {
+      return res
+        .status(400)
+        .json({ error: "Oto Kurtarıcı kategorisi bulunamadı" });
+    }
+
+    const ad = await prisma.ad.create({
+      data: {
+        userId,
+        categoryId: otoKurtariciCategory.id,
+        title,
+        description,
+        year: year ? parseInt(year) : null,
+        price: price ? parseFloat(price) : null,
+        mileage: mileage ? parseInt(mileage) : null,
+        vehicleCondition: "USED",
+        maxPower: maxPower ? parseInt(maxPower) : null,
+        maxTorque,
+        fuelType: fuelType ? fuelTypeMap[fuelType] || fuelType : null,
+        platformLength,
+        platformWidth,
+        maxVehicleCapacity,
+        loadCapacity,
+        plateNumber,
+        isExchangeable: exchange === "evet",
+        cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
+        districtId:
+          districtId && districtId !== "" ? parseInt(districtId) : null,
+        address,
+        detailedInfo,
+        customFields: {
+          exchange: exchange || null,
+          address: address || null,
+          detailedInfo: detailedInfo || null,
+          features: featuresJson || null,
+          cityId: cityId ? parseInt(cityId) : null,
+          districtId: districtId ? parseInt(districtId) : null,
+        },
+        status: "PENDING",
+      },
+      include: {
+        category: true,
+        user: true,
+      },
+    });
+
+    console.log("✅ Oto Kurtarıcı Tekli ilanı oluşturuldu, ID:", ad.id);
+
+    // Resim yükleme işlemi (Base64 formatında)
+    const files = req.files as any;
+    if (files && files.length > 0) {
+      console.log(
+        "📷 Oto Kurtarıcı Tekli - Resimler base64 formatında kaydediliyor:",
+        files.map((f: any) => f.fieldname)
+      );
+
+      const imagePromises = [];
+      let displayOrder = 0;
+
+      // Vitrin resmini bul ve işle
+      const showcaseFile = files.find(
+        (f: any) => f.fieldname === "showcasePhoto"
+      );
+      if (showcaseFile) {
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          showcaseFile.mimetype
+        };base64,${showcaseFile.buffer.toString("base64")}`;
+
+        console.log("📷 Vitrin resmi base64 formatında kaydediliyor");
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: true,
+              displayOrder: 0,
+              altText: `${title} - Vitrin Resmi`,
+            },
+          })
+        );
+        displayOrder = 1;
+      }
+
+      // Diğer resimleri işle
+      const photoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("photo_")
+      );
+      for (const file of photoFiles) {
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
+
+        console.log(`📷 Resim ${displayOrder} base64 formatında kaydediliyor`);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: false,
+              displayOrder,
+              altText: `${title} - Resim ${displayOrder}`,
+            },
+          })
+        );
+        displayOrder++;
+      }
+
+      // Tüm resimleri veritabanına kaydet
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        console.log(
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+        );
+      }
+    }
+
+    // Oluşturulan ilanı resimlerle birlikte getir
+    const createdAd = await prisma.ad.findUnique({
+      where: { id: ad.id },
+      include: {
+        category: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+    });
+
+    return res.status(201).json({
+      message:
+        "Oto Kurtarıcı Tekli ilanı başarıyla oluşturuldu ve onay bekliyor",
+      ad: createdAd,
+    });
+  } catch (error: any) {
+    console.error("Oto Kurtarıcı Tekli ilanı oluşturma hatası detayı:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      requestBody: req.body,
+    });
+    return res.status(500).json({
+      error: "İlan oluşturulurken hata oluştu",
+      details: error.message,
+    });
+  }
+};
+
+// İlan oluştur (Oto Kurtarıcı - Çoklu Araç)
+export const createOtoKurtariciCokluAd = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    console.log("🚛 Oto Kurtarıcı Çoklu İlanı API'ye istek geldi");
+    console.log("📦 Request body:", req.body);
+    console.log("📦 Content-Type:", req.headers["content-type"]);
+
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+    }
+
+    const {
+      title,
+      description,
+      year,
+      price,
+      mileage,
+      maxPower,
+      maxTorque,
+      fuelType,
+      platformLength,
+      platformWidth,
+      maxVehicleCapacity,
+      loadCapacity,
+      plateNumber,
+      exchange,
+      cityId,
+      districtId,
+      address,
+      detailedInfo,
+      features,
+    } = req.body;
+
+    // Fuel type enum mapping
+    const fuelTypeMap: Record<string, string> = {
+      benzin: "GASOLINE",
+      dizel: "DIESEL",
+      elektrik: "ELECTRIC",
+      hybrid: "HYBRID",
+    };
+
+    // Özellikleri JSON olarak hazırla
+    let featuresJson = null;
+    if (features) {
+      try {
+        featuresJson =
+          typeof features === "string" ? JSON.parse(features) : features;
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        featuresJson = features;
+      }
+    }
+
+    // Oto Kurtarıcı kategorisini bul
+    const otoKurtariciCategory = await prisma.category.findFirst({
+      where: {
+        OR: [
+          { slug: "oto-kurtarici-tasiyici" },
+          { slug: "oto-kurtarici" },
+          { name: { contains: "Oto Kurtarıcı" } },
+          { name: { contains: "Kurtarıcı" } },
+        ],
+      },
+    });
+
+    if (!otoKurtariciCategory) {
+      return res
+        .status(400)
+        .json({ error: "Oto Kurtarıcı kategorisi bulunamadı" });
+    }
+
+    const ad = await prisma.ad.create({
+      data: {
+        userId,
+        categoryId: otoKurtariciCategory.id,
+        title,
+        description,
+        year: year ? parseInt(year) : null,
+        price: price ? parseFloat(price) : null,
+        mileage: mileage ? parseInt(mileage) : null,
+        vehicleCondition: "USED",
+        maxPower: maxPower ? parseInt(maxPower) : null,
+        maxTorque,
+        fuelType: fuelType ? fuelTypeMap[fuelType] || fuelType : null,
+        platformLength,
+        platformWidth,
+        maxVehicleCapacity,
+        loadCapacity,
+        plateNumber,
+        isExchangeable: exchange === "evet",
+        cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
+        districtId:
+          districtId && districtId !== "" ? parseInt(districtId) : null,
+        address,
+        detailedInfo,
+        customFields: {
+          exchange: exchange || null,
+          address: address || null,
+          detailedInfo: detailedInfo || null,
+          features: featuresJson || null,
+          cityId: cityId ? parseInt(cityId) : null,
+          districtId: districtId ? parseInt(districtId) : null,
+        },
+        status: "PENDING",
+      },
+      include: {
+        category: true,
+        user: true,
+      },
+    });
+
+    console.log("✅ Oto Kurtarıcı Çoklu ilanı oluşturuldu, ID:", ad.id);
+
+    // Resim yükleme işlemi (Base64 formatında)
+    const files = req.files as any;
+    if (files && files.length > 0) {
+      console.log(
+        "📷 Oto Kurtarıcı Çoklu - Resimler base64 formatında kaydediliyor:",
+        files.map((f: any) => f.fieldname)
+      );
+
+      const imagePromises = [];
+      let displayOrder = 0;
+
+      // Vitrin resmini bul ve işle
+      const showcaseFile = files.find(
+        (f: any) => f.fieldname === "showcasePhoto"
+      );
+      if (showcaseFile) {
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          showcaseFile.mimetype
+        };base64,${showcaseFile.buffer.toString("base64")}`;
+
+        console.log("📷 Vitrin resmi base64 formatında kaydediliyor");
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: true,
+              displayOrder: 0,
+              altText: `${title} - Vitrin Resmi`,
+            },
+          })
+        );
+        displayOrder = 1;
+      }
+
+      // Diğer resimleri işle
+      const photoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("photo_")
+      );
+      for (const file of photoFiles) {
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
+
+        console.log(`📷 Resim ${displayOrder} base64 formatında kaydediliyor`);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: false,
+              displayOrder,
+              altText: `${title} - Resim ${displayOrder}`,
+            },
+          })
+        );
+        displayOrder++;
+      }
+
+      // Tüm resimleri veritabanına kaydet
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        console.log(
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+        );
+      }
+    }
+
+    // Oluşturulan ilanı resimlerle birlikte getir
+    const createdAd = await prisma.ad.findUnique({
+      where: { id: ad.id },
+      include: {
+        category: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+    });
+
+    return res.status(201).json({
+      message:
+        "Oto Kurtarıcı Çoklu ilanı başarıyla oluşturuldu ve onay bekliyor",
+      ad: createdAd,
+    });
+  } catch (error: any) {
+    console.error("Oto Kurtarıcı Çoklu ilanı oluşturma hatası detayı:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      requestBody: req.body,
+    });
+    return res.status(500).json({
+      error: "İlan oluşturulurken hata oluştu",
+      details: error.message,
+    });
+  }
+};

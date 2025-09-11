@@ -72,6 +72,22 @@ router.post(
   adController.createKaroserAd
 );
 
+// Oto Kurtarıcı Tekli ilan oluşturma (multipart/form-data desteği ile)
+router.post(
+  "/oto-kurtarici-tekli",
+  authenticateToken,
+  upload.any(),
+  adController.createOtoKurtariciTekliAd
+);
+
+// Oto Kurtarıcı Çoklu ilan oluşturma (multipart/form-data desteği ile)
+router.post(
+  "/oto-kurtarici-coklu",
+  authenticateToken,
+  upload.any(),
+  adController.createOtoKurtariciCokluAd
+);
+
 // Kullanıcının ilanları
 router.get("/user/my-ads", authenticateToken, adController.getUserAds);
 

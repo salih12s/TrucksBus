@@ -40,6 +40,10 @@ import KapakliForm from "./forms/Kuruyuk/KapakliForm";
 import KapakliKayaTipiForm from "./forms/Kuruyuk/KapakliKayaTipiForm";
 import KapaksızPlatformForm from "./forms/Kuruyuk/KapaksızPlatformForm";
 
+// Oto Kurtarıcı ve Taşıyıcı Forms
+import TekliAracForm from "./forms/OtoKurtariciTasiyici/TekliAracForm";
+import CokluAracForm from "./forms/OtoKurtariciTasiyici/CokluAracForm";
+
 const VehicleFormSelector: React.FC = () => {
   const { categorySlug, variantSlug, modelSlug } = useParams<{
     categorySlug: string;
@@ -410,8 +414,61 @@ const VehicleFormSelector: React.FC = () => {
       console.log("✅ Otobüs formu seçildi");
       return <OtobusAdForm />;
 
-    // Diğer kategoriler için varsayılan form (şimdilik minibüs)
+    // Oto Kurtarıcı ve Taşıyıcı
     case "oto-kurtarici-tasiyici":
+    case "oto-kurtarici":
+    case "tasiyici":
+      console.log("🎯 OTO KURTARICI VE TAŞIYICI KATEGORİSİ ALGILANDI!");
+      console.log("  Checking variant:", variantSlug);
+      console.log("  Checking model:", modelSlug);
+
+      // Variant'a göre form seç
+      if (variantSlug) {
+        switch (variantSlug) {
+          case "tekli-arac":
+          case "tekli":
+            console.log("✅ Tekli Araç Kurtarıcı formu seçildi");
+            return <TekliAracForm />;
+          case "coklu-arac":
+          case "coklu":
+          case "çoklu-arac":
+          case "çoklu":
+            console.log("✅ Çoklu Araç Kurtarıcı formu seçildi");
+            return <CokluAracForm />;
+          default:
+            console.log(
+              "⚠️ Bilinmeyen oto kurtarıcı variant:",
+              variantSlug,
+              "- Tekli Araç açılıyor"
+            );
+            return <TekliAracForm />;
+        }
+      }
+
+      // Model slug'ına göre seç (fallback)
+      if (modelSlug) {
+        const modelLower = modelSlug.toLowerCase();
+        if (
+          modelLower.includes("coklu") ||
+          modelLower.includes("çoklu") ||
+          modelLower.includes("multi")
+        ) {
+          console.log("✅ Çoklu Araç Kurtarıcı formu seçildi (model)");
+          return <CokluAracForm />;
+        } else {
+          console.log("✅ Tekli Araç Kurtarıcı formu seçildi (model)");
+          return <TekliAracForm />;
+        }
+      }
+
+      // Varsayılan olarak Tekli Araç
+      console.log(
+        "⚠️ Oto kurtarıcı için varsayılan form açılıyor - Tekli Araç"
+      );
+      return <TekliAracForm />;
+
+    // Diğer kategoriler için varsayılan form (şimdilik minibüs)
+    case "oto-kurtarici-tasiyici-old":
       console.log(
         "⚠️ Bu kategori için henüz özel form yok:",
         categorySlug,

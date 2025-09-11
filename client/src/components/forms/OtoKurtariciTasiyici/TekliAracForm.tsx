@@ -11,14 +11,24 @@ import {
   Button,
   Card,
   CardContent,
-  Alert,
   Chip,
-  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
-import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
-import DeleteIcon from "@mui/icons-material/Delete";
-import Header from "../../layout/Header";
+import {
+  PhotoCamera,
+  CheckCircle,
+  DirectionsBus,
+  Settings,
+  LocationOn,
+  Description,
+} from "@mui/icons-material";
+import { Header, Footer } from "../../layout";
 import apiClient from "../../../api/client";
 
 interface City {
@@ -36,57 +46,38 @@ interface District {
 interface FormData {
   title: string;
   description: string;
-  productionYear: string;
+  year: string;
   price: string;
-
-  // Araç Bilgileri
-  marka: string;
-  model: string;
-  motor: string;
-  motorGucu: string;
-  vites: string;
-  yakit: string;
-  cekisTipi: string;
-
-  // Tekli Araç Kurtarıcı Özellikleri
-  kurtariciTipi: string;
-  kaldirmaKapasitesi: string;
-  aracTipi: string;
-  platformUzunlugu: string;
-  platformGenisligi: string;
-  vinc: string;
-  vincKapasitesi: string;
-  hidrolik: string;
-  teleskopik: string;
-  yan_yukleme: string;
-  acil_durum: string;
-
-  // Teknik Özellikler
-  km: string;
-  beygirGucu: string;
-  motorHacmi: string;
-  agirlik: string;
-  azamiYuklenebilirAgirlik: string;
-  koltukSayisi: string;
-
-  // Konum
+  mileage: string;
+  engineVolume: string;
+  maxPower: string;
+  maxTorque: string;
+  fuelType: string;
+  platformLength: string;
+  platformWidth: string;
+  maxVehicleCapacity: string;
+  loadCapacity: string;
+  plateNumber: string;
+  exchange: string;
   cityId: string;
   districtId: string;
-
-  // Fotoğraflar
+  address: string;
+  detailedInfo: string;
   photos: File[];
   showcasePhoto: File | null;
-
-  // İletişim Bilgileri
-  sellerName: string;
-  phone: string;
-  email: string;
-
-  // Ekstra
-  warranty: string;
-  negotiable: string;
-  exchange: string;
-  detailedInfo: string;
+  // Detay Bilgisi alanları (ekler)
+  detailFeatures: {
+    hidrolikDireksiyon?: boolean;
+    abs?: boolean;
+    havaYastigi?: boolean;
+    tepeLambasi?: boolean;
+    takograf?: boolean;
+    havaliFreni?: boolean;
+    motorFreni?: boolean;
+    alarm?: boolean;
+    merkeziKilit?: boolean;
+    gps?: boolean;
+  };
 }
 
 const TekliAracForm: React.FC = () => {
@@ -96,140 +87,115 @@ const TekliAracForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
-    productionYear: "",
+    year: "",
     price: "",
-    marka: "",
-    model: "",
-    motor: "",
-    motorGucu: "",
-    vites: "",
-    yakit: "",
-    cekisTipi: "",
-    kurtariciTipi: "Tekli Araç Kurtarıcı",
-    kaldirmaKapasitesi: "",
-    aracTipi: "",
-    platformUzunlugu: "",
-    platformGenisligi: "",
-    vinc: "Hayır",
-    vincKapasitesi: "",
-    hidrolik: "Hayır",
-    teleskopik: "Hayır",
-    yan_yukleme: "Hayır",
-    acil_durum: "Hayır",
-    km: "",
-    beygirGucu: "",
-    motorHacmi: "",
-    agirlik: "",
-    azamiYuklenebilirAgirlik: "",
-    koltukSayisi: "",
+    mileage: "",
+    engineVolume: "",
+    maxPower: "",
+    maxTorque: "",
+    fuelType: "DIESEL",
+    platformLength: "",
+    platformWidth: "",
+    maxVehicleCapacity: "",
+    loadCapacity: "",
+    plateNumber: "",
+    exchange: "hayir",
     cityId: "",
     districtId: "",
+    address: "",
+    detailedInfo: "",
     photos: [],
     showcasePhoto: null,
-    sellerName: "",
-    phone: "",
-    email: "",
-    warranty: "Yok",
-    negotiable: "Evet",
-    exchange: "Hayır",
-    detailedInfo: "",
+    detailFeatures: {
+      hidrolikDireksiyon: false,
+      abs: false,
+      havaYastigi: false,
+      tepeLambasi: false,
+      takograf: false,
+      havaliFreni: false,
+      motorFreni: false,
+      alarm: false,
+      merkeziKilit: false,
+      gps: false,
+    },
   });
 
   // Seçenekler
   const uretimYillari = Array.from(
-    { length: 2024 - 1990 + 1 },
-    (_, i) => 2024 - i
+    { length: 2025 - 1990 + 1 },
+    (_, i) => 2025 - i
   );
 
-  const markalar = [
-    "Mercedes-Benz",
-    "Volvo",
-    "Scania",
-    "MAN",
-    "DAF",
-    "Iveco",
-    "Renault",
-    "Ford",
-    "Isuzu",
-    "Mitsubishi",
-    "Hyundai",
-    "BMC",
-    "Otokar",
-    "Temsa",
+  const yakitTipleri = [
+    { value: "GASOLINE", label: "Benzinli" },
+    { value: "GASOLINE_LPG", label: "Benzinli + LPG" },
+    { value: "DIESEL", label: "Dizel" },
+    { value: "DIESEL_LPG", label: "Dizel + LPG" },
   ];
 
-  const motorlar = [
-    "Euro 3",
-    "Euro 4",
-    "Euro 5",
-    "Euro 6",
-    "Euro 6c",
-    "Euro 6d",
+  const exchangeOptions = [
+    { value: "evet", label: "Evet" },
+    { value: "hayir", label: "Hayır" },
   ];
 
-  const vitesler = ["Manuel", "Otomatik", "Yarı Otomatik", "CVT"];
-
-  const yakitlar = ["Dizel", "Benzin", "LPG", "CNG", "Elektrik", "Hibrit"];
-
-  const cekisTipleri = [
-    "Önden Çekiş",
-    "Arkadan İtiş",
-    "4x2",
-    "4x4",
-    "6x2",
-    "6x4",
-    "8x4",
-  ];
-
-  const aracTipleri = [
-    "Otomobil",
-    "SUV",
-    "Minivan",
-    "Pick-up",
-    "Ticari Araç",
-    "Motosiklet",
-    "ATV",
-  ];
-
+  // Şehir ve ilçe yükleme
   useEffect(() => {
-    loadCities();
+    const fetchCities = async () => {
+      try {
+        const response = await apiClient.get("/ads/cities");
+        setCities(response.data as City[]);
+      } catch (error) {
+        console.error("Şehirler yüklenirken hata:", error);
+      }
+    };
+    fetchCities();
   }, []);
 
   useEffect(() => {
     if (formData.cityId) {
-      loadDistricts(parseInt(formData.cityId));
+      const fetchDistricts = async () => {
+        try {
+          const response = await apiClient.get(
+            `/ads/cities/${formData.cityId}/districts`
+          );
+          setDistricts(response.data as District[]);
+        } catch (error) {
+          console.error("İlçeler yüklenirken hata:", error);
+        }
+      };
+      fetchDistricts();
+    } else {
+      setDistricts([]);
+      setFormData((prev) => ({ ...prev, districtId: "" }));
     }
   }, [formData.cityId]);
 
-  const loadCities = async () => {
-    try {
-      const response = await apiClient.get("/cities");
-      setCities(response.data as City[]);
-    } catch (error) {
-      console.error("Şehirler yüklenirken hata:", error);
-    }
+  // Sayı formatlaması
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
   };
 
-  const loadDistricts = async (cityId: number) => {
-    try {
-      const response = await apiClient.get(`/districts/${cityId}`);
-      setDistricts(response.data as District[]);
-    } catch (error) {
-      console.error("İlçeler yüklenirken hata:", error);
-    }
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  // Form işlevleri
+  const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [field]: value,
     }));
   };
 
@@ -241,14 +207,61 @@ const TekliAracForm: React.FC = () => {
     }));
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const handleDetailFeatureChange = (featureName: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      detailFeatures: {
+        ...prev.detailFeatures,
+        [featureName]:
+          !prev.detailFeatures[featureName as keyof typeof prev.detailFeatures],
+      },
+    }));
+  };
+
+  // Fotoğraf işlevleri
+  const handlePhotoUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    isShowcase = false
+  ) => {
+    const files = event.target.files;
     if (files) {
-      const newPhotos = Array.from(files);
-      setFormData((prev) => ({
-        ...prev,
-        photos: [...prev.photos, ...newPhotos],
-      }));
+      if (isShowcase) {
+        const file = files[0];
+        setFormData((prev) => ({ ...prev, showcasePhoto: file }));
+
+        // Vitrin fotoğrafı önizlemesi oluştur
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setShowcasePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const currentPhotos = formData.photos;
+        const newPhotos = Array.from(files);
+        const totalPhotos = currentPhotos.length + newPhotos.length;
+
+        if (totalPhotos <= 15) {
+          setFormData((prev) => ({
+            ...prev,
+            photos: [...currentPhotos, ...newPhotos],
+          }));
+
+          // Yeni fotoğraflar için önizlemeler oluştur
+          const newPreviews: string[] = [];
+          Array.from(files).forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              newPreviews.push(e.target?.result as string);
+              if (newPreviews.length === files.length) {
+                setPhotoPreviews((prev) => [...prev, ...newPreviews]);
+              }
+            };
+            reader.readAsDataURL(file);
+          });
+        } else {
+          alert("En fazla 15 fotoğraf yükleyebilirsiniz");
+        }
+      }
     }
   };
 
@@ -257,15 +270,19 @@ const TekliAracForm: React.FC = () => {
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index),
     }));
+    // Önizlemeyi de kaldır
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const setShowcasePhoto = (photo: File) => {
-    setFormData((prev) => ({
-      ...prev,
-      showcasePhoto: photo,
-    }));
+  const handleNumberChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    const formatted = formatNumber(value);
+    handleInputChange(name as keyof FormData, formatted);
   };
 
+  // Form gönderimi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -273,699 +290,916 @@ const TekliAracForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Form verilerini ekle
+      // Temel bilgileri ekle (price ve mileage'ı parse ederek)
       Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "photos" && key !== "showcasePhoto") {
-          submitData.append(key, value as string);
+        if (
+          key !== "photos" &&
+          key !== "showcasePhoto" &&
+          key !== "detailFeatures" &&
+          value
+        ) {
+          // Price ve mileage değerlerini parse et
+          if (key === "price" || key === "mileage") {
+            const parsedValue = parseFormattedNumber(value.toString());
+            if (parsedValue) {
+              submitData.append(key, parsedValue);
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
-      // Fotoğrafları ekle
-      formData.photos.forEach((photo) => {
-        submitData.append("photos", photo);
-      });
+      // Detay özelliklerini JSON olarak ekle (backend "features" bekliyor)
+      submitData.append("features", JSON.stringify(formData.detailFeatures));
 
+      // Fotoğrafları ekle
       if (formData.showcasePhoto) {
         submitData.append("showcasePhoto", formData.showcasePhoto);
       }
 
-      const response = await apiClient.post("/ads/oto-kurtarici", submitData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      formData.photos.forEach((photo, index) => {
+        submitData.append(`photo_${index}`, photo);
       });
 
-      if (response.status === 201) {
-        setSubmitSuccess(true);
-        setTimeout(() => {
-          navigate("/ilanlarim");
-        }, 2000);
-      }
+      const response = await apiClient.post(
+        "/ads/oto-kurtarici-tekli",
+        submitData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("İlan başarıyla oluşturuldu:", response.data);
+      setSubmitSuccess(true);
     } catch (error) {
       console.error("İlan oluşturulurken hata:", error);
+      alert("İlan oluşturulurken bir hata oluştu");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSuccessClose = () => {
+    setSubmitSuccess(false);
+    navigate("/");
+  };
+
   if (submitSuccess) {
     return (
-      <Box sx={{ padding: 3 }}>
+      <Box
+        sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+      >
         <Header />
-        <Alert severity="success" sx={{ mb: 3 }}>
-          İlanınız başarıyla oluşturuldu! İlanlarım sayfasına
-          yönlendiriliyorsunuz...
-        </Alert>
+        <Box sx={{ flex: 1, padding: 3 }}>
+          <Dialog open={submitSuccess} onClose={handleSuccessClose}>
+            <DialogTitle>
+              <Box display="flex" alignItems="center" gap={1}>
+                <CheckCircle color="success" />
+                İlan Başarıyla Oluşturuldu!
+              </Box>
+            </DialogTitle>
+            <DialogContent>
+              <Typography>
+                Tekli araç kurtarıcı ilanınız başarıyla oluşturuldu ve
+                onaylanmak üzere yöneticilere gönderildi.
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleSuccessClose} variant="contained">
+                Ana Sayfaya Dön
+              </Button>
+            </DialogActions>
+          </Dialog>
+        </Box>
+        <Footer />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ padding: 3 }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
-
-      <Typography
-        variant="h4"
-        component="h1"
-        gutterBottom
-        sx={{ mb: 4, textAlign: "center" }}
-      >
-        Tekli Araç Kurtarıcı İlanı Oluştur
-      </Typography>
-
-      <form onSubmit={handleSubmit}>
-        {/* Temel Bilgiler */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Temel Bilgiler
-            </Typography>
-
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <TextField
-                fullWidth
-                label="İlan Başlığı"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="Açıklama"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                multiline
-                rows={4}
-                required
-              />
-
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                  gap: 2,
-                }}
-              >
-                <FormControl fullWidth>
-                  <InputLabel>Üretim Yılı</InputLabel>
-                  <Select
-                    name="productionYear"
-                    value={formData.productionYear}
-                    onChange={handleSelectChange}
-                    required
-                  >
-                    {uretimYillari.map((yil) => (
-                      <MenuItem key={yil} value={yil.toString()}>
-                        {yil}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  fullWidth
-                  label="Fiyat (TL)"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  type="number"
-                  required
-                />
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Araç Bilgileri */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Araç Bilgileri
-            </Typography>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 2,
-              }}
-            >
-              <FormControl fullWidth>
-                <InputLabel>Marka</InputLabel>
-                <Select
-                  name="marka"
-                  value={formData.marka}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {markalar.map((marka) => (
-                    <MenuItem key={marka} value={marka}>
-                      {marka}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <TextField
-                fullWidth
-                label="Model"
-                name="model"
-                value={formData.model}
-                onChange={handleInputChange}
-                required
-              />
-
-              <FormControl fullWidth>
-                <InputLabel>Motor</InputLabel>
-                <Select
-                  name="motor"
-                  value={formData.motor}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {motorlar.map((motor) => (
-                    <MenuItem key={motor} value={motor}>
-                      {motor}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <TextField
-                fullWidth
-                label="Motor Gücü (HP)"
-                name="motorGucu"
-                value={formData.motorGucu}
-                onChange={handleInputChange}
-                type="number"
-              />
-
-              <FormControl fullWidth>
-                <InputLabel>Vites</InputLabel>
-                <Select
-                  name="vites"
-                  value={formData.vites}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {vitesler.map((vites) => (
-                    <MenuItem key={vites} value={vites}>
-                      {vites}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Yakıt</InputLabel>
-                <Select
-                  name="yakit"
-                  value={formData.yakit}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {yakitlar.map((yakit) => (
-                    <MenuItem key={yakit} value={yakit}>
-                      {yakit}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Çekiş Tipi</InputLabel>
-                <Select
-                  name="cekisTipi"
-                  value={formData.cekisTipi}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {cekisTipleri.map((tip) => (
-                    <MenuItem key={tip} value={tip}>
-                      {tip}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Kurtarıcı Özellikleri */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Kurtarıcı Özellikleri
-            </Typography>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 2,
-              }}
-            >
-              <TextField
-                fullWidth
-                label="Kaldırma Kapasitesi (Ton)"
-                name="kaldirmaKapasitesi"
-                value={formData.kaldirmaKapasitesi}
-                onChange={handleInputChange}
-                type="number"
-              />
-
-              <FormControl fullWidth>
-                <InputLabel>Araç Tipi</InputLabel>
-                <Select
-                  name="aracTipi"
-                  value={formData.aracTipi}
-                  onChange={handleSelectChange}
-                >
-                  {aracTipleri.map((tip) => (
-                    <MenuItem key={tip} value={tip}>
-                      {tip}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <TextField
-                fullWidth
-                label="Platform Uzunluğu (m)"
-                name="platformUzunlugu"
-                value={formData.platformUzunlugu}
-                onChange={handleInputChange}
-                type="number"
-              />
-
-              <TextField
-                fullWidth
-                label="Platform Genişliği (m)"
-                name="platformGenisligi"
-                value={formData.platformGenisligi}
-                onChange={handleInputChange}
-                type="number"
-              />
-
-              <FormControl fullWidth>
-                <InputLabel>Vinç</InputLabel>
-                <Select
-                  name="vinc"
-                  value={formData.vinc}
-                  onChange={handleSelectChange}
-                >
-                  <MenuItem value="Evet">Evet</MenuItem>
-                  <MenuItem value="Hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
-              {formData.vinc === "Evet" && (
-                <TextField
-                  fullWidth
-                  label="Vinç Kapasitesi (Ton)"
-                  name="vincKapasitesi"
-                  value={formData.vincKapasitesi}
-                  onChange={handleInputChange}
-                  type="number"
-                />
-              )}
-
-              <FormControl fullWidth>
-                <InputLabel>Hidrolik</InputLabel>
-                <Select
-                  name="hidrolik"
-                  value={formData.hidrolik}
-                  onChange={handleSelectChange}
-                >
-                  <MenuItem value="Evet">Evet</MenuItem>
-                  <MenuItem value="Hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Teleskopik</InputLabel>
-                <Select
-                  name="teleskopik"
-                  value={formData.teleskopik}
-                  onChange={handleSelectChange}
-                >
-                  <MenuItem value="Evet">Evet</MenuItem>
-                  <MenuItem value="Hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Yan Yükleme</InputLabel>
-                <Select
-                  name="yan_yukleme"
-                  value={formData.yan_yukleme}
-                  onChange={handleSelectChange}
-                >
-                  <MenuItem value="Evet">Evet</MenuItem>
-                  <MenuItem value="Hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Acil Durum Donanımı</InputLabel>
-                <Select
-                  name="acil_durum"
-                  value={formData.acil_durum}
-                  onChange={handleSelectChange}
-                >
-                  <MenuItem value="Evet">Evet</MenuItem>
-                  <MenuItem value="Hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Teknik Özellikler */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Teknik Özellikler
-            </Typography>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 2,
-              }}
-            >
-              <TextField
-                fullWidth
-                label="Kilometre"
-                name="km"
-                value={formData.km}
-                onChange={handleInputChange}
-                type="number"
-              />
-
-              <TextField
-                fullWidth
-                label="Beygir Gücü (HP)"
-                name="beygirGucu"
-                value={formData.beygirGucu}
-                onChange={handleInputChange}
-                type="number"
-              />
-
-              <TextField
-                fullWidth
-                label="Motor Hacmi (cc)"
-                name="motorHacmi"
-                value={formData.motorHacmi}
-                onChange={handleInputChange}
-                type="number"
-              />
-
-              <TextField
-                fullWidth
-                label="Ağırlık (kg)"
-                name="agirlik"
-                value={formData.agirlik}
-                onChange={handleInputChange}
-                type="number"
-              />
-
-              <TextField
-                fullWidth
-                label="Azami Yüklenebilir Ağırlık (kg)"
-                name="azamiYuklenebilirAgirlik"
-                value={formData.azamiYuklenebilirAgirlik}
-                onChange={handleInputChange}
-                type="number"
-              />
-
-              <TextField
-                fullWidth
-                label="Koltuk Sayısı"
-                name="koltukSayisi"
-                value={formData.koltukSayisi}
-                onChange={handleInputChange}
-                type="number"
-              />
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Konum */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Konum
-            </Typography>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 2,
-              }}
-            >
-              <FormControl fullWidth>
-                <InputLabel>Şehir</InputLabel>
-                <Select
-                  name="cityId"
-                  value={formData.cityId}
-                  onChange={handleSelectChange}
-                  required
-                >
-                  {cities.map((city) => (
-                    <MenuItem key={city.id} value={city.id.toString()}>
-                      {city.plateCode} - {city.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>İlçe</InputLabel>
-                <Select
-                  name="districtId"
-                  value={formData.districtId}
-                  onChange={handleSelectChange}
-                  required
-                  disabled={!formData.cityId}
-                >
-                  {districts.map((district) => (
-                    <MenuItem key={district.id} value={district.id.toString()}>
-                      {district.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Fotoğraflar */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Fotoğraflar
-            </Typography>
-
-            <Box sx={{ mb: 2 }}>
-              <input
-                accept="image/*"
-                style={{ display: "none" }}
-                id="photo-upload"
-                multiple
-                type="file"
-                onChange={handlePhotoUpload}
-              />
-              <label htmlFor="photo-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  startIcon={<PhotoCameraIcon />}
-                >
-                  Fotoğraf Ekle
-                </Button>
-              </label>
-            </Box>
-
-            {formData.photos.length > 0 && (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                {formData.photos.map((photo, index) => (
-                  <Box
-                    key={index}
-                    sx={{ position: "relative", display: "inline-block" }}
-                  >
-                    <img
-                      src={URL.createObjectURL(photo)}
-                      alt={`Fotoğraf ${index + 1}`}
-                      style={{
-                        width: 100,
-                        height: 100,
-                        objectFit: "cover",
-                        borderRadius: 4,
-                      }}
-                    />
-                    <IconButton
-                      size="small"
-                      sx={{
-                        position: "absolute",
-                        top: -10,
-                        right: -10,
-                        bgcolor: "white",
-                      }}
-                      onClick={() => removePhoto(index)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                    {formData.showcasePhoto === photo && (
-                      <Chip
-                        label="Vitrin"
-                        size="small"
-                        color="primary"
-                        sx={{ position: "absolute", bottom: 0, left: 0 }}
-                      />
-                    )}
-                    {formData.showcasePhoto !== photo && (
-                      <Button
-                        size="small"
-                        sx={{ position: "absolute", bottom: 0, left: 0 }}
-                        onClick={() => setShowcasePhoto(photo)}
-                      >
-                        Vitrin Yap
-                      </Button>
-                    )}
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* İletişim Bilgileri */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              İletişim Bilgileri
-            </Typography>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 2,
-              }}
-            >
-              <TextField
-                fullWidth
-                label="Satıcı Adı"
-                name="sellerName"
-                value={formData.sellerName}
-                onChange={handleInputChange}
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="Telefon"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                type="email"
-              />
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Ekstra Bilgiler */}
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Ekstra Bilgiler
-            </Typography>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 2,
-              }}
-            >
-              <FormControl fullWidth>
-                <InputLabel>Garanti</InputLabel>
-                <Select
-                  name="warranty"
-                  value={formData.warranty}
-                  onChange={handleSelectChange}
-                >
-                  <MenuItem value="Var">Var</MenuItem>
-                  <MenuItem value="Yok">Yok</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Pazarlık</InputLabel>
-                <Select
-                  name="negotiable"
-                  value={formData.negotiable}
-                  onChange={handleSelectChange}
-                >
-                  <MenuItem value="Evet">Evet</MenuItem>
-                  <MenuItem value="Hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Takas</InputLabel>
-                <Select
-                  name="exchange"
-                  value={formData.exchange}
-                  onChange={handleSelectChange}
-                >
-                  <MenuItem value="Evet">Evet</MenuItem>
-                  <MenuItem value="Hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            <TextField
-              fullWidth
-              label="Detaylı Bilgi"
-              name="detailedInfo"
-              value={formData.detailedInfo}
-              onChange={handleInputChange}
-              multiline
-              rows={4}
-              sx={{ mt: 2 }}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Submit Button */}
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <Button
-            type="submit"
-            variant="contained"
-            size="large"
-            disabled={loading}
-            sx={{ minWidth: 200 }}
+      <Box sx={{ flex: 1, padding: 3 }}>
+        <Box
+          sx={{
+            maxWidth: "1200px",
+            margin: "0 auto",
+            px: { xs: 2, sm: 3, md: 4 },
+          }}
+        >
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{ mb: 4, textAlign: "center" }}
           >
-            {loading ? "İlan Oluşturuluyor..." : "İlanı Yayınla"}
-          </Button>
+            Tekli Araç Kurtarıcı İlanı Oluştur
+          </Typography>
+
+          <form onSubmit={handleSubmit}>
+            {/* Temel Bilgiler */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  <DirectionsBus sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Temel Bilgiler
+                </Typography>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="İlan Başlığı"
+                    name="title"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange("title", e.target.value)}
+                    required
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Açıklama"
+                    name="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      handleInputChange("description", e.target.value)
+                    }
+                    multiline
+                    rows={4}
+                    required
+                  />
+
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(250px, 1fr))",
+                      gap: 2,
+                    }}
+                  >
+                    <FormControl fullWidth>
+                      <InputLabel>Model Yılı</InputLabel>
+                      <Select
+                        name="year"
+                        value={formData.year}
+                        onChange={handleSelectChange}
+                        required
+                      >
+                        {uretimYillari.map((yil) => (
+                          <MenuItem key={yil} value={yil.toString()}>
+                            {yil}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    <TextField
+                      fullWidth
+                      label="Fiyat (TL)"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleNumberChange}
+                      placeholder="Örn: 850.000"
+                      required
+                    />
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Teknik Özellikler */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  <Settings sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Teknik Özellikler
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: 2,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    label="KM"
+                    name="mileage"
+                    value={formData.mileage}
+                    onChange={handleNumberChange}
+                    placeholder="Örn: 150.000"
+                    required
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Motor Hacmi (cc)"
+                    name="engineVolume"
+                    value={formData.engineVolume}
+                    onChange={(e) =>
+                      handleInputChange("engineVolume", e.target.value)
+                    }
+                    placeholder="Örn: 2500"
+                    required
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Maksimum Güç (HP)"
+                    name="maxPower"
+                    value={formData.maxPower}
+                    onChange={(e) =>
+                      handleInputChange("maxPower", e.target.value)
+                    }
+                    placeholder="Örn: 150"
+                    required
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Maksimum Tork"
+                    name="maxTorque"
+                    value={formData.maxTorque}
+                    onChange={(e) =>
+                      handleInputChange("maxTorque", e.target.value)
+                    }
+                    placeholder="Örn: 350 Nm"
+                  />
+
+                  <FormControl fullWidth>
+                    <InputLabel>Yakıt Tipi</InputLabel>
+                    <Select
+                      name="fuelType"
+                      value={formData.fuelType}
+                      onChange={handleSelectChange}
+                      required
+                    >
+                      {yakitTipleri.map((yakıt) => (
+                        <MenuItem key={yakıt.value} value={yakıt.value}>
+                          {yakıt.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Platform Özellikleri */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Platform Özellikleri
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: 2,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    label="Platform Uzunluğu (m)"
+                    name="platformLength"
+                    value={formData.platformLength}
+                    onChange={(e) =>
+                      handleInputChange("platformLength", e.target.value)
+                    }
+                    placeholder="Örn: 5.5"
+                    required
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Platform Genişliği (m)"
+                    name="platformWidth"
+                    value={formData.platformWidth}
+                    onChange={(e) =>
+                      handleInputChange("platformWidth", e.target.value)
+                    }
+                    placeholder="Örn: 2.3"
+                    required
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Maksimum Araç Kapasitesi"
+                    name="maxVehicleCapacity"
+                    value={formData.maxVehicleCapacity}
+                    onChange={(e) =>
+                      handleInputChange("maxVehicleCapacity", e.target.value)
+                    }
+                    placeholder="Örn: 1 araç"
+                    required
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="İstiab Haddi (t)"
+                    name="loadCapacity"
+                    value={formData.loadCapacity}
+                    onChange={(e) =>
+                      handleInputChange("loadCapacity", e.target.value)
+                    }
+                    placeholder="Örn: 3.5"
+                    required
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Araç Bilgileri */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Araç Bilgileri
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: 2,
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    label="Araç Plakası"
+                    name="plateNumber"
+                    value={formData.plateNumber}
+                    onChange={(e) =>
+                      handleInputChange("plateNumber", e.target.value)
+                    }
+                    placeholder="Örn: 34 ABC 1234"
+                    required
+                  />
+
+                  <FormControl fullWidth>
+                    <InputLabel>Takaslı</InputLabel>
+                    <Select
+                      name="exchange"
+                      value={formData.exchange}
+                      onChange={handleSelectChange}
+                      required
+                    >
+                      {exchangeOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Konum Bilgileri */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  <LocationOn sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Adres Bilgileri
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: 2,
+                  }}
+                >
+                  <FormControl fullWidth>
+                    <InputLabel>Şehir</InputLabel>
+                    <Select
+                      name="cityId"
+                      value={formData.cityId}
+                      onChange={handleSelectChange}
+                      required
+                    >
+                      {cities.map((city) => (
+                        <MenuItem key={city.id} value={city.id.toString()}>
+                          {city.plateCode} - {city.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth>
+                    <InputLabel>İlçe</InputLabel>
+                    <Select
+                      name="districtId"
+                      value={formData.districtId}
+                      onChange={handleSelectChange}
+                      required
+                      disabled={!formData.cityId}
+                    >
+                      {districts.map((district) => (
+                        <MenuItem
+                          key={district.id}
+                          value={district.id.toString()}
+                        >
+                          {district.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <TextField
+                  fullWidth
+                  label="Detaylı Adres"
+                  name="address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  multiline
+                  rows={2}
+                  sx={{ mt: 2 }}
+                  placeholder="Mahalle, sokak, bina no vs."
+                />
+              </CardContent>
+            </Card>
+
+            {/* Detaylı Bilgi */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  <Description sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Detaylı Bilgi
+                </Typography>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Çekici Ekipmanı
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(200px, 1fr))",
+                      gap: 1,
+                    }}
+                  >
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={
+                            formData.detailFeatures.hidrolikDireksiyon || false
+                          }
+                          onChange={() =>
+                            handleDetailFeatureChange("hidrolikDireksiyon")
+                          }
+                        />
+                      }
+                      label="Hidrolik Direksiyon"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.detailFeatures.abs || false}
+                          onChange={() => handleDetailFeatureChange("abs")}
+                        />
+                      }
+                      label="ABS"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.detailFeatures.havaYastigi || false}
+                          onChange={() =>
+                            handleDetailFeatureChange("havaYastigi")
+                          }
+                        />
+                      }
+                      label="Hava Yastığı"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.detailFeatures.tepeLambasi || false}
+                          onChange={() =>
+                            handleDetailFeatureChange("tepeLambasi")
+                          }
+                        />
+                      }
+                      label="Tepe Lambası"
+                    />
+                  </Box>
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Araç Donanımları
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(200px, 1fr))",
+                      gap: 1,
+                    }}
+                  >
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.detailFeatures.takograf || false}
+                          onChange={() => handleDetailFeatureChange("takograf")}
+                        />
+                      }
+                      label="Takograf"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.detailFeatures.havaliFreni || false}
+                          onChange={() =>
+                            handleDetailFeatureChange("havaliFreni")
+                          }
+                        />
+                      }
+                      label="Havalı Freni"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.detailFeatures.motorFreni || false}
+                          onChange={() =>
+                            handleDetailFeatureChange("motorFreni")
+                          }
+                        />
+                      }
+                      label="Motor Freni"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.detailFeatures.alarm || false}
+                          onChange={() => handleDetailFeatureChange("alarm")}
+                        />
+                      }
+                      label="Alarm"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={
+                            formData.detailFeatures.merkeziKilit || false
+                          }
+                          onChange={() =>
+                            handleDetailFeatureChange("merkeziKilit")
+                          }
+                        />
+                      }
+                      label="Merkezi Kilit"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.detailFeatures.gps || false}
+                          onChange={() => handleDetailFeatureChange("gps")}
+                        />
+                      }
+                      label="GPS"
+                    />
+                  </Box>
+                </Box>
+
+                <TextField
+                  fullWidth
+                  label="Detaylı Bilgi"
+                  name="detailedInfo"
+                  value={formData.detailedInfo}
+                  onChange={(e) =>
+                    handleInputChange("detailedInfo", e.target.value)
+                  }
+                  multiline
+                  rows={4}
+                  placeholder="Aracınız hakkında detaylı bilgi verebilirsiniz..."
+                />
+              </CardContent>
+            </Card>
+
+            {/* Fotoğraflar */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  <PhotoCamera sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Fotoğraflar
+                </Typography>
+
+                {/* Vitrin Fotoğrafı */}
+                <Card
+                  variant="outlined"
+                  sx={{
+                    p: 3,
+                    mb: 3,
+                    borderRadius: 3,
+                    background:
+                      "linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)",
+                    border: "2px dashed #ff9800",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease-in-out",
+                    "&:hover": {
+                      borderColor: "primary.main",
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
+                    },
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      color: "primary.main",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 1,
+                    }}
+                  >
+                    🖼️ Vitrin Fotoğrafı
+                    <Chip label="Zorunlu" color="error" size="small" />
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 3 }}
+                  >
+                    Ana fotoğraf olarak kullanılacak en iyi fotoğrafınızı seçin
+                  </Typography>
+                  <input
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    id="showcase-photo"
+                    type="file"
+                    onChange={(e) => handlePhotoUpload(e, true)}
+                  />
+                  <label htmlFor="showcase-photo">
+                    <Button
+                      variant="contained"
+                      component="span"
+                      startIcon={<PhotoCamera />}
+                      sx={{
+                        borderRadius: 3,
+                        py: 1.5,
+                        px: 3,
+                        fontWeight: 600,
+                        background:
+                          "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
+                        "&:hover": {
+                          background:
+                            "linear-gradient(45deg, #1565c0 30%, #1976d2 90%)",
+                        },
+                      }}
+                    >
+                      Vitrin Fotoğrafı Seç
+                    </Button>
+                  </label>
+
+                  {/* Vitrin fotoğrafı önizlemesi */}
+                  {showcasePreview && (
+                    <Box sx={{ mt: 3 }}>
+                      <Box
+                        sx={{
+                          position: "relative",
+                          display: "inline-block",
+                          borderRadius: 2,
+                          overflow: "hidden",
+                          boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                        }}
+                      >
+                        <img
+                          src={showcasePreview}
+                          alt="Vitrin fotoğrafı önizleme"
+                          style={{
+                            width: "200px",
+                            height: "150px",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            background: "rgba(0,0,0,0.7)",
+                            borderRadius: "50%",
+                            p: 0.5,
+                            cursor: "pointer",
+                            "&:hover": { background: "rgba(0,0,0,0.9)" },
+                          }}
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              showcasePhoto: null,
+                            }));
+                            setShowcasePreview(null);
+                          }}
+                        >
+                          <Typography sx={{ color: "white", fontSize: "14px" }}>
+                            ✕
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        color="primary"
+                        sx={{ display: "block", mt: 1 }}
+                      >
+                        Vitrin Fotoğrafı ✓
+                      </Typography>
+                    </Box>
+                  )}
+                </Card>
+
+                {/* Diğer Fotoğraflar */}
+                <Card
+                  variant="outlined"
+                  sx={{
+                    p: 3,
+                    borderRadius: 3,
+                    background:
+                      "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                    border: "2px dashed #64748b",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    transition: "all 0.3s ease-in-out",
+                    "&:hover": {
+                      borderColor: "primary.main",
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
+                    },
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: 2,
+                      color: "primary.main",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 1,
+                    }}
+                  >
+                    📷 Diğer Fotoğraflar
+                    <Chip label="İsteğe Bağlı" color="info" size="small" />
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 3 }}
+                  >
+                    Aracınızın farklı açılardan fotoğraflarını ekleyin (En fazla
+                    15 adet)
+                  </Typography>
+                  <input
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    id="other-photos"
+                    type="file"
+                    multiple
+                    onChange={(e) => handlePhotoUpload(e, false)}
+                  />
+                  <label htmlFor="other-photos">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      startIcon={<PhotoCamera />}
+                      disabled={formData.photos.length >= 15}
+                    >
+                      Fotoğraf Ekle ({formData.photos.length}/15)
+                    </Button>
+                  </label>
+
+                  {formData.photos.length > 0 && (
+                    <Box sx={{ mt: 3 }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{ mb: 2, fontWeight: 600 }}
+                      >
+                        Yüklenen Fotoğraflar ({formData.photos.length}/15)
+                      </Typography>
+
+                      {/* Fotoğraf önizlemeleri grid */}
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns:
+                            "repeat(auto-fill, minmax(120px, 1fr))",
+                          gap: 2,
+                          maxHeight: "300px",
+                          overflowY: "auto",
+                          p: 1,
+                          border: "1px solid #e0e0e0",
+                          borderRadius: 2,
+                          background: "#fafafa",
+                        }}
+                      >
+                        {photoPreviews.map((preview, index) => (
+                          <Box
+                            key={index}
+                            sx={{
+                              position: "relative",
+                              borderRadius: 2,
+                              overflow: "hidden",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                              transition: "transform 0.2s ease-in-out",
+                              "&:hover": {
+                                transform: "scale(1.05)",
+                                boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+                              },
+                            }}
+                          >
+                            <img
+                              src={preview}
+                              alt={`Fotoğraf ${index + 1}`}
+                              style={{
+                                width: "100%",
+                                height: "80px",
+                                objectFit: "cover",
+                                display: "block",
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 4,
+                                right: 4,
+                                background: "rgba(255,0,0,0.8)",
+                                borderRadius: "50%",
+                                width: 20,
+                                height: 20,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                "&:hover": { background: "rgba(255,0,0,1)" },
+                              }}
+                              onClick={() => removePhoto(index)}
+                            >
+                              <Typography
+                                sx={{
+                                  color: "white",
+                                  fontSize: "12px",
+                                  lineHeight: 1,
+                                }}
+                              >
+                                ✕
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                background: "rgba(0,0,0,0.7)",
+                                color: "white",
+                                textAlign: "center",
+                                py: 0.5,
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                sx={{ fontSize: "10px" }}
+                              >
+                                {index + 1}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Card>
+              </CardContent>
+            </Card>
+
+            {/* Submit Button */}
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{ minWidth: 200 }}
+              >
+                {loading ? "İlan Oluşturuluyor..." : "İlanı Yayınla"}
+              </Button>
+            </Box>
+          </form>
         </Box>
-      </form>
+      </Box>
+      <Footer />
     </Box>
   );
 };

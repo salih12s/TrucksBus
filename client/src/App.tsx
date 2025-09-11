@@ -91,6 +91,14 @@ const OzelKasaForm = React.lazy(
   () => import("./components/forms/KaroserUstyapi/SabitKabin/OzelKasaForm")
 );
 
+// Oto Kurtarıcı ve Taşıyıcı Forms
+const TekliAracForm = React.lazy(
+  () => import("./components/forms/OtoKurtariciTasiyici/TekliAracForm")
+);
+const CokluAracForm = React.lazy(
+  () => import("./components/forms/OtoKurtariciTasiyici/CokluAracForm")
+);
+
 const CategorySelection = React.lazy(
   () => import("./components/ads/CategorySelection")
 );
@@ -425,6 +433,63 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <CreateMinibusAdForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* Oto Kurtarıcı ve Taşıyıcı Form Routes */}
+                        <Route
+                          path="/categories/oto-kurtarici-tasiyici/brands/:brandSlug/models/:modelSlug/variants/tekli-arac/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <TekliAracForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/categories/oto-kurtarici-tasiyici/brands/:brandSlug/models/:modelSlug/variants/coklu-arac/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <CokluAracForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* Alternative route patterns for oto-kurtarici */}
+                        <Route
+                          path="/categories/oto-kurtarici/brands/:brandSlug/models/:modelSlug/variants/tekli-arac/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <TekliAracForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/categories/oto-kurtarici/brands/:brandSlug/models/:modelSlug/variants/coklu-arac/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <CokluAracForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* Alternative route patterns for tasiyici */}
+                        <Route
+                          path="/categories/tasiyici/brands/:brandSlug/models/:modelSlug/variants/tekli-arac/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <TekliAracForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/categories/tasiyici/brands/:brandSlug/models/:modelSlug/variants/coklu-arac/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <CokluAracForm />
                             </ProtectedRoute>
                           }
                         />

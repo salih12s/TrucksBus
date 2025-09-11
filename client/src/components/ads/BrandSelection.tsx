@@ -32,6 +32,55 @@ interface Category {
   slug: string;
 }
 
+// Brand Image Component with fallback
+const BrandImage: React.FC<{
+  brand: Brand;
+  getBrandImage: (brand: Brand) => string | null;
+}> = ({ brand, getBrandImage }) => {
+  const [imageError, setImageError] = useState(false);
+  const brandImage = getBrandImage(brand);
+
+  if (!brandImage || imageError) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          borderRadius: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Typography
+          variant="h2"
+          sx={{
+            color: "white",
+            fontWeight: "bold",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+          }}
+        >
+          {brand.name.charAt(0).toUpperCase()}
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <img
+      src={brandImage}
+      alt={brand.name}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "contain",
+      }}
+      onError={() => setImageError(true)}
+    />
+  );
+};
+
 const BrandSelection: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug } = useParams<{ categorySlug: string }>();
@@ -314,7 +363,6 @@ const BrandSelection: React.FC = () => {
             }}
           >
             {filteredBrands.map((brand) => {
-              const brandImage = getBrandImage(brand);
               return (
                 <Card
                   key={brand.id}
@@ -338,30 +386,14 @@ const BrandSelection: React.FC = () => {
                     sx={{
                       height: "70%",
                       position: "relative",
-                      backgroundImage: brandImage
-                        ? `url(${brandImage})`
-                        : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      backgroundSize: brandImage ? "contain" : "cover",
-                      backgroundPosition: "center",
-                      backgroundRepeat: "no-repeat",
-                      backgroundColor: brandImage ? "#f5f5f5" : "transparent",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      backgroundColor: "#f5f5f5",
+                      padding: 1,
                     }}
                   >
-                    {!brandImage && (
-                      <Typography
-                        variant="h2"
-                        sx={{
-                          color: "white",
-                          fontWeight: "bold",
-                          textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
-                        }}
-                      >
-                        {brand.name.charAt(0)}
-                      </Typography>
-                    )}
+                    <BrandImage brand={brand} getBrandImage={getBrandImage} />
                   </Box>
 
                   {/* Text Section - 30% */}
