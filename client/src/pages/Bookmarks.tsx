@@ -87,7 +87,7 @@ const Bookmarks: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
 
   // API Base URL'i al
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "https://trucksbus.up.railway.app/api";
 
   const getImageUrl = (images?: FavoriteAd["ad"]["images"]) => {
     if (!images || images.length === 0) return null;

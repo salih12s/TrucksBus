@@ -24,7 +24,7 @@ const app = express();
 const server = createServer(app);
 const io = new SocketIOServer(server, {
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:5173"],
+    origin: process.env.ALLOWED_ORIGINS?.split(",") || ["https://trucksbus.com.tr"],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -78,7 +78,7 @@ app.use(generalLimiter);
 const corsOptions = {
   origin: function (origin: string | undefined, callback: Function) {
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
-      "http://localhost:5174",
+      "https://trucksbus.com.tr",
     ];
 
     console.log("🔍 CORS Check:");
@@ -117,7 +117,7 @@ app.use(
   (req, res, next) => {
     // CORS headers for static files
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
-      "http://localhost:5174",
+      "https://trucksbus.com.tr",
     ];
 
     const origin = req.headers.origin;

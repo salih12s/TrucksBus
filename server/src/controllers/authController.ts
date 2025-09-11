@@ -779,7 +779,7 @@ export class AuthController {
       // In a real application, you would send an email here
       // For now, we'll just log the reset link
       const resetLink = `${
-        process.env.FRONTEND_URL || "http://localhost:5174"
+        process.env.FRONTEND_URL || "https://trucksbus.com.tr"
       }/reset-password?token=${resetToken}`;
       console.log("Password reset link for", email, ":", resetLink);
 

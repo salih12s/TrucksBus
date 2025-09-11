@@ -2517,7 +2517,9 @@ export const getAdminStats = async (req: Request, res: Response) => {
 
     // Kategori adlarını ekle
     const adsByCategoryWithNames = adsByCategory.map((item: any) => {
-      const category = categories.find((cat: any) => cat.id === item.categoryId);
+      const category = categories.find(
+        (cat: any) => cat.id === item.categoryId
+      );
       return {
         categoryId: item.categoryId,
         categoryName: category?.name || "Bilinmeyen",
