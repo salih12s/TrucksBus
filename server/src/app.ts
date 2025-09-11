@@ -153,6 +153,31 @@ app.use("/api", routes);
 // Serve static files from client build (production)
 if (process.env.NODE_ENV === "production") {
   const clientBuildPath = path.join(__dirname, "../../client/dist");
+  
+  // Debug: Log paths and check if directory exists
+  console.log("🔍 Client Build Debug:");
+  console.log("  __dirname:", __dirname);
+  console.log("  clientBuildPath:", clientBuildPath);
+  
+  const fs = require('fs');
+  if (fs.existsSync(clientBuildPath)) {
+    console.log("  ✅ Client build directory exists");
+    const files = fs.readdirSync(clientBuildPath);
+    console.log("  📁 Files in build directory:", files.slice(0, 10));
+  } else {
+    console.log("  ❌ Client build directory NOT found");
+    
+    // Try alternative paths
+    const alt1 = path.join(__dirname, "../client/dist");
+    const alt2 = path.join(__dirname, "../../../client/dist");
+    const alt3 = path.join(process.cwd(), "client/dist");
+    
+    console.log("  🔍 Trying alternative paths:");
+    console.log("    alt1:", alt1, fs.existsSync(alt1) ? "✅" : "❌");
+    console.log("    alt2:", alt2, fs.existsSync(alt2) ? "✅" : "❌");
+    console.log("    alt3:", alt3, fs.existsSync(alt3) ? "✅" : "❌");
+  }
+  
   app.use(express.static(clientBuildPath));
 
   // SPA fallback - catch all non-API routes and serve index.html
