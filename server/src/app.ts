@@ -155,13 +155,14 @@ if (process.env.NODE_ENV === "production") {
   const clientBuildPath = path.join(__dirname, "../../client/dist");
   app.use(express.static(clientBuildPath));
 
-  // SPA fallback - serve index.html for all non-API routes
-  app.get("/*", (req, res, next) => {
-    // Skip API routes
-    if (req.path.startsWith("/api")) {
+  // SPA fallback - catch all non-API routes and serve index.html
+  app.use((req, res, next) => {
+    // Skip API routes and static files
+    if (req.path.startsWith("/api") || req.path.includes(".")) {
       return next();
     }
 
+    // For all other routes, serve the React app
     res.sendFile(path.join(clientBuildPath, "index.html"));
   });
 }
