@@ -31,6 +31,9 @@ import TankerForm from "./forms/Tanker/TankerForm";
 // Silobas Form
 import SilobasForm from "./forms/Silobas/SilobasForm";
 
+// Tekstil Form
+import TekstilForm from "./forms/Tekstil/TekstilForm";
+
 // Lowbed Forms
 import HavuzluForm from "./forms/Lowbed/HavuzluForm";
 import OndekirmalıForm from "./forms/Lowbed/OndekirmalıForm";
@@ -88,6 +91,9 @@ const VehicleFormSelector: React.FC = () => {
         case "silobas":
           console.log("✅ Silobas Dorse formu seçildi (variant)");
           return <SilobasForm />;
+        case "tekstil":
+          console.log("✅ Tekstil Dorse formu seçildi (variant)");
+          return <TekstilForm />;
         case "lowbed":
           console.log(
             "✅ Lowbed variant algılandı, model kontrol ediliyor:",
@@ -178,6 +184,9 @@ const VehicleFormSelector: React.FC = () => {
         case "silobas":
           console.log("✅ Silobas Dorse formu seçildi (tam slug)");
           return <SilobasForm />;
+        case "tekstil":
+          console.log("✅ Tekstil Dorse formu seçildi (tam slug)");
+          return <TekstilForm />;
         case "lowbed":
         case "havuzlu":
           console.log("✅ Havuzlu Lowbed Dorse formu seçildi (tam slug)");

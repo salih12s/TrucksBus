@@ -129,7 +129,7 @@ const TekstilForm: React.FC = () => {
     const loadCities = async () => {
       setLoadingCities(true);
       try {
-        const response = await apiClient.get("/api/cities");
+        const response = await apiClient.get("/ads/cities");
         setCities(response.data as City[]);
       } catch (err) {
         console.error("Şehirler yüklenirken hata:", err);
@@ -149,7 +149,7 @@ const TekstilForm: React.FC = () => {
       const city = cities.find((c) => c.name === cityName);
       if (city) {
         const response = await apiClient.get(
-          `/api/districts?cityId=${city.id}`
+          `/ads/cities/${city.id}/districts`
         );
         setDistricts(response.data as District[]);
       }
@@ -320,7 +320,7 @@ const TekstilForm: React.FC = () => {
         }
       });
 
-      const response = await apiClient.post("/api/listings", formDataToSend, {
+      const response = await apiClient.post("/ads/dorse", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

@@ -145,7 +145,7 @@ const SilobasForm: React.FC = () => {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await apiClient.get("/cities");
+        const response = await apiClient.get("/ads/cities");
         setCities(response.data as City[]);
       } catch (error) {
         console.error("Şehirler yüklenirken hata:", error);
@@ -159,7 +159,7 @@ const SilobasForm: React.FC = () => {
     const fetchDistricts = async () => {
       if (formData.cityId) {
         try {
-          const response = await apiClient.get(`/districts/${formData.cityId}`);
+          const response = await apiClient.get(`/ads/cities/${formData.cityId}/districts`);
           setDistricts(response.data as District[]);
         } catch (error) {
           console.error("İlçeler yüklenirken hata:", error);

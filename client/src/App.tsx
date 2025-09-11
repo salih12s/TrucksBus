@@ -99,6 +99,17 @@ const CokluAracForm = React.lazy(
   () => import("./components/forms/OtoKurtariciTasiyici/CokluAracForm")
 );
 
+// Dorse Alt Kategoriler
+const SilobasForm = React.lazy(
+  () => import("./components/forms/Silobas/SilobasForm")
+);
+const TankerForm = React.lazy(
+  () => import("./components/forms/Tanker/TankerForm")
+);
+const TekstilForm = React.lazy(
+  () => import("./components/forms/Tekstil/TekstilForm")
+);
+
 const CategorySelection = React.lazy(
   () => import("./components/ads/CategorySelection")
 );
@@ -637,6 +648,34 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <KayaTipiForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* Dorse Alt Kategoriler - Silobas, Tanker, Tekstil */}
+                        <Route
+                          path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/silobas/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <SilobasForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/tanker/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <TankerForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        <Route
+                          path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/tekstil/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <TekstilForm />
                             </ProtectedRoute>
                           }
                         />
