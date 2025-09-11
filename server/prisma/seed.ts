@@ -63,7 +63,11 @@ async function main() {
     {
       name: "Anasayfa Vitrini",
       description: "İlanınız anasayfada öne çıkarılır",
-      features: ["Anasayfa vitrinde görünüm", "7 gün süreyle öne çıkarma", "Maksimum görünürlük"],
+      features: [
+        "Anasayfa vitrinde görünüm",
+        "7 gün süreyle öne çıkarma",
+        "Maksimum görünürlük",
+      ],
       price: 3000,
       originalPrice: 5679,
       duration: 7,
@@ -74,7 +78,11 @@ async function main() {
     {
       name: "Kategori Vitrini",
       description: "Kategori sayfasında öne çıkarılır",
-      features: ["Kategori vitrinde görünüm", "5 gün süreyle öne çıkarma", "Kategori içinde üst sırada"],
+      features: [
+        "Kategori vitrinde görünüm",
+        "5 gün süreyle öne çıkarma",
+        "Kategori içinde üst sırada",
+      ],
       price: 1200,
       originalPrice: 1719,
       duration: 5,
@@ -85,7 +93,11 @@ async function main() {
     {
       name: "Detaylı Arama Vitrini",
       description: "Arama sonuçlarında öne çıkarılır",
-      features: ["Arama sonuçlarında üst sıra", "3 gün süreyle öne çıkarma", "Özel vurgulama"],
+      features: [
+        "Arama sonuçlarında üst sıra",
+        "3 gün süreyle öne çıkarma",
+        "Özel vurgulama",
+      ],
       price: 500,
       originalPrice: 679,
       duration: 3,
@@ -96,7 +108,11 @@ async function main() {
     {
       name: "Güncelim Dopingi",
       description: "İlanınız sürekli yenilenir",
-      features: ["Günlük güncelleme", "Her gün üst sırada", "7 gün boyunca güncel"],
+      features: [
+        "Günlük güncelleme",
+        "Her gün üst sırada",
+        "7 gün boyunca güncel",
+      ],
       price: 300,
       originalPrice: 449,
       duration: 7,
@@ -118,7 +134,11 @@ async function main() {
     {
       name: "Acil Acil",
       description: "İlanınız acil olarak işaretlenir",
-      features: ["Acil etiketi", "Kırmızı vurgulama", "5 gün süreyle öne çıkarma"],
+      features: [
+        "Acil etiketi",
+        "Kırmızı vurgulama",
+        "5 gün süreyle öne çıkarma",
+      ],
       price: 1000,
       originalPrice: 1349,
       duration: 5,

@@ -2622,3 +2622,210 @@ export const forceDeleteAd = async (
     res.status(500).json({ error: "İlan silinirken hata oluştu" });
   }
 };
+
+// Uzayabilir Şasi ilan oluşturma
+export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const files = req.files as Express.Multer.File[];
+
+    const {
+      title,
+      description,
+      productionYear,
+      axleCount,
+      loadCapacity,
+      tireCondition,
+      isExchangeable,
+      cityId,
+      districtId,
+      sellerName,
+      sellerPhone,
+      sellerEmail,
+      price,
+    } = req.body;
+
+    // Validasyonlar
+    if (
+      !title ||
+      !description ||
+      !productionYear ||
+      !cityId ||
+      !districtId ||
+      !sellerName ||
+      !sellerPhone ||
+      !price
+    ) {
+      return res.status(400).json({
+        error: "Zorunlu alanlar eksik",
+      });
+    }
+
+    // Fotoğraf ayrıştırma
+    let showcaseImageUrl = "";
+    const galleryImages: string[] = [];
+
+    if (files && files.length > 0) {
+      for (const file of files) {
+        if (file.fieldname === "showcasePhoto") {
+          // Vitrin fotoğrafı için base64 encode
+          showcaseImageUrl = `data:${
+            file.mimetype
+          };base64,${file.buffer.toString("base64")}`;
+        } else if (file.fieldname === "photos") {
+          // Galeri fotoğrafları için base64 encode
+          galleryImages.push(
+            `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
+          );
+        }
+      }
+    }
+
+    // Konum bilgisini oluştur
+    const city = await prisma.city.findUnique({
+      where: { id: parseInt(cityId) },
+    });
+
+    const district = await prisma.district.findUnique({
+      where: { id: parseInt(districtId) },
+    });
+
+    if (!city || !district) {
+      return res.status(400).json({
+        error: "Geçersiz şehir veya ilçe seçimi",
+      });
+    }
+
+    const location = `${district.name}, ${city.name}`;
+
+    // Konteyner/Taşıyıcı Şasi kategorisini bul
+    const category = await prisma.category.findFirst({
+      where: {
+        name: { contains: "Konteyner", mode: "insensitive" },
+      },
+    });
+
+    if (!category) {
+      return res.status(400).json({
+        error: "Konteyner kategorisi bulunamadı",
+      });
+    }
+
+    // Uzayabilir markasını bul veya oluştur
+    let brand = await prisma.brand.findFirst({
+      where: { name: "Uzayabilir" },
+    });
+
+    if (!brand) {
+      brand = await prisma.brand.create({
+        data: {
+          name: "Uzayabilir",
+          slug: "uzayabilir",
+          logoUrl: "/BrandsImage/DigerMarkalar.png",
+        },
+      });
+    }
+
+    // Şasi modelini bul veya oluştur
+    let model = await prisma.model.findFirst({
+      where: {
+        name: "Şasi",
+        brandId: brand.id,
+        categoryId: category.id,
+      },
+    });
+
+    if (!model) {
+      model = await prisma.model.create({
+        data: {
+          name: "Şasi",
+          slug: "sasi",
+          brandId: brand.id,
+          categoryId: category.id,
+        },
+      });
+    }
+
+    // İlanı oluştur
+    const ad = await prisma.ad.create({
+      data: {
+        title,
+        description,
+        price: parseFloat(price),
+        year: parseInt(productionYear),
+        location,
+        cityId: parseInt(cityId),
+        districtId: parseInt(districtId),
+        categoryId: category.id,
+        brandId: brand.id,
+        modelId: model.id,
+        userId,
+        status: "PENDING",
+
+        // Uzayabilir şasi özel alanları
+        loadCapacity: loadCapacity || null,
+        isExchangeable: isExchangeable === "Evet",
+
+        // Özel alanlar JSON olarak
+        customFields: {
+          axleCount: axleCount || null,
+          tireCondition: tireCondition || null,
+          sellerName,
+          sellerPhone,
+          sellerEmail: sellerEmail || null,
+        },
+      },
+      include: {
+        category: true,
+        brand: true,
+        model: true,
+        city: true,
+        district: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    // Fotoğrafları kaydet
+    if (showcaseImageUrl) {
+      await prisma.adImage.create({
+        data: {
+          adId: ad.id,
+          imageUrl: showcaseImageUrl,
+          isShowcase: true,
+          displayOrder: 0,
+        },
+      });
+    }
+
+    // Galeri fotoğraflarını kaydet
+    for (let i = 0; i < galleryImages.length; i++) {
+      await prisma.adImage.create({
+        data: {
+          adId: ad.id,
+          imageUrl: galleryImages[i],
+          isShowcase: false,
+          displayOrder: i + 1,
+        },
+      });
+    }
+
+    return res.status(201).json({
+      message: "Uzayabilir şasi ilanı başarıyla oluşturuldu",
+      ad,
+    });
+  } catch (error) {
+    console.error("Uzayabilir şasi ilan oluşturma hatası:", error);
+    return res.status(500).json({
+      error: "İlan oluşturulurken hata oluştu",
+      details: error instanceof Error ? error.message : "Bilinmeyen hata",
+    });
+  }
+};

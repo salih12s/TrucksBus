@@ -222,9 +222,9 @@ const Header: React.FC<HeaderProps> = ({
               {/* Authenticated user toolbar */}
               <IconButton
                 color="inherit"
-                sx={{ 
+                sx={{
                   color: "white",
-                  padding: isMobile ? "6px" : "8px"
+                  padding: isMobile ? "6px" : "8px",
                 }}
                 onClick={() => navigate("/messages")}
               >
@@ -237,9 +237,9 @@ const Header: React.FC<HeaderProps> = ({
 
               <IconButton
                 color="inherit"
-                sx={{ 
+                sx={{
                   color: "white",
-                  padding: isMobile ? "6px" : "8px"
+                  padding: isMobile ? "6px" : "8px",
                 }}
                 onClick={() => navigate("/bookmarks")}
               >

@@ -315,22 +315,20 @@ const MainLayout: React.FC = () => {
       try {
         console.log("=== STARTING API CALLS ===");
 
-        const [categoriesRes, adsRes, citiesRes] = await Promise.all(
-          [
-            apiClient.get("/categories").catch((err) => {
-              console.error("Categories API error:", err);
-              return { data: [] };
-            }),
-            apiClient.get("/ads?status=APPROVED").catch((err) => {
-              console.error("Ads API error:", err);
-              return { data: { ads: [] } };
-            }),
-            apiClient.get("/cities").catch((err) => {
-              console.error("Cities API error:", err);
-              return { data: [] };
-            }),
-          ]
-        );
+        const [categoriesRes, adsRes, citiesRes] = await Promise.all([
+          apiClient.get("/categories").catch((err) => {
+            console.error("Categories API error:", err);
+            return { data: [] };
+          }),
+          apiClient.get("/ads?status=APPROVED").catch((err) => {
+            console.error("Ads API error:", err);
+            return { data: { ads: [] } };
+          }),
+          apiClient.get("/cities").catch((err) => {
+            console.error("Cities API error:", err);
+            return { data: [] };
+          }),
+        ]);
 
         console.log("=== RAW API RESPONSES ===");
         console.log("Categories response:", categoriesRes);
@@ -1365,11 +1363,13 @@ const MainLayout: React.FC = () => {
                             Detayları Gör
                           </Button>
 
-                          <Box sx={{ 
-                            display: "flex", 
-                            gap: { xs: 0.25, sm: 0.5 },
-                            flexDirection: { xs: "column", sm: "row" }
-                          }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: { xs: 0.25, sm: 0.5 },
+                              flexDirection: { xs: "column", sm: "row" },
+                            }}
+                          >
                             <Button
                               variant="outlined"
                               size="small"

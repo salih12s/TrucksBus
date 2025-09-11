@@ -545,19 +545,19 @@ const getCategorySpecificFields = (categorySlug: string): string[] => {
     "oto-kurtarici-tasiyici": [
       "year",
       "mileage",
-      "engineVolume", 
+      "engineVolume",
       "maxPower",
       "maxTorque",
       "fuelType",
       "platformLength",
-      "platformWidth", 
+      "platformWidth",
       "maxVehicleCapacity",
       "loadCapacity",
       "plateNumber",
       "exchange",
       "address",
       "detailedInfo",
-      "features"
+      "features",
     ],
   };
 
@@ -574,9 +574,9 @@ const AdDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
-  
+
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [ad, setAd] = useState<AdDetail | null>(null);
   const [similarAds, setSimilarAds] = useState<SimilarAd[]>([]);
@@ -1048,10 +1048,13 @@ const AdDetail: React.FC = () => {
   return (
     <>
       <Header />
-      <Container maxWidth="lg" sx={{ 
-        py: isMobile ? 2 : 3, 
-        px: { xs: 1, sm: 2, md: 3, lg: 4 } 
-      }}>
+      <Container
+        maxWidth="lg"
+        sx={{
+          py: isMobile ? 2 : 3,
+          px: { xs: 1, sm: 2, md: 3, lg: 4 },
+        }}
+      >
         {/* Geri Dön Butonu */}
         <Box mb={isMobile ? 2 : 3}>
           <Button

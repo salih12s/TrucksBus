@@ -88,6 +88,14 @@ router.post(
   adController.createOtoKurtariciCokluAd
 );
 
+// Uzayabilir Şasi ilan oluşturma (multipart/form-data desteği ile)
+router.post(
+  "/uzayabilir-sasi",
+  authenticateToken,
+  upload.any(),
+  adController.createUzayabilirSasiAd
+);
+
 // Kullanıcının ilanları
 router.get("/user/my-ads", authenticateToken, adController.getUserAds);
 
