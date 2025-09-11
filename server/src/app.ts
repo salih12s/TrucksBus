@@ -24,7 +24,12 @@ const app = express();
 const server = createServer(app);
 const io = new SocketIOServer(server, {
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(",") || ["https://trucksbus.com.tr"],
+    origin: process.env.ALLOWED_ORIGINS?.split(",") || [
+      "https://trucksbus.com.tr",
+      "http://trucksbus.com.tr", 
+      "https://www.trucksbus.com.tr",
+      "http://www.trucksbus.com.tr"
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -79,6 +84,9 @@ const corsOptions = {
   origin: function (origin: string | undefined, callback: Function) {
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
       "https://trucksbus.com.tr",
+      "http://trucksbus.com.tr", 
+      "https://www.trucksbus.com.tr",
+      "http://www.trucksbus.com.tr"
     ];
 
     console.log("🔍 CORS Check:");
@@ -118,6 +126,9 @@ app.use(
     // CORS headers for static files
     const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
       "https://trucksbus.com.tr",
+      "http://trucksbus.com.tr", 
+      "https://www.trucksbus.com.tr",
+      "http://www.trucksbus.com.tr"
     ];
 
     const origin = req.headers.origin;
