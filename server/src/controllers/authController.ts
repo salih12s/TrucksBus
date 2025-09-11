@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../config/database";
-import { UserRole } from "@prisma/client";
+import { UserRole, User, Ad } from "@prisma/client";
 import { AuthenticatedRequest } from "../middleware/auth";
 import { AdminLogController } from "./adminLogController";
 
@@ -12,7 +12,7 @@ interface RegisterRequest {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  role?: UserRole;
+  role?: string;
   companyName?: string;
   taxId?: string;
   tradeRegistryNo?: string;
@@ -40,7 +40,7 @@ const BCRYPT_ROUNDS = 12;
 
 export class AuthController {
   // Generate access token
-  private static generateAccessToken(userId: number, role: UserRole): string {
+  private static generateAccessToken(userId: number, role: string): string {
     const secret = process.env.JWT_SECRET_ACCESS;
     if (!secret) {
       throw new Error("JWT_SECRET_ACCESS is not defined");
@@ -100,7 +100,7 @@ export class AuthController {
         firstName,
         lastName,
         phone,
-        role = UserRole.USER,
+        role = "USER",
         companyName,
         taxId,
         tradeRegistryNo,
@@ -133,7 +133,7 @@ export class AuthController {
           firstName,
           lastName,
           phone,
-          role,
+          role: (role as UserRole) || UserRole.USER,
           companyName,
           taxId,
           tradeRegistryNo,
