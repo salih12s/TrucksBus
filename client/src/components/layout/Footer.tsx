@@ -8,7 +8,9 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store";
 import {
   Facebook,
   Twitter,
@@ -27,12 +29,32 @@ import {
 const Footer: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  const handleProtectedNavigation = (path: string) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    navigate(path);
+    scrollToTop();
+  };
+
+  const handleCategoryNavigation = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    navigate("/category-selection");
+    scrollToTop();
   };
 
   return (
@@ -250,52 +272,64 @@ const Footer: React.FC = () => {
                 Ana Sayfa
               </Link>
               <Link
-                component={RouterLink}
-                to="/listings"
-                onClick={scrollToTop}
+                component="button"
+                onClick={() => handleProtectedNavigation("/listings")}
                 sx={{
                   color: "white",
                   textDecoration: "none",
                   fontSize: "0.85rem",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
                   "&:hover": { color: "#D34237" },
                 }}
               >
                 Tüm İlanlar
               </Link>
               <Link
-                component={RouterLink}
-                to="/categories"
-                onClick={scrollToTop}
+                component="button"
+                onClick={handleCategoryNavigation}
                 sx={{
                   color: "white",
                   textDecoration: "none",
                   fontSize: "0.85rem",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
                   "&:hover": { color: "#D34237" },
                 }}
               >
                 Kategoriler
               </Link>
               <Link
-                component={RouterLink}
-                to="/favorites"
-                onClick={scrollToTop}
+                component="button"
+                onClick={() => handleProtectedNavigation("/favorites")}
                 sx={{
                   color: "white",
                   textDecoration: "none",
                   fontSize: "0.85rem",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
                   "&:hover": { color: "#D34237" },
                 }}
               >
                 Favorilerim
               </Link>
               <Link
-                component={RouterLink}
-                to="/my-listings"
-                onClick={scrollToTop}
+                component="button"
+                onClick={() => handleProtectedNavigation("/my-listings")}
                 sx={{
                   color: "white",
                   textDecoration: "none",
                   fontSize: "0.85rem",
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
                   "&:hover": { color: "#D34237" },
                 }}
               >
@@ -327,13 +361,16 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <LocalShipping sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  component={RouterLink}
-                  to="/categories/kamyon"
-                  onClick={scrollToTop}
+                  component="button"
+                  onClick={handleCategoryNavigation}
                   sx={{
                     color: "white",
                     textDecoration: "none",
                     fontSize: "0.85rem",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
                     "&:hover": { color: "#D34237" },
                   }}
                 >
@@ -343,13 +380,16 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <DirectionsBus sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  component={RouterLink}
-                  to="/categories/otobus"
-                  onClick={scrollToTop}
+                  component="button"
+                  onClick={handleCategoryNavigation}
                   sx={{
                     color: "white",
                     textDecoration: "none",
                     fontSize: "0.85rem",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
                     "&:hover": { color: "#D34237" },
                   }}
                 >
@@ -359,13 +399,16 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <DirectionsBus sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  component={RouterLink}
-                  to="/categories/minibus"
-                  onClick={scrollToTop}
+                  component="button"
+                  onClick={handleCategoryNavigation}
                   sx={{
                     color: "white",
                     textDecoration: "none",
                     fontSize: "0.85rem",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
                     "&:hover": { color: "#D34237" },
                   }}
                 >
@@ -375,13 +418,16 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <LocalShipping sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  component={RouterLink}
-                  to="/categories/cekici"
-                  onClick={scrollToTop}
+                  component="button"
+                  onClick={handleCategoryNavigation}
                   sx={{
                     color: "white",
                     textDecoration: "none",
                     fontSize: "0.85rem",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
                     "&:hover": { color: "#D34237" },
                   }}
                 >
@@ -391,13 +437,16 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Build sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  component={RouterLink}
-                  to="/categories/dorse"
-                  onClick={scrollToTop}
+                  component="button"
+                  onClick={handleCategoryNavigation}
                   sx={{
                     color: "white",
                     textDecoration: "none",
                     fontSize: "0.85rem",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
                     "&:hover": { color: "#D34237" },
                   }}
                 >
@@ -407,13 +456,16 @@ const Footer: React.FC = () => {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Engineering sx={{ fontSize: 16, color: "#D34237" }} />
                 <Link
-                  component={RouterLink}
-                  to="/categories/romork"
-                  onClick={scrollToTop}
+                  component="button"
+                  onClick={handleCategoryNavigation}
                   sx={{
                     color: "white",
                     textDecoration: "none",
                     fontSize: "0.85rem",
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
                     "&:hover": { color: "#D34237" },
                   }}
                 >
