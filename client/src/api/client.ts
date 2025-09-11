@@ -2,7 +2,8 @@ import axios from "axios";
 import { getTokenFromStorage } from "../utils/tokenUtils";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://trucksbus-production.up.railway.app/api";
+  import.meta.env.VITE_API_URL ||
+  "https://trucksbus-production.up.railway.app/api";
 
 // Create axios instance
 const apiClient = axios.create({

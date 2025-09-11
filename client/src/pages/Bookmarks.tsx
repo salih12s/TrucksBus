@@ -87,7 +87,9 @@ const Bookmarks: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
 
   // API Base URL'i al
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "https://trucksbus-production.up.railway.app/api";
+  const API_BASE_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://trucksbus-production.up.railway.app/api";
 
   const getImageUrl = (images?: FavoriteAd["ad"]["images"]) => {
     if (!images || images.length === 0) return null;
@@ -253,7 +255,10 @@ const Bookmarks: React.FC = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ fontWeight: "bold", color: "#313B4C" }}>
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: "bold", color: "#313B4C" }}
+          >
             Kaydettiğim İlanlar
           </Typography>
           <Typography variant="body1" color="text.secondary">
@@ -261,235 +266,240 @@ const Bookmarks: React.FC = () => {
           </Typography>
         </Box>
 
-      {/* Filters and Search */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            gap: 3,
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
-            <TextField
-              fullWidth
-              placeholder="İlan ara..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
+        {/* Filters and Search */}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 3,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+              <TextField
+                fullWidth
+                placeholder="İlan ara..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
 
-          <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
-            <FormControl fullWidth>
-              <InputLabel>Sırala</InputLabel>
-              <Select
-                value={sortBy}
-                label="Sırala"
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <MenuItem value="newest">En Yeni</MenuItem>
-                <MenuItem value="oldest">En Eski</MenuItem>
-                <MenuItem value="price-high">Fiyat (Yüksek-Düşük)</MenuItem>
-                <MenuItem value="price-low">Fiyat (Düşük-Yüksek)</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+            <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
+              <FormControl fullWidth>
+                <InputLabel>Sırala</InputLabel>
+                <Select
+                  value={sortBy}
+                  label="Sırala"
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <MenuItem value="newest">En Yeni</MenuItem>
+                  <MenuItem value="oldest">En Eski</MenuItem>
+                  <MenuItem value="price-high">Fiyat (Yüksek-Düşük)</MenuItem>
+                  <MenuItem value="price-low">Fiyat (Düşük-Yüksek)</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
 
-          <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
-            <FormControl fullWidth>
-              <InputLabel>Filtrele</InputLabel>
-              <Select
-                value={filterBy}
-                label="Filtrele"
-                onChange={(e) => setFilterBy(e.target.value)}
-              >
-                <MenuItem value="all">Tümü</MenuItem>
-                <MenuItem value="active">Aktif İlanlar</MenuItem>
-                <MenuItem value="inactive">Pasif İlanlar</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+            <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
+              <FormControl fullWidth>
+                <InputLabel>Filtrele</InputLabel>
+                <Select
+                  value={filterBy}
+                  label="Filtrele"
+                  onChange={(e) => setFilterBy(e.target.value)}
+                >
+                  <MenuItem value="all">Tümü</MenuItem>
+                  <MenuItem value="active">Aktif İlanlar</MenuItem>
+                  <MenuItem value="inactive">Pasif İlanlar</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
 
-          <Box sx={{ flex: "0 1 120px" }}>
-            <Button fullWidth variant="outlined" startIcon={<FilterIcon />}>
-              Filtrele
-            </Button>
+            <Box sx={{ flex: "0 1 120px" }}>
+              <Button fullWidth variant="outlined" startIcon={<FilterIcon />}>
+                Filtrele
+              </Button>
+            </Box>
           </Box>
+        </Paper>
+
+        {/* Results Count */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body1" color="text.secondary">
+            {getFilteredFavorites().length} kaydettiğiniz ilan bulundu
+          </Typography>
         </Box>
-      </Paper>
 
-      {/* Results Count */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="body1" color="text.secondary">
-          {getFilteredFavorites().length} kaydettiğiniz ilan bulundu
-        </Typography>
-      </Box>
+        {/* Saved Ads Grid */}
+        {getFilteredFavorites().length === 0 ? (
+          <Alert severity="info">
+            {searchQuery || filterBy !== "all"
+              ? "Arama kriterlerinize uygun kaydettiğiniz ilan bulunamadı."
+              : "Henüz kaydettiğiniz ilan bulunmuyor. İlanları görüntülerken Kaydet butonuna tıklayarak kaydedebilirsiniz."}
+          </Alert>
+        ) : (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+              gap: 3,
+            }}
+          >
+            {getFilteredFavorites().map((favorite) => (
+              <Card
+                key={favorite.id}
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  position: "relative",
+                  opacity: favorite.ad.status === "APPROVED" ? 1 : 0.7,
+                }}
+              >
+                {/* Status Badge */}
+                {favorite.ad.status !== "APPROVED" && (
+                  <Chip
+                    label="İlan Onaylanmamış"
+                    color="warning"
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      left: 8,
+                      zIndex: 1,
+                    }}
+                  />
+                )}
 
-      {/* Saved Ads Grid */}
-      {getFilteredFavorites().length === 0 ? (
-        <Alert severity="info">
-          {searchQuery || filterBy !== "all"
-            ? "Arama kriterlerinize uygun kaydettiğiniz ilan bulunamadı."
-            : "Henüz kaydettiğiniz ilan bulunmuyor. İlanları görüntülerken Kaydet butonuna tıklayarak kaydedebilirsiniz."}
-        </Alert>
-      ) : (
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: 3,
-          }}
-        >
-          {getFilteredFavorites().map((favorite) => (
-            <Card
-              key={favorite.id}
-              sx={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                position: "relative",
-                opacity: favorite.ad.status === "APPROVED" ? 1 : 0.7,
-              }}
-            >
-              {/* Status Badge */}
-              {favorite.ad.status !== "APPROVED" && (
-                <Chip
-                  label="İlan Onaylanmamış"
-                  color="warning"
-                  size="small"
+                {/* Remove from Favorites Button */}
+                <IconButton
                   sx={{
                     position: "absolute",
                     top: 8,
-                    left: 8,
+                    right: 8,
                     zIndex: 1,
+                    backgroundColor: "rgba(255,255,255,0.8)",
+                    "&:hover": {
+                      backgroundColor: "rgba(255,255,255,0.9)",
+                    },
                   }}
+                  onClick={() =>
+                    handleRemoveFavorite(favorite.id, favorite.ad.id)
+                  }
+                >
+                  <DeleteIcon color="error" />
+                </IconButton>
+
+                {/* Image */}
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={
+                    getImageUrl(favorite.ad.images) ||
+                    "/api/placeholder/300/200"
+                  }
+                  alt={favorite.ad.title}
+                  sx={{ backgroundColor: "#f5f5f5" }}
                 />
-              )}
 
-              {/* Remove from Favorites Button */}
-              <IconButton
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  zIndex: 1,
-                  backgroundColor: "rgba(255,255,255,0.8)",
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.9)",
-                  },
-                }}
-                onClick={() =>
-                  handleRemoveFavorite(favorite.id, favorite.ad.id)
-                }
-              >
-                <DeleteIcon color="error" />
-              </IconButton>
-
-              {/* Image */}
-              <CardMedia
-                component="img"
-                height="200"
-                image={
-                  getImageUrl(favorite.ad.images) || "/api/placeholder/300/200"
-                }
-                alt={favorite.ad.title}
-                sx={{ backgroundColor: "#f5f5f5" }}
-              />
-
-              {/* Content */}
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
-                  {favorite.ad.title}
-                </Typography>
-
-                <Typography
-                  variant="h5"
-                  color="primary"
-                  sx={{ fontWeight: "bold", mb: 2 }}
-                >
-                  {formatPrice(favorite.ad.price)}
-                </Typography>
-
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <LocationIcon sx={{ fontSize: 16, color: "#666", mr: 0.5 }} />
-                  <Typography variant="body2" color="text.secondary">
-                    {formatLocation(favorite.ad.city, favorite.ad.district)}
+                {/* Content */}
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
+                    {favorite.ad.title}
                   </Typography>
-                </Box>
 
-                <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
-                  {favorite.ad.year && (
-                    <Chip
-                      label={favorite.ad.year.toString()}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                  {favorite.ad.mileage && (
-                    <Chip
-                      label={`${favorite.ad.mileage.toLocaleString(
-                        "tr-TR"
-                      )} km`}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                  {favorite.ad.brand?.name && (
-                    <Chip
-                      label={favorite.ad.brand.name}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                  {favorite.ad.model?.name && (
-                    <Chip
-                      label={favorite.ad.model.name}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                </Box>
+                  <Typography
+                    variant="h5"
+                    color="primary"
+                    sx={{ fontWeight: "bold", mb: 2 }}
+                  >
+                    {formatPrice(favorite.ad.price)}
+                  </Typography>
 
-                <Typography variant="caption" color="text.secondary">
-                  Kaydedilme:{" "}
-                  {new Date(favorite.createdAt).toLocaleDateString("tr-TR")}
-                </Typography>
-              </CardContent>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                    <LocationIcon
+                      sx={{ fontSize: 16, color: "#666", mr: 0.5 }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      {formatLocation(favorite.ad.city, favorite.ad.district)}
+                    </Typography>
+                  </Box>
 
-              {/* Actions */}
-              <CardActions sx={{ p: 2, pt: 0 }}>
-                <Button
-                  size="small"
-                  startIcon={<ViewIcon />}
-                  disabled={favorite.ad.status !== "APPROVED"}
-                >
-                  İncele
-                </Button>
-                <Button
-                  size="small"
-                  startIcon={<PhoneIcon />}
-                  disabled={favorite.ad.status !== "APPROVED"}
-                  title={formatPhone(favorite.ad.user.phone)}
-                >
-                  Ara
-                </Button>
-                <Button size="small" startIcon={<ShareIcon />}>
-                  Paylaş
-                </Button>
-              </CardActions>
-            </Card>
-          ))}
-        </Box>
-      )}
-    </Container>
+                  <Box
+                    sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}
+                  >
+                    {favorite.ad.year && (
+                      <Chip
+                        label={favorite.ad.year.toString()}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                    {favorite.ad.mileage && (
+                      <Chip
+                        label={`${favorite.ad.mileage.toLocaleString(
+                          "tr-TR"
+                        )} km`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                    {favorite.ad.brand?.name && (
+                      <Chip
+                        label={favorite.ad.brand.name}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                    {favorite.ad.model?.name && (
+                      <Chip
+                        label={favorite.ad.model.name}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                  </Box>
+
+                  <Typography variant="caption" color="text.secondary">
+                    Kaydedilme:{" "}
+                    {new Date(favorite.createdAt).toLocaleDateString("tr-TR")}
+                  </Typography>
+                </CardContent>
+
+                {/* Actions */}
+                <CardActions sx={{ p: 2, pt: 0 }}>
+                  <Button
+                    size="small"
+                    startIcon={<ViewIcon />}
+                    disabled={favorite.ad.status !== "APPROVED"}
+                  >
+                    İncele
+                  </Button>
+                  <Button
+                    size="small"
+                    startIcon={<PhoneIcon />}
+                    disabled={favorite.ad.status !== "APPROVED"}
+                    title={formatPhone(favorite.ad.user.phone)}
+                  >
+                    Ara
+                  </Button>
+                  <Button size="small" startIcon={<ShareIcon />}>
+                    Paylaş
+                  </Button>
+                </CardActions>
+              </Card>
+            ))}
+          </Box>
+        )}
+      </Container>
     </>
   );
 };

@@ -10,7 +10,10 @@ class SocketService {
       return this.socket;
     }
 
-    const serverUrl = (import.meta.env.VITE_API_URL || "https://trucksbus-production.up.railway.app/api").replace('/api', '');
+    const serverUrl = (
+      import.meta.env.VITE_API_URL ||
+      "https://trucksbus-production.up.railway.app/api"
+    ).replace("/api", "");
 
     this.socket = io(serverUrl, {
       transports: ["websocket", "polling"],
