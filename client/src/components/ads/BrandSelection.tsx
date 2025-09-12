@@ -352,13 +352,14 @@ const BrandSelection: React.FC = () => {
             sx={{
               display: "grid",
               gridTemplateColumns: {
-                xs: "repeat(2, 1fr)",
-                sm: "repeat(3, 1fr)",
-                md: "repeat(4, 1fr)",
-                lg: "repeat(5, 1fr)",
+                xs: "repeat(3, 1fr)", // Mobilde 3 tane
+                sm: "repeat(4, 1fr)", // Küçük tablette 4 tane
+                md: "repeat(6, 1fr)", // Tablette 6 tane
+                lg: "repeat(8, 1fr)", // Masaüstünde 8 tane
+                xl: "repeat(8, 1fr)", // Büyük ekranlarda 8 tane
               },
-              gap: { xs: 2, sm: 2.5, md: 3 },
-              maxWidth: "1200px",
+              gap: { xs: 1, sm: 1.5, md: 2 }, // Gap'leri de küçülttük
+              maxWidth: "1400px", // Max genişliği artırdık
               mx: "auto",
             }}
           >
@@ -367,7 +368,7 @@ const BrandSelection: React.FC = () => {
                 <Card
                   key={brand.id}
                   sx={{
-                    height: 280,
+                    height: { xs: 120, sm: 140, md: 160 }, // Yüksekliği %50-60 küçülttük (280'den 160'a)
                     display: "flex",
                     flexDirection: "column",
                     cursor: "pointer",
@@ -375,49 +376,50 @@ const BrandSelection: React.FC = () => {
                     position: "relative",
                     overflow: "hidden",
                     "&:hover": {
-                      transform: "translateY(-8px)",
-                      boxShadow: "0 12px 40px rgba(0,0,0,0.15)",
+                      transform: "translateY(-4px)", // Hover efektini de küçülttük
+                      boxShadow: "0 8px 25px rgba(0,0,0,0.12)", // Shadow'u da küçülttük
                     },
                   }}
                   onClick={() => handleBrandSelect(brand.slug)}
                 >
-                  {/* Image Section - 70% */}
+                  {/* Image Section - 75% */}
                   <Box
                     sx={{
-                      height: "70%",
+                      height: "75%",
                       position: "relative",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       backgroundColor: "#f5f5f5",
-                      padding: 1,
+                      padding: { xs: 0.5, sm: 0.75, md: 1 }, // Padding'leri küçülttük
                     }}
                   >
                     <BrandImage brand={brand} getBrandImage={getBrandImage} />
                   </Box>
 
-                  {/* Text Section - 30% */}
+                  {/* Text Section - 25% */}
                   <Box
                     sx={{
-                      height: "30%",
+                      height: "25%",
                       background:
                         "linear-gradient(0deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%)",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
                       alignItems: "center",
-                      padding: 2,
+                      padding: { xs: 0.5, sm: 0.75, md: 1 }, // Padding'leri küçülttük
                       textAlign: "center",
                     }}
                   >
                     <Typography
-                      variant="h6"
+                      variant="body2" // h6'dan body2'ye küçülttük
                       sx={{
                         color: "#1976d2",
                         fontWeight: "bold",
-                        mb: 0.5,
+                        mb: 0, // Margin'i kaldırdık
                         textShadow: "1px 1px 2px rgba(0,0,0,0.1)",
-                        fontSize: { xs: "0.9rem", sm: "1.1rem" },
+                        fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.9rem" }, // Font boyutlarını küçülttük
+                        lineHeight: 1.2, // Satır yüksekliğini ayarladık
                       }}
                     >
                       {brand.name}

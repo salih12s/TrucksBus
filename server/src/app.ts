@@ -28,14 +28,31 @@ if (process.env.NODE_ENV === "development") {
 
 const app = express();
 const server = createServer(app);
+
+// Socket.IO CORS ayarları
+let socketOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+  "https://trucksbus.com.tr",
+  "http://trucksbus.com.tr",
+  "https://www.trucksbus.com.tr",
+  "http://www.trucksbus.com.tr",
+];
+
+// Development modunda localhost'a izin ver
+if (process.env.NODE_ENV === "development") {
+  socketOrigins = [
+    ...socketOrigins,
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5174",
+  ];
+}
+
 const io = new SocketIOServer(server, {
   cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(",") || [
-      "https://trucksbus.com.tr",
-      "http://trucksbus.com.tr",
-      "https://www.trucksbus.com.tr",
-      "http://www.trucksbus.com.tr",
-    ],
+    origin: socketOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -88,12 +105,25 @@ app.use(generalLimiter);
 // CORS configuration
 const corsOptions = {
   origin: function (origin: string | undefined, callback: Function) {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+    let allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
       "https://trucksbus.com.tr",
       "http://trucksbus.com.tr",
       "https://www.trucksbus.com.tr",
       "http://www.trucksbus.com.tr",
     ];
+
+    // Development modunda localhost'a izin ver
+    if (process.env.NODE_ENV === "development") {
+      allowedOrigins = [
+        ...allowedOrigins,
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5174",
+      ];
+    }
 
     console.log("🔍 CORS Check:");
     console.log("  Request Origin:", origin);
@@ -132,12 +162,25 @@ app.use(cors(corsOptions));
 // Additional CORS headers for stubborn browsers
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+  let allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
     "https://trucksbus.com.tr",
     "http://trucksbus.com.tr",
     "https://www.trucksbus.com.tr",
     "http://www.trucksbus.com.tr",
   ];
+
+  // Development modunda localhost'a izin ver
+  if (process.env.NODE_ENV === "development") {
+    allowedOrigins = [
+      ...allowedOrigins,
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:5174",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:5174",
+    ];
+  }
 
   if (allowedOrigins.includes(origin || "") || !origin) {
     res.header("Access-Control-Allow-Origin", origin || "*");
