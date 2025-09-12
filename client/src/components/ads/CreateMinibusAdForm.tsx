@@ -383,33 +383,6 @@ const CreateMinibusAdForm: React.FC = () => {
     <>
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #313B4C 30%, #D34237 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            🚐 Minibüs & Midibüs İlanı Ver
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ mb: 3, maxWidth: 600, mx: "auto" }}
-          >
-            Aracınızın tüm detaylarını girerek profesyonel ilanınızı oluşturun
-            ve binlerce alıcıya ulaşın
-          </Typography>
-        </Box>
-
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4, mt: 3 }}>
             {/* 📝 Temel Bilgiler */}
@@ -449,52 +422,174 @@ const CreateMinibusAdForm: React.FC = () => {
                       WebkitTextFillColor: "transparent",
                     }}
                   >
-                    Temel Bilgiler
+                    İlan Detayları
                   </Typography>
                 </Box>
 
                 {/* İlan Başlığı */}
                 <Box sx={{ mb: 3 }}>
+                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                    İlan Başlığı <span style={{ color: "red" }}>*</span>
+                  </Typography>
                   <TextField
                     fullWidth
-                    label="İlan Başlığı"
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
                     required
                     variant="outlined"
+                    size="small"
                     sx={{
                       "& .MuiOutlinedInput-root": {
-                        borderRadius: 3,
+                        borderRadius: 1,
                         "&:hover fieldset": {
                           borderColor: "primary.main",
                         },
                       },
                     }}
                   />
+                  <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                    <Checkbox size="small" sx={{ p: 0.5 }} />
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "orange", fontWeight: 500 }}
+                    >
+                      İLANINIZ FARKLI GÖRÜNSÜN:
+                    </Typography>
+                    <Typography variant="caption" sx={{ ml: 1 }}>
+                      Kalın Yazı ve Renkli Çerçeve (429,99 TL)
+                    </Typography>
+                  </Box>
                 </Box>
 
                 {/* Açıklama */}
-                <Box>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                    Açıklama <span style={{ color: "red" }}>*</span>
+                  </Typography>
                   <TextField
                     fullWidth
                     multiline
                     rows={4}
-                    label="Açıklama"
                     value={formData.description}
                     onChange={(e) =>
                       handleInputChange("description", e.target.value)
                     }
                     required
                     variant="outlined"
+                    size="small"
+                    placeholder="Bireysel kullanıcılarımızda alıcı ve satıcı güvenliğini sağlamak için açıklama alanına telefon numarası yazılan ilanlar onaylanmamaktadır."
                     sx={{
                       "& .MuiOutlinedInput-root": {
-                        borderRadius: 3,
+                        borderRadius: 1,
                         "&:hover fieldset": {
                           borderColor: "primary.main",
                         },
                       },
                     }}
                   />
+                </Box>
+
+                {/* Yıl, Fiyat, KM - Grid Layout */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: 2,
+                    mb: 3,
+                  }}
+                >
+                  {/* Yıl */}
+                  <Box>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                      Yıl <span style={{ color: "red" }}>*</span>
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      type="number"
+                      value={formData.year}
+                      onChange={(e) =>
+                        handleInputChange("year", e.target.value)
+                      }
+                      required
+                      variant="outlined"
+                      size="small"
+                      placeholder="Bu alanı 2 gün sonra değiştiremez"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                        },
+                      }}
+                      inputProps={{
+                        min: 1990,
+                        max: new Date().getFullYear() + 1,
+                      }}
+                    />
+                  </Box>
+
+                  {/* Fiyat */}
+                  <Box>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                      Fiyat <span style={{ color: "red" }}>*</span>
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      value={formatNumber(formData.price)}
+                      onChange={(e) => {
+                        const rawValue = parseFormattedNumber(e.target.value);
+                        handleInputChange("price", rawValue);
+                      }}
+                      required
+                      variant="outlined"
+                      size="small"
+                      InputProps={{
+                        endAdornment: (
+                          <Box
+                            sx={{
+                              color: "text.secondary",
+                              fontSize: "0.875rem",
+                            }}
+                          >
+                            TL
+                          </Box>
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                        },
+                      }}
+                    />
+                    <Typography
+                      variant="caption"
+                      color="primary"
+                      sx={{ fontSize: "0.75rem", cursor: "pointer" }}
+                    >
+                      ? Doğru Fiyat = Hızlı Sonuç
+                    </Typography>
+                  </Box>
+
+                  {/* KM */}
+                  <Box>
+                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
+                      KM <span style={{ color: "red" }}>*</span>
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      value={formatNumber(formData.mileage)}
+                      onChange={(e) => {
+                        const rawValue = parseFormattedNumber(e.target.value);
+                        handleInputChange("mileage", rawValue);
+                      }}
+                      required
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 1,
+                        },
+                      }}
+                    />
+                  </Box>
                 </Box>
               </CardContent>
             </Card>

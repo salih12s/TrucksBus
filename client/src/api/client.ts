@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getTokenFromStorage } from "../utils/tokenUtils";
 
-const API_BASE_URL =
+export const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://trucksbus-production.up.railway.app/api";
 

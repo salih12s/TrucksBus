@@ -3,13 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
-  CardContent,
   Typography,
   List,
   ListItem,
   ListItemText,
   TextField,
-  CardMedia,
   Button,
   useTheme,
   useMediaQuery,
@@ -568,16 +566,16 @@ const MainLayout: React.FC = () => {
     // Eğer kategori seçilmemişse normal kategori listesini göster
     if (!selectedCategory) {
       return (
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: 1 }}>
           {/* Kategoriler Başlığı */}
           <Typography
             variant="h6"
             sx={{
               color: "#333",
               fontWeight: "normal",
-              fontSize: "16px",
-              mb: 2,
-              pb: 1,
+              fontSize: "13px",
+              mb: 1,
+              pb: 0.5,
               borderBottom: "1px solid #e0e0e0",
             }}
           >
@@ -591,8 +589,8 @@ const MainLayout: React.FC = () => {
               onClick={() => handleCategoryClick(null)}
               sx={{
                 cursor: "pointer",
-                py: 1.5,
-                px: 2,
+                py: 0.5,
+                px: 1,
                 backgroundColor: "#f8f9fa",
                 borderLeft: "3px solid #333",
                 "&:hover": {
@@ -606,13 +604,13 @@ const MainLayout: React.FC = () => {
                 sx={{
                   "& .MuiListItemText-primary": {
                     color: "#333",
-                    fontSize: "15px",
+                    fontSize: "13px",
                     fontWeight: 600,
                     lineHeight: 1.2,
                   },
                   "& .MuiListItemText-secondary": {
                     color: "#666",
-                    fontSize: "13px",
+                    fontSize: "11px",
                     fontWeight: 400,
                   },
                 }}
@@ -625,8 +623,8 @@ const MainLayout: React.FC = () => {
                 onClick={() => handleCategoryClick(category.slug)}
                 sx={{
                   cursor: "pointer",
-                  py: 1.5,
-                  px: 2,
+                  py: 0.5,
+                  px: 1,
                   backgroundColor: "transparent",
                   borderLeft: "3px solid transparent",
                   "&:hover": {
@@ -640,13 +638,13 @@ const MainLayout: React.FC = () => {
                   sx={{
                     "& .MuiListItemText-primary": {
                       color: "#333",
-                      fontSize: "15px",
+                      fontSize: "13px",
                       fontWeight: 400,
                       lineHeight: 1.2,
                     },
                     "& .MuiListItemText-secondary": {
                       color: "#666",
-                      fontSize: "13px",
+                      fontSize: "11px",
                       fontWeight: 400,
                     },
                   }}
@@ -665,9 +663,9 @@ const MainLayout: React.FC = () => {
     const categoryBrands = getCategoryBrands();
 
     return (
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 1 }}>
         {/* Seçili Kategori Başlığı ve Geri Butonu */}
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 1 }}>
           <Button
             onClick={() => handleCategoryClick(null)}
             sx={{
@@ -689,7 +687,7 @@ const MainLayout: React.FC = () => {
             sx={{
               color: "#333",
               fontWeight: "bold",
-              fontSize: "16px",
+              fontSize: "13px",
               mb: 1,
               pb: 1,
               borderBottom: "1px solid #e0e0e0",
@@ -993,10 +991,11 @@ const MainLayout: React.FC = () => {
         {!shouldHideSidebar && (
           <Box
             sx={{
-              width: "280px",
+              width: "180px",
               flexShrink: 0,
-              borderRight: "1px solid #e0e0e0",
               backgroundColor: "transparent",
+              ml: 2,
+              mt: 3,
               overflow: "hidden",
             }}
           >
@@ -1043,171 +1042,442 @@ const MainLayout: React.FC = () => {
                     textAlign: { xs: "center", md: "left" },
                   }}
                 >
-                  Anasayfa Vitrini
-                </Typography>
-
-                {/* Filter Results Count */}
-                <Typography
-                  variant="body2"
-                  sx={{ color: "#666", textAlign: "center", mb: 2 }}
-                >
-                  {filteredAds.length} ilan bulundu
+                  {selectedCategory && selectedCategory !== "Tüm İlanlar"
+                    ? selectedCategory
+                    : "Anasayfa Vitrini"}
                 </Typography>
               </Box>
 
-              {/* Ads Grid */}
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: {
-                    xs: "repeat(2, 1fr)", // Mobile: 2 sütun
-                    sm: "repeat(3, 1fr)", // Small tablet: 3 sütun
-                    md: "repeat(4, 1fr)", // Medium: 4 sütun
-                    lg: "repeat(6, 1fr)", // Large: 6 sütun
-                    xl: "repeat(6, 1fr)", // Extra Large: 6 sütun
-                  },
-                  gap: { xs: 1, sm: 1.5, md: 2 },
-                  width: "100%",
-                }}
-              >
-                {(() => {
-                  console.log("=== RENDERING ADS ===", {
-                    filteredAdsCount: filteredAds.length,
-                    totalAdsCount: ads.length,
-                    isArray: Array.isArray(filteredAds),
-                    firstAd: filteredAds[0],
-                  });
-                  return null;
-                })()}
-
-                {!Array.isArray(filteredAds) ? (
-                  <Typography>İlanlar yükleniyor...</Typography>
-                ) : filteredAds.length === 0 ? (
-                  <Typography>Henüz ilan bulunmuyor.</Typography>
-                ) : (
-                  filteredAds.map((ad) => (
-                    <Card
-                      key={ad.id}
-                      onClick={() => navigate(`/ad/${ad.id}`)}
-                      sx={{
-                        borderRadius: 1,
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                        "&:hover": {
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                        },
-                        transition: "all 0.2s ease",
-                        cursor: "pointer",
-                        width: "100%",
-                        backgroundColor: "white",
-                        border: "1px solid #e0e0e0",
-                      }}
-                    >
-                      {/* Vitrin Görseli */}
-                      <CardMedia
-                        component="div"
+              {/* Conditional Rendering: Grid for "Tüm İlanlar", List for categories */}
+              {!selectedCategory || selectedCategory === "Tüm İlanlar" ? (
+                // Grid View for All Ads
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "repeat(2, 1fr)", // Mobile: 2 sütun
+                      sm: "repeat(3, 1fr)", // Small tablet: 3 sütun
+                      md: "repeat(4, 1fr)", // Medium: 4 sütun
+                      lg: "repeat(6, 1fr)", // Large: 6 sütun
+                      xl: "repeat(6, 1fr)", // Extra Large: 6 sütun
+                    },
+                    gap: { xs: 1, sm: 1.5, md: 2 },
+                    width: "100%",
+                  }}
+                >
+                  {!Array.isArray(filteredAds) ? (
+                    <Typography>İlanlar yükleniyor...</Typography>
+                  ) : filteredAds.length === 0 ? (
+                    <Typography>Henüz ilan bulunmuyor.</Typography>
+                  ) : (
+                    filteredAds.map((ad) => (
+                      <Card
+                        key={ad.id}
+                        onClick={() => navigate(`/ad/${ad.id}`)}
                         sx={{
-                          height: 120,
-                          backgroundColor: "#f8f9fa",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundImage: getImageUrl(ad.images)
-                            ? `url(${getImageUrl(ad.images)})`
-                            : "none",
-                          backgroundSize: "contain",
-                          backgroundRepeat: "no-repeat",
-                          backgroundPosition: "center",
-                          position: "relative",
-                          overflow: "hidden",
-                          padding: "8px",
+                          borderRadius: 1,
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                          "&:hover": {
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                          },
+                          transition: "all 0.2s ease",
+                          cursor: "pointer",
+                          width: "100%",
+                          backgroundColor: "white",
+                          border: "1px solid #e0e0e0",
                         }}
                       >
-                        {!getImageUrl(ad.images) && (
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              color: "#999",
-                            }}
-                          >
-                            <LocalShipping sx={{ fontSize: 24, mb: 0.5 }} />
-                            <Typography variant="caption" fontSize="10px">
-                              Görsel Yok
-                            </Typography>
-                          </Box>
-                        )}
-                      </CardMedia>
+                        {/* Vitrin Görseli */}
+                        <Box
+                          component="div"
+                          sx={{
+                            height: 120,
+                            backgroundColor: "#f8f9fa",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundImage: getImageUrl(ad.images)
+                              ? `url(${getImageUrl(ad.images)})`
+                              : "none",
+                            backgroundSize: "contain",
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "center",
+                            position: "relative",
+                            overflow: "hidden",
+                            padding: "8px",
+                          }}
+                        >
+                          {!getImageUrl(ad.images) && (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                color: "#999",
+                              }}
+                            >
+                              <LocalShipping sx={{ fontSize: 24, mb: 0.5 }} />
+                              <Typography variant="caption" fontSize="10px">
+                                Görsel Yok
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
 
-                      <CardContent
-                        sx={{
-                          p: 1.5,
-                          "&:last-child": { pb: 1.5 },
-                          height: "auto",
-                          display: "flex",
-                          flexDirection: "column",
-                          position: "relative",
-                        }}
-                      >
-                        {/* İl ve Model Yılı - Space Between */}
                         <Box
                           sx={{
+                            p: 1.5,
                             display: "flex",
-                            justifyContent: "space-between",
+                            flexDirection: "column",
+                            position: "relative",
+                            height: "auto",
+                          }}
+                        >
+                          {/* İlan Başlığı */}
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 500,
+                              fontSize: "13px",
+                              color: "#333",
+                              lineHeight: 1.3,
+                              mb: 1,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              minHeight: "32px",
+                            }}
+                          >
+                            {ad.title}
+                          </Typography>
+
+                          {/* Konum ve Model Yılı - Alt alta */}
+                          <Box sx={{ mb: 1 }}>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: "12px",
+                                color: "#666",
+                                display: "block",
+                              }}
+                            >
+                              {ad.city?.name || "Belirtilmemiş"}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: "12px",
+                                color: "#666",
+                                display: "block",
+                              }}
+                            >
+                              {ad.model?.name || ad.brand?.name || "Model"}{" "}
+                              {ad.year || ""}
+                            </Typography>
+                          </Box>
+
+                          {/* Fiyat - Sağ Alt Köşe */}
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              bottom: 8,
+                              right: 12,
+                            }}
+                          >
+                            <Typography
+                              variant="h6"
+                              sx={{
+                                fontWeight: 600,
+                                fontSize: "14px",
+                                color: "#d32f2f",
+                              }}
+                            >
+                              {ad.price
+                                ? `${formatPrice(ad.price)} TL`
+                                : "Fiyat Yok"}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Card>
+                    ))
+                  )}
+                </Box>
+              ) : (
+                // List View for Category Selection
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    width: "100%",
+                  }}
+                >
+                  {/* List Header */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      backgroundColor: "#f8f9fa",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 1,
+                      p: 2,
+                      alignItems: "center",
+                      fontWeight: 600,
+                      fontSize: "12px",
+                      color: "#666",
+                      textTransform: "uppercase",
+                      letterSpacing: 0.5,
+                    }}
+                  >
+                    <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>Görsel</Box>
+                    <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>Model</Box>
+                    <Box sx={{ flex: 1, mr: 2 }}>İlan Başlığı</Box>
+                    <Box
+                      sx={{
+                        width: 60,
+                        mr: 2,
+                        flexShrink: 0,
+                        textAlign: "center",
+                      }}
+                    >
+                      Yıl
+                    </Box>
+                    <Box
+                      sx={{
+                        width: 80,
+                        mr: 2,
+                        flexShrink: 0,
+                        textAlign: "center",
+                      }}
+                    >
+                      Kilometre
+                    </Box>
+                    <Box
+                      sx={{
+                        width: 80,
+                        mr: 2,
+                        flexShrink: 0,
+                        textAlign: "center",
+                      }}
+                    >
+                      Kategori
+                    </Box>
+                    <Box
+                      sx={{
+                        width: 100,
+                        mr: 2,
+                        flexShrink: 0,
+                        textAlign: "center",
+                      }}
+                    >
+                      Fiyat
+                    </Box>
+                    <Box
+                      sx={{
+                        width: 80,
+                        mr: 2,
+                        flexShrink: 0,
+                        textAlign: "center",
+                      }}
+                    >
+                      Tarih
+                    </Box>
+                    <Box
+                      sx={{ width: 120, flexShrink: 0, textAlign: "center" }}
+                    >
+                      İl / İlçe
+                    </Box>
+                  </Box>
+                  {(() => {
+                    console.log("=== RENDERING ADS ===", {
+                      filteredAdsCount: filteredAds.length,
+                      totalAdsCount: ads.length,
+                      isArray: Array.isArray(filteredAds),
+                      firstAd: filteredAds[0],
+                    });
+                    return null;
+                  })()}
+
+                  {!Array.isArray(filteredAds) ? (
+                    <Typography>İlanlar yükleniyor...</Typography>
+                  ) : filteredAds.length === 0 ? (
+                    <Typography>Henüz ilan bulunmuyor.</Typography>
+                  ) : (
+                    filteredAds.map((ad) => (
+                      <Card
+                        key={ad.id}
+                        onClick={() => navigate(`/ad/${ad.id}`)}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "row",
+                          borderRadius: 1,
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                          "&:hover": {
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                            backgroundColor: "#f8f9fa",
+                          },
+                          transition: "all 0.2s ease",
+                          cursor: "pointer",
+                          width: "100%",
+                          backgroundColor: "white",
+                          border: "1px solid #e0e0e0",
+                          mb: 1,
+                          p: 2,
+                          alignItems: "center",
+                        }}
+                      >
+                        {/* Vitrin Görseli */}
+                        <Box
+                          sx={{
+                            width: 120,
+                            height: 80,
+                            backgroundColor: "#f8f9fa",
+                            display: "flex",
                             alignItems: "center",
-                            mb: 1,
-                            fontSize: "12px",
-                            color: "#666",
+                            justifyContent: "center",
+                            backgroundImage: getImageUrl(ad.images)
+                              ? `url(${getImageUrl(ad.images)})`
+                              : "none",
+                            backgroundSize: "cover",
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "center",
+                            borderRadius: 1,
+                            mr: 2,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {!getImageUrl(ad.images) && (
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                color: "#999",
+                              }}
+                            >
+                              <LocalShipping sx={{ fontSize: 20 }} />
+                              <Typography variant="caption" fontSize="8px">
+                                Görsel Yok
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+
+                        {/* Model */}
+                        <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 600,
+                              fontSize: "13px",
+                              color: "#333",
+                            }}
+                          >
+                            {ad.model?.name || ad.brand?.name || "Model"}
+                          </Typography>
+                        </Box>
+
+                        {/* İlan Başlığı */}
+                        <Box sx={{ flex: 1, mr: 2 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 500,
+                              fontSize: "13px",
+                              color: "#333",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {ad.title}
+                          </Typography>
+                        </Box>
+
+                        {/* Yıl */}
+                        <Box
+                          sx={{
+                            width: 60,
+                            mr: 2,
+                            flexShrink: 0,
+                            textAlign: "center",
                           }}
                         >
                           <Typography
-                            variant="caption"
-                            sx={{ fontSize: "12px", color: "#666" }}
-                          >
-                            {ad.city?.name || "Belirtilmemiş"}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{ fontSize: "12px", color: "#666" }}
+                            variant="body2"
+                            sx={{
+                              fontSize: "13px",
+                              color: "#333",
+                              fontWeight: 500,
+                            }}
                           >
                             {ad.year || "---"}
                           </Typography>
                         </Box>
 
-                        {/* İlan Başlığı */}
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: 500,
-                            fontSize: "13px",
-                            color: "#333",
-                            lineHeight: 1.3,
-                            mb: 2,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            minHeight: "32px",
-                          }}
-                        >
-                          {ad.title}
-                        </Typography>
-
-                        {/* Fiyat - Sağ Alt Köşe */}
+                        {/* Kilometre */}
                         <Box
                           sx={{
-                            position: "absolute",
-                            bottom: 8,
-                            right: 12,
+                            width: 80,
+                            mr: 2,
+                            flexShrink: 0,
+                            textAlign: "center",
                           }}
                         >
                           <Typography
-                            variant="h6"
+                            variant="body2"
                             sx={{
-                              fontWeight: 600,
+                              fontSize: "13px",
+                              color: "#333",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {ad.mileage
+                              ? `${ad.mileage.toLocaleString("tr-TR")}`
+                              : "---"}
+                          </Typography>
+                        </Box>
+
+                        {/* Kategori */}
+                        <Box
+                          sx={{
+                            width: 80,
+                            mr: 2,
+                            flexShrink: 0,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontSize: "12px",
+                              color: "#666",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {ad.category?.name || "---"}
+                          </Typography>
+                        </Box>
+
+                        {/* Fiyat */}
+                        <Box
+                          sx={{
+                            width: 100,
+                            mr: 2,
+                            flexShrink: 0,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              fontWeight: 700,
                               fontSize: "14px",
-                              color: "#d32f2f",
+                              color: "#e53e3e",
                             }}
                           >
                             {ad.price
@@ -1215,11 +1485,64 @@ const MainLayout: React.FC = () => {
                               : "Fiyat Yok"}
                           </Typography>
                         </Box>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </Box>
+
+                        {/* Tarih */}
+                        <Box
+                          sx={{
+                            width: 80,
+                            mr: 2,
+                            flexShrink: 0,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontSize: "11px",
+                              color: "#666",
+                            }}
+                          >
+                            {ad.createdAt
+                              ? new Date(ad.createdAt).toLocaleDateString(
+                                  "tr-TR"
+                                )
+                              : "---"}
+                          </Typography>
+                        </Box>
+
+                        {/* İl/İlçe */}
+                        <Box
+                          sx={{
+                            width: 120,
+                            flexShrink: 0,
+                            textAlign: "center",
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontSize: "12px",
+                              color: "#666",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {ad.city?.name || "Belirtilmemiş"}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontSize: "10px",
+                              color: "#999",
+                            }}
+                          >
+                            {ad.district?.name || "---"}
+                          </Typography>
+                        </Box>
+                      </Card>
+                    ))
+                  )}
+                </Box>
+              )}
             </>
           )}
         </Box>

@@ -14,6 +14,7 @@ import {
   Chip,
 } from "@mui/material";
 import { Message, LocationOn, Star } from "@mui/icons-material";
+import { API_BASE_URL } from "../api/client";
 
 interface Ad {
   id: number;
@@ -54,7 +55,7 @@ const AdDetail: React.FC = () => {
   useEffect(() => {
     const fetchAd = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/ads/${id}`);
+        const response = await fetch(`${API_BASE_URL}/ads/${id}`);
         const data = await response.json();
         setAd(data);
         setLoading(false);
@@ -77,7 +78,8 @@ const AdDetail: React.FC = () => {
     if (!images || images.length === 0) return "/placeholder-image.jpg";
     const firstImage = images[0];
     if (firstImage.startsWith("http")) return firstImage;
-    return `http://localhost:5000${firstImage}`;
+    const baseUrl = API_BASE_URL.replace("/api", "");
+    return `${baseUrl}${firstImage}`;
   };
 
   if (loading) {
