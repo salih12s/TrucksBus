@@ -91,17 +91,24 @@ const Header: React.FC<HeaderProps> = ({
     <AppBar
       position="static"
       sx={{
-        backgroundColor: "#313B4C",
-        boxShadow: "none",
-        borderBottom: "1px solid #444",
+        backgroundColor: "white",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        borderBottom: "1px solid #e0e0e0",
       }}
     >
-      <Toolbar sx={{ px: 3, position: "relative" }}>
+      <Toolbar
+        sx={{
+          px: 2,
+          py: 0.5,
+          minHeight: "56px !important",
+          position: "relative",
+        }}
+      >
         {/* Logo - Absolute positioned */}
         <Box
           sx={{
             position: "absolute",
-            left: 20,
+            left: 12,
             top: "50%",
             transform: "translateY(-50%)",
             display: "flex",
@@ -120,9 +127,8 @@ const Header: React.FC<HeaderProps> = ({
             src="/Trucksbus.png"
             alt="TrucksBus"
             style={{
-              height: isMobile ? 80 : isTablet ? 100 : 120,
-              filter: "brightness(0) invert(1)", // Beyaz renk
-              marginRight: isMobile ? 8 : 16,
+              height: isMobile ? 45 : isTablet ? 55 : 65,
+              marginRight: isMobile ? 6 : 12,
               transition: "all 0.3s ease",
             }}
           />
@@ -131,18 +137,15 @@ const Header: React.FC<HeaderProps> = ({
             component="div"
             sx={{
               fontWeight: "bold",
-              fontSize: isMobile ? "1.1rem" : isTablet ? "1.3rem" : "1.5rem",
+              fontSize: isMobile ? "0.9rem" : isTablet ? "1.1rem" : "1.3rem",
               marginLeft: isMobile ? 1 : 2,
               transition: "all 0.3s ease",
-              display: isMobile ? "none" : "block", // Mobilde text gizle
-              "&:hover": {
-                textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-              },
+              display: isMobile ? "none" : "block",
             }}
           >
-            <span style={{ color: "white" }}>Alın Satın </span>
+            <span style={{ color: "#333" }}>Alın Satın </span>
             <span style={{ color: "#D34237" }}>Trucksbus.com</span>
-            <span style={{ color: "white" }}> ile Mutlu Kalın</span>
+            <span style={{ color: "#333" }}> ile Mutlu Kalın</span>
           </Typography>
         </Box>
 
@@ -177,8 +180,8 @@ const Header: React.FC<HeaderProps> = ({
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "rgba(255, 255, 255, 0.9)",
                   borderRadius: 25,
-                  fontSize: isMobile ? "0.8rem" : "0.875rem",
-                  height: isMobile ? 36 : 40,
+                  fontSize: isMobile ? "0.75rem" : "0.8rem",
+                  height: isMobile ? 32 : 36,
                   transition: "all 0.3s ease",
                   border: "2px solid transparent",
                   "&:hover": {
@@ -211,7 +214,7 @@ const Header: React.FC<HeaderProps> = ({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: isMobile ? 0.5 : isTablet ? 1 : 2,
+            gap: isMobile ? 0.3 : isTablet ? 0.5 : 1,
             marginLeft: "auto", // Push to right
             position: "relative",
             zIndex: 2,
@@ -223,13 +226,13 @@ const Header: React.FC<HeaderProps> = ({
               <IconButton
                 color="inherit"
                 sx={{
-                  color: "white",
-                  padding: isMobile ? "6px" : "8px",
+                  color: "#333",
+                  padding: isMobile ? "4px" : "6px",
                 }}
                 onClick={() => navigate("/messages")}
               >
                 <Badge badgeContent={unreadCount} color="error">
-                  <MessageIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+                  <MessageIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
                 </Badge>
               </IconButton>
 
@@ -238,8 +241,8 @@ const Header: React.FC<HeaderProps> = ({
               <IconButton
                 color="inherit"
                 sx={{
-                  color: "white",
-                  padding: isMobile ? "6px" : "8px",
+                  color: "#333",
+                  padding: isMobile ? "4px" : "6px",
                 }}
                 onClick={() => navigate("/bookmarks")}
               >
@@ -253,16 +256,19 @@ const Header: React.FC<HeaderProps> = ({
                     },
                   }}
                 >
-                  <BookmarkIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+                  <BookmarkIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
                 </Badge>
               </IconButton>
 
               <IconButton
                 color="inherit"
-                sx={{ color: "white" }}
+                sx={{
+                  color: "#333",
+                  padding: isMobile ? "4px" : "6px",
+                }}
                 onClick={() => setFeedbackModalOpen(true)}
               >
-                <FeedbackIcon />
+                <FeedbackIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
               </IconButton>
 
               {/* Post Ad button - responsive */}
@@ -273,10 +279,11 @@ const Header: React.FC<HeaderProps> = ({
                 sx={{
                   backgroundColor: "#D34237",
                   color: "white",
-                  ml: 1,
-                  fontSize: isMobile ? "0.75rem" : "0.875rem",
-                  padding: isMobile ? "4px 8px" : "6px 16px",
-                  minWidth: isMobile ? "auto" : "64px",
+                  ml: 0.5,
+                  fontSize: isMobile ? "0.7rem" : "0.8rem",
+                  padding: isMobile ? "3px 6px" : "4px 12px",
+                  minWidth: isMobile ? "auto" : "60px",
+                  minHeight: isMobile ? "28px" : "32px",
                   "&:hover": {
                     backgroundColor: "#B73429",
                   },
@@ -287,13 +294,16 @@ const Header: React.FC<HeaderProps> = ({
 
               {/* User Avatar */}
               {(user || isLoading) && (
-                <IconButton onClick={handleAvatarClick} sx={{ ml: 1 }}>
+                <IconButton
+                  onClick={handleAvatarClick}
+                  sx={{ ml: 0.5, padding: "4px" }}
+                >
                   <Avatar
                     sx={{
                       bgcolor: "#D34237",
-                      width: isMobile ? 32 : 40,
-                      height: isMobile ? 32 : 40,
-                      fontSize: isMobile ? "0.75rem" : "0.9rem",
+                      width: isMobile ? 28 : 32,
+                      height: isMobile ? 28 : 32,
+                      fontSize: isMobile ? "0.7rem" : "0.8rem",
                     }}
                   >
                     {isLoading ? "..." : getUserInitials()}
@@ -424,16 +434,17 @@ const Header: React.FC<HeaderProps> = ({
                 component={RouterLink}
                 to="/login"
                 sx={{
-                  color: "white",
-                  fontSize: isMobile ? "0.75rem" : "0.875rem",
-                  padding: isMobile ? "4px 8px" : "6px 16px",
-                  minWidth: isMobile ? "auto" : "64px",
+                  color: "#333",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  padding: "4px 8px",
+                  textTransform: "none",
                   "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.1)",
+                    backgroundColor: "rgba(0,0,0,0.05)",
                   },
                 }}
               >
-                {isMobile ? "Giriş" : "Giriş Yap"}
+                Giriş Yap / Üye Ol
               </Button>
 
               <Button
@@ -441,34 +452,20 @@ const Header: React.FC<HeaderProps> = ({
                 component={RouterLink}
                 to="/category-selection"
                 sx={{
-                  backgroundColor: "#D34237",
-                  color: "white",
-                  fontSize: isMobile ? "0.75rem" : "0.875rem",
-                  padding: isMobile ? "4px 8px" : "6px 16px",
-                  minWidth: isMobile ? "auto" : "64px",
-                  ml: isMobile ? 0.5 : 1,
+                  backgroundColor: "#FFD700",
+                  color: "#333",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  padding: "4px 12px",
+                  textTransform: "none",
+                  ml: 0.5,
+                  borderRadius: "4px",
                   "&:hover": {
-                    backgroundColor: "#B73429",
+                    backgroundColor: "#FFC107",
                   },
                 }}
               >
-                {isMobile ? "İlan" : "İlan Ver"}
-              </Button>
-
-              <Button
-                variant="outlined"
-                component={RouterLink}
-                to="/register"
-                sx={{
-                  borderColor: "white",
-                  color: "white",
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.1)",
-                    borderColor: "white",
-                  },
-                }}
-              >
-                Kayıt Ol
+                Ücretsiz İlan Ver
               </Button>
             </>
           )}
