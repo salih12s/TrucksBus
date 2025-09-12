@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   Box,
   Card,
@@ -7,39 +7,20 @@ import {
   Typography,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
   TextField,
   CardMedia,
   Button,
-  IconButton,
   useTheme,
   useMediaQuery,
-  Drawer,
-  Snackbar,
-  Alert,
-  CircularProgress,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
 } from "@mui/material";
-import {
-  LocalShipping,
-  DirectionsBus,
-  Build,
-  Engineering,
-  Menu as MenuIcon,
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle,
-  Report,
-  Message,
-  ViewList,
-} from "@mui/icons-material";
+import { LocalShipping } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
-import { useAppSelector, useAppDispatch } from "../hooks/redux";
-import { startConversation } from "../store/messagingSlice";
+import { useAppSelector } from "../hooks/redux";
 import apiClient from "../api/client";
 import ComplaintModal from "../components/complaints/ComplaintModal";
 import ContactPage from "./ContactPage";
@@ -111,9 +92,7 @@ interface ApiAdsResponse {
 }
 
 const MainLayout: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useAppDispatch();
   const [categories, setCategories] = useState<Category[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [filteredAds, setFilteredAds] = useState<Ad[]>([]);
@@ -125,15 +104,6 @@ const MainLayout: React.FC = () => {
   const [yearMin, setYearMin] = useState("");
   const [yearMax, setYearMax] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
-  );
-  const [savingAdId, setSavingAdId] = useState<number | null>(null);
-  const [savedAds, setSavedAds] = useState<Set<number>>(new Set());
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [complaintModalOpen, setComplaintModalOpen] = useState(false);
   const [selectedAdForComplaint, setSelectedAdForComplaint] = useState<{
@@ -160,21 +130,9 @@ const MainLayout: React.FC = () => {
     location.pathname === "/contact" || location.pathname === "/about";
   const shouldHideSidebar = isAvatarMenuPage || isContactOrAboutPage;
 
-  // Mobile'da sidebar varsayılan olarak kapalı
-  useEffect(() => {
-    if (isMobile) {
-      setSidebarOpen(false);
-    } else {
-      setSidebarOpen(true);
-    }
-  }, [isMobile]);
-
   // Category navigation handler
   const handleCategoryClick = (categorySlug: string | null) => {
     setSelectedCategory(categorySlug);
-    if (isMobile) {
-      setMobileDrawerOpen(false);
-    }
   };
 
   const getImageUrl = (images?: Ad["images"]) => {
@@ -191,118 +149,8 @@ const MainLayout: React.FC = () => {
   // Fiyat formatlama fonksiyonu
   const formatPrice = (price: number | null) => {
     if (!price) return "Belirtilmemiş";
-    return price.toLocaleString("tr-TR");
-  };
-
-  // Telefon formatlama fonksiyonu
-  const formatPhone = (phone: string | null) => {
-    if (!phone) return "Belirtilmemiş";
-    // Sadece rakamları al
-    const digits = phone.replace(/\D/g, "");
-    // 0545 585 55 55 formatına çevir
-    if (digits.length === 11) {
-      return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(
-        7,
-        9
-      )} ${digits.slice(9, 11)}`;
-    }
-    return phone;
-  };
-
-  // Şehir/İlçe formatlama fonksiyonu
-  const formatLocation = (
-    city?: { name: string },
-    district?: { name: string }
-  ) => {
-    if (!city && !district) return "Belirtilmemiş";
-    if (city && district) return `${city.name} / ${district.name}`;
-    if (city) return city.name;
-    if (district) return district.name;
-    return "Belirtilmemiş";
-  };
-
-  // Favorites fonksiyonları
-  const handleAddToFavorites = async (adId: number) => {
-    if (!user) {
-      setSnackbarMessage("Favorilere eklemek için giriş yapmalısınız");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return;
-    }
-
-    // Zaten kaydedilmişse tekrar kaydetme
-    if (savedAds.has(adId)) {
-      setSnackbarMessage("Bu ilan zaten favorilerinizde");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return;
-    }
-
-    setSavingAdId(adId);
-    try {
-      await apiClient.post("/favorites", { adId });
-      setSavedAds((prev) => new Set([...prev, adId]));
-      setFavoritesCount((prev) => prev + 1);
-      setSnackbarMessage("İlan favorilere eklendi");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
-    } catch (error: unknown) {
-      const axiosError = error as { response?: { data?: { error?: string } } };
-      const message =
-        axiosError.response?.data?.error || "Favorilere eklenirken hata oluştu";
-      setSnackbarMessage(message);
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    } finally {
-      setSavingAdId(null);
-    }
-  };
-
-  const handleCloseSnackbar = () => {
-    setSnackbarOpen(false);
-  };
-
-  // Messaging function
-  const handleStartMessage = async (ad: Ad) => {
-    if (!isAuthenticated) {
-      setSnackbarMessage("Mesaj göndermek için giriş yapmalısınız");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return;
-    }
-
-    if (!ad.user || ad.user.id === user?.id) {
-      setSnackbarMessage("Kendi ilanınıza mesaj gönderemezsiniz");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-      return;
-    }
-
-    try {
-      // Start conversation and navigate to messages page
-      await dispatch(
-        startConversation({
-          adId: ad.id,
-          receiverId: ad.user.id,
-          initialMessage: `Merhaba, "${ad.title}" ilanınız hakkında bilgi almak istiyorum.`,
-        })
-      );
-
-      navigate("/messages");
-    } catch (error) {
-      console.error("Failed to start conversation:", error);
-      setSnackbarMessage("Mesaj gönderilirken hata oluştu");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
-    }
-  };
-
-  const handleComplaint = (ad: Ad) => {
-    setSelectedAdForComplaint({
-      id: ad.id,
-      title: ad.title || "İlan",
-    });
-    setComplaintModalOpen(true);
+    // Sayıyı string'e çevir ve nokta ile ayır
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
   const handleCloseComplaintModal = () => {
@@ -567,10 +415,6 @@ const MainLayout: React.FC = () => {
         const response = await apiClient.get("/favorites");
         const favorites = response.data as Array<{ ad: { id: number } }>;
         setFavoritesCount(favorites.length);
-
-        // Mevcut kaydedilmiş ilanları da set et
-        const savedAdIds = new Set(favorites.map((fav) => fav.ad.id));
-        setSavedAds(savedAdIds);
       } catch (error) {
         console.error("Error fetching favorites count:", error);
         setFavoritesCount(0);
@@ -580,151 +424,77 @@ const MainLayout: React.FC = () => {
     fetchFavoritesCount();
   }, [user]);
 
-  const getCategoryIcon = (slug: string) => {
-    switch (slug) {
-      case "cekici":
-      case "kamyon-kamyonet":
-        return <LocalShipping />;
-      case "minibus-midibus":
-      case "otobus":
-        return <DirectionsBus />;
-      case "dorse":
-        return <Build />;
-      default:
-        return <Engineering />;
+  // Category count helper function - dinamik olarak ads verilerinden hesaplar
+  const getCategoryCount = (slug: string | null) => {
+    if (slug === null) {
+      // Tüm ilanlar için toplam sayı
+      return ads.length.toLocaleString();
     }
+
+    // Belirli kategori için sayı
+    const categoryAds = ads.filter((ad) => {
+      // Category'nin slug'ına göre filtreleme
+      const category = categories.find((cat) => cat.name === ad.category?.name);
+      return category?.slug === slug;
+    });
+
+    return categoryAds.length.toLocaleString();
   };
 
   const renderSidebarContent = () => (
-    <Box sx={{ p: sidebarOpen || isMobile ? 3 : 1, height: "100%" }}>
-      <Box
+    <Box sx={{ p: 2 }}>
+      {/* Kategoriler Başlığı */}
+      <Typography
+        variant="h6"
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: sidebarOpen || isMobile ? 3 : 2,
-          pb: sidebarOpen || isMobile ? 2 : 1,
-          borderBottom:
-            sidebarOpen || isMobile ? "2px solid #D34237" : "1px solid #e0e0e0",
+          color: "#333",
+          fontWeight: "normal",
+          fontSize: "16px",
+          mb: 2,
+          pb: 1,
+          borderBottom: "1px solid #e0e0e0",
         }}
       >
-        {sidebarOpen || isMobile ? (
-          <>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <MenuIcon sx={{ color: "#D34237", mr: 1 }} />
-              <Typography
-                variant="h6"
-                sx={{
-                  color: "#313B4C",
-                  fontWeight: "bold",
-                  fontSize: "1.3rem",
-                }}
-              >
-                Kategoriler
-              </Typography>
-            </Box>
-            <IconButton
-              onClick={() =>
-                isMobile ? setMobileDrawerOpen(false) : setSidebarOpen(false)
-              }
-              size="small"
-              sx={{
-                color: "#666",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  backgroundColor: "#f5f5f5",
-                  color: "#D34237",
-                  transform: "scale(1.1)",
-                },
-              }}
-            >
-              <ChevronLeft />
-            </IconButton>
-          </>
-        ) : (
-          <IconButton
-            onClick={() => setSidebarOpen(true)}
-            size="small"
-            sx={{
-              color: "#666",
-              margin: "0 auto",
-              transition: "all 0.2s ease",
-              "&:hover": {
-                backgroundColor: "#f5f5f5",
-                color: "#D34237",
-                transform: "scale(1.1)",
-              },
-            }}
-          >
-            <ChevronRight />
-          </IconButton>
-        )}
-      </Box>
+        Kategoriler
+      </Typography>
 
-      {/* Categories List - Always visible */}
+      {/* Categories List - Clean and Simple */}
       <List sx={{ p: 0 }}>
-        {/* Tümünü Göster Seçeneği */}
+        {/* Tüm İlanlar Seçeneği */}
         <ListItem
           onClick={() => handleCategoryClick(null)}
           sx={{
             cursor: "pointer",
-            borderRadius: 2,
-            mb: 1,
-            p: sidebarOpen || isMobile ? 2 : 1,
-            border:
-              selectedCategory === null
-                ? "2px solid #D34237"
-                : "1px solid transparent",
+            py: 1.5,
+            px: 2,
             backgroundColor:
-              selectedCategory === null ? "rgba(211,66,55,0.1)" : "transparent",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            position: "relative",
-            overflow: "hidden",
-            justifyContent: sidebarOpen || isMobile ? "flex-start" : "center",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: "-100%",
-              width: "100%",
-              height: "100%",
-              background:
-                "linear-gradient(90deg, transparent, rgba(211,66,55,0.1), transparent)",
-              transition: "left 0.5s ease",
-            },
+              selectedCategory === null ? "#f8f9fa" : "transparent",
+            borderLeft:
+              selectedCategory === null
+                ? "3px solid #333"
+                : "3px solid transparent",
             "&:hover": {
-              borderColor: "#D34237",
-              backgroundColor: "rgba(211,66,55,0.1)",
-              transform: "translateX(8px)",
-              "&::before": {
-                left: "100%",
-              },
+              backgroundColor: "#f8f9fa",
             },
           }}
         >
-          <ListItemIcon
+          <ListItemText
+            primary="Tüm İlanlar"
+            secondary={getCategoryCount(null)}
             sx={{
-              color: selectedCategory === null ? "#D34237" : "#333",
-              transition: "color 0.3s ease",
-              minWidth: "auto",
-              mr: sidebarOpen || isMobile ? 2 : 0,
-            }}
-          >
-            <ViewList />
-          </ListItemIcon>
-          {(sidebarOpen || isMobile) && (
-            <ListItemText
-              primary="Tümünü Göster"
-              sx={{
-                color: selectedCategory === null ? "#D34237" : "#333",
+              "& .MuiListItemText-primary": {
+                color: "#333",
+                fontSize: "15px",
                 fontWeight: selectedCategory === null ? 600 : 400,
-                "& .MuiListItemText-primary": {
-                  fontSize: "0.95rem",
-                  fontWeight: "inherit",
-                },
-              }}
-            />
-          )}
+                lineHeight: 1.2,
+              },
+              "& .MuiListItemText-secondary": {
+                color: "#666",
+                fontSize: "13px",
+                fontWeight: 400,
+              },
+            }}
+          />
         </ListItem>
 
         {categories.map((category) => (
@@ -733,96 +503,36 @@ const MainLayout: React.FC = () => {
             onClick={() => handleCategoryClick(category.slug)}
             sx={{
               cursor: "pointer",
-              borderRadius: 2,
-              mb: 1,
-              p: sidebarOpen || isMobile ? 2 : 1,
-              border:
-                selectedCategory === category.slug
-                  ? "2px solid #D34237"
-                  : "1px solid transparent",
+              py: 1.5,
+              px: 2,
               backgroundColor:
+                selectedCategory === category.slug ? "#f8f9fa" : "transparent",
+              borderLeft:
                 selectedCategory === category.slug
-                  ? "rgba(211,66,55,0.1)"
-                  : "transparent",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              position: "relative",
-              overflow: "hidden",
-              justifyContent: sidebarOpen || isMobile ? "flex-start" : "center",
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                top: 0,
-                left: "-100%",
-                width: "100%",
-                height: "100%",
-                background:
-                  "linear-gradient(90deg, transparent, rgba(211,66,55,0.1), transparent)",
-                transition: "left 0.5s ease",
-              },
+                  ? "3px solid #333"
+                  : "3px solid transparent",
               "&:hover": {
-                backgroundColor: "#fff5f5",
-                borderColor: "#D34237",
-                transform:
-                  sidebarOpen || isMobile ? "translateX(8px)" : "scale(1.1)",
-                boxShadow: "0 4px 12px rgba(211,66,55,0.2)",
-                "&::before": {
-                  left: "100%",
-                },
-                "& .MuiListItemIcon-root": {
-                  transform: "scale(1.2) rotate(5deg)",
-                  color: "#D34237",
-                },
-                "& .MuiListItemText-primary": {
-                  color: "#D34237",
-                  fontWeight: 600,
-                },
-              },
-              "&:active": {
-                transform:
-                  sidebarOpen || isMobile
-                    ? "translateX(4px) scale(0.98)"
-                    : "scale(0.95)",
+                backgroundColor: "#f8f9fa",
               },
             }}
           >
-            <ListItemIcon
+            <ListItemText
+              primary={category.name}
+              secondary={getCategoryCount(category.slug)}
               sx={{
-                color: "#666",
-                minWidth: sidebarOpen || isMobile ? 45 : "auto",
-                justifyContent: "center",
-                transition: "all 0.3s ease",
+                "& .MuiListItemText-primary": {
+                  color: "#333",
+                  fontSize: "15px",
+                  fontWeight: selectedCategory === category.slug ? 600 : 400,
+                  lineHeight: 1.2,
+                },
+                "& .MuiListItemText-secondary": {
+                  color: "#666",
+                  fontSize: "13px",
+                  fontWeight: 400,
+                },
               }}
-            >
-              {getCategoryIcon(category.slug)}
-            </ListItemIcon>
-            {(sidebarOpen || isMobile) && (
-              <>
-                <ListItemText
-                  primary={category.name}
-                  sx={{
-                    "& .MuiListItemText-primary": {
-                      color: "#313B4C",
-                      fontSize: "15px",
-                      fontWeight: 500,
-                      transition: "all 0.3s ease",
-                    },
-                  }}
-                />
-                <Box
-                  sx={{
-                    width: 4,
-                    height: 4,
-                    borderRadius: "50%",
-                    backgroundColor: "#D34237",
-                    opacity: 0,
-                    transition: "opacity 0.3s ease",
-                    ".MuiListItem-root:hover &": {
-                      opacity: 1,
-                    },
-                  }}
-                />
-              </>
-            )}
+            />
           </ListItem>
         ))}
       </List>
@@ -855,50 +565,29 @@ const MainLayout: React.FC = () => {
           width: "100%",
           margin: 0,
           padding: 0,
-          minHeight: "calc(100vh - 120px)", // Yükseklik düşürüldü (64px'den 120px'e)
-          flexDirection: isMobile ? "column" : "row", // Mobile'da column layout
+          flexDirection: "row",
         }}
       >
-        {/* Mobile Drawer */}
-        {isMobile && !shouldHideSidebar ? (
-          <Drawer
-            anchor="left"
-            open={mobileDrawerOpen}
-            onClose={() => setMobileDrawerOpen(false)}
-            sx={{
-              "& .MuiDrawer-paper": {
-                width: 280,
-                backgroundColor: "white",
-                boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
-              },
-            }}
-          >
-            {renderSidebarContent()}
-          </Drawer>
-        ) : !shouldHideSidebar && !isMobile ? (
-          /* Desktop Sidebar */
+        {/* Fixed Sidebar - Always visible on left */}
+        {!shouldHideSidebar && (
           <Box
             sx={{
-              width: sidebarOpen ? "280px" : "60px",
+              width: "280px",
               flexShrink: 0,
               borderRight: "1px solid #e0e0e0",
-              backgroundColor: "white",
-              transition: "all 0.3s ease",
+              backgroundColor: "transparent",
               overflow: "hidden",
-              boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
             }}
           >
             {renderSidebarContent()}
           </Box>
-        ) : null}
+        )}
 
         {/* Main Content Area */}
         <Box
           sx={{
             flex: 1,
             p: isMobile ? 1 : isTablet ? 2 : 3,
-            transition: "all 0.3s ease",
-            minHeight: "calc(100vh - 120px)",
             width: "100%",
           }}
         >
@@ -921,24 +610,6 @@ const MainLayout: React.FC = () => {
             <Dukkanim />
           ) : (
             <>
-              {/* Mobile Menu Button */}
-              {isMobile && !shouldHideSidebar && (
-                <Box sx={{ mb: 2 }}>
-                  <IconButton
-                    onClick={() => setMobileDrawerOpen(true)}
-                    sx={{
-                      backgroundColor: "#313B4C",
-                      color: "white",
-                      "&:hover": {
-                        backgroundColor: "#D34237",
-                      },
-                    }}
-                  >
-                    <MenuIcon />
-                  </IconButton>
-                </Box>
-              )}
-
               {/* Page Title and Filters */}
               <Box sx={{ mb: 3 }}>
                 <Typography
@@ -1096,12 +767,13 @@ const MainLayout: React.FC = () => {
                 sx={{
                   display: "grid",
                   gridTemplateColumns: {
-                    xs: "1fr", // Mobile: 1 sütun
-                    sm: "repeat(auto-fill, minmax(280px, 1fr))", // Small tablet: responsive
-                    md: sidebarOpen ? "repeat(2, 1fr)" : "repeat(3, 1fr)", // Medium: 2-3 sütun
-                    lg: sidebarOpen ? "repeat(3, 1fr)" : "repeat(4, 1fr)", // Large: 3-4 sütun
+                    xs: "repeat(2, 1fr)", // Mobile: 2 sütun
+                    sm: "repeat(3, 1fr)", // Small tablet: 3 sütun
+                    md: "repeat(4, 1fr)", // Medium: 4 sütun
+                    lg: "repeat(6, 1fr)", // Large: 6 sütun
+                    xl: "repeat(6, 1fr)", // Extra Large: 6 sütun
                   },
-                  gap: { xs: 1.5, sm: 2, md: 3 },
+                  gap: { xs: 1, sm: 1.5, md: 2 },
                   width: "100%",
                 }}
               >
@@ -1124,37 +796,36 @@ const MainLayout: React.FC = () => {
                     <Card
                       key={ad.id}
                       sx={{
-                        borderRadius: 2,
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        borderRadius: 1,
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                         "&:hover": {
-                          boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                          transform: "translateY(-2px)",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                         },
-                        transition: "all 0.3s ease",
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
+                        transition: "all 0.2s ease",
                         cursor: "pointer",
                         width: "100%",
-                        maxWidth: "100%",
+                        backgroundColor: "white",
+                        border: "1px solid #e0e0e0",
                       }}
                     >
                       {/* Vitrin Görseli */}
                       <CardMedia
                         component="div"
                         sx={{
-                          height: { xs: 140, sm: 160, md: 180 },
-                          backgroundColor: "#f5f5f5",
+                          height: 120,
+                          backgroundColor: "#f8f9fa",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           backgroundImage: getImageUrl(ad.images)
                             ? `url(${getImageUrl(ad.images)})`
                             : "none",
-                          backgroundSize: "cover",
+                          backgroundSize: "contain",
+                          backgroundRepeat: "no-repeat",
                           backgroundPosition: "center",
                           position: "relative",
                           overflow: "hidden",
+                          padding: "8px",
                         }}
                       >
                         {!getImageUrl(ad.images) && (
@@ -1166,296 +837,89 @@ const MainLayout: React.FC = () => {
                               color: "#999",
                             }}
                           >
-                            <LocalShipping sx={{ fontSize: 40, mb: 1 }} />
-                            <Typography variant="caption">
+                            <LocalShipping sx={{ fontSize: 24, mb: 0.5 }} />
+                            <Typography variant="caption" fontSize="10px">
                               Görsel Yok
                             </Typography>
                           </Box>
                         )}
-
-                        {/* Kategori Badge */}
-                        <Box
-                          sx={{
-                            position: "absolute",
-                            top: 8,
-                            left: 8,
-                            backgroundColor: "rgba(0, 0, 0, 0.7)",
-                            color: "white",
-                            px: 1,
-                            py: 0.3,
-                            borderRadius: 0.5,
-                            fontSize: "0.7rem",
-                          }}
-                        >
-                          {ad.category?.name || "Araç"}
-                        </Box>
                       </CardMedia>
 
                       <CardContent
                         sx={{
-                          flexGrow: 1,
+                          p: 1.5,
+                          "&:last-child": { pb: 1.5 },
+                          height: "auto",
                           display: "flex",
                           flexDirection: "column",
-                          p: 2,
-                          "&:last-child": { pb: 2 },
+                          position: "relative",
                         }}
                       >
-                        {/* İlan Başlığı */}
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontWeight: "bold",
-                            color: "#313B4C",
-                            mb: 1,
-                            fontSize: { xs: "0.9rem", sm: "1rem" },
-                            lineHeight: 1.3,
-                            height: "2.6em", // 2 satırlık sabit yükseklik
-                            overflow: "hidden",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                          }}
-                        >
-                          {ad.title || "İlan Başlığı Belirtilmemiş"}
-                        </Typography>
-
-                        {/* Fiyat */}
-                        <Typography
-                          variant="h5"
-                          sx={{
-                            color: "#333",
-                            fontWeight: "bold",
-                            mb: 2,
-                            fontSize: { xs: "1.1rem", sm: "1.25rem" },
-                          }}
-                        >
-                          ₺{formatPrice(ad.price)}
-                        </Typography>
-
-                        {/* Araç Bilgileri */}
-                        <Box sx={{ mb: 2 }}>
-                          {/* Model Yılı */}
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: "#666",
-                              mb: 0.8,
-                              fontSize: { xs: "0.75rem", sm: "0.8rem" },
-                            }}
-                          >
-                            <strong>Model Yılı:</strong>{" "}
-                            {ad.year || "Belirtilmemiş"}
-                          </Typography>
-
-                          {/* Kilometre */}
-                          {ad.mileage && (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: "#666",
-                                mb: 0.8,
-                                fontSize: { xs: "0.75rem", sm: "0.8rem" },
-                              }}
-                            >
-                              <strong>KM:</strong>{" "}
-                              {ad.mileage.toLocaleString("tr-TR")} km
-                            </Typography>
-                          )}
-
-                          {/* Konum */}
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: "#666",
-                              mb: 0.8,
-                              fontSize: { xs: "0.75rem", sm: "0.8rem" },
-                            }}
-                          >
-                            <strong>Şehir/İlçe:</strong>{" "}
-                            {formatLocation(ad.city, ad.district)}
-                          </Typography>
-
-                          {/* İlan Tarihi */}
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: "#999",
-                              fontSize: "0.75rem",
-                            }}
-                          >
-                            <strong>İlan Tarihi:</strong>{" "}
-                            {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
-                          </Typography>
-                        </Box>
-
-                        {/* Satıcı Bilgileri */}
-                        <Box
-                          sx={{
-                            backgroundColor: "#f5f5f5",
-                            borderRadius: 1,
-                            p: 1.5,
-                            mb: 2,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: "#666",
-                                fontSize: "0.8rem",
-                              }}
-                            >
-                              <strong>İlan Sahibi:</strong>{" "}
-                              {[ad.user.firstName, ad.user.lastName]
-                                .filter(Boolean)
-                                .join(" ") || "Belirtilmemiş"}
-                            </Typography>
-
-                            {ad.user.phone && (
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  color: "#333",
-                                  fontSize: "0.85rem",
-                                  fontWeight: "600",
-                                  backgroundColor: "#e8e8e8",
-                                  px: 0.8,
-                                  py: 0.2,
-                                  borderRadius: 0.5,
-                                }}
-                              >
-                                {formatPhone(ad.user.phone)}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Box>
-
-                        {/* Action Buttons */}
+                        {/* İl ve Model Yılı - Space Between */}
                         <Box
                           sx={{
                             display: "flex",
-                            flexDirection: "column",
-                            gap: 1,
-                            mt: "auto",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            mb: 1,
+                            fontSize: "12px",
+                            color: "#666",
                           }}
                         >
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            onClick={() => navigate(`/ad/${ad.id}`)}
-                            sx={{
-                              backgroundColor: "#333",
-                              color: "white",
-                              py: { xs: 0.8, sm: 1 },
-                              borderRadius: 1,
-                              fontSize: { xs: "0.7rem", sm: "0.8rem" },
-                              "&:hover": {
-                                backgroundColor: "#555",
-                              },
-                            }}
+                          <Typography
+                            variant="caption"
+                            sx={{ fontSize: "12px", color: "#666" }}
                           >
-                            Detayları Gör
-                          </Button>
+                            {ad.city?.name || "Belirtilmemiş"}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ fontSize: "12px", color: "#666" }}
+                          >
+                            {ad.year || "---"}
+                          </Typography>
+                        </Box>
 
-                          <Box
+                        {/* İlan Başlığı */}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 500,
+                            fontSize: "13px",
+                            color: "#333",
+                            lineHeight: 1.3,
+                            mb: 2,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            minHeight: "32px",
+                          }}
+                        >
+                          {ad.title}
+                        </Typography>
+
+                        {/* Fiyat - Sağ Alt Köşe */}
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            bottom: 8,
+                            right: 12,
+                          }}
+                        >
+                          <Typography
+                            variant="h6"
                             sx={{
-                              display: "flex",
-                              gap: { xs: 0.25, sm: 0.5 },
-                              flexDirection: { xs: "column", sm: "row" },
+                              fontWeight: 600,
+                              fontSize: "14px",
+                              color: "#d32f2f",
                             }}
                           >
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => handleComplaint(ad)}
-                              startIcon={<Report />}
-                              sx={{
-                                flex: 1,
-                                fontSize: { xs: "0.6rem", sm: "0.7rem" },
-                                py: { xs: 0.2, sm: 0.3 },
-                                borderColor: "#d32f2f",
-                                color: "#d32f2f",
-                                "&:hover": {
-                                  borderColor: "#b71c1c",
-                                  backgroundColor: "#ffebee",
-                                  color: "#b71c1c",
-                                },
-                              }}
-                            >
-                              {isMobile ? "Şikayet" : "Şikayet Et"}
-                            </Button>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => handleStartMessage(ad)}
-                              startIcon={<Message />}
-                              sx={{
-                                flex: 1,
-                                fontSize: { xs: "0.6rem", sm: "0.7rem" },
-                                py: { xs: 0.2, sm: 0.3 },
-                                borderColor: "#1976d2",
-                                color: "#1976d2",
-                                "&:hover": {
-                                  borderColor: "#1565c0",
-                                  backgroundColor: "#e3f2fd",
-                                  color: "#1565c0",
-                                },
-                              }}
-                            >
-                              Mesaj
-                            </Button>
-                            <Button
-                              variant={
-                                savedAds.has(ad.id) ? "contained" : "outlined"
-                              }
-                              size="small"
-                              onClick={() => handleAddToFavorites(ad.id)}
-                              disabled={
-                                savingAdId === ad.id || savedAds.has(ad.id)
-                              }
-                              startIcon={
-                                savingAdId === ad.id ? (
-                                  <CircularProgress size={12} />
-                                ) : savedAds.has(ad.id) ? (
-                                  <CheckCircle />
-                                ) : null
-                              }
-                              sx={{
-                                flex: 1,
-                                fontSize: { xs: "0.6rem", sm: "0.7rem" },
-                                py: { xs: 0.2, sm: 0.3 },
-                                borderColor: savedAds.has(ad.id)
-                                  ? "#4caf50"
-                                  : "#888",
-                                color: savedAds.has(ad.id) ? "white" : "#666",
-                                backgroundColor: savedAds.has(ad.id)
-                                  ? "#4caf50"
-                                  : "transparent",
-                                "&:hover": {
-                                  borderColor: savedAds.has(ad.id)
-                                    ? "#4caf50"
-                                    : "#666",
-                                  backgroundColor: savedAds.has(ad.id)
-                                    ? "#4caf50"
-                                    : "#f5f5f5",
-                                },
-                                "&:disabled": {
-                                  backgroundColor: savedAds.has(ad.id)
-                                    ? "#4caf50"
-                                    : "transparent",
-                                  color: savedAds.has(ad.id) ? "white" : "#999",
-                                },
-                              }}
-                            >
-                              {savedAds.has(ad.id) ? "Kaydedildi" : "Kaydet"}
-                            </Button>
-                          </Box>
+                            {ad.price
+                              ? `${formatPrice(ad.price)} TL`
+                              : "Fiyat Yok"}
+                          </Typography>
                         </Box>
                       </CardContent>
                     </Card>
@@ -1478,22 +942,6 @@ const MainLayout: React.FC = () => {
           adTitle={selectedAdForComplaint.title}
         />
       )}
-
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbarSeverity}
-          sx={{ width: "100%" }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

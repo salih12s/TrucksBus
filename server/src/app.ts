@@ -17,8 +17,14 @@ import {
   requestSizeLimit,
 } from "./middleware/security";
 
-// Load environment variables
-dotenv.config();
+// Load environment variables first
+dotenv.config(); // Load default .env first
+
+// Then load local development overrides if in development
+if (process.env.NODE_ENV === "development") {
+  dotenv.config({ path: ".env.local", override: true });
+  console.log("🔧 Loading local development environment variables");
+}
 
 const app = express();
 const server = createServer(app);
