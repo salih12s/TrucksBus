@@ -1,8 +1,60 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, AdStatus } from "@prisma/client";
 
 const router = Router();
 const prisma = new PrismaClient();
+
+// Get all brands
+router.get("/", async (req, res) => {
+  try {
+    const { categoryId } = req.query;
+
+    let whereClause: any = {
+      isActive: true,
+    };
+
+    // If categoryId is provided, filter brands that have ads in that category
+    if (categoryId) {
+      whereClause.ads = {
+        some: {
+          categoryId: parseInt(categoryId as string),
+          status: AdStatus.APPROVED,
+        },
+      };
+    }
+
+    const brands = await prisma.brand.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logoUrl: true,
+        isActive: true,
+        _count: {
+          select: {
+            ads: {
+              where: {
+                status: AdStatus.APPROVED,
+                ...(categoryId && {
+                  categoryId: parseInt(categoryId as string),
+                }),
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return res.json(brands);
+  } catch (error) {
+    console.error("Error fetching brands:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // Get single brand by slug
 router.get("/:brandSlug", async (req, res) => {

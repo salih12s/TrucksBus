@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -14,7 +14,6 @@ import {
   useTheme,
   useMediaQuery,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
 } from "@mui/material";
@@ -37,6 +36,15 @@ interface Category {
   name: string;
   slug: string;
   displayOrder: number;
+}
+
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+  categoryId?: string;
+  isActive?: boolean;
+  logoUrl?: string;
 }
 
 interface Ad {
@@ -93,11 +101,14 @@ interface ApiAdsResponse {
 
 const MainLayout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [filteredAds, setFilteredAds] = useState<Ad[]>([]);
   const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
@@ -133,6 +144,12 @@ const MainLayout: React.FC = () => {
   // Category navigation handler
   const handleCategoryClick = (categorySlug: string | null) => {
     setSelectedCategory(categorySlug);
+    setSelectedBrand(null); // Reset brand when category changes
+  };
+
+  // Brand navigation handler
+  const handleBrandClick = (brandSlug: string | null) => {
+    setSelectedBrand(brandSlug);
   };
 
   const getImageUrl = (images?: Ad["images"]) => {
@@ -163,25 +180,37 @@ const MainLayout: React.FC = () => {
       try {
         console.log("=== STARTING API CALLS ===");
 
-        const [categoriesRes, adsRes, citiesRes] = await Promise.all([
-          apiClient.get("/categories").catch((err) => {
-            console.error("Categories API error:", err);
-            return { data: [] };
-          }),
-          apiClient.get("/ads?status=APPROVED").catch((err) => {
-            console.error("Ads API error:", err);
-            return { data: { ads: [] } };
-          }),
-          apiClient.get("/cities").catch((err) => {
-            console.error("Cities API error:", err);
-            return { data: [] };
-          }),
-        ]);
+        const [categoriesRes, adsRes, citiesRes, brandsRes] = await Promise.all(
+          [
+            apiClient.get("/categories").catch((err) => {
+              console.error("Categories API error:", err);
+              return { data: [] };
+            }),
+            apiClient.get("/ads?status=APPROVED").catch((err) => {
+              console.error("Ads API error:", err);
+              return { data: { ads: [] } };
+            }),
+            apiClient.get("/cities").catch((err) => {
+              console.error("Cities API error:", err);
+              return { data: [] };
+            }),
+            apiClient.get("/brands").catch((err) => {
+              console.error("Brands API error:", err);
+              console.error(
+                "Brands API error details:",
+                err.response?.data,
+                err.response?.status
+              );
+              return { data: [] };
+            }),
+          ]
+        );
 
         console.log("=== RAW API RESPONSES ===");
         console.log("Categories response:", categoriesRes);
         console.log("Ads response:", adsRes);
         console.log("Cities response:", citiesRes);
+        console.log("Brands response:", brandsRes);
 
         // Güvenli veri kontrolü
         const categoriesData = Array.isArray(categoriesRes.data)
@@ -199,16 +228,32 @@ const MainLayout: React.FC = () => {
           : [];
 
         const citiesData = Array.isArray(citiesRes.data) ? citiesRes.data : [];
+        const brandsData = Array.isArray(brandsRes.data) ? brandsRes.data : [];
+
+        console.log("=== BRANDS API DEBUG ===");
+        console.log("Brands response raw:", brandsRes);
+        console.log("Brands data type:", typeof brandsRes.data);
+        console.log("Brands data is array:", Array.isArray(brandsRes.data));
+        console.log("Brands data length:", brandsData.length);
+        console.log("Brands data sample:", brandsData.slice(0, 3));
 
         setCategories(categoriesData as Category[]);
         setAds(adsData as Ad[]);
         setCities(citiesData);
+        setBrands(brandsData as Brand[]);
 
         // Debug: Check all fetched data
         console.log("=== API DATA FETCH RESULTS ===");
         console.log("Categories:", categoriesData.length, categoriesData);
         console.log("Ads:", adsData.length, adsData);
         console.log("Cities:", citiesData.length, citiesData);
+        console.log("Brands:", brandsData.length, brandsData);
+
+        // Brands'i ayrıca console'a yazdır
+        console.log("BRANDS DETAIL:");
+        if (brandsData.length > 0) {
+          console.log("First 5 brands:", brandsData.slice(0, 5));
+        }
 
         if (adsData.length > 0) {
           console.log("First ad sample:", adsData[0]);
@@ -261,10 +306,14 @@ const MainLayout: React.FC = () => {
     fetchData();
   }, []);
 
+  // İlk yüklemede tüm markaları yükle, sonra kategoriye göre filtrele
+  // useEffect kaldırıldı - artık category değiştiğinde API çağrısı yapmıyoruz
+
   // Gelişmiş filtreleme
   useEffect(() => {
     console.log("Filtering with:", {
       selectedCategory,
+      selectedBrand,
       searchTerm,
       priceMin,
       priceMax,
@@ -276,6 +325,7 @@ const MainLayout: React.FC = () => {
 
     if (
       !selectedCategory &&
+      !selectedBrand &&
       !searchTerm &&
       !priceMin &&
       !priceMax &&
@@ -306,6 +356,26 @@ const MainLayout: React.FC = () => {
             filtered.length,
             "Category:",
             selectedCategoryName
+          );
+        }
+      }
+
+      // Marka filtresi
+      if (selectedBrand) {
+        const selectedBrandName = brands.find(
+          (brand) => brand.slug === selectedBrand
+        )?.name;
+        if (selectedBrandName) {
+          filtered = filtered.filter((ad) => {
+            const brandMatch =
+              ad.brand?.name?.toLowerCase() === selectedBrandName.toLowerCase();
+            return brandMatch;
+          });
+          console.log(
+            "After brand filter:",
+            filtered.length,
+            "Brand:",
+            selectedBrandName
           );
         }
       }
@@ -394,6 +464,7 @@ const MainLayout: React.FC = () => {
   }, [
     ads,
     selectedCategory,
+    selectedBrand,
     searchTerm,
     priceMin,
     priceMax,
@@ -401,6 +472,7 @@ const MainLayout: React.FC = () => {
     yearMax,
     selectedCity,
     categories,
+    brands,
   ]);
 
   // Favorites count'u yükle
@@ -441,74 +513,204 @@ const MainLayout: React.FC = () => {
     return categoryAds.length.toLocaleString();
   };
 
-  const renderSidebarContent = () => (
-    <Box sx={{ p: 2 }}>
-      {/* Kategoriler Başlığı */}
-      <Typography
-        variant="h6"
-        sx={{
-          color: "#333",
-          fontWeight: "normal",
-          fontSize: "16px",
-          mb: 2,
-          pb: 1,
-          borderBottom: "1px solid #e0e0e0",
-        }}
-      >
-        Kategoriler
-      </Typography>
+  // Get brands for selected category
+  const getCategoryBrands = () => {
+    console.log("getCategoryBrands called - brands length:", brands.length);
 
-      {/* Categories List - Clean and Simple */}
-      <List sx={{ p: 0 }}>
-        {/* Tüm İlanlar Seçeneği */}
-        <ListItem
-          onClick={() => handleCategoryClick(null)}
-          sx={{
-            cursor: "pointer",
-            py: 1.5,
-            px: 2,
-            backgroundColor:
-              selectedCategory === null ? "#f8f9fa" : "transparent",
-            borderLeft:
-              selectedCategory === null
-                ? "3px solid #333"
-                : "3px solid transparent",
-            "&:hover": {
-              backgroundColor: "#f8f9fa",
-            },
-          }}
-        >
-          <ListItemText
-            primary="Tüm İlanlar"
-            secondary={getCategoryCount(null)}
+    if (!selectedCategory || brands.length === 0) {
+      console.log("No category selected or no brands loaded");
+      return [];
+    }
+
+    // Seçili kategoriye ait ilanları bul
+    const selectedCategoryName = categories.find(
+      (cat) => cat.slug === selectedCategory
+    )?.name;
+    console.log("Selected category name:", selectedCategoryName);
+
+    const categoryAds = ads.filter(
+      (ad) =>
+        ad.category?.name?.toLowerCase() === selectedCategoryName?.toLowerCase()
+    );
+
+    console.log("Ads in this category:", categoryAds.length);
+
+    // Bu kategorideki ilanlardan benzersiz marka isimlerini al
+    const brandNamesInCategory = [
+      ...new Set(categoryAds.map((ad) => ad.brand?.name).filter(Boolean)),
+    ];
+
+    console.log("Brand names found in category ads:", brandNamesInCategory);
+
+    // Bu marka isimlerine sahip brand objelerini bul
+    const categoryBrands = brands.filter((brand) =>
+      brandNamesInCategory.includes(brand.name)
+    );
+
+    console.log(
+      "Final category brands:",
+      categoryBrands.length,
+      categoryBrands.map((b) => b.name)
+    );
+
+    return categoryBrands;
+  };
+
+  // Get brand count for category
+  const getBrandCount = (brandSlug: string) => {
+    // Şimdilik sabit sayı döndürelim, sonra gerçek count'u ekleriz
+    const count = Math.floor(Math.random() * 50);
+    console.log(`Brand count for ${brandSlug}:`, count);
+    return count.toString();
+  };
+
+  const renderSidebarContent = () => {
+    // Eğer kategori seçilmemişse normal kategori listesini göster
+    if (!selectedCategory) {
+      return (
+        <Box sx={{ p: 2 }}>
+          {/* Kategoriler Başlığı */}
+          <Typography
+            variant="h6"
             sx={{
-              "& .MuiListItemText-primary": {
+              color: "#333",
+              fontWeight: "normal",
+              fontSize: "16px",
+              mb: 2,
+              pb: 1,
+              borderBottom: "1px solid #e0e0e0",
+            }}
+          >
+            Kategoriler
+          </Typography>
+
+          {/* Categories List */}
+          <List sx={{ p: 0 }}>
+            {/* Tüm İlanlar Seçeneği */}
+            <ListItem
+              onClick={() => handleCategoryClick(null)}
+              sx={{
+                cursor: "pointer",
+                py: 1.5,
+                px: 2,
+                backgroundColor: "#f8f9fa",
+                borderLeft: "3px solid #333",
+                "&:hover": {
+                  backgroundColor: "#f8f9fa",
+                },
+              }}
+            >
+              <ListItemText
+                primary="Tüm İlanlar"
+                secondary={getCategoryCount(null)}
+                sx={{
+                  "& .MuiListItemText-primary": {
+                    color: "#333",
+                    fontSize: "15px",
+                    fontWeight: 600,
+                    lineHeight: 1.2,
+                  },
+                  "& .MuiListItemText-secondary": {
+                    color: "#666",
+                    fontSize: "13px",
+                    fontWeight: 400,
+                  },
+                }}
+              />
+            </ListItem>
+
+            {categories.map((category) => (
+              <ListItem
+                key={category.id}
+                onClick={() => handleCategoryClick(category.slug)}
+                sx={{
+                  cursor: "pointer",
+                  py: 1.5,
+                  px: 2,
+                  backgroundColor: "transparent",
+                  borderLeft: "3px solid transparent",
+                  "&:hover": {
+                    backgroundColor: "#f8f9fa",
+                  },
+                }}
+              >
+                <ListItemText
+                  primary={category.name}
+                  secondary={getCategoryCount(category.slug)}
+                  sx={{
+                    "& .MuiListItemText-primary": {
+                      color: "#333",
+                      fontSize: "15px",
+                      fontWeight: 400,
+                      lineHeight: 1.2,
+                    },
+                    "& .MuiListItemText-secondary": {
+                      color: "#666",
+                      fontSize: "13px",
+                      fontWeight: 400,
+                    },
+                  }}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      );
+    }
+
+    // Kategori seçilmişse o kategoriye özel sidebar göster
+    const selectedCategoryData = categories.find(
+      (cat) => cat.slug === selectedCategory
+    );
+    const categoryBrands = getCategoryBrands();
+
+    return (
+      <Box sx={{ p: 2 }}>
+        {/* Seçili Kategori Başlığı ve Geri Butonu */}
+        <Box sx={{ mb: 2 }}>
+          <Button
+            onClick={() => handleCategoryClick(null)}
+            sx={{
+              mb: 1,
+              p: 0,
+              minWidth: "auto",
+              color: "#666",
+              fontSize: "12px",
+              "&:hover": {
+                backgroundColor: "transparent",
                 color: "#333",
-                fontSize: "15px",
-                fontWeight: selectedCategory === null ? 600 : 400,
-                lineHeight: 1.2,
-              },
-              "& .MuiListItemText-secondary": {
-                color: "#666",
-                fontSize: "13px",
-                fontWeight: 400,
               },
             }}
-          />
-        </ListItem>
+          >
+            ← Tüm Kategoriler
+          </Button>
+          <Typography
+            variant="h6"
+            sx={{
+              color: "#333",
+              fontWeight: "bold",
+              fontSize: "16px",
+              mb: 1,
+              pb: 1,
+              borderBottom: "1px solid #e0e0e0",
+            }}
+          >
+            {selectedCategoryData?.name}
+          </Typography>
+        </Box>
 
-        {categories.map((category) => (
+        {/* Tüm İlanlar için kategori */}
+        <List sx={{ p: 0, mb: 2 }}>
           <ListItem
-            key={category.id}
-            onClick={() => handleCategoryClick(category.slug)}
+            onClick={() => handleBrandClick(null)}
             sx={{
               cursor: "pointer",
-              py: 1.5,
+              py: 1,
               px: 2,
               backgroundColor:
-                selectedCategory === category.slug ? "#f8f9fa" : "transparent",
+                selectedBrand === null ? "#f8f9fa" : "transparent",
               borderLeft:
-                selectedCategory === category.slug
+                selectedBrand === null
                   ? "3px solid #333"
                   : "3px solid transparent",
               "&:hover": {
@@ -517,27 +719,246 @@ const MainLayout: React.FC = () => {
             }}
           >
             <ListItemText
-              primary={category.name}
-              secondary={getCategoryCount(category.slug)}
+              primary="Tüm Markalar"
+              secondary={getCategoryCount(selectedCategory)}
               sx={{
                 "& .MuiListItemText-primary": {
                   color: "#333",
-                  fontSize: "15px",
-                  fontWeight: selectedCategory === category.slug ? 600 : 400,
-                  lineHeight: 1.2,
+                  fontSize: "14px",
+                  fontWeight: selectedBrand === null ? 600 : 400,
                 },
                 "& .MuiListItemText-secondary": {
                   color: "#666",
-                  fontSize: "13px",
-                  fontWeight: 400,
+                  fontSize: "12px",
                 },
               }}
             />
           </ListItem>
-        ))}
-      </List>
-    </Box>
-  );
+        </List>
+
+        {/* Markalar Başlığı */}
+        <Typography
+          variant="subtitle2"
+          sx={{
+            color: "#333",
+            fontWeight: "bold",
+            fontSize: "14px",
+            mb: 1,
+          }}
+        >
+          Markalar
+        </Typography>
+
+        {/* Markalar Listesi */}
+        <List sx={{ p: 0 }}>
+          {categoryBrands.map((brand) => (
+            <ListItem
+              key={brand.id}
+              onClick={() => handleBrandClick(brand.slug)}
+              sx={{
+                cursor: "pointer",
+                py: 0.8,
+                px: 2,
+                backgroundColor:
+                  selectedBrand === brand.slug ? "#f8f9fa" : "transparent",
+                borderLeft:
+                  selectedBrand === brand.slug
+                    ? "3px solid #333"
+                    : "3px solid transparent",
+                "&:hover": {
+                  backgroundColor: "#f8f9fa",
+                },
+              }}
+            >
+              <ListItemText
+                primary={brand.name}
+                secondary={getBrandCount(brand.slug)}
+                sx={{
+                  "& .MuiListItemText-primary": {
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: selectedBrand === brand.slug ? 600 : 400,
+                  },
+                  "& .MuiListItemText-secondary": {
+                    color: "#666",
+                    fontSize: "11px",
+                  },
+                }}
+              />
+            </ListItem>
+          ))}
+        </List>
+
+        {/* Filtreler Bölümü */}
+        <Box sx={{ mt: 3 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              color: "#333",
+              fontWeight: "bold",
+              fontSize: "14px",
+              mb: 2,
+              pb: 1,
+              borderBottom: "1px solid #e0e0e0",
+            }}
+          >
+            Filtreler
+          </Typography>
+
+          {/* Fiyat Aralığı */}
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ mb: 1, fontSize: "12px", color: "#666" }}
+            >
+              Fiyat Aralığı
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <TextField
+                size="small"
+                placeholder="Min"
+                type="number"
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+                sx={{
+                  flex: 1,
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    fontSize: "12px",
+                    height: "32px",
+                  },
+                }}
+              />
+              <TextField
+                size="small"
+                placeholder="Max"
+                type="number"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                sx={{
+                  flex: 1,
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    fontSize: "12px",
+                    height: "32px",
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Yıl Aralığı */}
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ mb: 1, fontSize: "12px", color: "#666" }}
+            >
+              Model Yılı
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <TextField
+                size="small"
+                placeholder="Min"
+                type="number"
+                value={yearMin}
+                onChange={(e) => setYearMin(e.target.value)}
+                sx={{
+                  flex: 1,
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    fontSize: "12px",
+                    height: "32px",
+                  },
+                }}
+              />
+              <TextField
+                size="small"
+                placeholder="Max"
+                type="number"
+                value={yearMax}
+                onChange={(e) => setYearMax(e.target.value)}
+                sx={{
+                  flex: 1,
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "white",
+                    fontSize: "12px",
+                    height: "32px",
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+
+          {/* Şehir Filtresi */}
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ mb: 1, fontSize: "12px", color: "#666" }}
+            >
+              Şehir
+            </Typography>
+            <FormControl size="small" fullWidth>
+              <Select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                displayEmpty
+                sx={{
+                  backgroundColor: "white",
+                  fontSize: "12px",
+                  height: "32px",
+                }}
+              >
+                <MenuItem value="">Tümü</MenuItem>
+                {cities.map((city) => (
+                  <MenuItem
+                    key={city.id}
+                    value={city.id}
+                    sx={{ fontSize: "12px" }}
+                  >
+                    {city.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* Filtreleri Temizle */}
+          {(selectedBrand ||
+            priceMin ||
+            priceMax ||
+            yearMin ||
+            yearMax ||
+            selectedCity) && (
+            <Button
+              variant="outlined"
+              size="small"
+              fullWidth
+              onClick={() => {
+                setSelectedBrand(null);
+                setPriceMin("");
+                setPriceMax("");
+                setYearMin("");
+                setYearMax("");
+                setSelectedCity("");
+              }}
+              sx={{
+                color: "#d32f2f",
+                borderColor: "#d32f2f",
+                fontSize: "11px",
+                height: "28px",
+                "&:hover": {
+                  borderColor: "#b71c1c",
+                  backgroundColor: "rgba(211, 66, 55, 0.04)",
+                },
+              }}
+            >
+              Filtreleri Temizle
+            </Button>
+          )}
+        </Box>
+      </Box>
+    );
+  };
 
   return (
     <Box
@@ -625,134 +1046,6 @@ const MainLayout: React.FC = () => {
                   Anasayfa Vitrini
                 </Typography>
 
-                {/* Advanced Filters */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "1fr",
-                      sm: "1fr 1fr",
-                      md: "1fr 1fr 1fr 1fr",
-                    },
-                    gap: 2,
-                    mb: 2,
-                  }}
-                >
-                  {/* Price Range */}
-                  <TextField
-                    size="small"
-                    placeholder="Min Fiyat"
-                    type="number"
-                    value={priceMin}
-                    onChange={(e) => setPriceMin(e.target.value)}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: 1,
-                      },
-                    }}
-                  />
-                  <TextField
-                    size="small"
-                    placeholder="Max Fiyat"
-                    type="number"
-                    value={priceMax}
-                    onChange={(e) => setPriceMax(e.target.value)}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: 1,
-                      },
-                    }}
-                  />
-
-                  {/* Year Range */}
-                  <TextField
-                    size="small"
-                    placeholder="Min Yıl"
-                    type="number"
-                    value={yearMin}
-                    onChange={(e) => setYearMin(e.target.value)}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: 1,
-                      },
-                    }}
-                  />
-                  <TextField
-                    size="small"
-                    placeholder="Max Yıl"
-                    type="number"
-                    value={yearMax}
-                    onChange={(e) => setYearMax(e.target.value)}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        backgroundColor: "white",
-                        borderRadius: 1,
-                      },
-                    }}
-                  />
-                </Box>
-
-                {/* City Filter */}
-                <Box sx={{ mb: 2 }}>
-                  <FormControl size="small" fullWidth>
-                    <InputLabel>Şehir Seç</InputLabel>
-                    <Select
-                      value={selectedCity}
-                      label="Şehir Seç"
-                      onChange={(e) => setSelectedCity(e.target.value)}
-                      sx={{
-                        backgroundColor: "white",
-                        borderRadius: 1,
-                      }}
-                    >
-                      <MenuItem value="">Tümü</MenuItem>
-                      {cities.map((city) => (
-                        <MenuItem key={city.id} value={city.id}>
-                          {city.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                {/* Clear Filters Button */}
-                {(selectedCategory ||
-                  searchTerm ||
-                  priceMin ||
-                  priceMax ||
-                  yearMin ||
-                  yearMax ||
-                  selectedCity) && (
-                  <Box sx={{ textAlign: "center", mb: 2 }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => {
-                        setSelectedCategory("");
-                        setSearchTerm("");
-                        setPriceMin("");
-                        setPriceMax("");
-                        setYearMin("");
-                        setYearMax("");
-                        setSelectedCity("");
-                      }}
-                      sx={{
-                        color: "#D34237",
-                        borderColor: "#D34237",
-                        "&:hover": {
-                          borderColor: "#B12E23",
-                          backgroundColor: "rgba(211, 66, 55, 0.04)",
-                        },
-                      }}
-                    >
-                      Filtreleri Temizle
-                    </Button>
-                  </Box>
-                )}
-
                 {/* Filter Results Count */}
                 <Typography
                   variant="body2"
@@ -795,6 +1088,7 @@ const MainLayout: React.FC = () => {
                   filteredAds.map((ad) => (
                     <Card
                       key={ad.id}
+                      onClick={() => navigate(`/ad/${ad.id}`)}
                       sx={{
                         borderRadius: 1,
                         boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
