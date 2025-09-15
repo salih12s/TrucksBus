@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Box,
-  Typography,
-  Button,
-  Breadcrumbs,
-  Link,
-  Chip,
-  Container,
-} from "@mui/material";
+import { Box, Typography, Button, Chip, Container } from "@mui/material";
 import { Star } from "@mui/icons-material";
 import { API_BASE_URL } from "../api/client";
 
@@ -189,60 +181,8 @@ const AdDetail: React.FC = () => {
 
   return (
     <Box sx={{ backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
-      <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, md: 4, lg: 6 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 3, sm: 4, lg: 8 } }}>
         <Box sx={{ py: 2 }}>
-          {/* Breadcrumb Navigation */}
-          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-            <Breadcrumbs sx={{ color: "#666", fontSize: "14px" }}>
-              <Link
-                color="inherit"
-                href="/"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate("/");
-                }}
-                sx={{
-                  textDecoration: "none",
-                  "&:hover": { textDecoration: "underline" },
-                }}
-              >
-                Vasıta
-              </Link>
-              <Link color="inherit">{ad.category?.name || "Çekici"}</Link>
-              <Link color="inherit">{ad.brand?.name || "MAN"}</Link>
-              <Link color="inherit">
-                {typeof ad.model === "object"
-                  ? ad.model?.name
-                  : ad.model || "TGS"}
-              </Link>
-              <Typography color="text.primary">18.470</Typography>
-            </Breadcrumbs>
-
-            {/* Right side navigation links */}
-            <Box
-              sx={{
-                ml: "auto",
-                display: "flex",
-                gap: 2,
-                fontSize: "12px",
-                color: "#666",
-              }}
-            >
-              <Link href="#" sx={{ color: "#666", textDecoration: "none" }}>
-                Favori İlanlarım
-              </Link>
-              <Link href="#" sx={{ color: "#666", textDecoration: "none" }}>
-                Favori Aramalarım
-              </Link>
-              <Link href="#" sx={{ color: "#666", textDecoration: "none" }}>
-                Size Özel İlanlar
-              </Link>
-              <Link href="#" sx={{ color: "#666", textDecoration: "none" }}>
-                Karşılaştır
-              </Link>
-            </Box>
-          </Box>
-
           {/* Main Title and Price */}
           <Box sx={{ mb: 3 }}>
             <Typography
@@ -274,7 +214,7 @@ const AdDetail: React.FC = () => {
                   sx={{
                     fontSize: "28px",
                     fontWeight: "bold",
-                    color: "#FF6B35",
+                    color: "#dc3545",
                   }}
                 >
                   {formatPrice(ad.price)}
@@ -485,9 +425,8 @@ const AdDetail: React.FC = () => {
               )}
             </Box>
 
-            {/* Middle Section - Vehicle Details (35%) */}
+            {/* Middle Section - Vehicle Details */}
             <Box sx={{ flex: { lg: "0 0 35%" } }}>
-              {/* Vehicle Details Table */}
               <Box
                 sx={{
                   backgroundColor: "white",
@@ -697,109 +636,6 @@ const AdDetail: React.FC = () => {
                     ))}
                 </Box>
               </Box>
-
-              {/* Açıklama Section */}
-              <Box
-                sx={{
-                  mt: 1.5,
-                  backgroundColor: "white",
-                  border: "1px solid #e0e0e0",
-                  borderRadius: 1,
-                }}
-              >
-                <Box
-                  sx={{
-                    backgroundColor: "#f8f9fa",
-                    px: 1.5,
-                    py: 1,
-                    borderBottom: "1px solid #e0e0e0",
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: "13px",
-                      fontWeight: "bold",
-                      color: "#333",
-                    }}
-                  >
-                    Açıklama
-                  </Typography>
-                </Box>
-
-                <Box sx={{ p: 1.5 }}>
-                  <Typography
-                    sx={{
-                      fontSize: "12px",
-                      color: "#333",
-                      lineHeight: 1.6,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {typeof ad.description === "string"
-                      ? ad.description
-                      : typeof ad.customFields?.detailedInfo === "string"
-                      ? ad.customFields.detailedInfo
-                      : "Açıklama bulunmuyor."}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Features Section */}
-              {ad.customFields?.features &&
-                typeof ad.customFields.features === "object" && (
-                  <Box
-                    sx={{
-                      mt: 1.5,
-                      backgroundColor: "white",
-                      border: "1px solid #e0e0e0",
-                      borderRadius: 1,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        backgroundColor: "#f8f9fa",
-                        px: 1.5,
-                        py: 1,
-                        borderBottom: "1px solid #e0e0e0",
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: "13px",
-                          fontWeight: "bold",
-                          color: "#333",
-                        }}
-                      >
-                        Özellikler
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ p: 1.5 }}>
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {Object.entries(
-                          ad.customFields.features as Record<string, boolean>
-                        )
-                          .filter(([, value]) => value === true)
-                          .map(([key]) => (
-                            <Chip
-                              key={key}
-                              label={key}
-                              size="small"
-                              sx={{
-                                backgroundColor: "#e3f2fd",
-                                color: "#1976d2",
-                                fontSize: "10px",
-                                height: "20px",
-                                "& .MuiChip-label": {
-                                  px: 1,
-                                },
-                              }}
-                            />
-                          ))}
-                      </Box>
-                    </Box>
-                  </Box>
-                )}
             </Box>
 
             {/* Right Section - Seller Info (20%) */}
@@ -894,6 +730,111 @@ const AdDetail: React.FC = () => {
                 </Box>
               </Box>
             </Box>
+          </Box>
+
+          {/* Açıklama ve Özellikler Section - Full width below main content */}
+          <Box sx={{ mt: 3 }}>
+            {/* Açıklama Section */}
+            <Box
+              sx={{
+                backgroundColor: "white",
+                border: "1px solid #e0e0e0",
+                borderRadius: 1,
+                mb: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  backgroundColor: "#f8f9fa",
+                  px: 1.5,
+                  py: 1,
+                  borderBottom: "1px solid #e0e0e0",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: "13px",
+                    fontWeight: "bold",
+                    color: "#333",
+                  }}
+                >
+                  Açıklama
+                </Typography>
+              </Box>
+
+              <Box sx={{ p: 1.5 }}>
+                <Typography
+                  sx={{
+                    fontSize: "12px",
+                    color: "#333",
+                    lineHeight: 1.6,
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {typeof ad.description === "string"
+                    ? ad.description
+                    : typeof ad.customFields?.detailedInfo === "string"
+                    ? ad.customFields.detailedInfo
+                    : "Açıklama bulunmuyor."}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Özellikler Section */}
+            {ad.customFields?.features &&
+              typeof ad.customFields.features === "object" && (
+                <Box
+                  sx={{
+                    backgroundColor: "white",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 1,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      backgroundColor: "#f8f9fa",
+                      px: 1.5,
+                      py: 1,
+                      borderBottom: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "13px",
+                        fontWeight: "bold",
+                        color: "#333",
+                      }}
+                    >
+                      Özellikler
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ p: 1.5 }}>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {Object.entries(
+                        ad.customFields.features as Record<string, boolean>
+                      )
+                        .filter(([, value]) => value === true)
+                        .map(([key]) => (
+                          <Chip
+                            key={key}
+                            label={key}
+                            size="small"
+                            sx={{
+                              backgroundColor: "#e3f2fd",
+                              color: "#1976d2",
+                              fontSize: "10px",
+                              height: "20px",
+                              "& .MuiChip-label": {
+                                px: 1,
+                              },
+                            }}
+                          />
+                        ))}
+                    </Box>
+                  </Box>
+                </Box>
+              )}
           </Box>
         </Box>
       </Container>
