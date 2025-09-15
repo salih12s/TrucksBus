@@ -99,8 +99,8 @@ const Header: React.FC<HeaderProps> = ({
       <Toolbar
         sx={{
           px: 2,
-          py: 0.5,
-          minHeight: "56px !important",
+          py: 0.2,
+          minHeight: "48px !important",
           position: "relative",
         }}
       >
@@ -127,7 +127,7 @@ const Header: React.FC<HeaderProps> = ({
             src="/Trucksbus.png"
             alt="TrucksBus"
             style={{
-              height: isMobile ? 45 : isTablet ? 55 : 65,
+              height: isMobile ? 38 : isTablet ? 48 : 55,
               marginRight: isMobile ? 6 : 12,
               transition: "all 0.3s ease",
             }}
@@ -214,7 +214,7 @@ const Header: React.FC<HeaderProps> = ({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: isMobile ? 0.3 : isTablet ? 0.5 : 1,
+            gap: isMobile ? 0.5 : isTablet ? 0.8 : 1.2,
             marginLeft: "auto", // Push to right
             position: "relative",
             zIndex: 2,
@@ -227,12 +227,19 @@ const Header: React.FC<HeaderProps> = ({
                 color="inherit"
                 sx={{
                   color: "#333",
-                  padding: isMobile ? "4px" : "6px",
+                  padding: isMobile ? "6px" : "8px",
+                  borderRadius: "8px",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
+                    color: "#D34237",
+                    transform: "scale(1.1)",
+                  },
                 }}
                 onClick={() => navigate("/messages")}
               >
                 <Badge badgeContent={unreadCount} color="error">
-                  <MessageIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
+                  <MessageIcon sx={{ fontSize: isMobile ? 22 : 24 }} />
                 </Badge>
               </IconButton>
 
@@ -242,7 +249,14 @@ const Header: React.FC<HeaderProps> = ({
                 color="inherit"
                 sx={{
                   color: "#333",
-                  padding: isMobile ? "4px" : "6px",
+                  padding: isMobile ? "6px" : "8px",
+                  borderRadius: "8px",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
+                    color: "#D34237",
+                    transform: "scale(1.1)",
+                  },
                 }}
                 onClick={() => navigate("/bookmarks")}
               >
@@ -256,7 +270,7 @@ const Header: React.FC<HeaderProps> = ({
                     },
                   }}
                 >
-                  <BookmarkIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
+                  <BookmarkIcon sx={{ fontSize: isMobile ? 22 : 24 }} />
                 </Badge>
               </IconButton>
 
@@ -264,11 +278,18 @@ const Header: React.FC<HeaderProps> = ({
                 color="inherit"
                 sx={{
                   color: "#333",
-                  padding: isMobile ? "4px" : "6px",
+                  padding: isMobile ? "6px" : "8px",
+                  borderRadius: "8px",
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
+                    color: "#D34237",
+                    transform: "scale(1.1)",
+                  },
                 }}
                 onClick={() => setFeedbackModalOpen(true)}
               >
-                <FeedbackIcon sx={{ fontSize: isMobile ? 18 : 20 }} />
+                <FeedbackIcon sx={{ fontSize: isMobile ? 22 : 24 }} />
               </IconButton>
 
               {/* Post Ad button - responsive */}
@@ -279,13 +300,18 @@ const Header: React.FC<HeaderProps> = ({
                 sx={{
                   backgroundColor: "#D34237",
                   color: "white",
-                  ml: 0.5,
-                  fontSize: isMobile ? "0.7rem" : "0.8rem",
-                  padding: isMobile ? "3px 6px" : "4px 12px",
-                  minWidth: isMobile ? "auto" : "60px",
-                  minHeight: isMobile ? "28px" : "32px",
+                  ml: 1,
+                  fontSize: isMobile ? "0.75rem" : "0.85rem",
+                  padding: isMobile ? "6px 12px" : "8px 16px",
+                  minWidth: isMobile ? "auto" : "70px",
+                  minHeight: isMobile ? "32px" : "36px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  transition: "all 0.2s ease",
                   "&:hover": {
                     backgroundColor: "#B73429",
+                    transform: "scale(1.05)",
+                    boxShadow: "0 4px 12px rgba(211, 66, 55, 0.3)",
                   },
                 }}
               >
@@ -296,14 +322,22 @@ const Header: React.FC<HeaderProps> = ({
               {(user || isLoading) && (
                 <IconButton
                   onClick={handleAvatarClick}
-                  sx={{ ml: 0.5, padding: "4px" }}
+                  sx={{
+                    ml: 1,
+                    padding: "6px",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      transform: "scale(1.1)",
+                    },
+                  }}
                 >
                   <Avatar
                     sx={{
                       bgcolor: "#D34237",
-                      width: isMobile ? 28 : 32,
-                      height: isMobile ? 28 : 32,
-                      fontSize: isMobile ? "0.7rem" : "0.8rem",
+                      width: isMobile ? 32 : 36,
+                      height: isMobile ? 32 : 36,
+                      fontSize: isMobile ? "0.8rem" : "0.9rem",
+                      boxShadow: "0 2px 8px rgba(211, 66, 55, 0.3)",
                     }}
                   >
                     {isLoading ? "..." : getUserInitials()}

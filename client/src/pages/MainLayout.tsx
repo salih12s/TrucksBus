@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   Card,
@@ -18,6 +18,7 @@ import {
 import { LocalShipping } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
 import { useAppSelector } from "../hooks/redux";
+import AdDetail from "./AdDetail";
 import apiClient from "../api/client";
 import ComplaintModal from "../components/complaints/ComplaintModal";
 import ContactPage from "./ContactPage";
@@ -100,6 +101,7 @@ interface ApiAdsResponse {
 const MainLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const params = useParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
@@ -137,7 +139,9 @@ const MainLayout: React.FC = () => {
   const isAvatarMenuPage = avatarMenuPages.includes(location.pathname);
   const isContactOrAboutPage =
     location.pathname === "/contact" || location.pathname === "/about";
-  const shouldHideSidebar = isAvatarMenuPage || isContactOrAboutPage;
+  const isAdDetailPage = location.pathname.startsWith("/ad/") && params.id;
+  const shouldHideSidebar =
+    isAvatarMenuPage || isContactOrAboutPage || isAdDetailPage;
 
   // Category navigation handler
   const handleCategoryClick = (categorySlug: string | null) => {
@@ -1012,7 +1016,9 @@ const MainLayout: React.FC = () => {
           }}
         >
           {/* Conditional Content Based on URL */}
-          {location.pathname === "/contact" ? (
+          {isAdDetailPage ? (
+            <AdDetail />
+          ) : location.pathname === "/contact" ? (
             <ContactPage />
           ) : location.pathname === "/about" ? (
             <AboutPage />
@@ -1073,7 +1079,13 @@ const MainLayout: React.FC = () => {
                     filteredAds.map((ad) => (
                       <Card
                         key={ad.id}
-                        onClick={() => navigate(`/ad/${ad.id}`)}
+                        onClick={() => {
+                          console.log(
+                            "Card clicked, navigating to:",
+                            `/ad/${ad.id}`
+                          );
+                          navigate(`/ad/${ad.id}`);
+                        }}
                         sx={{
                           borderRadius: 1,
                           boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
@@ -1308,7 +1320,13 @@ const MainLayout: React.FC = () => {
                     filteredAds.map((ad) => (
                       <Card
                         key={ad.id}
-                        onClick={() => navigate(`/ad/${ad.id}`)}
+                        onClick={() => {
+                          console.log(
+                            "Card clicked (mobile), navigating to:",
+                            `/ad/${ad.id}`
+                          );
+                          navigate(`/ad/${ad.id}`);
+                        }}
                         sx={{
                           display: "flex",
                           flexDirection: "row",

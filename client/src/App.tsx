@@ -22,7 +22,6 @@ import { ProtectedRoute } from "./components/auth";
 
 // Pages - Lazy loaded for better performance
 const MainLayout = React.lazy(() => import("./pages/MainLayout"));
-const AdDetail = React.lazy(() => import("./pages/AdDetail"));
 const Notifications = React.lazy(() => import("./pages/Notifications"));
 const Bookmarks = React.lazy(() => import("./pages/Bookmarks"));
 const LoginNew = React.lazy(() => import("./components/auth/LoginNew"));
@@ -396,7 +395,7 @@ function App() {
                           path="/reset-password"
                           element={<ResetPassword />}
                         />
-                        <Route path="/ad/:id" element={<AdDetail />} />
+                        <Route path="/ad/:id" element={<MainLayout />} />
                         <Route
                           path="/category-selection"
                           element={<CategorySelection />}

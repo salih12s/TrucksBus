@@ -167,9 +167,20 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         className={className}
         color="inherit"
         aria-label="bildirimler"
+        sx={{
+          color: "#333",
+          padding: "6px 8px",
+          borderRadius: "8px",
+          transition: "all 0.2s ease",
+          "&:hover": {
+            backgroundColor: "#f5f5f5",
+            color: "#D34237",
+            transform: "scale(1.1)",
+          },
+        }}
       >
         <Badge badgeContent={unreadCount} color="error">
-          <NotificationsIcon />
+          <NotificationsIcon sx={{ fontSize: 24 }} />
         </Badge>
       </IconButton>
 
