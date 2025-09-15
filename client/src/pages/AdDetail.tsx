@@ -529,8 +529,6 @@ const AdDetail: React.FC = () => {
                         : null,
                     },
                     { label: "Kategori", value: ad.category?.name || null },
-                    { label: "Başlık", value: ad.title || null },
-                    { label: "Açıklama", value: ad.description || null },
                     {
                       label: "Fiyat",
                       value: ad.price
@@ -625,10 +623,6 @@ const AdDetail: React.FC = () => {
                       value: ad.customFields?.exchange || ad.takas || null,
                     },
                     { label: "Hasar Durumu", value: ad.damage || null },
-                    {
-                      label: "Detaylı Bilgi",
-                      value: ad.customFields?.detailedInfo || null,
-                    },
 
                     // Platform Bilgileri (Dorse için)
                     {
@@ -701,6 +695,52 @@ const AdDetail: React.FC = () => {
                         </Box>
                       </Box>
                     ))}
+                </Box>
+              </Box>
+
+              {/* Açıklama Section */}
+              <Box
+                sx={{
+                  mt: 1.5,
+                  backgroundColor: "white",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    backgroundColor: "#f8f9fa",
+                    px: 1.5,
+                    py: 1,
+                    borderBottom: "1px solid #e0e0e0",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "13px",
+                      fontWeight: "bold",
+                      color: "#333",
+                    }}
+                  >
+                    Açıklama
+                  </Typography>
+                </Box>
+
+                <Box sx={{ p: 1.5 }}>
+                  <Typography
+                    sx={{
+                      fontSize: "12px",
+                      color: "#333",
+                      lineHeight: 1.6,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {typeof ad.description === "string"
+                      ? ad.description
+                      : typeof ad.customFields?.detailedInfo === "string"
+                      ? ad.customFields.detailedInfo
+                      : "Açıklama bulunmuyor."}
+                  </Typography>
                 </Box>
               </Box>
 

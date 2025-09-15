@@ -99,8 +99,8 @@ const Header: React.FC<HeaderProps> = ({
       <Toolbar
         sx={{
           px: 2,
-          py: 0.2,
-          minHeight: "48px !important",
+          py: 0.4,
+          minHeight: "64px !important",
           position: "relative",
         }}
       >
@@ -127,7 +127,7 @@ const Header: React.FC<HeaderProps> = ({
             src="/Trucksbus.png"
             alt="TrucksBus"
             style={{
-              height: isMobile ? 38 : isTablet ? 48 : 55,
+              height: isMobile ? 42 : isTablet ? 52 : 62,
               marginRight: isMobile ? 6 : 12,
               transition: "all 0.3s ease",
             }}
@@ -486,16 +486,17 @@ const Header: React.FC<HeaderProps> = ({
                 component={RouterLink}
                 to="/category-selection"
                 sx={{
-                  backgroundColor: "#FFD700",
-                  color: "#333",
+                  backgroundColor: "#fdeaea",
+                  color: "#dc3545",
                   fontSize: "12px",
                   fontWeight: 600,
                   padding: "4px 12px",
                   textTransform: "none",
                   ml: 0.5,
                   borderRadius: "4px",
+                  border: "1px solid #dc3545",
                   "&:hover": {
-                    backgroundColor: "#FFC107",
+                    backgroundColor: "#f8d7da",
                   },
                 }}
               >

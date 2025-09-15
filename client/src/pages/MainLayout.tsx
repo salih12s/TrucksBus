@@ -570,17 +570,17 @@ const MainLayout: React.FC = () => {
     // Eğer kategori seçilmemişse normal kategori listesini göster
     if (!selectedCategory) {
       return (
-        <Box sx={{ p: 1 }}>
+        <Box sx={{ p: 1.5 }}>
           {/* Kategoriler Başlığı */}
           <Typography
             variant="h6"
             sx={{
               color: "#333",
-              fontWeight: "normal",
-              fontSize: "13px",
-              mb: 1,
+              fontWeight: "600",
+              fontSize: "14px",
+              mb: 1.5,
               pb: 0.5,
-              borderBottom: "1px solid #e0e0e0",
+              borderBottom: "1px solid #ff6b35",
             }}
           >
             Kategoriler
@@ -594,11 +594,13 @@ const MainLayout: React.FC = () => {
               sx={{
                 cursor: "pointer",
                 py: 0.5,
-                px: 1,
-                backgroundColor: "#f8f9fa",
-                borderLeft: "3px solid #333",
+                px: 1.5,
+                backgroundColor: "#fdeaea",
+                borderLeft: "3px solid #dc3545",
+                borderRadius: "3px",
+                mb: 0.3,
                 "&:hover": {
-                  backgroundColor: "#f8f9fa",
+                  backgroundColor: "#f8d7da",
                 },
               }}
             >
@@ -607,15 +609,15 @@ const MainLayout: React.FC = () => {
                 secondary={getCategoryCount(null)}
                 sx={{
                   "& .MuiListItemText-primary": {
-                    color: "#333",
-                    fontSize: "13px",
+                    color: "#dc3545",
+                    fontSize: "12px",
                     fontWeight: 600,
                     lineHeight: 1.2,
                   },
                   "& .MuiListItemText-secondary": {
-                    color: "#666",
-                    fontSize: "11px",
-                    fontWeight: 400,
+                    color: "#dc3545",
+                    fontSize: "10px",
+                    fontWeight: 500,
                   },
                 }}
               />
@@ -628,11 +630,12 @@ const MainLayout: React.FC = () => {
                 sx={{
                   cursor: "pointer",
                   py: 0.5,
-                  px: 1,
+                  px: 1.5,
                   backgroundColor: "transparent",
-                  borderLeft: "3px solid transparent",
+                  borderRadius: "3px",
+                  mb: 0.3,
                   "&:hover": {
-                    backgroundColor: "#f8f9fa",
+                    backgroundColor: "#f5f5f5",
                   },
                 }}
               >
@@ -642,14 +645,14 @@ const MainLayout: React.FC = () => {
                   sx={{
                     "& .MuiListItemText-primary": {
                       color: "#333",
-                      fontSize: "13px",
+                      fontSize: "12px",
                       fontWeight: 400,
                       lineHeight: 1.2,
                     },
                     "& .MuiListItemText-secondary": {
-                      color: "#666",
-                      fontSize: "11px",
-                      fontWeight: 400,
+                      color: "#ff6b35",
+                      fontSize: "10px",
+                      fontWeight: 500,
                     },
                   }}
                 />
@@ -1041,16 +1044,16 @@ const MainLayout: React.FC = () => {
                 <Typography
                   variant="h4"
                   sx={{
-                    fontWeight: "bold",
-                    color: "#313B4C",
+                    fontWeight: "600",
+                    color: "#dc3545",
                     mb: 2,
-                    fontSize: { xs: "1.5rem", sm: "2rem", md: "2.125rem" },
-                    textAlign: { xs: "center", md: "left" },
+                    fontSize: { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" },
+                    textAlign: "center",
                   }}
                 >
                   {selectedCategory && selectedCategory !== "Tüm İlanlar"
                     ? selectedCategory
-                    : "Anasayfa Vitrini"}
+                    : "Vitrin"}
                 </Typography>
               </Box>
 
@@ -1203,7 +1206,7 @@ const MainLayout: React.FC = () => {
                               sx={{
                                 fontWeight: 600,
                                 fontSize: "14px",
-                                color: "#d32f2f",
+                                color: "#dc3545",
                               }}
                             >
                               {ad.price
@@ -1495,7 +1498,7 @@ const MainLayout: React.FC = () => {
                             sx={{
                               fontWeight: 700,
                               fontSize: "14px",
-                              color: "#e53e3e",
+                              color: "#dc3545",
                             }}
                           >
                             {ad.price
