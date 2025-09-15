@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -11,20 +11,24 @@ import {
   IconButton,
   Checkbox,
   FormControlLabel,
+  MenuItem,
 } from "@mui/material";
-import {
-  Visibility,
-  VisibilityOff,
-  Email,
-  Lock,
-  Person,
-  Phone,
-  Business,
-  LocationOn,
-  AccountBalance,
-} from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { registerUser, clearError } from "../../store/authSlice";
+import apiClient from "../../api/client";
+
+// City/District interfaces
+interface City {
+  id: number;
+  name: string;
+}
+
+interface District {
+  id: number;
+  name: string;
+  cityId: number;
+}
 
 const RegisterCorporate: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -41,10 +45,45 @@ const RegisterCorporate: React.FC = () => {
     address: "",
     password: "",
     confirmPassword: "",
+    cityId: "",
+    districtId: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [cities, setCities] = useState<City[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+
+  // Load cities on component mount
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await apiClient.get("/ads/cities");
+        setCities(response.data as City[]);
+      } catch (error) {
+        console.error("Şehirler yüklenirken hata:", error);
+      }
+    };
+    fetchCities();
+  }, []);
+
+  // Load districts when city changes
+  useEffect(() => {
+    if (formData.cityId) {
+      const fetchDistricts = async () => {
+        try {
+          const response = await apiClient.get(
+            `/ads/cities/${formData.cityId}/districts`
+          );
+          setDistricts(response.data as District[]);
+        } catch (error) {
+          console.error("İlçeler yüklenirken hata:", error);
+        }
+      };
+      fetchDistricts();
+    } else {
+      setDistricts([]);
+    }
+  }, [formData.cityId]);
 
   // Telefon numarası formatlama
   const formatPhoneNumber = (phone: string) => {
@@ -103,6 +142,15 @@ const RegisterCorporate: React.FC = () => {
       [name]: formattedValue,
     }));
 
+    // Reset district when city changes
+    if (name === "cityId") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formattedValue,
+        districtId: "", // Reset district selection
+      }));
+    }
+
     if (error) {
       dispatch(clearError());
     }
@@ -145,186 +193,66 @@ const RegisterCorporate: React.FC = () => {
       sx={{
         minHeight: "100vh",
         display: "flex",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "#f8f9fa",
+        justifyContent: "center",
+        alignItems: "center",
+        p: 2,
       }}
     >
-      {/* Left Side - Corporate Branding */}
-      <Box
+      <Paper
+        elevation={0}
         sx={{
-          flex: 1,
-          background: "linear-gradient(135deg, #313B4C 0%, #2a3441 100%)",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          color: "white",
-          p: 4,
-          position: "relative",
-          "&::before": {
-            content: '""',
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background:
-              'url(\'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.03"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.03"/><circle cx="25" cy="75" r="1" fill="%23ffffff" opacity="0.03"/><circle cx="75" cy="25" r="1" fill="%23ffffff" opacity="0.03"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>\') repeat',
-            opacity: 0.4,
-          },
+          width: "100%",
+          maxWidth: 900,
+          backgroundColor: "white",
+          borderRadius: 2,
+          border: "1px solid #e0e0e0",
+          overflow: "hidden",
         }}
       >
-        <Box sx={{ textAlign: "center", zIndex: 1 }}>
-          {/* Corporate Logo */}
-          <Box
-            sx={{
-              width: 140,
-              height: 140,
-              borderRadius: 3,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mb: 4,
-              mx: "auto",
-            }}
-          >
-            <img
-              src="/Trucksbus.png"
-              alt="TrucksBus Logo"
-              style={{
-                width: "280px",
-                height: "280px",
-                objectFit: "contain",
-                filter: "brightness(0) invert(1)",
-              }}
-            />
-          </Box>
-
-          {/* Corporate Welcome Text */}
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: "bold",
-              mb: 2,
-              background: "linear-gradient(45deg, #ffffff 30%, #4caf50 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            KURUMSAL
-          </Typography>
-
-          <Typography
-            variant="h6"
-            sx={{
-              mb: 4,
-              opacity: 0.9,
-              maxWidth: 400,
-              lineHeight: 1.6,
-            }}
-          >
-            İşletmeniz için özel çözümler
-          </Typography>
-
-          {/* Corporate Features */}
-          <Box sx={{ textAlign: "left", maxWidth: 400 }}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  backgroundColor: "#4caf50",
-                  mr: 2,
-                }}
-              />
-              <Typography variant="body1">Özel kurumsal destek</Typography>
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  backgroundColor: "#4caf50",
-                  mr: 2,
-                }}
-              />
-              <Typography variant="body1">Toplu araç alım-satım</Typography>
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  backgroundColor: "#4caf50",
-                  mr: 2,
-                }}
-              />
-              <Typography variant="body1">Özel fiyatlandırma</Typography>
-            </Box>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  backgroundColor: "#4caf50",
-                  mr: 2,
-                }}
-              />
-              <Typography variant="body1">
-                Ticari finansman çözümleri
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-
-      {/* Right Side - Corporate Register Form */}
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          p: 4,
-        }}
-      >
-        <Paper
-          elevation={0}
+        {/* Header with Logo/Brand */}
+        <Box
           sx={{
-            p: 6,
-            width: "100%",
-            maxWidth: 520,
-            borderRadius: 3,
-            backgroundColor: "white",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+            textAlign: "center",
+            pt: 6,
+            pb: 2,
+            px: 4,
+            position: "relative",
           }}
         >
-          {/* Header */}
-          <Box sx={{ mb: 4, textAlign: "center" }}>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: "bold",
-                color: "#313B4C",
-                mb: 1,
-              }}
-            >
-              Kurumsal Hesap
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "#666",
-              }}
-            >
-              İşletmeniz için özel avantajlar
-            </Typography>
+          {/* TrucksBus.com Brand */}
+          <Box
+            sx={{
+              display: "inline-block",
+              backgroundColor: "#E53E3E",
+              color: "white",
+              px: 3,
+              py: 1,
+              borderRadius: 1,
+              fontSize: "18px",
+              fontWeight: "bold",
+              mb: 4,
+              letterSpacing: "0.5px",
+            }}
+          >
+            TrucksBus.com
           </Box>
 
+          {/* Corporate Register Title */}
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: "600",
+              color: "#333",
+              mb: 1,
+              fontSize: "24px",
+            }}
+          >
+            Kurumsal Hesap Aç
+          </Typography>
+        </Box>
+        {/* Form Container */}
+        <Box sx={{ px: 6, pb: 6 }}>
           {/* Error Alert */}
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
@@ -334,165 +262,151 @@ const RegisterCorporate: React.FC = () => {
 
           {/* Corporate Register Form */}
           <Box component="form" onSubmit={handleSubmit}>
-            {/* Company Information */}
-            <Typography
-              variant="h6"
-              sx={{ color: "#313B4C", mb: 2, fontWeight: "bold" }}
-            >
-              Şirket Bilgileri
-            </Typography>
-
-            <TextField
-              fullWidth
-              name="companyName"
-              label="Şirket Adı"
-              value={formData.companyName}
-              onChange={handleChange}
-              required
-              sx={{ mb: 3 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Business sx={{ color: "#666" }} />
-                  </InputAdornment>
-                ),
+            {/* Form Grid Layout */}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 2,
+                mb: 2,
               }}
-            />
-
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-              <TextField
-                fullWidth
-                name="taxNumber"
-                label="Vergi Numarası"
-                value={formData.taxNumber}
-                onChange={handleChange}
-                required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccountBalance sx={{ color: "#666" }} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <TextField
-                fullWidth
-                name="address"
-                label="Adres"
-                value={formData.address}
-                onChange={handleChange}
-                required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LocationOn sx={{ color: "#666" }} />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Box>
-
-            {/* Contact Person Information */}
-            <Typography
-              variant="h6"
-              sx={{ color: "#313B4C", mb: 2, fontWeight: "bold" }}
             >
-              İletişim Sorumlusu
-            </Typography>
-
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+              {/* Company Name and Last Name */}
               <TextField
                 fullWidth
                 name="firstName"
-                label="Ad"
+                placeholder="Adınız"
                 value={formData.firstName}
                 onChange={handleChange}
                 required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person sx={{ color: "#666" }} />
-                    </InputAdornment>
-                  ),
+                variant="outlined"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "transparent",
+                    borderRadius: 1,
+                    "& fieldset": {
+                      borderColor: "#ddd",
+                      borderWidth: "2px",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#4A90E2",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#4A90E2",
+                      borderWidth: "2px",
+                    },
+                  },
+                  "& .MuiInputBase-input": {
+                    py: 2,
+                    fontSize: "16px",
+                  },
                 }}
               />
               <TextField
                 fullWidth
                 name="lastName"
-                label="Soyad"
+                placeholder="Soyadınız"
                 value={formData.lastName}
                 onChange={handleChange}
                 required
+                variant="outlined"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "transparent",
+                    borderRadius: 1,
+                    "& fieldset": {
+                      borderColor: "#ddd",
+                      borderWidth: "2px",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#4A90E2",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#4A90E2",
+                      borderWidth: "2px",
+                    },
+                  },
+                  "& .MuiInputBase-input": {
+                    py: 2,
+                    fontSize: "16px",
+                  },
+                }}
               />
             </Box>
 
-            {/* Contact Information */}
+            {/* Email Address */}
             <TextField
               fullWidth
               name="email"
               type="email"
-              label="Kurumsal E-posta"
+              placeholder="E-posta Adresiniz"
               value={formData.email}
               onChange={handleChange}
               required
-              sx={{ mb: 3 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Email sx={{ color: "#666" }} />
-                  </InputAdornment>
-                ),
+              variant="outlined"
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "transparent",
+                  borderRadius: 1,
+                  "& fieldset": {
+                    borderColor: "#ddd",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#4A90E2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4A90E2",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  py: 2,
+                  fontSize: "16px",
+                },
               }}
             />
 
-            <TextField
-              fullWidth
-              name="phone"
-              label="Telefon"
-              placeholder="0xxx xxx xx xx"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              sx={{ mb: 3 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Phone sx={{ color: "#666" }} />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            {/* Password Fields */}
-            <Typography
-              variant="h6"
-              sx={{ color: "#313B4C", mb: 2, fontWeight: "bold" }}
-            >
-              Güvenlik
-            </Typography>
-
+            {/* Password */}
             <TextField
               fullWidth
               name="password"
               type={showPassword ? "text" : "password"}
-              label="Şifre"
-              placeholder="En az 8 karakter"
+              placeholder="Şifre"
               value={formData.password}
               onChange={handleChange}
               required
-              sx={{ mb: 1 }}
-              helperText="Şifreniz en az 8 karakter olmalı ve şunları içermeli: 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter (@$!%*?&)"
+              variant="outlined"
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "transparent",
+                  borderRadius: 1,
+                  "& fieldset": {
+                    borderColor: "#ddd",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#4A90E2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4A90E2",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  py: 2,
+                  fontSize: "16px",
+                },
+              }}
               InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock sx={{ color: "#666" }} />
-                  </InputAdornment>
-                ),
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       onClick={() => setShowPassword(!showPassword)}
                       edge="end"
+                      sx={{ color: "#666" }}
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
@@ -501,70 +415,277 @@ const RegisterCorporate: React.FC = () => {
               }}
             />
 
+            {/* Phone */}
             <TextField
               fullWidth
-              name="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              label="Şifre Tekrar"
-              value={formData.confirmPassword}
+              name="phone"
+              placeholder="Sabit Telefon"
+              value={formData.phone}
               onChange={handleChange}
               required
-              sx={{ mb: 3 }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock sx={{ color: "#666" }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      edge="end"
-                    >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              variant="outlined"
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "transparent",
+                  borderRadius: 1,
+                  "& fieldset": {
+                    borderColor: "#ddd",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#4A90E2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4A90E2",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  py: 2,
+                  fontSize: "16px",
+                },
+              }}
+            />
+
+            {/* City and District Fields */}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 2,
+                mb: 2,
+              }}
+            >
+              <TextField
+                select
+                name="cityId"
+                placeholder="İl"
+                value={formData.cityId}
+                onChange={handleChange}
+                required
+                variant="outlined"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "transparent",
+                    borderRadius: 1,
+                    "& fieldset": {
+                      borderColor: "#ddd",
+                      borderWidth: "2px",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#4A90E2",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#4A90E2",
+                      borderWidth: "2px",
+                    },
+                  },
+                  "& .MuiInputBase-input": {
+                    py: 2,
+                    fontSize: "16px",
+                  },
+                }}
+              >
+                <MenuItem value="">
+                  <em>İl Seçiniz</em>
+                </MenuItem>
+                {cities.map((city) => (
+                  <MenuItem key={city.id} value={city.id.toString()}>
+                    {city.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                name="districtId"
+                placeholder="İlçe"
+                value={formData.districtId}
+                onChange={handleChange}
+                required
+                variant="outlined"
+                disabled={!formData.cityId}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    backgroundColor: "transparent",
+                    borderRadius: 1,
+                    "& fieldset": {
+                      borderColor: "#ddd",
+                      borderWidth: "2px",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#4A90E2",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#4A90E2",
+                      borderWidth: "2px",
+                    },
+                  },
+                  "& .MuiInputBase-input": {
+                    py: 2,
+                    fontSize: "16px",
+                  },
+                }}
+              >
+                <MenuItem value="">
+                  <em>İlçe Seçiniz</em>
+                </MenuItem>
+                {districts.map((district) => (
+                  <MenuItem key={district.id} value={district.id.toString()}>
+                    {district.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
+
+            {/* Business Type Section */}
+            <Typography
+              sx={{
+                fontSize: "16px",
+                fontWeight: "600",
+                color: "#333",
+                mb: 2,
+              }}
+            >
+              İşletme Türü
+            </Typography>
+
+            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+              <FormControlLabel
+                control={
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      border: "2px solid #4A90E2",
+                      backgroundColor: "#4A90E2",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      mr: 1,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: "white",
+                      }}
+                    />
+                  </Box>
+                }
+                label={
+                  <Typography sx={{ fontSize: "14px", color: "#333" }}>
+                    Şahıs Şirketi
+                  </Typography>
+                }
+              />
+              <FormControlLabel
+                control={
+                  <Box
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      border: "2px solid #ddd",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      mr: 1,
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontSize: "14px", color: "#333" }}>
+                    Limited veya Anonim Şirketi
+                  </Typography>
+                }
+              />
+            </Box>
+
+            {/* Tax Information - Only Tax Number */}
+            <TextField
+              fullWidth
+              name="taxNumber"
+              placeholder="Vergi Numarası"
+              value={formData.taxNumber}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              sx={{
+                mb: 3,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "transparent",
+                  borderRadius: 1,
+                  "& fieldset": {
+                    borderColor: "#ddd",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#4A90E2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4A90E2",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  py: 2,
+                  fontSize: "16px",
+                },
               }}
             />
 
             {/* Terms & Conditions */}
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={acceptTerms}
-                  onChange={(e) => setAcceptTerms(e.target.checked)}
-                  sx={{
-                    color: "#4caf50",
-                    "&.Mui-checked": {
-                      color: "#4caf50",
-                    },
-                  }}
-                />
-              }
-              label={
-                <Typography variant="body2">
-                  <Link
-                    to="/terms"
-                    style={{ color: "#4caf50", textDecoration: "none" }}
-                  >
-                    Kurumsal Sözleşme
-                  </Link>
-                  'yi ve{" "}
-                  <Link
-                    to="/privacy"
-                    style={{ color: "#4caf50", textDecoration: "none" }}
-                  >
-                    KVKK Metni
-                  </Link>
-                  'ni okudum ve kabul ediyorum.
-                </Typography>
-              }
-              sx={{ mb: 4 }}
-            />
+            <Box sx={{ mb: 4 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                    sx={{
+                      color: "#4A90E2",
+                      "&.Mui-checked": {
+                        color: "#4A90E2",
+                      },
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontSize: "14px", color: "#666" }}>
+                    <Link
+                      to="/terms"
+                      style={{ color: "#4A90E2", textDecoration: "none" }}
+                    >
+                      Kurumsal Hesap Sözleşmesi ve Etkiler
+                    </Link>
+                    'ni kabul ediyorum.
+                  </Typography>
+                }
+              />
+              <Typography
+                sx={{
+                  fontSize: "12px",
+                  color: "#666",
+                  mt: 1,
+                  ml: 4,
+                  lineHeight: 1.4,
+                }}
+              >
+                Bu sayfadaki bilgiler sahibinden.com hesabı ve fatura gönderimi
+                dahil olmak üzere tüm bilgilendirmelerimiz için alınmaktadır.
+                Kişisel verilerin korunması hakkında detaylı bilgiye{" "}
+                <Link
+                  to="/privacy"
+                  style={{ color: "#4A90E2", textDecoration: "none" }}
+                >
+                  buradan
+                </Link>{" "}
+                ulaşabilirsiniz.
+              </Typography>
+            </Box>
 
             {/* Register Button */}
             <Button
@@ -573,56 +694,45 @@ const RegisterCorporate: React.FC = () => {
               variant="contained"
               disabled={isLoading || !acceptTerms}
               sx={{
-                py: 1.5,
-                mb: 3,
-                backgroundColor: "#4caf50",
+                py: 2,
+                mb: 4,
+                backgroundColor: "#4A90E2",
                 fontSize: "16px",
-                fontWeight: "bold",
+                fontWeight: "600",
+                borderRadius: 1,
+                textTransform: "none",
+                boxShadow: "none",
                 "&:hover": {
-                  backgroundColor: "#45a049",
+                  backgroundColor: "#357ABD",
+                  boxShadow: "none",
                 },
                 "&:disabled": {
                   backgroundColor: "#ccc",
                 },
               }}
             >
-              {isLoading
-                ? "Kurumsal hesap oluşturuluyor..."
-                : "Kurumsal Hesap Aç"}
+              {isLoading ? "Hesap oluşturuluyor..." : "Hesap Aç"}
             </Button>
 
-            {/* Login Links */}
+            {/* Login Link */}
             <Box sx={{ textAlign: "center" }}>
               <Typography variant="body2" sx={{ color: "#666" }}>
                 Zaten hesabın var mı?{" "}
                 <Link
                   to="/login"
                   style={{
-                    color: "#4caf50",
+                    color: "#4A90E2",
                     textDecoration: "none",
-                    fontWeight: "bold",
+                    fontWeight: "500",
                   }}
                 >
-                  Giriş yap
-                </Link>
-              </Typography>
-              <Typography variant="body2" sx={{ color: "#666", mt: 1 }}>
-                Bireysel hesap mı istiyorsunuz? 👤{" "}
-                <Link
-                  to="/register"
-                  style={{
-                    color: "#4caf50",
-                    textDecoration: "none",
-                    fontWeight: "bold",
-                  }}
-                >
-                  Bireysel Kayıt
+                  Giriş yap ▸
                 </Link>
               </Typography>
             </Box>
           </Box>
-        </Paper>
-      </Box>
+        </Box>
+      </Paper>
     </Box>
   );
 };
