@@ -281,6 +281,7 @@ const KamyonAdForm: React.FC = () => {
           setDistricts(response.data as District[]);
         } catch (error) {
           console.error("İlçeler yüklenirken hata:", error);
+          setDistricts([]);
         }
       };
       fetchDistricts();
@@ -436,33 +437,6 @@ const KamyonAdForm: React.FC = () => {
     <>
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #FF6B35 30%, #F7931E 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            🚛 Kamyon İlanı Ver
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ mb: 3, maxWidth: 600, mx: "auto" }}
-          >
-            Kamyonunuzun tüm detaylarını girerek profesyonel ilanınızı oluşturun
-            ve binlerce alıcıya ulaşın
-          </Typography>
-        </Box>
-
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4, mt: 3 }}>
             {/* 📝 Temel Bilgiler */}

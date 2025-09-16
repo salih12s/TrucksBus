@@ -240,16 +240,89 @@ const AdDetail: React.FC = () => {
     setModalOpen(false);
   };
 
-  // Format feature names (camelCase to Title Case)
+  // Format feature names (camelCase to Title Case) with Turkish translations
   const formatFeatureName = (featureName: string): string => {
-    // Split camelCase words
+    // Turkish translations for common feature names
+    const turkishTranslations: { [key: string]: string } = {
+      // English to Turkish translations
+      abs: "ABS",
+      esp: "ESP",
+      asr: "ASR",
+      alarm: "Alarm",
+      ebv: "EBV",
+      airBag: "Hava Yastığı",
+      sideAirbag: "Yan Hava Yastığı",
+      passengerAirbag: "Yolcu Hava Yastığı",
+      centralLock: "Merkezi Kilit",
+      immobilizer: "İmmobilizer",
+      headlightSensor: "Far Sensörü",
+      headlightWasher: "Far Yıkayıcı",
+      rainSensor: "Yağmur Sensörü",
+      pto: "PTO",
+      cruiseControl: "Hız Sabitleyici",
+      airCondition: "Klima",
+      alloyWheel: "Alaşım Jant",
+      cd: "CD",
+      towHook: "Çeki Demiri",
+      leatherSeat: "Deri Koltuk",
+      electricMirror: "Elektrikli Ayna",
+      electricWindow: "Elektrikli Cam",
+      fogLight: "Sis Farı",
+      heatedSeats: "Isıtmalı Koltuk",
+      powerSteering: "Hidrolik Direksiyon",
+      memorySeats: "Hafızalı Koltuk",
+      retarder: "Retarder",
+      spoiler: "Spoiler",
+      sunroof: "Sunroof",
+      radio: "Radyo",
+      gps: "GPS",
+      tripComputer: "Seyir Bilgisayarı",
+      windDeflector: "Rüzgar Deflektörü",
+      table: "Masa",
+      flexibleReadingLight: "Esnek Okuma Lambası",
+      // Camel case versions
+      AirBag: "Hava Yastığı",
+      SideAirbag: "Yan Hava Yastığı",
+      PassengerAirbag: "Yolcu Hava Yastığı",
+      CentralLock: "Merkezi Kilit",
+      HeadlightSensor: "Far Sensörü",
+      HeadlightWasher: "Far Yıkayıcı",
+      RainSensor: "Yağmur Sensörü",
+      CruiseControl: "Hız Sabitleyici",
+      AirCondition: "Klima",
+      AlloyWheel: "Alaşım Jant",
+      TowHook: "Çeki Demiri",
+      LeatherSeat: "Deri Koltuk",
+      ElectricMirror: "Elektrikli Ayna",
+      ElectricWindow: "Elektrikli Cam",
+      FogLight: "Sis Farı",
+      HeatedSeats: "Isıtmalı Koltuk",
+      PowerSteering: "Hidrolik Direksiyon",
+      MemorySeats: "Hafızalı Koltuk",
+      TripComputer: "Seyir Bilgisayarı",
+      WindDeflector: "Rüzgar Deflektörü",
+      FlexibleReadingLight: "Esnek Okuma Lambası",
+    };
+
+    // Check if we have a direct Turkish translation
+    if (turkishTranslations[featureName]) {
+      return turkishTranslations[featureName];
+    }
+
+    // Split camelCase words and convert to title case
     const words = featureName.replace(/([A-Z])/g, " $1").trim();
 
-    // Capitalize each word
-    return words
+    const titleCase = words
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
+
+    // Check if the title case version has a translation
+    if (turkishTranslations[titleCase.replace(/\s/g, "")]) {
+      return turkishTranslations[titleCase.replace(/\s/g, "")];
+    }
+
+    return titleCase;
   };
 
   // Check if current user is the owner of the ad
@@ -910,11 +983,15 @@ const AdDetail: React.FC = () => {
                     {
                       label: "Motor Gücü",
                       value:
-                        ad.customFields?.motorPower || ad.enginePower || null,
+                        ad.customFields?.motorPower ||
+                        ad.customFields?.enginePower ||
+                        ad.enginePower ||
+                        null,
                     },
                     {
                       label: "Motor Hacmi",
                       value:
+                        ad.customFields?.engineCapacity ||
                         ad.customFields?.engineVolume ||
                         ad.engineVolume ||
                         null,
@@ -935,6 +1012,29 @@ const AdDetail: React.FC = () => {
                         null,
                     },
                     { label: "Kabin", value: ad.customFields?.cabin || null },
+
+                    // Çekici Özel Alanları
+                    {
+                      label: "Kabin Tipi",
+                      value: ad.customFields?.cabinType || null,
+                    },
+                    {
+                      label: "Yatak Sayısı",
+                      value: ad.customFields?.bedCount || null,
+                    },
+                    {
+                      label: "Dorse Mevcut",
+                      value: ad.customFields?.dorseAvailable || null,
+                    },
+                    {
+                      label: "Hasar Kaydı",
+                      value: ad.customFields?.damageRecord || null,
+                    },
+                    {
+                      label: "Boyalı",
+                      value: ad.customFields?.paintChange || null,
+                    },
+
                     {
                       label: "Lastik Durumu",
                       value: ad.customFields?.tireCondition
@@ -1204,85 +1304,70 @@ const AdDetail: React.FC = () => {
                     </Typography>
                   </Box>
 
-                  {/* Map Options - No API Key Required */}
+                  {/* Map Options - No iframe, just buttons */}
                   <Box
                     sx={{
                       width: "100%",
-                      height: 200,
+                      minHeight: 120,
                       borderRadius: 1,
-                      overflow: "hidden",
                       border: "1px solid #ddd",
                       position: "relative",
+                      backgroundColor: "#f8f9fa",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 2,
+                      p: 2,
                     }}
                   >
-                    {/* OpenStreetMap Embed */}
-                    <iframe
-                      width="100%"
-                      height="200"
-                      style={{ border: 0 }}
-                      loading="lazy"
-                      src={`https://www.openstreetmap.org/export/embed.html?bbox=27.2000,37.8500,27.3000,37.9000&layer=mapnik&marker=37.8583,27.2583`}
-                      title="Konum Haritası"
-                    />
-
-                    {/* Location info overlay */}
+                    {/* Location Display */}
                     <Box
                       sx={{
-                        position: "absolute",
-                        top: 8,
-                        left: 8,
-                        backgroundColor: "rgba(255, 255, 255, 0.95)",
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                         display: "flex",
                         alignItems: "center",
-                        gap: 0.5,
+                        gap: 1,
+                        mb: 1,
                       }}
                     >
-                      <LocationOn sx={{ color: "#e74c3c", fontSize: 16 }} />
+                      <LocationOn sx={{ color: "#e74c3c", fontSize: 24 }} />
                       <Typography
                         sx={{
-                          fontSize: "11px",
+                          fontSize: "16px",
                           fontWeight: "bold",
                           color: "#333",
                         }}
                       >
-                        {ad.city?.name || "Aydın"} /{" "}
-                        {ad.district?.name || "Kuşadası"}
+                        {ad.city?.name || "İstanbul"} /{" "}
+                        {ad.district?.name || "Merkez"}
                       </Typography>
                     </Box>
 
-                    {/* Map controls */}
+                    {/* Map Action Buttons */}
                     <Box
                       sx={{
-                        position: "absolute",
-                        bottom: 8,
-                        right: 8,
                         display: "flex",
-                        flexDirection: "column",
-                        gap: 0.5,
+                        gap: 2,
+                        flexWrap: "wrap",
+                        justifyContent: "center",
                       }}
                     >
                       {/* Google Maps button */}
-                      <Box
+                      <Button
+                        variant="contained"
                         sx={{
-                          backgroundColor: "rgba(66, 133, 244, 0.95)",
+                          backgroundColor: "#4285f4",
                           color: "white",
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: 1,
-                          cursor: "pointer",
-                          fontSize: "10px",
-                          fontWeight: "bold",
+                          fontSize: "12px",
+                          py: 1,
+                          px: 2,
                           "&:hover": {
-                            backgroundColor: "rgb(66, 133, 244)",
+                            backgroundColor: "#3367d6",
                           },
                         }}
                         onClick={() => {
-                          const cityName = ad.city?.name || "Aydın";
-                          const districtName = ad.district?.name || "Kuşadası";
+                          const cityName = ad.city?.name || "İstanbul";
+                          const districtName = ad.district?.name || "Merkez";
                           const searchQuery = `${cityName}, ${districtName}, Turkey`;
                           window.open(
                             `https://www.google.com/maps/search/${encodeURIComponent(
@@ -1292,27 +1377,25 @@ const AdDetail: React.FC = () => {
                           );
                         }}
                       >
-                        Google Maps
-                      </Box>
+                        📍 Google Maps'te Aç
+                      </Button>
 
                       {/* Yandex Maps button */}
-                      <Box
+                      <Button
+                        variant="contained"
                         sx={{
-                          backgroundColor: "rgba(255, 219, 77, 0.95)",
+                          backgroundColor: "#ffdb4d",
                           color: "#333",
-                          px: 1,
-                          py: 0.5,
-                          borderRadius: 1,
-                          cursor: "pointer",
-                          fontSize: "10px",
-                          fontWeight: "bold",
+                          fontSize: "12px",
+                          py: 1,
+                          px: 2,
                           "&:hover": {
-                            backgroundColor: "rgb(255, 219, 77)",
+                            backgroundColor: "#ffd700",
                           },
                         }}
                         onClick={() => {
-                          const cityName = ad.city?.name || "Aydın";
-                          const districtName = ad.district?.name || "Kuşadası";
+                          const cityName = ad.city?.name || "İstanbul";
+                          const districtName = ad.district?.name || "Merkez";
                           window.open(
                             `https://yandex.com.tr/maps/?text=${encodeURIComponent(
                               cityName + " " + districtName
@@ -1321,8 +1404,8 @@ const AdDetail: React.FC = () => {
                           );
                         }}
                       >
-                        Yandex Maps
-                      </Box>
+                        🗺️ Yandex Maps'te Aç
+                      </Button>
                     </Box>
                   </Box>
                 </Box>

@@ -19,6 +19,13 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -455,30 +462,6 @@ const CekiciAdForm: React.FC = () => {
         }}
       >
         {/* Ana Başlık */}
-        <Box
-          sx={{
-            background: "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-            color: "white",
-            p: 4,
-            borderRadius: "24px 24px 0 0",
-            textAlign: "center",
-            mb: 4,
-          }}
-        >
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 800,
-              mb: 2,
-              textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
-            }}
-          >
-            🚛 Çekici İlanı Ver
-          </Typography>
-          <Typography variant="h6" sx={{ opacity: 0.9 }}>
-            Çekici aracınızı hızlıca satmak için detaylı bilgilerini girin
-          </Typography>
-        </Box>
 
         <form onSubmit={handleSubmit} style={{ padding: "0 32px 32px" }}>
           {/* Genel Bilgiler Kartı */}

@@ -19,6 +19,7 @@ import {
   CardContent,
   Dialog,
   DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { PhotoCamera, CheckCircle } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
@@ -203,6 +204,16 @@ const OtobusAdForm: React.FC = () => {
     }
   }, [formData.cityId]);
 
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
   const handleInputChange = (
     field: keyof FormData,
     value: string | string[] | File[] | File | null
@@ -307,7 +318,9 @@ const OtobusAdForm: React.FC = () => {
       // Temel bilgiler
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
-      submitData.append("price", formData.price);
+      // Fiyatı düz sayıya çevir (nokta ve boşlukları kaldır)
+      const cleanPrice = formData.price.replace(/[\s.]/g, "");
+      submitData.append("price", cleanPrice);
       if (formData.condition && formData.condition.trim() !== "") {
         submitData.append("condition", formData.condition);
       }
@@ -321,7 +334,9 @@ const OtobusAdForm: React.FC = () => {
         submitData.append("year", formData.year);
       }
       if (formData.mileage && formData.mileage.trim() !== "") {
-        submitData.append("mileage", formData.mileage);
+        // Kilometre değerini düz sayıya çevir
+        const cleanMileage = formData.mileage.replace(/[\s.]/g, "");
+        submitData.append("mileage", cleanMileage);
       }
       if (formData.enginePower && formData.enginePower.trim() !== "") {
         submitData.append("enginePower", formData.enginePower);
@@ -335,7 +350,9 @@ const OtobusAdForm: React.FC = () => {
 
       // Otobüs özel bilgileri - Boş string kontrolü ekleyelim
       if (formData.capacity && formData.capacity.trim() !== "") {
-        submitData.append("passengerCapacity", formData.capacity);
+        // Kapasite değerini düz sayıya çevir
+        const cleanCapacity = formData.capacity.replace(/[\s.]/g, "");
+        submitData.append("passengerCapacity", cleanCapacity);
       }
       if (formData.seatArrangement && formData.seatArrangement.trim() !== "") {
         submitData.append("seatLayout", formData.seatArrangement);
@@ -347,7 +364,9 @@ const OtobusAdForm: React.FC = () => {
         submitData.append("color", formData.color);
       }
       if (formData.fuelCapacity && formData.fuelCapacity.trim() !== "") {
-        submitData.append("fuelCapacity", formData.fuelCapacity);
+        // Yakıt hacmi değerini düz sayıya çevir
+        const cleanFuelCapacity = formData.fuelCapacity.replace(/[\s.]/g, "");
+        submitData.append("fuelCapacity", cleanFuelCapacity);
       }
       if (formData.tireCondition && formData.tireCondition.trim() !== "") {
         submitData.append("tireCondition", formData.tireCondition);
@@ -390,6 +409,7 @@ const OtobusAdForm: React.FC = () => {
       });
 
       if (response.status === 201 || response.status === 200) {
+        // Başarılı olduğunda modalı aç
         setSubmitSuccess(true);
       }
     } catch (error) {
@@ -404,33 +424,6 @@ const OtobusAdForm: React.FC = () => {
     <>
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #313B4C 30%, #D34237 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            🚍 Otobüs İlanı Ver
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ mb: 3, maxWidth: 600, mx: "auto" }}
-          >
-            Otobüsünüzün tüm detaylarını girerek profesyonel ilanınızı oluşturun
-            ve binlerce alıcıya ulaşın
-          </Typography>
-        </Box>
-
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4, mt: 3 }}>
             {/* 📝 Temel Bilgiler */}
@@ -517,12 +510,19 @@ const OtobusAdForm: React.FC = () => {
                   <TextField
                     fullWidth
                     label="Fiyat (₺)"
-                    type="number"
                     value={formData.price}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
+                    onChange={(e) => {
+                      const formattedValue = formatNumber(e.target.value);
+                      handleInputChange("price", formattedValue);
+                    }}
                     error={!!errors.price}
                     helperText={errors.price}
-                    placeholder="1500000"
+                    placeholder="1.500.000"
+                    InputProps={{
+                      inputProps: {
+                        inputMode: "numeric",
+                      },
+                    }}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,
@@ -697,12 +697,17 @@ const OtobusAdForm: React.FC = () => {
                   <TextField
                     fullWidth
                     label="Kilometre"
-                    type="number"
                     value={formData.mileage}
-                    onChange={(e) =>
-                      handleInputChange("mileage", e.target.value)
-                    }
-                    placeholder="100000"
+                    onChange={(e) => {
+                      const formattedValue = formatNumber(e.target.value);
+                      handleInputChange("mileage", formattedValue);
+                    }}
+                    placeholder="100.000"
+                    InputProps={{
+                      inputProps: {
+                        inputMode: "numeric",
+                      },
+                    }}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,
@@ -772,12 +777,17 @@ const OtobusAdForm: React.FC = () => {
                   <TextField
                     fullWidth
                     label="Kapasite (Kişi)"
-                    type="number"
                     value={formData.capacity}
-                    onChange={(e) =>
-                      handleInputChange("capacity", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const formattedValue = formatNumber(e.target.value);
+                      handleInputChange("capacity", formattedValue);
+                    }}
                     placeholder="50"
+                    InputProps={{
+                      inputProps: {
+                        inputMode: "numeric",
+                      },
+                    }}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,
@@ -847,12 +857,17 @@ const OtobusAdForm: React.FC = () => {
                   <TextField
                     fullWidth
                     label="Yakıt Hacmi (Litre)"
-                    type="number"
                     value={formData.fuelCapacity}
-                    onChange={(e) =>
-                      handleInputChange("fuelCapacity", e.target.value)
-                    }
+                    onChange={(e) => {
+                      const formattedValue = formatNumber(e.target.value);
+                      handleInputChange("fuelCapacity", formattedValue);
+                    }}
                     placeholder="300"
+                    InputProps={{
+                      inputProps: {
+                        inputMode: "numeric",
+                      },
+                    }}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,
@@ -868,13 +883,25 @@ const OtobusAdForm: React.FC = () => {
                   <TextField
                     fullWidth
                     label="Lastik Durumu (%)"
-                    type="number"
                     value={formData.tireCondition}
-                    onChange={(e) =>
-                      handleInputChange("tireCondition", e.target.value)
-                    }
+                    onChange={(e) => {
+                      // Yüzde için özel formatlama
+                      const value = e.target.value.replace(/\D/g, "");
+                      if (
+                        value === "" ||
+                        (parseInt(value) >= 0 && parseInt(value) <= 100)
+                      ) {
+                        handleInputChange("tireCondition", value);
+                      }
+                    }}
                     placeholder="85"
-                    inputProps={{ min: 0, max: 100 }}
+                    InputProps={{
+                      inputProps: {
+                        inputMode: "numeric",
+                        min: 0,
+                        max: 100,
+                      },
+                    }}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,
@@ -1392,7 +1419,7 @@ const OtobusAdForm: React.FC = () => {
       {/* Success Modal */}
       <Dialog
         open={submitSuccess}
-        onClose={() => setSubmitSuccess(false)}
+        onClose={() => {}} // Modal kapatılamaz, sadece buton ile
         maxWidth="sm"
         fullWidth
         PaperProps={{
@@ -1411,35 +1438,35 @@ const OtobusAdForm: React.FC = () => {
             }}
           />
           <Typography variant="h5" component="h2" gutterBottom>
-            İlanınız Başarıyla Oluşturuldu!
+            🎉 İlanınız Başarıyla Yayınlandı!
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Otobüs ilanınız başarıyla yayınlandı. İlanınızı yönetmek için
-            ilanlarım sayfasına gidebilirsiniz.
+            Otobüs ilanınız başarıyla oluşturuldu ve yayına alındı. İlanınızı
+            ana sayfada görebilir ve yönetebilirsiniz.
           </Typography>
-          <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setSubmitSuccess(false);
-                navigate("/");
-              }}
-              sx={{ minWidth: 120 }}
-            >
-              Ana Sayfa
-            </Button>
-            <Button
-              variant="contained"
-              onClick={() => {
-                setSubmitSuccess(false);
-                navigate("/user/ads");
-              }}
-              sx={{ minWidth: 120 }}
-            >
-              İlanlarım
-            </Button>
-          </Box>
         </DialogContent>
+        <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setSubmitSuccess(false);
+              navigate("/");
+            }}
+            size="large"
+            sx={{
+              minWidth: 200,
+              py: 1.5,
+              fontSize: "1.1rem",
+              fontWeight: "bold",
+              background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1565c0 30%, #1976d2 90%)",
+              },
+            }}
+          >
+            🏠 Ana Sayfaya Git
+          </Button>
+        </DialogActions>
       </Dialog>
     </>
   );
