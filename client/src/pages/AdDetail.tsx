@@ -60,6 +60,7 @@ interface Ad {
   maxPower?: string;
   maxTorque?: string;
   fuelType?: string;
+  maxVehicleCapacity?: string;
   images?: string[];
   user?: {
     id: number;
@@ -1081,6 +1082,13 @@ const AdDetail: React.FC = () => {
                         null,
                     },
                     {
+                      label: "Maksimum Araç Kapasitesi",
+                      value:
+                        ad.customFields?.maxVehicleCapacity ||
+                        ad.maxVehicleCapacity ||
+                        null,
+                    },
+                    {
                       label: "Koltuk Düzeni",
                       value:
                         ad.customFields?.seatArrangement ||
@@ -1101,44 +1109,49 @@ const AdDetail: React.FC = () => {
                     // Oto Kurtarıcı Tekli Araç Özel Alanları
                     {
                       label: "İstiap Haddi",
-                      value: ad.customFields?.loadCapacity || 
-                             ad.loadCapacity || null,
+                      value:
+                        ad.customFields?.loadCapacity ||
+                        ad.loadCapacity ||
+                        null,
                     },
                     {
                       label: "Motor Hacmi",
-                      value: ad.customFields?.engineVolume || 
-                             ad.customFields?.engineCapacity ||
-                             ad.engineVolume || null,
+                      value:
+                        ad.customFields?.engineVolume ||
+                        ad.customFields?.engineCapacity ||
+                        ad.engineVolume ||
+                        null,
                     },
                     {
                       label: "Maksimum Güç",
-                      value: ad.customFields?.maxPower || 
-                             ad.maxPower || null,
+                      value: ad.customFields?.maxPower || ad.maxPower || null,
                     },
                     {
                       label: "Maksimum Tork",
-                      value: ad.customFields?.maxTorque || 
-                             ad.maxTorque || null,
+                      value: ad.customFields?.maxTorque || ad.maxTorque || null,
                     },
                     {
                       label: "Yakıt Tipi",
-                      value: ad.customFields?.fuelType || 
-                             ad.fuelType || null,
+                      value: ad.customFields?.fuelType || ad.fuelType || null,
                     },
                     {
                       label: "Araç Plakası",
-                      value: ad.customFields?.plateNumber || 
-                             ad.plateNumber || null,
+                      value:
+                        ad.customFields?.plateNumber || ad.plateNumber || null,
                     },
                     {
                       label: "Platform Uzunluk",
-                      value: ad.customFields?.platformLength || 
-                             ad.platformLength || null,
+                      value:
+                        ad.customFields?.platformLength ||
+                        ad.platformLength ||
+                        null,
                     },
                     {
                       label: "Platform Genişlik",
-                      value: ad.customFields?.platformWidth || 
-                             ad.platformWidth || null,
+                      value:
+                        ad.customFields?.platformWidth ||
+                        ad.platformWidth ||
+                        null,
                     },
 
                     {

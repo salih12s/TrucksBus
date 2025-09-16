@@ -446,29 +446,48 @@ const VehicleFormSelector: React.FC = () => {
     case "oto-kurtarici":
     case "tasiyici":
       console.log("🎯 OTO KURTARICI VE TAŞIYICI KATEGORİSİ ALGILANDI!");
+      console.log("  Category slug:", categorySlug);
+      console.log("  Model slug:", modelSlug);
+      console.log("  Variant slug:", variantSlug);
       console.log("  Checking variant:", variantSlug);
       console.log("  Checking model:", modelSlug);
 
       // Variant'a göre form seç
       if (variantSlug) {
+        console.log("🔍 Variant kontrolü başlıyor:", variantSlug);
         switch (variantSlug) {
           case "tekli-arac":
           case "tekli":
-            console.log("✅ Tekli Araç Kurtarıcı formu seçildi");
+            console.log("✅ Tekli Araç Kurtarıcı formu seçildi (variant)");
             return <TekliAracForm />;
           case "coklu-arac":
           case "coklu":
           case "çoklu-arac":
           case "çoklu":
-            console.log("✅ Çoklu Araç Kurtarıcı formu seçildi");
+            console.log("✅ Çoklu Araç Kurtarıcı formu seçildi (variant)");
             return <CokluAracForm />;
-          default:
+          default: {
             console.log(
               "⚠️ Bilinmeyen oto kurtarıcı variant:",
               variantSlug,
-              "- Tekli Araç açılıyor"
+              "- Kontrol ediliyor..."
             );
-            return <TekliAracForm />;
+            // Variant adında 'coklu' veya 'çoklu' geçiyorsa çoklu araç formu aç
+            const variantLower = variantSlug.toLowerCase();
+            if (
+              variantLower.includes("coklu") ||
+              variantLower.includes("çoklu") ||
+              variantLower.includes("multi")
+            ) {
+              console.log(
+                "✅ Çoklu Araç Kurtarıcı formu seçildi (variant string match)"
+              );
+              return <CokluAracForm />;
+            } else {
+              console.log("⚠️ Varsayılan olarak Tekli Araç açılıyor");
+              return <TekliAracForm />;
+            }
+          }
         }
       }
 

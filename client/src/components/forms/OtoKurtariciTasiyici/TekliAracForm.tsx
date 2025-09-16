@@ -366,10 +366,13 @@ const TekliAracForm: React.FC = () => {
 
       // Detay özelliklerini JSON olarak ekle (backend "features" bekliyor)
       submitData.append("features", JSON.stringify(formData.detailFeatures));
-      
+
       // Çekici ekipmanlarını JSON olarak ekle
-      submitData.append("cekiciEkipmani", JSON.stringify(formData.cekiciEkipmani));
-      
+      submitData.append(
+        "cekiciEkipmani",
+        JSON.stringify(formData.cekiciEkipmani)
+      );
+
       // Ek ekipmanları JSON olarak ekle
       submitData.append("ekEkipmanlar", JSON.stringify(formData.ekEkipmanlar));
 
@@ -780,18 +783,24 @@ const TekliAracForm: React.FC = () => {
                   Çekici Ekipmanı
                 </Typography>
 
-                <Box 
-                  sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' },
-                    gap: 2
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "repeat(2, 1fr)",
+                      sm: "repeat(3, 1fr)",
+                      md: "repeat(4, 1fr)",
+                    },
+                    gap: 2,
                   }}
                 >
                   <FormControlLabel
                     control={
                       <Checkbox
                         checked={formData.cekiciEkipmani.kayarPlatform || false}
-                        onChange={() => handleCekiciEkipmaniChange("kayarPlatform")}
+                        onChange={() =>
+                          handleCekiciEkipmaniChange("kayarPlatform")
+                        }
                       />
                     }
                     label="Kayar Platform"
@@ -836,7 +845,9 @@ const TekliAracForm: React.FC = () => {
                     control={
                       <Checkbox
                         checked={formData.cekiciEkipmani.ahtapotVinc || false}
-                        onChange={() => handleCekiciEkipmaniChange("ahtapotVinc")}
+                        onChange={() =>
+                          handleCekiciEkipmaniChange("ahtapotVinc")
+                        }
                       />
                     }
                     label="Ahtapot Vinç"
@@ -865,11 +876,15 @@ const TekliAracForm: React.FC = () => {
                   Ek Ekipmanlar
                 </Typography>
 
-                <Box 
-                  sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' },
-                    gap: 2
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "repeat(2, 1fr)",
+                      sm: "repeat(3, 1fr)",
+                      md: "repeat(4, 1fr)",
+                    },
+                    gap: 2,
                   }}
                 >
                   <FormControlLabel
@@ -894,7 +909,9 @@ const TekliAracForm: React.FC = () => {
                     control={
                       <Checkbox
                         checked={formData.ekEkipmanlar.sabitlemeHalati || false}
-                        onChange={() => handleEkEkipmanChange("sabitlemeHalati")}
+                        onChange={() =>
+                          handleEkEkipmanChange("sabitlemeHalati")
+                        }
                       />
                     }
                     label="Sabitleme Halatı"
