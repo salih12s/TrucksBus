@@ -1,8 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Box, Typography, Button, Chip, Container } from "@mui/material";
-import { Star } from "@mui/icons-material";
+import {
+  Box,
+  Typography,
+  Button,
+  Chip,
+  Container,
+  Dialog,
+  DialogContent,
+  IconButton,
+} from "@mui/material";
+import {
+  LocationOn,
+  Close,
+  ArrowBackIos,
+  ArrowForwardIos,
+  FavoriteBorder,
+  Favorite,
+} from "@mui/icons-material";
 import { API_BASE_URL } from "../api/client";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
+import ComplaintModal from "../components/complaints/ComplaintModal";
+import {
+  checkFavorite,
+  addToFavorites,
+  removeFromFavorites,
+} from "../api/favorites";
 
 interface Ad {
   id: number;
@@ -59,6 +83,14 @@ const AdDetail: React.FC = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [categoryFields, setCategoryFields] = useState<CategoryField[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [showComplaintModal, setShowComplaintModal] = useState(false);
+
+  // Get current user from Redux store
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const token = useSelector((state: RootState) => state.auth.token);
 
   useEffect(() => {
     const fetchAd = async () => {
@@ -96,6 +128,18 @@ const AdDetail: React.FC = () => {
           }
         }
 
+        // Check if ad is favorited by current user
+        if (currentUser && token) {
+          try {
+            const favResult = await checkFavorite(Number(id), token);
+            if (favResult.success) {
+              setIsFavorited(favResult.isFavorited || false);
+            }
+          } catch (favError) {
+            console.error("Favori kontrolü hatası:", favError);
+          }
+        }
+
         setLoading(false);
       } catch (error) {
         console.error("Error fetching ad:", error);
@@ -106,7 +150,7 @@ const AdDetail: React.FC = () => {
     if (id) {
       fetchAd();
     }
-  }, [id]);
+  }, [id, currentUser, token]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("tr-TR").format(price) + " TL";
@@ -179,10 +223,309 @@ const AdDetail: React.FC = () => {
     );
   }
 
+  // Modal navigation functions
+  const handleNextImage = () => {
+    if (ad?.images && modalImageIndex < ad.images.length - 1) {
+      setModalImageIndex(modalImageIndex + 1);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (modalImageIndex > 0) {
+      setModalImageIndex(modalImageIndex - 1);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
+
+  // Format feature names (camelCase to Title Case)
+  const formatFeatureName = (featureName: string): string => {
+    // Split camelCase words
+    const words = featureName.replace(/([A-Z])/g, " $1").trim();
+
+    // Capitalize each word
+    return words
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  // Check if current user is the owner of the ad
+  const isOwner = currentUser?.id === ad?.user?.id;
+
+  // Handle favorite toggle
+  const handleFavoriteToggle = async () => {
+    if (!currentUser) {
+      alert("Favorilere eklemek için giriş yapmalısınız.");
+      navigate("/login");
+      return;
+    }
+
+    if (!token) {
+      alert("Oturum bilginiz geçersiz. Lütfen tekrar giriş yapın.");
+      navigate("/login");
+      return;
+    }
+
+    if (isOwner) {
+      alert("Kendi ilanınızı favorilere ekleyemezsiniz!");
+      return;
+    }
+
+    try {
+      let result;
+      if (isFavorited) {
+        result = await removeFromFavorites(Number(id), token);
+      } else {
+        result = await addToFavorites(Number(id), token);
+      }
+
+      if (result.success) {
+        setIsFavorited(!isFavorited);
+        if (result.message) {
+          // Optional: Show success message
+          console.log(result.message);
+        }
+      } else {
+        alert(result.message || "İşlem başarısız oldu.");
+      }
+    } catch (error) {
+      console.error("Favorileme hatası:", error);
+      alert("Bir hata oluştu. Lütfen tekrar deneyin.");
+    }
+  };
+
+  // Handle message sending
+  const handleSendMessage = () => {
+    if (!currentUser) {
+      alert("Mesaj göndermek için giriş yapmalısınız.");
+      navigate("/login");
+      return;
+    }
+
+    if (isOwner) {
+      alert("Kendi ilanınıza mesaj gönderemezsiniz!");
+      return;
+    }
+
+    // Navigate to messaging with the ad owner
+    navigate(`/messages?userId=${ad?.user?.id}&adId=${id}`);
+  };
+
+  // Handle complaint
+  const handleComplaint = () => {
+    if (!currentUser) {
+      alert("Şikayet için giriş yapmalısınız.");
+      navigate("/login");
+      return;
+    }
+
+    if (isOwner) {
+      alert("Kendi ilanınızı şikayet edemezsiniz!");
+      return;
+    }
+
+    setShowComplaintModal(true);
+  };
+
   return (
-    <Box sx={{ backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
-      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4, lg: 5 } }}>
-        <Box sx={{ py: 2 }}>
+    <Box sx={{ backgroundColor: "#f8f9fa", minHeight: "100vh", py: 3 }}>
+      {/* Photo Modal */}
+      <Dialog
+        open={modalOpen}
+        onClose={handleCloseModal}
+        maxWidth={false}
+        sx={{
+          "& .MuiDialog-paper": {
+            maxWidth: "95vw",
+            maxHeight: "95vh",
+            backgroundColor: "transparent",
+            boxShadow: "none",
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogContent
+          sx={{
+            position: "relative",
+            p: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.9)",
+            minHeight: "80vh",
+          }}
+        >
+          {/* Close button */}
+          <IconButton
+            onClick={handleCloseModal}
+            sx={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              color: "white",
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+              },
+              zIndex: 1000,
+            }}
+          >
+            <Close />
+          </IconButton>
+
+          {/* Previous button */}
+          {ad?.images && modalImageIndex > 0 && (
+            <IconButton
+              onClick={handlePrevImage}
+              sx={{
+                position: "absolute",
+                left: 16,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "white",
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                },
+                zIndex: 1000,
+              }}
+            >
+              <ArrowBackIos />
+            </IconButton>
+          )}
+
+          {/* Next button */}
+          {ad?.images && modalImageIndex < ad.images.length - 1 && (
+            <IconButton
+              onClick={handleNextImage}
+              sx={{
+                position: "absolute",
+                right: 16,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "white",
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                },
+                zIndex: 1000,
+              }}
+            >
+              <ArrowForwardIos />
+            </IconButton>
+          )}
+
+          {/* Main modal image */}
+          {ad?.images && (
+            <img
+              src={getImageUrl([ad.images[modalImageIndex]])}
+              alt={`${ad.title} - Fotoğraf ${modalImageIndex + 1}`}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "100%",
+                objectFit: "contain",
+                borderRadius: 8,
+              }}
+              onError={(e) => {
+                e.currentTarget.src =
+                  "https://via.placeholder.com/800x600/f0f0f0/999999?text=Resim+Hatası";
+              }}
+            />
+          )}
+
+          {/* Image counter */}
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: 16,
+              left: "50%",
+              transform: "translateX(-50%)",
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              color: "white",
+              px: 2,
+              py: 1,
+              borderRadius: 2,
+              fontSize: "14px",
+              fontWeight: "bold",
+            }}
+          >
+            {modalImageIndex + 1} / {ad?.images?.length || 1}
+          </Box>
+
+          {/* Thumbnail strip */}
+          {ad?.images && ad.images.length > 1 && (
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: 60,
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                gap: 1,
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                p: 1,
+                borderRadius: 2,
+                maxWidth: "80vw",
+                overflowX: "auto",
+                "&::-webkit-scrollbar": {
+                  height: 4,
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  borderRadius: 2,
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                  borderRadius: 2,
+                },
+              }}
+            >
+              {ad.images.map((image, index) => (
+                <Box
+                  key={index}
+                  onClick={() => setModalImageIndex(index)}
+                  sx={{
+                    width: 60,
+                    height: 45,
+                    border:
+                      modalImageIndex === index
+                        ? "2px solid #007bff"
+                        : "1px solid transparent",
+                    borderRadius: 1,
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      borderColor: "#007bff",
+                    },
+                  }}
+                >
+                  <img
+                    src={getImageUrl([image])}
+                    alt={`Thumbnail ${index + 1}`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/60x45/f0f0f0/999999?text=?";
+                    }}
+                  />
+                </Box>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Container maxWidth="lg">
+        <Box sx={{ px: { xs: 1, sm: 2, md: 3 } }}>
           {/* Main Title and Price */}
           <Box sx={{ mb: 3 }}>
             <Typography
@@ -233,19 +576,41 @@ const AdDetail: React.FC = () => {
               <Box sx={{ display: "flex", gap: 1 }}>
                 <Button
                   variant="outlined"
-                  startIcon={<Star />}
+                  startIcon={isFavorited ? <Favorite /> : <FavoriteBorder />}
                   size="small"
+                  onClick={handleFavoriteToggle}
+                  disabled={isOwner}
                   sx={{
-                    borderColor: "#007bff",
-                    color: "#007bff",
+                    borderColor: isOwner
+                      ? "#ccc"
+                      : isFavorited
+                      ? "#dc3545"
+                      : "#007bff",
+                    color: isOwner
+                      ? "#666"
+                      : isFavorited
+                      ? "#dc3545"
+                      : "#007bff",
                     fontSize: "12px",
                     "&:hover": {
-                      backgroundColor: "#007bff",
-                      color: "white",
+                      backgroundColor: isOwner
+                        ? "transparent"
+                        : isFavorited
+                        ? "#dc3545"
+                        : "#007bff",
+                      color: isOwner ? "#666" : "white",
+                    },
+                    "&:disabled": {
+                      borderColor: "#ccc",
+                      color: "#666",
                     },
                   }}
                 >
-                  Favorilerime Ekle
+                  {isOwner
+                    ? "Kendi İlanınız"
+                    : isFavorited
+                    ? "Favorilerden Çıkar"
+                    : "Favorilerime Ekle"}
                 </Button>
               </Box>
             </Box>
@@ -296,6 +661,14 @@ const AdDetail: React.FC = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     overflow: "hidden",
+                    cursor: "pointer",
+                    "&:hover": {
+                      opacity: 0.95,
+                    },
+                  }}
+                  onClick={() => {
+                    setModalImageIndex(selectedImageIndex);
+                    setModalOpen(true);
                   }}
                 >
                   <img
@@ -324,6 +697,10 @@ const AdDetail: React.FC = () => {
                 <Button
                   variant="outlined"
                   size="small"
+                  onClick={() => {
+                    setModalImageIndex(selectedImageIndex);
+                    setModalOpen(true);
+                  }}
                   sx={{
                     position: "absolute",
                     bottom: 16,
@@ -384,7 +761,11 @@ const AdDetail: React.FC = () => {
                     return (
                       <Box
                         key={index}
-                        onClick={() => setSelectedImageIndex(index)}
+                        onClick={() => {
+                          setSelectedImageIndex(index);
+                          setModalImageIndex(index);
+                          setModalOpen(true);
+                        }}
                         sx={{
                           width: "100%",
                           aspectRatio: "4/3",
@@ -398,6 +779,7 @@ const AdDetail: React.FC = () => {
                           transition: "all 0.2s ease",
                           "&:hover": {
                             borderColor: "#007bff",
+                            transform: "scale(1.02)",
                           },
                         }}
                       >
@@ -500,7 +882,7 @@ const AdDetail: React.FC = () => {
                     { label: "İlçe", value: ad.district?.name || null },
                     { label: "Adres", value: ad.customFields?.address || null },
 
-                    // Araç Detayları (customFields'tan)
+                    // Araç Detayları
                     {
                       label: "Durum",
                       value: ad.customFields?.condition || null,
@@ -522,14 +904,36 @@ const AdDetail: React.FC = () => {
                     },
                     {
                       label: "Çekiş",
-                      value: ad.customFields?.drivetrain || null,
+                      value:
+                        ad.customFields?.drivetrain || ad.wheelDrive || null,
                     },
                     {
                       label: "Motor Gücü",
                       value:
                         ad.customFields?.motorPower || ad.enginePower || null,
                     },
-                    { label: "Motor Hacmi", value: ad.engineVolume || null },
+                    {
+                      label: "Motor Hacmi",
+                      value:
+                        ad.customFields?.engineVolume ||
+                        ad.engineVolume ||
+                        null,
+                    },
+                    {
+                      label: "Koltuk Sayısı",
+                      value: ad.customFields?.seatCount || ad.seatCount || null,
+                    },
+                    {
+                      label: "Tavan Tipi",
+                      value: ad.customFields?.roofType || ad.roofType || null,
+                    },
+                    {
+                      label: "Şasi",
+                      value:
+                        ad.customFields?.chassis ||
+                        ad.customFields?.chasisType ||
+                        null,
+                    },
                     { label: "Kabin", value: ad.customFields?.cabin || null },
                     {
                       label: "Lastik Durumu",
@@ -545,7 +949,6 @@ const AdDetail: React.FC = () => {
                       label: "Üst Yapı",
                       value: ad.customFields?.superstructure || null,
                     },
-                    { label: "Koltuk Sayısı", value: ad.seatCount || null },
 
                     // Plaka Bilgileri
                     {
@@ -567,13 +970,18 @@ const AdDetail: React.FC = () => {
                     // Platform Bilgileri (Dorse için)
                     {
                       label: "Platform Uzunluk",
-                      value: ad.platformLength || null,
+                      value:
+                        ad.platformLength ||
+                        ad.customFields?.platformLength ||
+                        null,
                     },
                     {
                       label: "Platform Genişlik",
-                      value: ad.platformWidth || null,
+                      value:
+                        ad.platformWidth ||
+                        ad.customFields?.platformWidth ||
+                        null,
                     },
-                    { label: "Çatı Tipi", value: ad.roofType || null },
 
                     // Dinamik kategori alanları
                     ...(Array.isArray(categoryFields)
@@ -609,11 +1017,11 @@ const AdDetail: React.FC = () => {
                         <Box
                           sx={{
                             flex: "0 0 40%",
-                            px: 1.5,
-                            py: 0.5,
+                            px: 1,
+                            py: 0.3,
                             backgroundColor: "#fafbfc",
                             borderRight: "1px solid #f0f0f0",
-                            fontSize: "11px",
+                            fontSize: "10px",
                             fontWeight: "500",
                             color: "#666",
                           }}
@@ -623,10 +1031,11 @@ const AdDetail: React.FC = () => {
                         <Box
                           sx={{
                             flex: 1,
-                            px: 1.5,
-                            py: 0.5,
-                            fontSize: "11px",
+                            px: 1,
+                            py: 0.3,
+                            fontSize: "10px",
                             color: "#333",
+                            lineHeight: 1.2,
                           }}
                         >
                           {typeof item.value === "object"
@@ -698,36 +1107,224 @@ const AdDetail: React.FC = () => {
                     fullWidth
                     variant="contained"
                     size="small"
+                    onClick={handleSendMessage}
+                    disabled={isOwner}
                     sx={{
-                      backgroundColor: "#007bff",
+                      backgroundColor: isOwner ? "#ccc" : "#007bff",
                       color: "white",
                       mb: 1.5,
                       fontSize: "12px",
                       py: 1,
                       "&:hover": {
-                        backgroundColor: "#0056b3",
+                        backgroundColor: isOwner ? "#ccc" : "#0056b3",
+                      },
+                      "&:disabled": {
+                        color: "#666",
                       },
                     }}
                   >
-                    📞 Mesaj Gönder
+                    📞 {isOwner ? "Kendi İlanınız" : "Mesaj Gönder"}
                   </Button>
 
                   <Button
                     fullWidth
                     variant="outlined"
                     size="small"
+                    onClick={handleComplaint}
+                    disabled={isOwner}
                     sx={{
-                      borderColor: "#007bff",
-                      color: "#007bff",
+                      borderColor: isOwner ? "#ccc" : "#007bff",
+                      color: isOwner ? "#666" : "#007bff",
                       fontSize: "11px",
                       py: 0.8,
                       "&:hover": {
-                        backgroundColor: "#f8f9fa",
+                        backgroundColor: isOwner ? "transparent" : "#f8f9fa",
+                      },
+                      "&:disabled": {
+                        borderColor: "#ccc",
+                        color: "#666",
                       },
                     }}
                   >
-                    İlan ile İlgili Şikayetin Var
+                    {isOwner
+                      ? "Kendi İlanınızı Şikayet Edemezsiniz"
+                      : "İlan ile İlgili Şikayetin Var"}
                   </Button>
+                </Box>
+              </Box>
+
+              {/* Location Map Section */}
+              <Box
+                sx={{
+                  backgroundColor: "white",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 1,
+                  mt: 2,
+                }}
+              >
+                <Box
+                  sx={{
+                    backgroundColor: "#f8f9fa",
+                    px: 3,
+                    py: 2,
+                    borderBottom: "1px solid #e0e0e0",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      color: "#333",
+                    }}
+                  >
+                    Konum
+                  </Typography>
+                </Box>
+
+                <Box sx={{ p: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 1,
+                    }}
+                  >
+                    <LocationOn sx={{ color: "#007bff", fontSize: 18 }} />
+                    <Typography
+                      sx={{
+                        fontSize: "14px",
+                        color: "#333",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {ad.city?.name && ad.district?.name
+                        ? `${ad.city.name} / ${ad.district.name}`
+                        : "Konum bilgisi mevcut değil"}
+                    </Typography>
+                  </Box>
+
+                  {/* Map Options - No API Key Required */}
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: 200,
+                      borderRadius: 1,
+                      overflow: "hidden",
+                      border: "1px solid #ddd",
+                      position: "relative",
+                    }}
+                  >
+                    {/* OpenStreetMap Embed */}
+                    <iframe
+                      width="100%"
+                      height="200"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=27.2000,37.8500,27.3000,37.9000&layer=mapnik&marker=37.8583,27.2583`}
+                      title="Konum Haritası"
+                    />
+
+                    {/* Location info overlay */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        backgroundColor: "rgba(255, 255, 255, 0.95)",
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                      }}
+                    >
+                      <LocationOn sx={{ color: "#e74c3c", fontSize: 16 }} />
+                      <Typography
+                        sx={{
+                          fontSize: "11px",
+                          fontWeight: "bold",
+                          color: "#333",
+                        }}
+                      >
+                        {ad.city?.name || "Aydın"} /{" "}
+                        {ad.district?.name || "Kuşadası"}
+                      </Typography>
+                    </Box>
+
+                    {/* Map controls */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        bottom: 8,
+                        right: 8,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 0.5,
+                      }}
+                    >
+                      {/* Google Maps button */}
+                      <Box
+                        sx={{
+                          backgroundColor: "rgba(66, 133, 244, 0.95)",
+                          color: "white",
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          cursor: "pointer",
+                          fontSize: "10px",
+                          fontWeight: "bold",
+                          "&:hover": {
+                            backgroundColor: "rgb(66, 133, 244)",
+                          },
+                        }}
+                        onClick={() => {
+                          const cityName = ad.city?.name || "Aydın";
+                          const districtName = ad.district?.name || "Kuşadası";
+                          const searchQuery = `${cityName}, ${districtName}, Turkey`;
+                          window.open(
+                            `https://www.google.com/maps/search/${encodeURIComponent(
+                              searchQuery
+                            )}`,
+                            "_blank"
+                          );
+                        }}
+                      >
+                        Google Maps
+                      </Box>
+
+                      {/* Yandex Maps button */}
+                      <Box
+                        sx={{
+                          backgroundColor: "rgba(255, 219, 77, 0.95)",
+                          color: "#333",
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          cursor: "pointer",
+                          fontSize: "10px",
+                          fontWeight: "bold",
+                          "&:hover": {
+                            backgroundColor: "rgb(255, 219, 77)",
+                          },
+                        }}
+                        onClick={() => {
+                          const cityName = ad.city?.name || "Aydın";
+                          const districtName = ad.district?.name || "Kuşadası";
+                          window.open(
+                            `https://yandex.com.tr/maps/?text=${encodeURIComponent(
+                              cityName + " " + districtName
+                            )}`,
+                            "_blank"
+                          );
+                        }}
+                      >
+                        Yandex Maps
+                      </Box>
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
             </Box>
@@ -870,15 +1467,16 @@ const AdDetail: React.FC = () => {
                         .map(([key]) => (
                           <Chip
                             key={`feature-${key}`}
-                            label={key}
+                            label={formatFeatureName(key)}
                             size="small"
                             sx={{
                               backgroundColor: "#e3f2fd",
                               color: "#1976d2",
-                              fontSize: "10px",
-                              height: "20px",
+                              fontSize: "12px",
+                              height: "28px",
+                              fontWeight: "500",
                               "& .MuiChip-label": {
-                                px: 1,
+                                px: 1.5,
                               },
                             }}
                           />
@@ -897,15 +1495,16 @@ const AdDetail: React.FC = () => {
                         .map(([key]) => (
                           <Chip
                             key={`detail-${key}`}
-                            label={key}
+                            label={formatFeatureName(key)}
                             size="small"
                             sx={{
                               backgroundColor: "#e8f5e8",
                               color: "#2e7d32",
-                              fontSize: "10px",
-                              height: "20px",
+                              fontSize: "12px",
+                              height: "28px",
+                              fontWeight: "500",
                               "& .MuiChip-label": {
-                                px: 1,
+                                px: 1.5,
                               },
                             }}
                           />
@@ -917,6 +1516,16 @@ const AdDetail: React.FC = () => {
           </Box>
         </Box>
       </Container>
+
+      {/* Complaint Modal */}
+      {ad && (
+        <ComplaintModal
+          open={showComplaintModal}
+          onClose={() => setShowComplaintModal(false)}
+          adId={ad.id}
+          adTitle={ad.title}
+        />
+      )}
     </Box>
   );
 };
