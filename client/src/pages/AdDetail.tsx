@@ -181,7 +181,7 @@ const AdDetail: React.FC = () => {
 
   return (
     <Box sx={{ backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
-      <Container maxWidth="lg" sx={{ px: { xs: 3, sm: 4, lg: 8 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4, lg: 5 } }}>
         <Box sx={{ py: 2 }}>
           {/* Main Title and Price */}
           <Box sx={{ mb: 3 }}>
@@ -281,14 +281,14 @@ const AdDetail: React.FC = () => {
               flexDirection: { xs: "column", lg: "row" },
             }}
           >
-            {/* Left Side - Images (45%) */}
-            <Box sx={{ flex: { lg: "0 0 45%" } }}>
+            {/* Left Side - Images (40%) */}
+            <Box sx={{ flex: { lg: "0 0 40%" } }}>
               {/* Main Image */}
               <Box sx={{ mb: 2, position: "relative" }}>
                 <Box
                   sx={{
                     width: "100%",
-                    height: 350,
+                    height: 250,
                     backgroundColor: "#f8f9fa",
                     border: "1px solid #e0e0e0",
                     borderRadius: 1,
@@ -362,12 +362,13 @@ const AdDetail: React.FC = () => {
               {ad.images && ad.images.length > 1 && (
                 <Box
                   sx={{
-                    display: "flex",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(5, 1fr)",
                     gap: 1,
-                    overflowX: "auto",
-                    pb: 1,
+                    maxHeight: 150,
+                    overflowY: "auto",
                     "&::-webkit-scrollbar": {
-                      height: 6,
+                      width: 6,
                     },
                     "&::-webkit-scrollbar-track": {
                       backgroundColor: "#f1f1f1",
@@ -385,8 +386,8 @@ const AdDetail: React.FC = () => {
                         key={index}
                         onClick={() => setSelectedImageIndex(index)}
                         sx={{
-                          minWidth: 80,
-                          height: 60,
+                          width: "100%",
+                          aspectRatio: "4/3",
                           border:
                             selectedImageIndex === index
                               ? "2px solid #007bff"
@@ -780,14 +781,16 @@ const AdDetail: React.FC = () => {
               </Box>
             </Box>
 
-            {/* Özellikler Section */}
-            {ad.customFields?.features &&
-              typeof ad.customFields.features === "object" && (
+            {/* Detaylı Bilgi Section */}
+            {ad.customFields?.detailedInfo &&
+              typeof ad.customFields.detailedInfo === "string" &&
+              ad.customFields.detailedInfo.trim() !== "" && (
                 <Box
                   sx={{
                     backgroundColor: "white",
                     border: "1px solid #e0e0e0",
                     borderRadius: 1,
+                    mb: 2,
                   }}
                 >
                   <Box
@@ -805,19 +808,68 @@ const AdDetail: React.FC = () => {
                         color: "#333",
                       }}
                     >
-                      Özellikler
+                      Detaylı Bilgi
                     </Typography>
                   </Box>
 
                   <Box sx={{ p: 1.5 }}>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {Object.entries(
+                    <Typography
+                      sx={{
+                        fontSize: "12px",
+                        color: "#333",
+                        lineHeight: 1.6,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {ad.customFields.detailedInfo}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+
+            {/* Özellikler Section */}
+            {((ad.customFields?.features &&
+              typeof ad.customFields.features === "object") ||
+              (ad.customFields?.detailFeatures &&
+                typeof ad.customFields.detailFeatures === "object")) && (
+              <Box
+                sx={{
+                  backgroundColor: "white",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    backgroundColor: "#f8f9fa",
+                    px: 1.5,
+                    py: 1,
+                    borderBottom: "1px solid #e0e0e0",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "13px",
+                      fontWeight: "bold",
+                      color: "#333",
+                    }}
+                  >
+                    Araç Özellikleri
+                  </Typography>
+                </Box>
+
+                <Box sx={{ p: 1.5 }}>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {/* Features'dan gelen özellikler */}
+                    {ad.customFields?.features &&
+                      typeof ad.customFields.features === "object" &&
+                      Object.entries(
                         ad.customFields.features as Record<string, boolean>
                       )
                         .filter(([, value]) => value === true)
                         .map(([key]) => (
                           <Chip
-                            key={key}
+                            key={`feature-${key}`}
                             label={key}
                             size="small"
                             sx={{
@@ -831,10 +883,37 @@ const AdDetail: React.FC = () => {
                             }}
                           />
                         ))}
-                    </Box>
+
+                    {/* DetailFeatures'dan gelen özellikler */}
+                    {ad.customFields?.detailFeatures &&
+                      typeof ad.customFields.detailFeatures === "object" &&
+                      Object.entries(
+                        ad.customFields.detailFeatures as Record<
+                          string,
+                          boolean
+                        >
+                      )
+                        .filter(([, value]) => value === true)
+                        .map(([key]) => (
+                          <Chip
+                            key={`detail-${key}`}
+                            label={key}
+                            size="small"
+                            sx={{
+                              backgroundColor: "#e8f5e8",
+                              color: "#2e7d32",
+                              fontSize: "10px",
+                              height: "20px",
+                              "& .MuiChip-label": {
+                                px: 1,
+                              },
+                            }}
+                          />
+                        ))}
                   </Box>
                 </Box>
-              )}
+              </Box>
+            )}
           </Box>
         </Box>
       </Container>
