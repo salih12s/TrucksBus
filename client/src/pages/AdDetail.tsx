@@ -50,11 +50,16 @@ interface Ad {
   color?: string;
   damage?: string;
   plateType?: string;
+  plateNumber?: string;
   takas?: string;
   viewCount?: number;
   platformLength?: string;
   platformWidth?: string;
   roofType?: string;
+  loadCapacity?: string;
+  maxPower?: string;
+  maxTorque?: string;
+  fuelType?: string;
   images?: string[];
   user?: {
     id: number;
@@ -103,6 +108,22 @@ const AdDetail: React.FC = () => {
         console.log("Images verisi:", data.images);
         console.log("Images tipi:", typeof data.images);
         console.log("Images array mi?", Array.isArray(data.images));
+
+        // Motor gücü debug
+        console.log("=== Motor Gücü Debug ===");
+        console.log("data.enginePower:", data.enginePower);
+        console.log("data.customFields:", data.customFields);
+        if (data.customFields) {
+          console.log(
+            "data.customFields.enginePower:",
+            data.customFields.enginePower
+          );
+          console.log(
+            "data.customFields.motorPower:",
+            data.customFields.motorPower
+          );
+        }
+
         if (data.images) {
           console.log("İlk resim:", data.images[0]);
           if (data.images[0]?.imageUrl) {
@@ -986,6 +1007,10 @@ const AdDetail: React.FC = () => {
                         ad.customFields?.motorPower ||
                         ad.customFields?.enginePower ||
                         ad.enginePower ||
+                        ad.customFields?.motor_power ||
+                        ad.customFields?.engine_power ||
+                        ad.dynamicFields?.enginePower ||
+                        ad.dynamicFields?.motorPower ||
                         null,
                     },
                     {
@@ -1035,6 +1060,87 @@ const AdDetail: React.FC = () => {
                       value: ad.customFields?.paintChange || null,
                     },
 
+                    // Otobüs Özel Alanları
+                    {
+                      label: "Motor Gücü",
+                      value:
+                        ad.customFields?.motorPower ||
+                        ad.customFields?.enginePower ||
+                        ad.enginePower ||
+                        ad.customFields?.motor_power ||
+                        ad.customFields?.engine_power ||
+                        ad.dynamicFields?.enginePower ||
+                        ad.dynamicFields?.motorPower ||
+                        null,
+                    },
+                    {
+                      label: "Kapasite",
+                      value:
+                        ad.customFields?.capacity ||
+                        ad.customFields?.passengerCapacity ||
+                        null,
+                    },
+                    {
+                      label: "Koltuk Düzeni",
+                      value:
+                        ad.customFields?.seatArrangement ||
+                        ad.customFields?.seatLayout ||
+                        null,
+                    },
+                    {
+                      label: "Koltuk Arkası Ekran",
+                      value: ad.customFields?.seatBackScreen || null,
+                    },
+                    {
+                      label: "Yakıt Hacmi (Litre)",
+                      value: ad.customFields?.fuelCapacity
+                        ? `${ad.customFields.fuelCapacity} L`
+                        : null,
+                    },
+
+                    // Oto Kurtarıcı Tekli Araç Özel Alanları
+                    {
+                      label: "İstiap Haddi",
+                      value: ad.customFields?.loadCapacity || 
+                             ad.loadCapacity || null,
+                    },
+                    {
+                      label: "Motor Hacmi",
+                      value: ad.customFields?.engineVolume || 
+                             ad.customFields?.engineCapacity ||
+                             ad.engineVolume || null,
+                    },
+                    {
+                      label: "Maksimum Güç",
+                      value: ad.customFields?.maxPower || 
+                             ad.maxPower || null,
+                    },
+                    {
+                      label: "Maksimum Tork",
+                      value: ad.customFields?.maxTorque || 
+                             ad.maxTorque || null,
+                    },
+                    {
+                      label: "Yakıt Tipi",
+                      value: ad.customFields?.fuelType || 
+                             ad.fuelType || null,
+                    },
+                    {
+                      label: "Araç Plakası",
+                      value: ad.customFields?.plateNumber || 
+                             ad.plateNumber || null,
+                    },
+                    {
+                      label: "Platform Uzunluk",
+                      value: ad.customFields?.platformLength || 
+                             ad.platformLength || null,
+                    },
+                    {
+                      label: "Platform Genişlik",
+                      value: ad.customFields?.platformWidth || 
+                             ad.platformWidth || null,
+                    },
+
                     {
                       label: "Lastik Durumu",
                       value: ad.customFields?.tireCondition
@@ -1066,22 +1172,6 @@ const AdDetail: React.FC = () => {
                       value: ad.customFields?.exchange || ad.takas || null,
                     },
                     { label: "Hasar Durumu", value: ad.damage || null },
-
-                    // Platform Bilgileri (Dorse için)
-                    {
-                      label: "Platform Uzunluk",
-                      value:
-                        ad.platformLength ||
-                        ad.customFields?.platformLength ||
-                        null,
-                    },
-                    {
-                      label: "Platform Genişlik",
-                      value:
-                        ad.platformWidth ||
-                        ad.customFields?.platformWidth ||
-                        null,
-                    },
 
                     // Dinamik kategori alanları
                     ...(Array.isArray(categoryFields)

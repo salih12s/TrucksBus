@@ -1878,7 +1878,7 @@ export const getSimilarAds = async (req: Request, res: Response) => {
   }
 };
 
-// İlan oluştur (Oto Kurtarıcı - Tekli Araç)
+// İlan oluştur (Oto Kurtarıcı - Tekli Araç) - UNIQUE_MARKER_FOR_TEKLI
 export const createOtoKurtariciTekliAd = async (
   req: Request,
   res: Response
@@ -1905,7 +1905,6 @@ export const createOtoKurtariciTekliAd = async (
       fuelType,
       platformLength,
       platformWidth,
-      maxVehicleCapacity,
       loadCapacity,
       plateNumber,
       exchange,
@@ -1914,6 +1913,8 @@ export const createOtoKurtariciTekliAd = async (
       address,
       detailedInfo,
       features,
+      cekiciEkipmani,
+      ekEkipmanlar,
     } = req.body;
 
     // Fuel type enum mapping
@@ -1969,7 +1970,6 @@ export const createOtoKurtariciTekliAd = async (
         fuelType: fuelType ? fuelTypeMap[fuelType] || fuelType : null,
         platformLength,
         platformWidth,
-        maxVehicleCapacity,
         loadCapacity,
         plateNumber,
         isExchangeable: exchange === "evet",

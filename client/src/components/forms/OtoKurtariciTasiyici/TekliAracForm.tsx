@@ -55,7 +55,6 @@ interface FormData {
   fuelType: string;
   platformLength: string;
   platformWidth: string;
-  maxVehicleCapacity: string;
   loadCapacity: string;
   plateNumber: string;
   exchange: string;
@@ -65,6 +64,23 @@ interface FormData {
   detailedInfo: string;
   photos: File[];
   showcasePhoto: File | null;
+  // Çekici Ekipmanı
+  cekiciEkipmani: {
+    kayarPlatform?: boolean;
+    palet?: boolean;
+    rampa?: boolean;
+    makara?: boolean;
+    vinc?: boolean;
+    ahtapotVinc?: boolean;
+    gozluk?: boolean;
+    hiUp?: boolean;
+  };
+  // Ek Ekipmanlar
+  ekEkipmanlar: {
+    pistonAyak?: boolean;
+    takoz?: boolean;
+    sabitlemeHalati?: boolean;
+  };
   // Detay Bilgisi alanları (ekler)
   detailFeatures: {
     hidrolikDireksiyon?: boolean;
@@ -102,7 +118,6 @@ const TekliAracForm: React.FC = () => {
     fuelType: "DIESEL",
     platformLength: "",
     platformWidth: "",
-    maxVehicleCapacity: "",
     loadCapacity: "",
     plateNumber: "",
     exchange: "hayir",
@@ -112,6 +127,21 @@ const TekliAracForm: React.FC = () => {
     detailedInfo: "",
     photos: [],
     showcasePhoto: null,
+    cekiciEkipmani: {
+      kayarPlatform: false,
+      palet: false,
+      rampa: false,
+      makara: false,
+      vinc: false,
+      ahtapotVinc: false,
+      gozluk: false,
+      hiUp: false,
+    },
+    ekEkipmanlar: {
+      pistonAyak: false,
+      takoz: false,
+      sabitlemeHalati: false,
+    },
     detailFeatures: {
       hidrolikDireksiyon: false,
       abs: false,
@@ -218,6 +248,28 @@ const TekliAracForm: React.FC = () => {
     }));
   };
 
+  const handleCekiciEkipmaniChange = (featureName: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      cekiciEkipmani: {
+        ...prev.cekiciEkipmani,
+        [featureName]:
+          !prev.cekiciEkipmani[featureName as keyof typeof prev.cekiciEkipmani],
+      },
+    }));
+  };
+
+  const handleEkEkipmanChange = (featureName: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      ekEkipmanlar: {
+        ...prev.ekEkipmanlar,
+        [featureName]:
+          !prev.ekEkipmanlar[featureName as keyof typeof prev.ekEkipmanlar],
+      },
+    }));
+  };
+
   // Fotoğraf işlevleri
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -296,6 +348,8 @@ const TekliAracForm: React.FC = () => {
           key !== "photos" &&
           key !== "showcasePhoto" &&
           key !== "detailFeatures" &&
+          key !== "cekiciEkipmani" &&
+          key !== "ekEkipmanlar" &&
           value
         ) {
           // Price ve mileage değerlerini parse et
@@ -312,6 +366,12 @@ const TekliAracForm: React.FC = () => {
 
       // Detay özelliklerini JSON olarak ekle (backend "features" bekliyor)
       submitData.append("features", JSON.stringify(formData.detailFeatures));
+      
+      // Çekici ekipmanlarını JSON olarak ekle
+      submitData.append("cekiciEkipmani", JSON.stringify(formData.cekiciEkipmani));
+      
+      // Ek ekipmanları JSON olarak ekle
+      submitData.append("ekEkipmanlar", JSON.stringify(formData.ekEkipmanlar));
 
       // Fotoğrafları ekle
       if (formData.showcasePhoto) {
@@ -588,18 +648,6 @@ const TekliAracForm: React.FC = () => {
 
                   <TextField
                     fullWidth
-                    label="Maksimum Araç Kapasitesi"
-                    name="maxVehicleCapacity"
-                    value={formData.maxVehicleCapacity}
-                    onChange={(e) =>
-                      handleInputChange("maxVehicleCapacity", e.target.value)
-                    }
-                    placeholder="Örn: 1 araç"
-                    required
-                  />
-
-                  <TextField
-                    fullWidth
                     label="İstiab Haddi (t)"
                     name="loadCapacity"
                     value={formData.loadCapacity}
@@ -721,6 +769,137 @@ const TekliAracForm: React.FC = () => {
                   sx={{ mt: 2 }}
                   placeholder="Mahalle, sokak, bina no vs."
                 />
+              </CardContent>
+            </Card>
+
+            {/* Çekici Ekipmanı */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  <Settings sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Çekici Ekipmanı
+                </Typography>
+
+                <Box 
+                  sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' },
+                    gap: 2
+                  }}
+                >
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.cekiciEkipmani.kayarPlatform || false}
+                        onChange={() => handleCekiciEkipmaniChange("kayarPlatform")}
+                      />
+                    }
+                    label="Kayar Platform"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.cekiciEkipmani.palet || false}
+                        onChange={() => handleCekiciEkipmaniChange("palet")}
+                      />
+                    }
+                    label="Palet"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.cekiciEkipmani.rampa || false}
+                        onChange={() => handleCekiciEkipmaniChange("rampa")}
+                      />
+                    }
+                    label="Rampa"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.cekiciEkipmani.makara || false}
+                        onChange={() => handleCekiciEkipmaniChange("makara")}
+                      />
+                    }
+                    label="Makara"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.cekiciEkipmani.vinc || false}
+                        onChange={() => handleCekiciEkipmaniChange("vinc")}
+                      />
+                    }
+                    label="Vinç"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.cekiciEkipmani.ahtapotVinc || false}
+                        onChange={() => handleCekiciEkipmaniChange("ahtapotVinc")}
+                      />
+                    }
+                    label="Ahtapot Vinç"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.cekiciEkipmani.gozluk || false}
+                        onChange={() => handleCekiciEkipmaniChange("gozluk")}
+                      />
+                    }
+                    label="Gözlük"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.cekiciEkipmani.hiUp || false}
+                        onChange={() => handleCekiciEkipmaniChange("hiUp")}
+                      />
+                    }
+                    label="Hi-Up"
+                  />
+                </Box>
+
+                <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
+                  Ek Ekipmanlar
+                </Typography>
+
+                <Box 
+                  sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' },
+                    gap: 2
+                  }}
+                >
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.ekEkipmanlar.pistonAyak || false}
+                        onChange={() => handleEkEkipmanChange("pistonAyak")}
+                      />
+                    }
+                    label="Piston Ayak"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.ekEkipmanlar.takoz || false}
+                        onChange={() => handleEkEkipmanChange("takoz")}
+                      />
+                    }
+                    label="Takoz"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.ekEkipmanlar.sabitlemeHalati || false}
+                        onChange={() => handleEkEkipmanChange("sabitlemeHalati")}
+                      />
+                    }
+                    label="Sabitleme Halatı"
+                  />
+                </Box>
               </CardContent>
             </Card>
 
