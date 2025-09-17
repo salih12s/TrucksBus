@@ -183,11 +183,14 @@ const MainLayout: React.FC = () => {
     setSelectedAdForComplaint(null);
   };
 
-  // ❗ CRITICAL: Ads'leri lazy loading ile yükle - daha az ilan
+  // ❗ ULTRA FAST: Ads'leri minimal mode ile hızlı yükle
   const loadAdsLazy = async () => {
+    const adsStartTime = performance.now();
+    console.log("⚡ Loading ads with ultra fast mode...");
+
     try {
       const adsRes = await apiClient
-        .get("/ads?status=APPROVED&limit=12&page=1&minimal=true") // ❗ 12 ilan
+        .get("/ads?status=APPROVED&limit=20&page=1&minimal=true") // ❗ 20 ilan (anasayfa için)
         .catch((err) => {
           console.error("Ads lazy loading error:", err);
           return { data: { ads: [] } };
@@ -202,6 +205,9 @@ const MainLayout: React.FC = () => {
         ? (adsRes.data as Ad[])
         : [];
 
+      const adsLoadTime = performance.now() - adsStartTime;
+      console.log(`⚡ Ads loaded in: ${adsLoadTime.toFixed(2)}ms`);
+
       setAds(adsData as Ad[]);
     } catch (error) {
       console.error("Ads lazy loading error:", error);
@@ -211,8 +217,17 @@ const MainLayout: React.FC = () => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
+      console.log("🚀 INSTANT Homepage Loading Start...");
+
       try {
-        // ❗ CRITICAL: Sadece kategorileri yükle - ADS'LERİ SONRA LAZY LOADING İLE YÜKLE
+        // ❗ INSTANT UI: Kategorileri localStorage'dan yükle (varsa)
+        const cachedCategories = localStorage.getItem("categories");
+        if (cachedCategories) {
+          setCategories(JSON.parse(cachedCategories));
+          console.log("⚡ Categories loaded from cache instantly");
+        }
+
+        // ❗ CRITICAL: Kategorileri API'den yükle ve cache'le
         const categoriesRes = await apiClient
           .get("/categories")
           .catch((err) => {
@@ -225,16 +240,16 @@ const MainLayout: React.FC = () => {
           : [];
 
         setCategories(categoriesData as Category[]);
+        // Cache categories for next visit
+        localStorage.setItem("categories", JSON.stringify(categoriesData));
 
-        // ❗ CRITICAL: Ads'leri 2 saniye sonra lazy loading ile yükle - UI önce render olsun
-        setTimeout(() => {
-          loadAdsLazy();
-        }, 2000);
+        // ❗ CRITICAL: Ads'leri ANINDA yükle - 2 saniye bekleme kaldırıldı
+        loadAdsLazy();
 
-        // ❗ Şehirler ve markalar lazy loading - 1 saniye sonra yükle
+        // ❗ Şehirler ve markalar lazy loading - 500ms sonra yükle (daha hızlı)
         setTimeout(() => {
           loadCitiesAndBrands();
-        }, 1000);
+        }, 500);
       } catch (error) {
         console.error("Initial data fetch error:", error);
         // Fallback data sadece kategoriler için
@@ -1066,7 +1081,59 @@ const MainLayout: React.FC = () => {
                   }}
                 >
                   {!Array.isArray(filteredAds) ? (
-                    <Typography>İlanlar yükleniyor...</Typography>
+                    // ⚡ SKELETON LOADING - Anında görsel feedback (20 ilan)
+                    <>
+                      {Array.from({ length: 20 }, (_, i) => i + 1).map((i) => (
+                        <Card
+                          key={`skeleton-${i}`}
+                          className="skeleton-pulse"
+                          sx={{
+                            borderRadius: 1,
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                            cursor: "default",
+                            height: 200,
+                            display: "flex",
+                            flexDirection: "column",
+                            backgroundColor: "#f5f5f5",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              height: 120,
+                              backgroundColor: "#e0e0e0",
+                              borderRadius: "4px 4px 0 0",
+                            }}
+                          />
+                          <Box sx={{ p: 1, flex: 1 }}>
+                            <Box
+                              sx={{
+                                height: 16,
+                                backgroundColor: "#e0e0e0",
+                                borderRadius: 1,
+                                mb: 1,
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                height: 14,
+                                backgroundColor: "#e0e0e0",
+                                borderRadius: 1,
+                                mb: 1,
+                                width: "70%",
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                height: 14,
+                                backgroundColor: "#e0e0e0",
+                                borderRadius: 1,
+                                width: "50%",
+                              }}
+                            />
+                          </Box>
+                        </Card>
+                      ))}
+                    </>
                   ) : filteredAds.length === 0 ? (
                     <Typography>Henüz ilan bulunmuyor.</Typography>
                   ) : (
@@ -1314,7 +1381,86 @@ const MainLayout: React.FC = () => {
                   })()}
 
                   {!Array.isArray(filteredAds) ? (
-                    <Typography>İlanlar yükleniyor...</Typography>
+                    // ⚡ SKELETON LOADING - Liste görünümü için (20 ilan)
+                    <>
+                      {Array.from({ length: 20 }, (_, i) => i + 1).map((i) => (
+                        <Box
+                          key={`skeleton-list-${i}`}
+                          className="skeleton-pulse"
+                          sx={{
+                            display: "flex",
+                            borderBottom: "1px solid #e0e0e0",
+                            padding: 1.5,
+                            backgroundColor: "#f9f9f9",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 80,
+                              height: 60,
+                              backgroundColor: "#e0e0e0",
+                              borderRadius: 1,
+                              mr: 2,
+                            }}
+                          />
+                          <Box sx={{ flex: 1, mr: 2 }}>
+                            <Box
+                              sx={{
+                                height: 16,
+                                backgroundColor: "#e0e0e0",
+                                borderRadius: 1,
+                                mb: 0.5,
+                              }}
+                            />
+                            <Box
+                              sx={{
+                                height: 14,
+                                backgroundColor: "#e0e0e0",
+                                borderRadius: 1,
+                                width: "60%",
+                              }}
+                            />
+                          </Box>
+                          <Box sx={{ width: 100, mr: 2 }}>
+                            <Box
+                              sx={{
+                                height: 14,
+                                backgroundColor: "#e0e0e0",
+                                borderRadius: 1,
+                              }}
+                            />
+                          </Box>
+                          <Box sx={{ width: 80, mr: 2 }}>
+                            <Box
+                              sx={{
+                                height: 14,
+                                backgroundColor: "#e0e0e0",
+                                borderRadius: 1,
+                              }}
+                            />
+                          </Box>
+                          <Box sx={{ width: 80, mr: 2 }}>
+                            <Box
+                              sx={{
+                                height: 14,
+                                backgroundColor: "#e0e0e0",
+                                borderRadius: 1,
+                              }}
+                            />
+                          </Box>
+                          <Box sx={{ width: 120 }}>
+                            <Box
+                              sx={{
+                                height: 14,
+                                backgroundColor: "#e0e0e0",
+                                borderRadius: 1,
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                      ))}
+                    </>
                   ) : filteredAds.length === 0 ? (
                     <Typography>Henüz ilan bulunmuyor.</Typography>
                   ) : (

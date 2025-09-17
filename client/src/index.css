@@ -8,3 +8,14 @@
   margin: 0;
   padding: 0;
 }
+
+/* ⚡ SKELETON LOADING ANIMATION */
+@keyframes skeletonPulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.skeleton-pulse {
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}

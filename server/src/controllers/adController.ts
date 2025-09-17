@@ -26,7 +26,7 @@ export const getAds = async (req: Request, res: Response) => {
       location,
       status = "APPROVED",
       page = 1,
-      limit = 6, // ❗ 20'den 6'ya düşür ilk yükleme için
+      limit = 20, // ❗ Anasayfa için 20 ilan
       sortBy = "createdAt",
       sortOrder = "desc",
       minimal = false, // ❗ Minimal mode ekledik
