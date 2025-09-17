@@ -301,8 +301,33 @@ const VehicleFormSelector: React.FC = () => {
   // KaroserUstYapi kategorisi için özel mantık
   if (categorySlug === "karoser-ust-yapi") {
     console.log("🎯 KAROSER ÜST YAPI KATEGORİSİ ALGILANDI!");
-    console.log("  Checking variant:", variantSlug);
-    console.log("  Checking model:", modelSlug);
+    console.log("  📋 URL Parametreleri:");
+    console.log("    - categorySlug:", categorySlug);
+    console.log("    - modelSlug:", modelSlug);
+    console.log("    - variantSlug:", variantSlug);
+    console.log("  🔍 Ahşap Kasa Kontrolleri:");
+    if (variantSlug) {
+      console.log("    - variant toLowerCase:", variantSlug.toLowerCase());
+      console.log(
+        "    - variant includes 'ahsap':",
+        variantSlug.toLowerCase().includes("ahsap")
+      );
+      console.log(
+        "    - variant includes 'ahşap':",
+        variantSlug.toLowerCase().includes("ahşap")
+      );
+    }
+    if (modelSlug) {
+      console.log("    - model toLowerCase:", modelSlug.toLowerCase());
+      console.log(
+        "    - model includes 'ahsap':",
+        modelSlug.toLowerCase().includes("ahsap")
+      );
+      console.log(
+        "    - model includes 'ahşap':",
+        modelSlug.toLowerCase().includes("ahşap")
+      );
+    }
 
     // Eğer variant var ise, variant'a göre seç
     if (variantSlug) {
@@ -317,6 +342,7 @@ const VehicleFormSelector: React.FC = () => {
           console.log("✅ Karoser Kapaklı Tip formu seçildi (variant)");
           return <KaroserKapakliTipForm />;
         case "ahsap-kasa":
+        case "damperli-grup-ahsap-kasa-ahsap-kasa":
           console.log("✅ Karoser Ahşap Kasa formu seçildi (variant)");
           return <KaroserAhsapKasaForm />;
         case "acik-kasa":
@@ -328,13 +354,60 @@ const VehicleFormSelector: React.FC = () => {
         case "ozel-kasa":
           console.log("✅ Özel Kasa formu seçildi (variant)");
           return <OzelKasaForm />;
-        default:
+        default: {
           console.log(
             "⚠️ Bilinmeyen karoser variant:",
             variantSlug,
-            "- Kaya Tipi açılıyor"
+            "- String matching kontrol ediliyor..."
           );
-          return <KaroserKayaTipiForm />;
+
+          // String matching ile variant kontrol et
+          const variantLower = variantSlug.toLowerCase();
+
+          if (
+            variantLower.includes("ahsap") ||
+            variantLower.includes("ahşap")
+          ) {
+            console.log("✅ Ahşap Kasa formu seçildi (string match)");
+            return <KaroserAhsapKasaForm />;
+          } else if (variantLower.includes("kaya")) {
+            console.log("✅ Kaya Tipi formu seçildi (string match)");
+            return <KaroserKayaTipiForm />;
+          } else if (
+            variantLower.includes("havuz") ||
+            variantLower.includes("hardox")
+          ) {
+            console.log("✅ Havuz Hardox Tipi formu seçildi (string match)");
+            return <KaroserHavuzHardoxTipiForm />;
+          } else if (
+            variantLower.includes("kapakli") ||
+            variantLower.includes("kapaklı")
+          ) {
+            console.log("✅ Kapaklı Tip formu seçildi (string match)");
+            return <KaroserKapakliTipForm />;
+          } else if (
+            variantLower.includes("acik") ||
+            variantLower.includes("açık")
+          ) {
+            console.log("✅ Açık Kasa formu seçildi (string match)");
+            return <AcikKasaForm />;
+          } else if (
+            variantLower.includes("kapali") ||
+            variantLower.includes("kapalı")
+          ) {
+            console.log("✅ Kapalı Kasa formu seçildi (string match)");
+            return <KapaliKasaForm />;
+          } else if (
+            variantLower.includes("ozel") ||
+            variantLower.includes("özel")
+          ) {
+            console.log("✅ Özel Kasa formu seçildi (string match)");
+            return <OzelKasaForm />;
+          } else {
+            console.log("⚠️ Hiçbir match bulunamadı - Kaya Tipi açılıyor");
+            return <KaroserKayaTipiForm />;
+          }
+        }
       }
     }
 

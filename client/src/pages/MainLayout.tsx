@@ -155,11 +155,31 @@ const MainLayout: React.FC = () => {
   };
 
   const getImageUrl = (images?: Ad["images"]) => {
-    if (!images || images.length === 0) return null;
+    console.log("🏠 MainLayout getImageUrl çağrıldı:", {
+      hasImages: !!images,
+      imageCount: images?.length || 0,
+      images: images?.map((img) => ({
+        id: img.id,
+        isPrimary: img.isPrimary,
+        hasUrl: !!img.imageUrl,
+      })),
+    });
+
+    if (!images || images.length === 0) {
+      console.log("❌ MainLayout: Resim bulunamadı");
+      return null;
+    }
 
     // Önce vitrin resmini ara
     const primaryImage = images.find((img) => img.isPrimary);
     const imageToUse = primaryImage || images[0];
+
+    console.log("🖼️ MainLayout: Kullanılacak resim:", {
+      id: imageToUse?.id,
+      isPrimary: imageToUse?.isPrimary,
+      hasUrl: !!imageToUse?.imageUrl,
+      urlLength: imageToUse?.imageUrl?.length,
+    });
 
     // Artık imageUrl doğrudan base64 formatında geliyor
     return imageToUse?.imageUrl || null;
@@ -1178,7 +1198,9 @@ const MainLayout: React.FC = () => {
                                 display: "block",
                               }}
                             >
-                              {ad.city?.name || "Belirtilmemiş"}
+                              {ad.city?.name ||
+                                ad.district?.name ||
+                                "Belirtilmemiş"}
                             </Typography>
                             <Typography
                               variant="caption"

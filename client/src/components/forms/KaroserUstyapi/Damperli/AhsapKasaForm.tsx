@@ -71,12 +71,44 @@ interface FormData {
   detailedInfo: string;
 }
 
+interface AdCreateResponse {
+  success: boolean;
+  message: string;
+  ad?: {
+    id: number;
+    title: string;
+  };
+}
+
+interface ApiError {
+  message: string;
+  response?: {
+    data?: {
+      error?: string;
+    };
+    status?: number;
+  };
+}
+
 // Devrilme Yönleri
 const DEVRILME_YONLERI = ["Sağa", "Sola", "Arkaya"];
 
 const AhsapKasaForm: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
+
+  // Fiyat formatı için helper fonksiyonlar
+  const formatPrice = (value: string): string => {
+    // Sadece sayıları al
+    const numericValue = value.replace(/[^\d]/g, "");
+    // Binlik ayırıcı ekle
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  const unformatPrice = (value: string): string => {
+    // Binlik ayırıcıları kaldır
+    return value.replace(/\./g, "");
+  };
 
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -188,6 +220,15 @@ const AhsapKasaForm: React.FC = () => {
     }));
   };
 
+  const handlePriceChange = (value: string) => {
+    // Ham veriyi kaydet (formatlanmamış)
+    const unformattedValue = unformatPrice(value);
+
+    setFormData((prev) => ({
+      ...prev,
+      price: unformattedValue, // Ham veri olarak kaydet
+    }));
+  };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
@@ -219,6 +260,16 @@ const AhsapKasaForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
+      // Debug: Form verilerini logla
+      console.log("🔍 Form gönderimi başlıyor:");
+      console.log("📝 FormData içeriği:", {
+        title: formData.title,
+        description: formData.description,
+        price: formData.price,
+        photos: formData.photos.length,
+        showcasePhoto: formData.showcasePhoto ? "VAR" : "YOK",
+      });
+
       // Temel bilgileri ekle
       Object.entries(formData).forEach(([key, value]) => {
         if (key !== "photos" && key !== "showcasePhoto" && value) {
@@ -234,12 +285,30 @@ const AhsapKasaForm: React.FC = () => {
 
       // Fotoğrafları ekle
       if (formData.showcasePhoto) {
+        console.log(
+          "📷 Vitrin fotoğrafı ekleniyor:",
+          formData.showcasePhoto.name
+        );
         submitData.append("showcasePhoto", formData.showcasePhoto);
+      } else {
+        console.log("⚠️ Vitrin fotoğrafı bulunamadı!");
       }
 
       formData.photos.forEach((photo, index) => {
+        console.log(`📷 Fotoğraf ${index + 1} ekleniyor:`, photo.name);
         submitData.append(`photo_${index}`, photo);
       });
+
+      console.log(`📊 Toplam fotoğraf sayısı: ${formData.photos.length}`);
+
+      // FormData içeriğini logla
+      console.log("📦 FormData keys:");
+      for (const [key, value] of submitData.entries()) {
+        console.log(
+          `  ${key}:`,
+          typeof value === "object" ? value.constructor.name : value
+        );
+      }
 
       const response = await apiClient.post("/ads/karoser", submitData, {
         headers: {
@@ -247,14 +316,24 @@ const AhsapKasaForm: React.FC = () => {
         },
       });
 
-      console.log(
-        "Ahşap Kasa Karoser ilanı başarıyla oluşturuldu:",
-        response.data
-      );
+      console.log("✅ Server Response:", response.data);
+      const responseData = response.data as AdCreateResponse;
+      console.log("📷 İlan ID:", responseData?.ad?.id);
+
       setSubmitSuccess(true);
-    } catch (error) {
-      console.error("İlan oluşturulurken hata:", error);
-      alert("İlan oluşturulurken bir hata oluştu");
+    } catch (error: unknown) {
+      const err = error as ApiError;
+      console.error("❌ İlan oluşturulurken hata:", err);
+      console.error("🔍 Error details:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
+      alert(
+        `İlan oluşturulurken bir hata oluştu: ${
+          err.response?.data?.error || err.message
+        }`
+      );
     } finally {
       setLoading(false);
     }
@@ -273,32 +352,6 @@ const AhsapKasaForm: React.FC = () => {
     <>
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            🌳 Ahşap Kasa Damperli Karoser İlanı Ver
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ fontWeight: 500 }}
-          >
-            {categorySlug} - {brandSlug} - {modelSlug} - {variantSlug}
-          </Typography>
-        </Box>
-
         <Paper elevation={3} sx={{ p: 4 }}>
           <form onSubmit={handleSubmit}>
             {/* Temel Bilgiler */}
@@ -351,10 +404,13 @@ const AhsapKasaForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  type="number"
                   label="Fiyat (TL) *"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  value={formatPrice(formData.price)}
+                  onChange={(e) => handlePriceChange(e.target.value)}
+                  placeholder="Örn: 150.000"
+                  InputProps={{
+                    endAdornment: "₺",
+                  }}
                   required
                 />
               </Box>
@@ -464,50 +520,6 @@ const AhsapKasaForm: React.FC = () => {
 
             <Divider sx={{ my: 4 }} />
 
-            {/* İletişim Bilgileri */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📞 İletişim Bilgileri
-            </Typography>
-
-            <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
-              <TextField
-                fullWidth
-                label="Satıcı Adı *"
-                value={formData.sellerName}
-                onChange={(e) =>
-                  handleInputChange("sellerName", e.target.value)
-                }
-                disabled
-                helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
-                required
-              />
-
-              <Box
-                sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-              >
-                <TextField
-                  fullWidth
-                  label="Telefon *"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="(5XX) XXX XX XX"
-                  disabled
-                  helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
-                  required
-                />
-
-                <TextField
-                  fullWidth
-                  type="email"
-                  label="E-posta"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  disabled
-                  helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
-                />
-              </Box>
-            </Box>
-
             <Divider sx={{ my: 4 }} />
 
             {/* Ek Seçenekler */}
@@ -523,20 +535,6 @@ const AhsapKasaForm: React.FC = () => {
                 mb: 4,
               }}
             >
-              <FormControl fullWidth>
-                <InputLabel>Garanti</InputLabel>
-                <Select
-                  value={formData.warranty}
-                  onChange={(e) =>
-                    handleInputChange("warranty", e.target.value)
-                  }
-                  label="Garanti"
-                >
-                  <MenuItem value="evet">Evet</MenuItem>
-                  <MenuItem value="hayir">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
               <FormControl fullWidth>
                 <InputLabel>Pazarlık</InputLabel>
                 <Select

@@ -1765,6 +1765,9 @@ export const createKaroserAd = async (req: Request, res: Response) => {
           ? parseInt(productionYear)
           : null,
         price: price ? parseFloat(price) : null,
+        // Şehir ve ilçe bilgilerini ana tablo alanlarına kaydet
+        cityId: cityId ? parseInt(cityId) : null,
+        districtId: districtId ? parseInt(districtId) : null,
         customFields: {
           // Damperli alanları
           genislik: genislik || null,
@@ -1790,8 +1793,6 @@ export const createKaroserAd = async (req: Request, res: Response) => {
           phone: phone || null,
           email: email || null,
           detailedInfo: detailedInfo || null,
-          cityId: cityId ? parseInt(cityId) : null,
-          districtId: districtId ? parseInt(districtId) : null,
           categorySlug: categorySlug || null,
           brandSlug: brandSlug || null,
           modelSlug: modelSlug || null,
@@ -1804,6 +1805,81 @@ export const createKaroserAd = async (req: Request, res: Response) => {
         user: true,
       },
     });
+
+    // Resim yükleme işlemi (Base64 formatında)
+    const files = req.files as any;
+    if (files && files.length > 0) {
+      console.log(
+        "📷 Karoser ilanı için resimler base64 formatında kaydediliyor:",
+        files.map((f: any) => f.fieldname)
+      );
+
+      const imagePromises = [];
+      let displayOrder = 0;
+
+      // Vitrin resmini bul ve işle
+      const showcaseFile = files.find(
+        (f: any) => f.fieldname === "showcasePhoto"
+      );
+      if (showcaseFile) {
+        // Base64 formatına çevir
+        const base64Image = `data:${
+          showcaseFile.mimetype
+        };base64,${showcaseFile.buffer.toString("base64")}`;
+
+        console.log("📷 Karoser vitrin resmi base64 formatında kaydediliyor");
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: true,
+              displayOrder: 0,
+              altText: `${title} - Vitrin Resmi`,
+            },
+          })
+        );
+        displayOrder = 1;
+      }
+
+      // Diğer resimleri işle (photo_0, photo_1, photo_2, ...)
+      const photoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("photo_")
+      );
+
+      photoFiles.forEach((file: any, index: number) => {
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
+
+        console.log(
+          `📷 Karoser resim ${index + 1} base64 formatında kaydediliyor`
+        );
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: false,
+              displayOrder: displayOrder + index,
+              altText: `${title} - Resim ${index + 1}`,
+            },
+          })
+        );
+      });
+
+      // Tüm resimleri kaydet
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        console.log(
+          `✅ ${imagePromises.length} adet karoser resmi başarıyla kaydedildi`
+        );
+      }
+    } else {
+      console.log("⚠️ Karoser ilanı için resim bulunamadı");
+    }
 
     return res.status(201).json({
       message: "Karoser üst yapı ilanı başarıyla oluşturuldu ve onay bekliyor",

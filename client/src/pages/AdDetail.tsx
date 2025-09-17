@@ -61,7 +61,13 @@ interface Ad {
   maxTorque?: string;
   fuelType?: string;
   maxVehicleCapacity?: string;
-  images?: string[];
+  images?: {
+    id: number;
+    imageUrl: string;
+    isPrimary: boolean;
+    displayOrder: number;
+    altText?: string;
+  }[];
   user?: {
     id: number;
     firstName: string;
@@ -973,8 +979,24 @@ const AdDetail: React.FC = () => {
                     { label: "Varyant", value: ad.variant?.name || null },
 
                     // Lokasyon Bilgileri
-                    { label: "Şehir", value: ad.city?.name || null },
-                    { label: "İlçe", value: ad.district?.name || null },
+                    {
+                      label: "Şehir",
+                      value:
+                        ad.city?.name ||
+                        (ad.customFields?.cityId
+                          ? `Şehir ID: ${ad.customFields.cityId}`
+                          : null) ||
+                        null,
+                    },
+                    {
+                      label: "İlçe",
+                      value:
+                        ad.district?.name ||
+                        (ad.customFields?.districtId
+                          ? `İlçe ID: ${ad.customFields.districtId}`
+                          : null) ||
+                        null,
+                    },
                     { label: "Adres", value: ad.customFields?.address || null },
 
                     // Araç Detayları
@@ -1059,6 +1081,29 @@ const AdDetail: React.FC = () => {
                     {
                       label: "Boyalı",
                       value: ad.customFields?.paintChange || null,
+                    },
+
+                    // Karoser/Ahşap Kasa Özel Alanları
+                    {
+                      label: "Uzunluk (cm)",
+                      value:
+                        ad.customFields?.length ||
+                        ad.customFields?.uzunluk ||
+                        null,
+                    },
+                    {
+                      label: "Genişlik (cm)",
+                      value:
+                        ad.customFields?.width ||
+                        ad.customFields?.genislik ||
+                        null,
+                    },
+                    {
+                      label: "Devrilme Yönü",
+                      value:
+                        ad.customFields?.tippingDirection ||
+                        ad.customFields?.devrilmeYonu ||
+                        null,
                     },
 
                     // Otobüs Özel Alanları

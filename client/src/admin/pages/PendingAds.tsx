@@ -110,6 +110,12 @@ const PendingAds: React.FC = () => {
   // Base64 image handler - images are now stored as base64 in database
   const getImageUrl = (imageUrl: string) => {
     // imageUrl artık doğrudan base64 formatında geliyor
+    console.log("🖼️ Image URL kontrol:", {
+      hasUrl: !!imageUrl,
+      length: imageUrl?.length,
+      isBase64: imageUrl?.startsWith("data:"),
+      preview: imageUrl?.substring(0, 50),
+    });
     return imageUrl || "/placeholder.jpg";
   };
 
@@ -122,6 +128,24 @@ const PendingAds: React.FC = () => {
     try {
       const response = await apiClient.get("/ads/admin/pending");
       const adsData = response.data as Ad[];
+
+      // Debug: İlan verilerini kontrol et
+      console.log("📊 Admin paneli - Onay bekleyen ilanlar:", adsData.length);
+      adsData.forEach((ad, index) => {
+        console.log(`📋 İlan ${index + 1}:`, {
+          id: ad.id,
+          title: ad.title,
+          images: ad.images?.length || 0,
+          imageDetails: ad.images?.map((img) => ({
+            id: img.id,
+            isPrimary: img.isPrimary,
+            hasImageUrl: !!img.imageUrl,
+            imageUrlLength: img.imageUrl?.length,
+            isBase64: img.imageUrl?.startsWith("data:"),
+          })),
+        });
+      });
+
       setAds(adsData);
     } catch (error) {
       console.error("Onay bekleyen ilanlar alınamadı:", error);
