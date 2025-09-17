@@ -1085,14 +1085,14 @@ const AdDetail: React.FC = () => {
 
                     // Karoser/Ahşap Kasa Özel Alanları
                     {
-                      label: "Uzunluk (cm)",
+                      label: "Uzunluk (m)",
                       value:
                         ad.customFields?.length ||
                         ad.customFields?.uzunluk ||
                         null,
                     },
                     {
-                      label: "Genişlik (cm)",
+                      label: "Genişlik (m)",
                       value:
                         ad.customFields?.width ||
                         ad.customFields?.genislik ||
@@ -1201,9 +1201,14 @@ const AdDetail: React.FC = () => {
 
                     {
                       label: "Lastik Durumu",
-                      value: ad.customFields?.tireCondition
-                        ? `${ad.customFields.tireCondition}%`
-                        : null,
+                      value:
+                        ad.customFields?.tireCondition ||
+                        ad.customFields?.lastikDurumu
+                          ? `${
+                              ad.customFields?.tireCondition ||
+                              ad.customFields?.lastikDurumu
+                            }%`
+                          : null,
                     },
                     {
                       label: "Yük Kapasitesi",

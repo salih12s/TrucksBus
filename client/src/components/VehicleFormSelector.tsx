@@ -341,6 +341,10 @@ const VehicleFormSelector: React.FC = () => {
         case "kapakli-tip":
           console.log("✅ Karoser Kapaklı Tip formu seçildi (variant)");
           return <KaroserKapakliTipForm />;
+        case "hafriyat-tipi":
+        case "damperli-grup-hafriyat-tipi-hafriyat-tipi":
+          console.log("✅ Karoser Hafriyat Tipi formu seçildi (variant)");
+          return <HafriyatTipiForm />;
         case "ahsap-kasa":
         case "damperli-grup-ahsap-kasa-ahsap-kasa":
           console.log("✅ Karoser Ahşap Kasa formu seçildi (variant)");
@@ -370,6 +374,12 @@ const VehicleFormSelector: React.FC = () => {
           ) {
             console.log("✅ Ahşap Kasa formu seçildi (string match)");
             return <KaroserAhsapKasaForm />;
+          } else if (
+            variantLower.includes("hafriyat") ||
+            variantLower.includes("hafrıyat")
+          ) {
+            console.log("✅ Hafriyat Tipi formu seçildi (string match)");
+            return <HafriyatTipiForm />;
           } else if (variantLower.includes("kaya")) {
             console.log("✅ Kaya Tipi formu seçildi (string match)");
             return <KaroserKayaTipiForm />;
@@ -420,6 +430,10 @@ const VehicleFormSelector: React.FC = () => {
         case "kaya-tipi":
           console.log("✅ Karoser Kaya Tipi formu seçildi (tam slug)");
           return <KaroserKayaTipiForm />;
+        case "hafriyat-tipi":
+        case "damperli-grup-hafriyat-tipi":
+          console.log("✅ Karoser Hafriyat Tipi formu seçildi (tam slug)");
+          return <HafriyatTipiForm />;
         case "havuz-hardox-tipi":
           console.log("✅ Karoser Havuz Hardox Tipi formu seçildi (tam slug)");
           return <KaroserHavuzHardoxTipiForm />;
@@ -447,6 +461,12 @@ const VehicleFormSelector: React.FC = () => {
       if (modelLower.includes("kaya") || modelLower.includes("taş")) {
         console.log("✅ Karoser Kaya Tipi formu seçildi (içerik)");
         return <KaroserKayaTipiForm />;
+      } else if (
+        modelLower.includes("hafriyat") ||
+        modelLower.includes("hafrıyat")
+      ) {
+        console.log("✅ Karoser Hafriyat Tipi formu seçildi (içerik)");
+        return <HafriyatTipiForm />;
       } else if (
         modelLower.includes("havuz") ||
         modelLower.includes("hardox")

@@ -293,32 +293,6 @@ const AcikKasaForm: React.FC = () => {
     <>
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            📦 Açık Kasa Sabit Kabin Karoser İlanı Ver
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ fontWeight: 500 }}
-          >
-            {categorySlug} - {brandSlug} - {modelSlug} - {variantSlug}
-          </Typography>
-        </Box>
-
         <Paper elevation={3} sx={{ p: 4 }}>
           <form onSubmit={handleSubmit}>
             {/* Temel Bilgiler */}
@@ -732,12 +706,18 @@ const AcikKasaForm: React.FC = () => {
         <Dialog open={submitSuccess} onClose={handleSuccessClose}>
           <DialogTitle sx={{ textAlign: "center" }}>
             <CheckCircle sx={{ fontSize: 60, color: "green", mb: 2 }} />
-            <Typography variant="h4">Başarılı!</Typography>
+            <Typography variant="h4">🎉 Başarılı!</Typography>
           </DialogTitle>
           <DialogContent>
-            <Typography variant="body1" sx={{ textAlign: "center" }}>
-              Açık Kasa Sabit Kabin Karoser ilanınız başarıyla oluşturuldu.
-              Admin onayından sonra yayınlanacaktır.
+            <Typography variant="body1" sx={{ textAlign: "center", mb: 2 }}>
+              <strong>Açık Kasa Karoser</strong> ilanınız başarıyla oluşturuldu!
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ textAlign: "center", color: "#666" }}
+            >
+              İlanınız admin onayından sonra yayınlanacak ve diğer kullanıcılar
+              tarafından görülebilecektir.
             </Typography>
           </DialogContent>
           <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
@@ -746,10 +726,15 @@ const AcikKasaForm: React.FC = () => {
               variant="contained"
               size="large"
               sx={{
-                background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
+                background: "linear-gradient(45deg, #4caf50 30%, #66bb6a 90%)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(45deg, #43a047 30%, #4caf50 90%)",
+                },
+                px: 4,
               }}
             >
-              Tamam
+              Ana Sayfaya Dön
             </Button>
           </DialogActions>
         </Dialog>
