@@ -1085,6 +1085,14 @@ const AdDetail: React.FC = () => {
 
                     // Karoser/Ahşap Kasa Özel Alanları
                     {
+                      label: "Kullanım Alanı",
+                      value: ad.customFields?.usageArea || null,
+                    },
+                    {
+                      label: "Karoser Yapısı",
+                      value: ad.customFields?.bodyStructure || null,
+                    },
+                    {
                       label: "Uzunluk (m)",
                       value:
                         ad.customFields?.length ||
@@ -1104,6 +1112,14 @@ const AdDetail: React.FC = () => {
                         ad.customFields?.tippingDirection ||
                         ad.customFields?.devrilmeYonu ||
                         null,
+                    },
+                    {
+                      label: "Takaslı",
+                      value: ad.customFields?.isExchangeable
+                        ? ad.customFields.isExchangeable === "evet"
+                          ? "Evet"
+                          : "Hayır"
+                        : null,
                     },
 
                     // Otobüs Özel Alanları
