@@ -3,28 +3,32 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Get all categories with their brands and models
+// Get all categories - OPTIMIZED for fast loading
 export const getCategories = async (req: Request, res: Response) => {
   try {
+    // ❗ CRITICAL: Categories'i sadece temel bilgilerle yükle - brands ve models lazy loading
     const categories = await prisma.category.findMany({
-      include: {
-        brands: {
-          include: {
-            brand: {
-              include: {
-                models: {
-                  include: {
-                    variants: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        iconUrl: true,
+        displayOrder: true,
+        isActive: true,
+        description: true,
+      },
+      where: {
+        isActive: true,
       },
       orderBy: {
         displayOrder: "asc",
       },
+    });
+
+    // ❗ CRITICAL: Cache headers ekle - 10 dakika cache
+    res.set({
+      "Cache-Control": "public, max-age=600, stale-while-revalidate=120",
+      ETag: `categories-${categories.length}`,
     });
 
     res.json(categories);
@@ -72,36 +76,45 @@ export const getCategoryById = async (req: Request, res: Response) => {
   }
 };
 
-// Get brands for a specific category by slug
+// Get brands for a specific category by slug - OPTIMIZED
 export const getBrandsByCategory = async (req: Request, res: Response) => {
   try {
     const { categorySlug } = req.params;
 
-    // First find the category by slug
+    // ❗ CRITICAL: Simplified query for performance
     const category = await prisma.category.findUnique({
       where: { slug: categorySlug },
+      select: { id: true },
     });
 
     if (!category) {
       return res.status(404).json({ error: "Category not found" });
     }
 
+    // ❗ CRITICAL: Minimal brand data for fast loading
     const categoryBrands = await prisma.categoryBrand.findMany({
       where: { categoryId: category.id },
-      include: {
+      select: {
         brand: {
-          include: {
-            _count: {
-              select: {
-                models: true,
-              },
-            },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logoUrl: true,
+            isActive: true,
           },
         },
       },
     });
 
     const brands = categoryBrands.map((cb: any) => cb.brand);
+
+    // ❗ CRITICAL: Cache headers - 15 dakika cache
+    res.set({
+      "Cache-Control": "public, max-age=900, stale-while-revalidate=180",
+      ETag: `brands-${categorySlug}-${brands.length}`,
+    });
+
     return res.json(brands);
   } catch (error) {
     console.error("Error fetching brands:", error);

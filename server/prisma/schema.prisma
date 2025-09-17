@@ -171,6 +171,14 @@ model Ad {
   messages           Message[]
   pendingAd          PendingAd?
 
+  // ❗ ULTRA PERFORMANCE INDEX'LER
+  @@index([status, createdAt])
+  @@index([status, isPromoted, createdAt])
+  @@index([status]) // ❗ Sadece status için
+  @@index([createdAt]) // ❗ Sadece tarih için
+  @@index([categoryId, status])
+  @@index([brandId, status])
+  @@index([cityId, status])
   @@map("ads")
 }
 
@@ -184,6 +192,8 @@ model AdImage {
   isShowcase   Boolean @default(false) @map("is_showcase")
   ad           Ad      @relation(fields: [adId], references: [id], onDelete: Cascade)
 
+  // ❗ Performans için index'ler  
+  @@index([adId, isPrimary])
   @@map("ad_images")
 }
 

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../config/database";
 
-// Get all cities
+// Get all cities - OPTIMIZED
 export const getCities = async (req: Request, res: Response) => {
   try {
     const cities = await prisma.city.findMany({
@@ -12,6 +12,12 @@ export const getCities = async (req: Request, res: Response) => {
         name: true,
         plateCode: true,
       },
+    });
+
+    // ❗ CRITICAL: Cache headers - 30 dakika cache (cities çok değişmez)
+    res.set({
+      "Cache-Control": "public, max-age=1800, stale-while-revalidate=300",
+      ETag: `cities-${cities.length}`,
     });
 
     res.json(cities);

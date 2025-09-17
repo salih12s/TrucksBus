@@ -110,18 +110,20 @@ const corsOptions = {
       "http://trucksbus.com.tr",
       "https://www.trucksbus.com.tr",
       "http://www.trucksbus.com.tr",
+      // ❗ Development için her zaman localhost'a izin ver
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:5174",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:5174",
     ];
 
-    // Development modunda localhost'a izin ver
-    if (process.env.NODE_ENV === "development") {
+    // Railway production URLs
+    if (process.env.RAILWAY_ENVIRONMENT_NAME) {
       allowedOrigins = [
         ...allowedOrigins,
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://localhost:5174",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5174",
+        "https://trucksbus-production.up.railway.app",
       ];
     }
 
@@ -151,6 +153,7 @@ const corsOptions = {
     "X-Requested-With",
     "Origin",
     "Accept",
+    "Cache-Control", // ❗ Cache-Control header allow et
   ],
   exposedHeaders: ["Content-Length", "X-Foo", "X-Bar"],
   optionsSuccessStatus: 200, // Some legacy browsers choke on 204
@@ -336,6 +339,7 @@ server.listen(PORT, () => {
     `🔒 Security features: Rate limiting, CORS, Helmet, Input validation`
   );
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`🔧 CORS Cache-Control header enabled`); // ❗ Restart trigger
 });
 
 export { io };

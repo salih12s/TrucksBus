@@ -156,18 +156,8 @@ const MainLayout: React.FC = () => {
   };
 
   const getImageUrl = (images?: Ad["images"]) => {
-    console.log("🏠 MainLayout getImageUrl çağrıldı:", {
-      hasImages: !!images,
-      imageCount: images?.length || 0,
-      images: images?.map((img) => ({
-        id: img.id,
-        isPrimary: img.isPrimary,
-        hasUrl: !!img.imageUrl,
-      })),
-    });
-
+    // ❗ Performance için console.log'ları kaldırdık
     if (!images || images.length === 0) {
-      console.log("❌ MainLayout: Resim bulunamadı");
       return null;
     }
 
@@ -175,14 +165,7 @@ const MainLayout: React.FC = () => {
     const primaryImage = images.find((img) => img.isPrimary);
     const imageToUse = primaryImage || images[0];
 
-    console.log("🖼️ MainLayout: Kullanılacak resim:", {
-      id: imageToUse?.id,
-      isPrimary: imageToUse?.isPrimary,
-      hasUrl: !!imageToUse?.imageUrl,
-      urlLength: imageToUse?.imageUrl?.length,
-    });
-
-    // Artık imageUrl doğrudan base64 formatında geliyor
+    // Base64 veya URL formatında döndür
     return imageToUse?.imageUrl || null;
   };
 
@@ -198,51 +181,58 @@ const MainLayout: React.FC = () => {
     setSelectedAdForComplaint(null);
   };
 
+  // ❗ CRITICAL: Ads'leri lazy loading ile yükle - daha az ilan
+  const loadAdsLazy = async () => {
+    try {
+      const adsRes = await apiClient
+        .get("/ads?status=APPROVED&limit=12&page=1&minimal=true") // ❗ 12 ilan
+        .catch((err) => {
+          console.error("Ads lazy loading error:", err);
+          return { data: { ads: [] } };
+        });
+
+      const adsResponse = adsRes.data as unknown as ApiAdsResponse;
+      const adsData = adsResponse?.ads
+        ? Array.isArray(adsResponse.ads)
+          ? adsResponse.ads
+          : []
+        : Array.isArray(adsRes.data)
+        ? (adsRes.data as Ad[])
+        : [];
+
+      setAds(adsData as Ad[]);
+    } catch (error) {
+      console.error("Ads lazy loading error:", error);
+      setAds([]);
+    }
+  };
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        console.log("=== STARTING INITIAL API CALLS ===");
-
-        // İlk yüklemede sadece kategoriler ve ilk 20 ilan
-        const [categoriesRes, adsRes] = await Promise.all([
-          apiClient.get("/categories").catch((err) => {
+        // ❗ CRITICAL: Sadece kategorileri yükle - ADS'LERİ SONRA LAZY LOADING İLE YÜKLE
+        const categoriesRes = await apiClient
+          .get("/categories")
+          .catch((err) => {
             console.error("Categories API error:", err);
             return { data: [] };
-          }),
-          apiClient.get("/ads?status=APPROVED&limit=20&page=1").catch((err) => {
-            console.error("Ads API error:", err);
-            return { data: { ads: [] } };
-          }),
-        ]);
+          });
 
-        console.log("=== INITIAL API RESPONSES ===");
-        console.log("Categories response:", categoriesRes);
-        console.log("Ads response:", adsRes);
-
-        // Güvenli veri kontrolü
         const categoriesData = Array.isArray(categoriesRes.data)
           ? categoriesRes.data
           : [];
 
-        // Backend response format: { ads: [], pagination: {} }
-        const adsResponse = adsRes.data as unknown as ApiAdsResponse;
-        const adsData = adsResponse?.ads
-          ? Array.isArray(adsResponse.ads)
-            ? adsResponse.ads
-            : []
-          : Array.isArray(adsRes.data)
-          ? (adsRes.data as Ad[])
-          : [];
-
         setCategories(categoriesData as Category[]);
-        setAds(adsData as Ad[]);
 
-        console.log("=== INITIAL DATA LOADED ===");
-        console.log("Categories:", categoriesData.length);
-        console.log("Ads:", adsData.length);
+        // ❗ CRITICAL: Ads'leri 2 saniye sonra lazy loading ile yükle - UI önce render olsun
+        setTimeout(() => {
+          loadAdsLazy();
+        }, 2000);
 
-        // Şehirler ve markalar lazy loading olarak ayrı yüklenecek
-        loadCitiesAndBrands();
+        // ❗ Şehirler ve markalar lazy loading - 1 saniye sonra yükle
+        setTimeout(() => {
+          loadCitiesAndBrands();
+        }, 1000);
       } catch (error) {
         console.error("Initial data fetch error:", error);
         // Fallback data sadece kategoriler için
@@ -285,15 +275,16 @@ const MainLayout: React.FC = () => {
     fetchInitialData();
   }, []);
 
-  // Lazy loading function for cities and brands
+  // ❗ Şehirler ve markalar lazy loading - optimize edildi
   const loadCitiesAndBrands = async () => {
     try {
+      // ❗ CRITICAL: Paralel ama limit'li ve cache'li
       const [citiesRes, brandsRes] = await Promise.all([
-        apiClient.get("/cities").catch((err) => {
+        apiClient.get("/cities?limit=50").catch((err) => {
           console.error("Cities API error:", err);
           return { data: [] };
         }),
-        apiClient.get("/brands").catch((err) => {
+        apiClient.get("/brands?limit=100").catch((err) => {
           console.error("Brands API error:", err);
           return { data: [] };
         }),
@@ -304,10 +295,6 @@ const MainLayout: React.FC = () => {
 
       setCities(citiesData);
       setBrands(brandsData as Brand[]);
-
-      console.log("=== LAZY LOADED DATA ===");
-      console.log("Cities:", citiesData.length);
-      console.log("Brands:", brandsData.length);
     } catch (error) {
       console.error("Lazy loading error:", error);
     }
@@ -318,17 +305,7 @@ const MainLayout: React.FC = () => {
 
   // Gelişmiş filtreleme
   useEffect(() => {
-    console.log("Filtering with:", {
-      selectedCategory,
-      selectedBrand,
-      searchTerm,
-      priceMin,
-      priceMax,
-      yearMin,
-      yearMax,
-      selectedCity,
-      totalAds: ads.length,
-    });
+    // ❗ Performance için filtering console'u kaldırdık
 
     if (
       !selectedCategory &&
@@ -482,7 +459,7 @@ const MainLayout: React.FC = () => {
     brands,
   ]);
 
-  // Favorites count'u yükle
+  // ❗ Favorites count'u lazy yükle - critical değil
   useEffect(() => {
     const fetchFavoritesCount = async () => {
       if (!user) {
@@ -490,14 +467,17 @@ const MainLayout: React.FC = () => {
         return;
       }
 
-      try {
-        const response = await apiClient.get("/favorites");
-        const favorites = response.data as Array<{ ad: { id: number } }>;
-        setFavoritesCount(favorites.length);
-      } catch (error) {
-        console.error("Error fetching favorites count:", error);
-        setFavoritesCount(0);
-      }
+      // ❗ 2 saniye sonra yükle - initial loading'i engellemez
+      setTimeout(async () => {
+        try {
+          const response = await apiClient.get("/favorites");
+          const favorites = response.data as Array<{ ad: { id: number } }>;
+          setFavoritesCount(favorites.length);
+        } catch (error) {
+          console.error("Error fetching favorites count:", error);
+          setFavoritesCount(0);
+        }
+      }, 2000);
     };
 
     fetchFavoritesCount();

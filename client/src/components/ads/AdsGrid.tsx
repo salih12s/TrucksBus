@@ -80,7 +80,8 @@ const AdsGrid: React.FC<AdsGridProps> = React.memo(({ filters = {} }) => {
   const buildApiUrl = useCallback(() => {
     const params = new URLSearchParams();
     params.append("status", "APPROVED");
-    params.append("limit", "12"); // İlk yüklemede daha az ilan
+    params.append("limit", "20"); // ❗ 20 ilan göster
+    params.append("minimal", "true"); // ❗ Minimal mode - hızlı yükleme
 
     if (filters.categoryId) params.append("categoryId", filters.categoryId);
     if (filters.brandId) params.append("brandId", filters.brandId);
@@ -157,10 +158,17 @@ const AdsGrid: React.FC<AdsGridProps> = React.memo(({ filters = {} }) => {
     const primaryImage = images.find((img) => img.isPrimary);
     const firstImage = primaryImage || images[0];
 
+    // ❗ Base64 resimleri direkt döndür
+    if (firstImage.imageUrl.startsWith("data:")) {
+      return firstImage.imageUrl;
+    }
+
+    // HTTP URL'leri direkt döndür
     if (firstImage.imageUrl.startsWith("http")) {
       return firstImage.imageUrl;
     }
 
+    // Relative path'ler için base URL ekle
     const baseUrl = "http://localhost:5000";
     return `${baseUrl}${firstImage.imageUrl}`;
   };

@@ -20,12 +20,14 @@ import {
 import { PWAStatus } from "./components/pwa";
 import { ProtectedRoute } from "./components/auth";
 
-// Pages - Lazy loaded for better performance
+// ❗ CRITICAL: Ana sayfa için gerekli - öncelikle yükle
 const MainLayout = React.lazy(() => import("./pages/MainLayout"));
-const Notifications = React.lazy(() => import("./pages/Notifications"));
-const Bookmarks = React.lazy(() => import("./pages/Bookmarks"));
 const LoginNew = React.lazy(() => import("./components/auth/LoginNew"));
 const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
+
+// ❗ Secondary pages - Daha sonra yüklenebilir
+const Notifications = React.lazy(() => import("./pages/Notifications"));
+const Bookmarks = React.lazy(() => import("./pages/Bookmarks"));
 const RegisterCorporate = React.lazy(
   () => import("./components/auth/RegisterCorporate")
 );
@@ -35,6 +37,8 @@ const ForgotPassword = React.lazy(
 const ResetPassword = React.lazy(
   () => import("./components/auth/ResetPassword")
 );
+
+// ❗ Form components - Ad creation'da lazy load
 const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
 const CreateMinibusAdForm = React.lazy(
   () => import("./components/ads/CreateMinibusAdForm")

@@ -42,8 +42,8 @@ const LazyImage: React.FC<LazyImageProps> = ({
           });
         },
         {
-          threshold: 0.1,
-          rootMargin: "50px",
+          threshold: 0.01, // ❗ Daha agresif threshold
+          rootMargin: "100px", // ❗ Daha geniş margin - ekrana yaklaşmadan yükle
         }
       );
 

@@ -4,10 +4,11 @@ import { PrismaClient, AdStatus } from "@prisma/client";
 const router = Router();
 const prisma = new PrismaClient();
 
-// Get all brands
+// ❗ Get all brands - Optimized for performance
 router.get("/", async (req, res) => {
   try {
-    const { categoryId } = req.query;
+    const { categoryId, limit } = req.query;
+    const brandLimit = limit ? parseInt(limit as string) : undefined;
 
     let whereClause: any = {
       isActive: true,
@@ -47,6 +48,16 @@ router.get("/", async (req, res) => {
       orderBy: {
         name: "asc",
       },
+      ...(brandLimit && { take: brandLimit }),
+    });
+
+    // ❗ CRITICAL: Cache headers for performance
+    res.set({
+      "Cache-Control": "public, max-age=1800", // 30 dakika cache
+      ETag: `brands-${categoryId || "all"}-${brandLimit || "all"}-${
+        brands.length
+      }`,
+      Expires: new Date(Date.now() + 30 * 60 * 1000).toUTCString(),
     });
 
     return res.json(brands);

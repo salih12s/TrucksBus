@@ -22,6 +22,7 @@ import { API_BASE_URL } from "../api/client";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store";
 import ComplaintModal from "../components/complaints/ComplaintModal";
+import LazyImage from "../components/common/LazyImage"; // ❗ LazyImage import
 import {
   checkFavorite,
   addToFavorites,
@@ -106,67 +107,57 @@ const AdDetail: React.FC = () => {
 
   useEffect(() => {
     const fetchAd = async () => {
+      const startTime = Date.now(); // ❗ Performance monitoring
       try {
-        const response = await fetch(`${API_BASE_URL}/ads/${id}`);
-        const data = await response.json();
-        console.log("=== API Veri Debug ===");
-        console.log("Tam API verisi:", JSON.stringify(data, null, 2));
-        console.log("Ad objesi:", data);
-        console.log("Images verisi:", data.images);
-        console.log("Images tipi:", typeof data.images);
-        console.log("Images array mi?", Array.isArray(data.images));
+        console.log("🚀 Starting ad detail fetch...");
 
-        // Motor gücü debug
-        console.log("=== Motor Gücü Debug ===");
-        console.log("data.enginePower:", data.enginePower);
-        console.log("data.customFields:", data.customFields);
-        if (data.customFields) {
-          console.log(
-            "data.customFields.enginePower:",
-            data.customFields.enginePower
-          );
-          console.log(
-            "data.customFields.motorPower:",
-            data.customFields.motorPower
-          );
-        }
+        // ❗ Parallel fetch for speed
+        const adPromise = fetch(`${API_BASE_URL}/ads/${id}`);
 
-        if (data.images) {
-          console.log("İlk resim:", data.images[0]);
-          if (data.images[0]?.imageUrl) {
-            console.log(
-              "İlk resimin imageUrl'i:",
-              data.images[0].imageUrl.substring(0, 100)
-            );
-          }
-        }
+        const adResponse = await adPromise;
+        const data = await adResponse.json();
+
+        const fetchTime = Date.now() - startTime;
+        console.log(`🚀 Ad Detail Fetch Time: ${fetchTime}ms`);
+        console.log("Backend Response Time:", data._debug?.responseTime + "ms");
+
         setAd(data);
 
-        // Kategori alanlarını fetch et
+        // ❗ Async operations (don't block UI)
+        const asyncOperations = [];
+
+        // Kategori alanları - async
         if (data.category?.id) {
-          try {
-            const fieldsResponse = await fetch(
-              `${API_BASE_URL}/categories/${data.category.id}/fields`
-            );
-            const fieldsData = await fieldsResponse.json();
-            console.log("Kategori alanları:", fieldsData);
-            setCategoryFields(fieldsData);
-          } catch (fieldsError) {
-            console.error("Kategori alanları fetch hatası:", fieldsError);
-          }
+          asyncOperations.push(
+            fetch(`${API_BASE_URL}/categories/${data.category.id}/fields`)
+              .then((res) => res.json())
+              .then((fieldsData) => {
+                setCategoryFields(fieldsData);
+              })
+              .catch((error) =>
+                console.error("Kategori alanları hatası:", error)
+              )
+          );
         }
 
-        // Check if ad is favorited by current user
+        // Favori kontrolü - async
         if (currentUser && token) {
-          try {
-            const favResult = await checkFavorite(Number(id), token);
-            if (favResult.success) {
-              setIsFavorited(favResult.isFavorited || false);
-            }
-          } catch (favError) {
-            console.error("Favori kontrolü hatası:", favError);
-          }
+          asyncOperations.push(
+            checkFavorite(Number(id), token)
+              .then((favResult) => {
+                if (favResult.success) {
+                  setIsFavorited(favResult.isFavorited || false);
+                }
+              })
+              .catch((error) => console.error("Favori kontrolü hatası:", error))
+          );
         }
+
+        // Run async operations in background
+        Promise.all(asyncOperations).finally(() => {
+          const totalTime = Date.now() - startTime;
+          console.log(`🚀 Total Detail Page Load Time: ${totalTime}ms`);
+        });
 
         setLoading(false);
       } catch (error) {
@@ -521,7 +512,7 @@ const AdDetail: React.FC = () => {
 
           {/* Main modal image */}
           {ad?.images && (
-            <img
+            <LazyImage
               src={getImageUrl([ad.images[modalImageIndex]])}
               alt={`${ad.title} - Fotoğraf ${modalImageIndex + 1}`}
               style={{
@@ -530,10 +521,8 @@ const AdDetail: React.FC = () => {
                 objectFit: "contain",
                 borderRadius: 8,
               }}
-              onError={(e) => {
-                e.currentTarget.src =
-                  "https://via.placeholder.com/800x600/f0f0f0/999999?text=Resim+Hatası";
-              }}
+              width="800"
+              height="600"
             />
           )}
 
@@ -605,7 +594,7 @@ const AdDetail: React.FC = () => {
                     },
                   }}
                 >
-                  <img
+                  <LazyImage
                     src={getImageUrl([image])}
                     alt={`Thumbnail ${index + 1}`}
                     style={{
@@ -613,10 +602,8 @@ const AdDetail: React.FC = () => {
                       height: "100%",
                       objectFit: "cover",
                     }}
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://via.placeholder.com/60x45/f0f0f0/999999?text=?";
-                    }}
+                    width="60"
+                    height="45"
                   />
                 </Box>
               ))}
@@ -772,7 +759,7 @@ const AdDetail: React.FC = () => {
                     setModalOpen(true);
                   }}
                 >
-                  <img
+                  <LazyImage
                     src={
                       ad.images &&
                       ad.images.length > 0 &&
@@ -786,11 +773,8 @@ const AdDetail: React.FC = () => {
                       maxHeight: "100%",
                       objectFit: "contain",
                     }}
-                    onError={(e) => {
-                      console.log("❌ Resim yüklenemedi:", e.currentTarget.src);
-                      e.currentTarget.src =
-                        "https://via.placeholder.com/400x300/f0f0f0/999999?text=Resim+Hatası";
-                    }}
+                    width="400"
+                    height="300"
                   />
                 </Box>
 
@@ -884,7 +868,7 @@ const AdDetail: React.FC = () => {
                           },
                         }}
                       >
-                        <img
+                        <LazyImage
                           src={getImageUrl([image])}
                           alt={`${ad.title} - ${index + 1}`}
                           style={{
@@ -892,15 +876,8 @@ const AdDetail: React.FC = () => {
                             height: "100%",
                             objectFit: "cover",
                           }}
-                          onError={(e) => {
-                            console.log(
-                              `❌ Thumbnail ${index + 1} yüklenemedi:`,
-                              e.currentTarget.src
-                            );
-                            e.currentTarget.src =
-                              "https://via.placeholder.com/80x60/f0f0f0/999999?text=" +
-                              (index + 1);
-                          }}
+                          width="80"
+                          height="60"
                         />
                       </Box>
                     );

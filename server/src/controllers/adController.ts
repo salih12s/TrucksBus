@@ -1,10 +1,19 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+// ❗ ULTRA PERFORMANCE: Connection pool optimize
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+  log: [], // Log'ları kapat performance için
+});
 
 // Get all ads with filters
 export const getAds = async (req: Request, res: Response) => {
+  const startTime = Date.now(); // ❗ Performance monitoring
   try {
     const {
       categoryId,
@@ -17,9 +26,10 @@ export const getAds = async (req: Request, res: Response) => {
       location,
       status = "APPROVED",
       page = 1,
-      limit = 20,
+      limit = 6, // ❗ 20'den 6'ya düşür ilk yükleme için
       sortBy = "createdAt",
       sortOrder = "desc",
+      minimal = false, // ❗ Minimal mode ekledik
     } = req.query;
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
@@ -46,6 +56,72 @@ export const getAds = async (req: Request, res: Response) => {
       if (maxYear) where.year.lte = parseInt(maxYear as string);
     }
 
+    // ❗ Minimal mode - ULTRA FAST RAW SQL
+    if (minimal === "true") {
+      console.log("🚀 Using RAW SQL for ultra performance...");
+
+      const rawQuery = `
+        SELECT 
+          a.id,
+          a.title,
+          a.price,
+          a.year,
+          a.created_at as "createdAt",
+          c.name as city_name,
+          d.name as district_name,
+          b.name as brand_name,
+          cat.name as category_name,
+          img.image_url as image_url
+        FROM ads a
+        LEFT JOIN cities c ON a.city_id = c.id
+        LEFT JOIN districts d ON a.district_id = d.id
+        LEFT JOIN brands b ON a.brand_id = b.id
+        LEFT JOIN categories cat ON a.category_id = cat.id
+        LEFT JOIN (
+          SELECT DISTINCT ON (ad_id) ad_id, image_url 
+          FROM ad_images 
+          WHERE is_primary = true 
+          ORDER BY ad_id, display_order ASC
+        ) img ON a.id = img.ad_id
+        WHERE a.status = 'APPROVED'
+        ORDER BY a.created_at DESC
+        LIMIT $1 OFFSET $2
+      `;
+
+      const ads = await prisma.$queryRawUnsafe(
+        rawQuery,
+        parseInt(limit as string),
+        skip
+      );
+
+      const responseTime = Date.now() - startTime;
+      console.log(`🚀 RAW SQL Response Time: ${responseTime}ms`);
+
+      res.set("Cache-Control", "public, max-age=300");
+      return res.json({
+        ads: (ads as any[]).map((ad) => ({
+          id: ad.id,
+          title: ad.title,
+          price: ad.price,
+          year: ad.year,
+          createdAt: ad.createdAt,
+          city: ad.city_name ? { name: ad.city_name } : null,
+          district: ad.district_name ? { name: ad.district_name } : null,
+          brand: ad.brand_name ? { name: ad.brand_name } : null,
+          category: ad.category_name ? { name: ad.category_name } : null,
+          images: ad.image_url ? [{ imageUrl: ad.image_url }] : [],
+        })),
+        pagination: {
+          page: parseInt(page as string),
+          limit: parseInt(limit as string),
+          total: 0,
+          pages: 0,
+        },
+        _debug: { responseTime },
+      });
+    }
+
+    // ❗ Normal mode - detaylı veri
     const ads = await prisma.ad.findMany({
       where,
       include: {
@@ -80,7 +156,17 @@ export const getAds = async (req: Request, res: Response) => {
 
     const total = await prisma.ad.count({ where });
 
-    res.json({
+    // ❗ CRITICAL: Cache headers for better performance
+    res.set({
+      "Cache-Control": "public, max-age=300", // 5 dakika cache (ads değişebilir)
+      ETag: `ads-${categoryId || "all"}-${page}-${limit}-${sortBy}-${minimal}`,
+      Expires: new Date(Date.now() + 5 * 60 * 1000).toUTCString(),
+    });
+
+    const responseTime = Date.now() - startTime;
+    console.log(`🚀 API Response Time (normal): ${responseTime}ms`);
+
+    return res.json({
       ads,
       pagination: {
         page: parseInt(page as string),
@@ -88,75 +174,157 @@ export const getAds = async (req: Request, res: Response) => {
         total,
         pages: Math.ceil(total / parseInt(limit as string)),
       },
+      _debug: { responseTime }, // ❗ Frontend'e timing gönder
     });
   } catch (error) {
     console.error("Error fetching ads:", error);
-    res.status(500).json({ error: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 };
 
-// Get ad by ID
+// Get ad by ID - ULTRA PERFORMANCE VERSION
 export const getAdById = async (req: Request, res: Response) => {
+  const startTime = Date.now(); // ❗ Performance monitoring
   try {
     const { id } = req.params;
 
-    const ad = await prisma.ad.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            companyName: true,
-            city: true,
-            phone: true,
-            email: true,
-            createdAt: true,
-            isVerified: true,
-          },
-        },
-        category: true,
-        brand: true,
-        model: true,
-        variant: true,
-        city: true,
-        district: true,
-        images: {
-          orderBy: { displayOrder: "asc" },
-        },
-      },
-    });
+    // ❗ RAW SQL for extreme performance
+    const adQuery = `
+      SELECT 
+        a.*,
+        u.id as user_id,
+        u.first_name,
+        u.last_name, 
+        u.company_name,
+        u.phone,
+        u.email,
+        u.created_at as user_created_at,
+        u.is_verified,
+        c.name as category_name,
+        b.name as brand_name,
+        m.name as model_name,
+        v.name as variant_name,
+        city.name as city_name,
+        dist.name as district_name
+      FROM ads a
+      LEFT JOIN users u ON a.user_id = u.id
+      LEFT JOIN categories c ON a.category_id = c.id
+      LEFT JOIN brands b ON a.brand_id = b.id
+      LEFT JOIN models m ON a.model_id = m.id
+      LEFT JOIN variants v ON a.variant_id = v.id
+      LEFT JOIN cities city ON a.city_id = city.id
+      LEFT JOIN districts dist ON a.district_id = dist.id
+      WHERE a.id = $1
+    `;
 
+    const imagesQuery = `
+      SELECT * FROM ad_images 
+      WHERE ad_id = $1 
+      ORDER BY display_order ASC
+    `;
+
+    // Parallel execution for speed
+    const [adResult, imagesResult] = await Promise.all([
+      prisma.$queryRawUnsafe(adQuery, parseInt(id)),
+      prisma.$queryRawUnsafe(imagesQuery, parseInt(id)),
+    ]);
+
+    const ad = (adResult as any[])[0];
     if (!ad) {
       return res.status(404).json({ error: "Ad not found" });
     }
 
-    // Increment view count
-    await prisma.ad.update({
-      where: { id: parseInt(id) },
-      data: { viewCount: { increment: 1 } },
+    const images = imagesResult as any[];
+
+    // ❗ Async view count update (don't wait for it)
+    prisma.ad
+      .update({
+        where: { id: parseInt(id) },
+        data: { viewCount: { increment: 1 } },
+      })
+      .catch(console.error); // Fire and forget
+
+    // ❗ User total ads with RAW SQL
+    const userTotalQuery = `
+      SELECT COUNT(*) as total 
+      FROM ads 
+      WHERE user_id = $1 AND status = 'APPROVED'
+    `;
+    const userTotalResult = await prisma.$queryRawUnsafe(
+      userTotalQuery,
+      ad.user_id
+    );
+    const userTotalAds = parseInt((userTotalResult as any[])[0].total);
+
+    const responseTime = Date.now() - startTime;
+    console.log(`🚀 Ad Detail Response Time: ${responseTime}ms`);
+
+    // ❗ Cache headers for detail page
+    res.set({
+      "Cache-Control": "public, max-age=600", // 10 dakika cache (detail değişmez)
+      ETag: `ad-${id}-${ad.updated_at}`,
+      Expires: new Date(Date.now() + 10 * 60 * 1000).toUTCString(),
     });
 
-    // User'ın toplam ilanlarını çek
-    const userTotalAds = await prisma.ad.count({
-      where: {
-        userId: ad.userId,
-        status: "APPROVED",
-      },
-    });
-
-    // Response'u format et
+    // Format response
     const formattedAd = {
-      ...ad,
+      id: ad.id,
+      title: ad.title,
+      description: ad.description,
+      price: ad.price,
+      year: ad.year,
+      mileage: ad.mileage,
+      location: ad.location,
+      latitude: ad.latitude,
+      longitude: ad.longitude,
+      status: ad.status,
+      viewCount: ad.view_count,
+      isPromoted: ad.is_promoted,
+      promotedUntil: ad.promoted_until,
+      customFields: ad.custom_fields,
+      createdAt: ad.created_at,
+      updatedAt: ad.updated_at,
+      chassisType: ad.chassis_type,
+      color: ad.color,
+      detailFeatures: ad.detail_features,
+      driveType: ad.drive_type,
+      engineCapacity: ad.engine_capacity,
+      fuelType: ad.fuel_type,
+      isExchangeable: ad.is_exchangeable,
+      plateNumber: ad.plate_number,
+      plateType: ad.plate_type,
+      roofType: ad.roof_type,
+      seatCount: ad.seat_count,
+      transmissionType: ad.transmission_type,
       user: {
-        ...ad.user,
+        id: ad.user_id,
+        firstName: ad.first_name,
+        lastName: ad.last_name,
+        companyName: ad.company_name,
+        phone: ad.phone,
+        email: ad.email,
+        createdAt: ad.user_created_at,
+        isVerified: ad.is_verified,
         name:
-          ad.user.companyName ||
-          `${ad.user.firstName || ""} ${ad.user.lastName || ""}`.trim() ||
+          ad.company_name ||
+          `${ad.first_name || ""} ${ad.last_name || ""}`.trim() ||
           "Bilinmeyen Satıcı",
         totalAds: userTotalAds,
       },
+      category: ad.category_name ? { name: ad.category_name } : null,
+      brand: ad.brand_name ? { name: ad.brand_name } : null,
+      model: ad.model_name ? { name: ad.model_name } : null,
+      variant: ad.variant_name ? { name: ad.variant_name } : null,
+      city: ad.city_name ? { name: ad.city_name } : null,
+      district: ad.district_name ? { name: ad.district_name } : null,
+      images: images.map((img) => ({
+        id: img.id,
+        imageUrl: img.image_url,
+        isPrimary: img.is_primary,
+        displayOrder: img.display_order,
+        altText: img.alt_text,
+      })),
+      _debug: { responseTime },
     };
 
     return res.json(formattedAd);
