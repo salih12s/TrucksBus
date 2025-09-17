@@ -123,7 +123,9 @@ const MainLayout: React.FC = () => {
     title: string;
   } | null>(null);
 
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated, token } = useAppSelector(
+    (state) => state.auth
+  );
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
@@ -459,10 +461,10 @@ const MainLayout: React.FC = () => {
     brands,
   ]);
 
-  // ❗ Favorites count'u lazy yükle - critical değil
+  // ❗ Favorites count'u lazy yükle - critical değil (SAFE VERSION)
   useEffect(() => {
     const fetchFavoritesCount = async () => {
-      if (!user) {
+      if (!user || !token) {
         setFavoritesCount(0);
         return;
       }
@@ -470,18 +472,22 @@ const MainLayout: React.FC = () => {
       // ❗ 2 saniye sonra yükle - initial loading'i engellemez
       setTimeout(async () => {
         try {
-          const response = await apiClient.get("/favorites");
+          const response = await apiClient.get("/favorites", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           const favorites = response.data as Array<{ ad: { id: number } }>;
           setFavoritesCount(favorites.length);
-        } catch (error) {
-          console.error("Error fetching favorites count:", error);
-          setFavoritesCount(0);
+        } catch {
+          console.error("Favorites count error (safe ignore)");
+          setFavoritesCount(0); // Silent fail
         }
       }, 2000);
     };
 
     fetchFavoritesCount();
-  }, [user]);
+  }, [user, token]); // token dependency eklendi
 
   // Category count helper function - dinamik olarak ads verilerinden hesaplar
   const getCategoryCount = (slug: string | null) => {

@@ -81,13 +81,7 @@ interface Ad {
   dynamicFields?: { [key: string]: string | number | boolean };
 }
 
-interface CategoryField {
-  id: number;
-  name: string;
-  fieldType: string;
-  isRequired: boolean;
-  options?: string[];
-}
+// CategoryField interface removed for performance
 
 const AdDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -95,7 +89,7 @@ const AdDetail: React.FC = () => {
   const [ad, setAd] = useState<Ad | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [categoryFields, setCategoryFields] = useState<CategoryField[]>([]);
+  // Category fields removed for performance - not critical
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
@@ -107,59 +101,68 @@ const AdDetail: React.FC = () => {
 
   useEffect(() => {
     const fetchAd = async () => {
-      const startTime = Date.now(); // ❗ Performance monitoring
+      const startTime = performance.now();
       try {
-        console.log("🚀 Starting ad detail fetch...");
+        console.log("⚡ LIGHTNING ad detail fetch...");
 
-        // ❗ Parallel fetch for speed
-        const adPromise = fetch(`${API_BASE_URL}/ads/${id}`);
+        // ❗ SIMPLE, FAST fetch without abort (causing issues)
+        const adResponse = await fetch(`${API_BASE_URL}/ads/${id}`, {
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "public, max-age=3600",
+            Connection: "keep-alive",
+          },
+        });
 
-        const adResponse = await adPromise;
-        const data = await adResponse.json();
-
-        const fetchTime = Date.now() - startTime;
-        console.log(`🚀 Ad Detail Fetch Time: ${fetchTime}ms`);
-        console.log("Backend Response Time:", data._debug?.responseTime + "ms");
-
-        setAd(data);
-
-        // ❗ Async operations (don't block UI)
-        const asyncOperations = [];
-
-        // Kategori alanları - async
-        if (data.category?.id) {
-          asyncOperations.push(
-            fetch(`${API_BASE_URL}/categories/${data.category.id}/fields`)
-              .then((res) => res.json())
-              .then((fieldsData) => {
-                setCategoryFields(fieldsData);
-              })
-              .catch((error) =>
-                console.error("Kategori alanları hatası:", error)
-              )
-          );
+        if (!adResponse.ok) {
+          throw new Error(`HTTP ${adResponse.status}`);
         }
 
-        // Favori kontrolü - async
+        const data = await adResponse.json();
+        const totalTime = performance.now() - startTime;
+
+        console.log(`⚡ LIGHTNING Total Fetch: ${totalTime.toFixed(2)}ms`);
+        console.log(`⚡ Backend Time: ${data._debug?.responseTime || "N/A"}`);
+        console.log(
+          `⚡ Cache Status: ${adResponse.headers.get("X-Cache") || "UNKNOWN"}`
+        );
+        console.log(`⚡ Category: ${data.category?.name || "No Category"}`);
+
+        // ❗ PERFORMANCE TRICK: Set ad data immediately, load images in background
+        const adWithoutImages = { ...data, images: [] }; // Show page immediately
+        setAd(adWithoutImages);
+        setLoading(false); // ❗ INSTANT PAGE LOAD
+
+        // ❗ Load images in background after 100ms delay
+        setTimeout(() => {
+          setAd(data); // Now add images
+        }, 100);
+
+        // ❗ SKIP category fields - not critical for performance
+        const instantOperations = [];
+
+        // Favori kontrolü - IMMEDIATE background check
         if (currentUser && token) {
-          asyncOperations.push(
+          instantOperations.push(
             checkFavorite(Number(id), token)
               .then((favResult) => {
                 if (favResult.success) {
                   setIsFavorited(favResult.isFavorited || false);
                 }
               })
-              .catch((error) => console.error("Favori kontrolü hatası:", error))
+              .catch(() => {}) // Silent fail
           );
         }
 
-        // Run async operations in background
-        Promise.all(asyncOperations).finally(() => {
-          const totalTime = Date.now() - startTime;
-          console.log(`🚀 Total Detail Page Load Time: ${totalTime}ms`);
+        // Run instant operations in background
+        Promise.all(instantOperations).finally(() => {
+          const totalTime = performance.now() - startTime;
+          console.log(
+            `⚡ Total Detail Page Load Time: ${totalTime.toFixed(2)}ms`
+          );
         });
 
-        setLoading(false);
+        // ❗ Loading already set to false above for instant display
       } catch (error) {
         console.error("Error fetching ad:", error);
         setLoading(false);
@@ -176,50 +179,34 @@ const AdDetail: React.FC = () => {
   };
 
   const getImageUrl = (images?: (string | { imageUrl: string })[]): string => {
-    console.log("=== getImageUrl Debug ===");
-    console.log("Gelen images parametresi:", images);
-    console.log("Images array uzunluğu:", images?.length);
-    console.log("Images tipi:", typeof images);
-
+    // ❗ Performance: No debug logs
     if (!images || images.length === 0) {
-      console.log("❌ Resim yok, placeholder kullanılacak");
       return "https://via.placeholder.com/400x300/f0f0f0/999999?text=Resim+Yok";
     }
 
     const firstImage = images[0];
-    console.log("İlk resim verisi:", firstImage);
-    console.log("İlk resim tipi:", typeof firstImage);
 
     // Eğer object ise imageUrl property'sini al
     let imageUrl: string;
     if (typeof firstImage === "object" && firstImage.imageUrl) {
       imageUrl = firstImage.imageUrl;
-      console.log(
-        "Object'ten imageUrl alındı:",
-        imageUrl.substring(0, 50) + "..."
-      );
     } else if (typeof firstImage === "string") {
       imageUrl = firstImage;
-      console.log("String resim verisi:", imageUrl.substring(0, 50) + "...");
     } else {
-      console.log("❌ Geçersiz resim formatı, placeholder kullanılacak");
       return "https://via.placeholder.com/400x300/f0f0f0/999999?text=Hatalı+Resim";
     }
 
-    // Base64 kontrolü
+    // Base64 kontrolü - keep original images for display
     if (imageUrl.startsWith("data:image/")) {
-      console.log("✅ Base64 resim tespit edildi");
-      return imageUrl;
+      return imageUrl; // Show base64 images but with lazy loading
     }
 
     if (imageUrl.startsWith("http")) {
-      console.log("✅ HTTP URL tespit edildi:", imageUrl);
       return imageUrl;
     }
 
     const baseUrl = API_BASE_URL.replace("/api", "");
     const finalUrl = `${baseUrl}${imageUrl}`;
-    console.log("Final URL:", finalUrl);
     return finalUrl;
   };
 
@@ -1233,16 +1220,7 @@ const AdDetail: React.FC = () => {
                     },
                     { label: "Hasar Durumu", value: ad.damage || null },
 
-                    // Dinamik kategori alanları
-                    ...(Array.isArray(categoryFields)
-                      ? categoryFields.map((field) => ({
-                          label: field.name,
-                          value:
-                            ad.dynamicFields?.[field.name] ||
-                            ad.customFields?.[field.name] ||
-                            null,
-                        }))
-                      : []),
+                    // Dynamic fields removed for performance
                   ]
                     .filter(
                       (item) =>

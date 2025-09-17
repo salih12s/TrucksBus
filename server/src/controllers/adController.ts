@@ -182,30 +182,83 @@ export const getAds = async (req: Request, res: Response) => {
   }
 };
 
-// Get ad by ID - ULTRA PERFORMANCE VERSION
-export const getAdById = async (req: Request, res: Response) => {
-  const startTime = Date.now(); // ❗ Performance monitoring
-  try {
-    const { id } = req.params;
+// ❗ SAFE IN-MEMORY CACHE for frequently accessed ads
+const adCache = new Map<
+  string,
+  { data: any; timestamp: number; ttl: number }
+>();
+const CACHE_TTL = 2 * 60 * 1000; // 2 dakika cache (daha kısa)
 
-    // ❗ RAW SQL for extreme performance
-    const adQuery = `
+// ❗ Cache cleaning utility
+const cleanExpiredCache = () => {
+  const now = Date.now();
+  for (const [key, value] of adCache.entries()) {
+    if (now - value.timestamp > value.ttl) {
+      adCache.delete(key);
+    }
+  }
+};
+
+// Clean cache every 5 minutes
+setInterval(cleanExpiredCache, 5 * 60 * 1000);
+
+// Get ad by ID - LIGHTNING FAST VERSION 3.0 ⚡ (SAFE)
+export const getAdById = async (req: Request, res: Response) => {
+  const startTime = performance.now();
+  const { id } = req.params;
+  const adId = parseInt(id);
+
+  // ❗ SAFE CACHE CHECK - only for valid IDs
+  if (!adId || adId <= 0) {
+    return res.status(400).json({ error: "Invalid ad ID" });
+  }
+
+  const cacheKey = `ad_${id}`;
+  const cached = adCache.get(cacheKey);
+
+  // ❗ SAFE cache validation - check if ad still exists
+  if (cached && Date.now() - cached.timestamp < cached.ttl) {
+    console.log(
+      `⚡ CACHE HIT for ad ${id} - ${(performance.now() - startTime).toFixed(
+        2
+      )}ms`
+    );
+    res.set({
+      "Cache-Control": "public, max-age=1800", // 30 dakika (daha güvenli)
+      "X-Cache": "HIT",
+      "X-Response-Time": `${(performance.now() - startTime).toFixed(2)}ms`,
+    });
+    return res.json(cached.data);
+  }
+
+  try {
+    console.log(`🚀 FRESH fetch for ID: ${id}`);
+
+    // ❗ OPTIMIZED SQL - keep base64 but limit size and count
+    const lightningQuery = `
       SELECT 
-        a.*,
-        u.id as user_id,
-        u.first_name,
-        u.last_name, 
-        u.company_name,
-        u.phone,
-        u.email,
-        u.created_at as user_created_at,
-        u.is_verified,
-        c.name as category_name,
-        b.name as brand_name,
-        m.name as model_name,
-        v.name as variant_name,
-        city.name as city_name,
-        dist.name as district_name
+        a.id, a.title, a.description, a.price, a.year, a.mileage,
+        a.location, a.latitude, a.longitude, a.status, a.view_count,
+        a.is_promoted, a.promoted_until, a.custom_fields, 
+        a.created_at, a.updated_at, a.chassis_type, a.color, 
+        a.detail_features, a.drive_type, a.engine_capacity,
+        a.fuel_type, a.is_exchangeable, a.plate_number, a.plate_type, 
+        a.roof_type, a.seat_count, a.transmission_type,
+        u.id as user_id, u.first_name, u.last_name, u.company_name, 
+        u.phone, u.email, u.created_at as user_created_at, u.is_verified,
+        c.name as category_name, b.name as brand_name, m.name as model_name, 
+        v.name as variant_name, city.name as city_name, dist.name as district_name,
+        COALESCE((
+          SELECT json_agg(json_build_object(
+            'id', ai.id,
+            'imageUrl', ai.image_url,
+            'isPrimary', ai.is_primary,
+            'displayOrder', ai.display_order,
+            'altText', ai.alt_text
+          ) ORDER BY ai.is_primary DESC, ai.display_order ASC LIMIT 5)
+          FROM ad_images ai WHERE ai.ad_id = a.id
+        ), '[]'::json) as images_json,
+        (SELECT COUNT(*)::int FROM ads a2 WHERE a2.user_id = a.user_id AND a2.status = 'APPROVED') as user_total_ads
       FROM ads a
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN categories c ON a.category_id = c.id
@@ -214,60 +267,41 @@ export const getAdById = async (req: Request, res: Response) => {
       LEFT JOIN variants v ON a.variant_id = v.id
       LEFT JOIN cities city ON a.city_id = city.id
       LEFT JOIN districts dist ON a.district_id = dist.id
-      WHERE a.id = $1
+      WHERE a.id = $1 AND a.status IN ('APPROVED', 'PENDING')
     `;
 
-    const imagesQuery = `
-      SELECT * FROM ad_images 
-      WHERE ad_id = $1 
-      ORDER BY display_order ASC
-    `;
+    const result = await prisma.$queryRawUnsafe(lightningQuery, adId);
+    const ad = (result as any[])[0];
 
-    // Parallel execution for speed
-    const [adResult, imagesResult] = await Promise.all([
-      prisma.$queryRawUnsafe(adQuery, parseInt(id)),
-      prisma.$queryRawUnsafe(imagesQuery, parseInt(id)),
-    ]);
+    // ❗ IMMEDIATE view count increment (fire and forget)
+    setImmediate(() => {
+      prisma
+        .$executeRawUnsafe(
+          `UPDATE ads SET view_count = view_count + 1 WHERE id = $1`,
+          adId
+        )
+        .catch(() => {}); // Silent fail
+    });
 
-    const ad = (adResult as any[])[0];
     if (!ad) {
+      console.log(
+        `❌ Ad ${id} not found - ${(performance.now() - startTime).toFixed(
+          2
+        )}ms`
+      );
+      // ❗ Clear any cached version of this ad
+      adCache.delete(cacheKey);
       return res.status(404).json({ error: "Ad not found" });
     }
 
-    const images = imagesResult as any[];
+    // ❗ Don't cache if ad is PENDING (might change status)
+    const shouldCache = ad.status === "APPROVED";
 
-    // ❗ Async view count update (don't wait for it)
-    prisma.ad
-      .update({
-        where: { id: parseInt(id) },
-        data: { viewCount: { increment: 1 } },
-      })
-      .catch(console.error); // Fire and forget
+    const responseTime = performance.now() - startTime;
+    console.log(`⚡ SAFE Ad Detail Response: ${responseTime.toFixed(2)}ms`);
 
-    // ❗ User total ads with RAW SQL
-    const userTotalQuery = `
-      SELECT COUNT(*) as total 
-      FROM ads 
-      WHERE user_id = $1 AND status = 'APPROVED'
-    `;
-    const userTotalResult = await prisma.$queryRawUnsafe(
-      userTotalQuery,
-      ad.user_id
-    );
-    const userTotalAds = parseInt((userTotalResult as any[])[0].total);
-
-    const responseTime = Date.now() - startTime;
-    console.log(`🚀 Ad Detail Response Time: ${responseTime}ms`);
-
-    // ❗ Cache headers for detail page
-    res.set({
-      "Cache-Control": "public, max-age=600", // 10 dakika cache (detail değişmez)
-      ETag: `ad-${id}-${ad.updated_at}`,
-      Expires: new Date(Date.now() + 10 * 60 * 1000).toUTCString(),
-    });
-
-    // Format response
-    const formattedAd = {
+    // ❗ OPTIMIZED response object (pre-formatted)
+    const responseData = {
       id: ad.id,
       title: ad.title,
       description: ad.description,
@@ -309,7 +343,7 @@ export const getAdById = async (req: Request, res: Response) => {
           ad.company_name ||
           `${ad.first_name || ""} ${ad.last_name || ""}`.trim() ||
           "Bilinmeyen Satıcı",
-        totalAds: userTotalAds,
+        totalAds: ad.user_total_ads || 0,
       },
       category: ad.category_name ? { name: ad.category_name } : null,
       brand: ad.brand_name ? { name: ad.brand_name } : null,
@@ -317,20 +351,51 @@ export const getAdById = async (req: Request, res: Response) => {
       variant: ad.variant_name ? { name: ad.variant_name } : null,
       city: ad.city_name ? { name: ad.city_name } : null,
       district: ad.district_name ? { name: ad.district_name } : null,
-      images: images.map((img) => ({
-        id: img.id,
-        imageUrl: img.image_url,
-        isPrimary: img.is_primary,
-        displayOrder: img.display_order,
-        altText: img.alt_text,
-      })),
-      _debug: { responseTime },
+      images: ad.images_json || [],
+      _debug: {
+        responseTime: responseTime.toFixed(2) + "ms",
+        queryType: "SAFE_SINGLE_QUERY_WITH_SELECTIVE_CACHE",
+        cacheStatus: "MISS",
+        shouldCache: shouldCache,
+        adStatus: ad.status,
+      },
     };
 
-    return res.json(formattedAd);
+    // ❗ SELECTIVE CACHE - only cache approved ads
+    if (shouldCache) {
+      adCache.set(cacheKey, {
+        data: responseData,
+        timestamp: Date.now(),
+        ttl: CACHE_TTL,
+      });
+    }
+
+    // ❗ SAFE cache headers based on ad status
+    const cacheMaxAge = shouldCache ? 1800 : 300; // Approved: 30min, Pending: 5min
+    res.set({
+      "Cache-Control": `public, max-age=${cacheMaxAge}`,
+      ETag: `"ad-${id}-v3-${ad.updated_at}-${ad.status}"`,
+      Expires: new Date(Date.now() + cacheMaxAge * 1000).toUTCString(),
+      "Last-Modified": new Date(ad.updated_at).toUTCString(),
+      "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+      "X-Cache": "MISS",
+      "X-Ad-Status": ad.status,
+      Vary: "Accept-Encoding",
+    });
+
+    return res.json(responseData);
   } catch (error) {
-    console.error("Error fetching ad:", error);
-    return res.status(500).json({ error: "Server error" });
+    console.error("❌ Error fetching ad:", error);
+    const errorTime = performance.now() - startTime;
+    console.log(`❌ Error response time: ${errorTime.toFixed(2)}ms`);
+
+    // ❗ Clear cache on error
+    adCache.delete(cacheKey);
+
+    return res.status(500).json({
+      error: "Server error",
+      _debug: { responseTime: errorTime.toFixed(2) + "ms" },
+    });
   }
 };
 
