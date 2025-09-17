@@ -1093,6 +1093,10 @@ const AdDetail: React.FC = () => {
                       value: ad.customFields?.bodyStructure || null,
                     },
                     {
+                      label: "Kasa Tipi",
+                      value: ad.customFields?.caseType || null,
+                    },
+                    {
                       label: "Uzunluk (m)",
                       value:
                         ad.customFields?.length ||

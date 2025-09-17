@@ -309,32 +309,6 @@ const OzelKasaForm: React.FC = () => {
     <>
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            🔧 Özel Kasa Sabit Kabin Karoser İlanı Ver
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ fontWeight: 500 }}
-          >
-            {categorySlug} - {brandSlug} - {modelSlug} - {variantSlug}
-          </Typography>
-        </Box>
-
         <Paper elevation={3} sx={{ p: 4 }}>
           <form onSubmit={handleSubmit}>
             {/* Temel Bilgiler */}
@@ -477,50 +451,6 @@ const OzelKasaForm: React.FC = () => {
             <Divider sx={{ my: 4 }} />
 
             {/* İletişim Bilgileri */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📞 İletişim Bilgileri
-            </Typography>
-
-            <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
-              <TextField
-                fullWidth
-                label="Satıcı Adı *"
-                value={formData.sellerName}
-                onChange={(e) =>
-                  handleInputChange("sellerName", e.target.value)
-                }
-                disabled
-                helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
-                required
-              />
-
-              <Box
-                sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-              >
-                <TextField
-                  fullWidth
-                  label="Telefon *"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="(5XX) XXX XX XX"
-                  disabled
-                  helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
-                  required
-                />
-
-                <TextField
-                  fullWidth
-                  type="email"
-                  label="E-posta"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  disabled
-                  helperText="Profil bilgilerinizden otomatik olarak dolduruldu"
-                />
-              </Box>
-            </Box>
-
-            <Divider sx={{ my: 4 }} />
 
             {/* Ek Seçenekler */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
@@ -535,20 +465,6 @@ const OzelKasaForm: React.FC = () => {
                 mb: 4,
               }}
             >
-              <FormControl fullWidth>
-                <InputLabel>Garanti</InputLabel>
-                <Select
-                  value={formData.warranty}
-                  onChange={(e) =>
-                    handleInputChange("warranty", e.target.value)
-                  }
-                  label="Garanti"
-                >
-                  <MenuItem value="evet">Evet</MenuItem>
-                  <MenuItem value="hayir">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
               <FormControl fullWidth>
                 <InputLabel>Pazarlık</InputLabel>
                 <Select
