@@ -66,7 +66,9 @@ export const getAds = async (req: Request, res: Response) => {
         city: true,
         district: true,
         images: {
+          where: { isPrimary: true }, // ❗ Sadece ana resimi yükle
           orderBy: { displayOrder: "asc" },
+          take: 1, // ❗ Sadece 1 resim
         },
       },
       orderBy: {

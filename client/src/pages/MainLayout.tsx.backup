@@ -29,7 +29,7 @@ import Doping from "./Doping";
 import MessagesPage from "./MessagesPage";
 import Complaints from "./Complaints";
 import Dukkanim from "./Dukkanim";
-import LazyImage from "../components/common/LazyImage";
+import AdsGrid from "../components/ads/AdsGrid"; // ❗ Yeni bileşen
 
 interface Category {
   id: string;
@@ -105,8 +105,6 @@ const MainLayout: React.FC = () => {
   const params = useParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [ads, setAds] = useState<Ad[]>([]);
-  const [filteredAds, setFilteredAds] = useState<Ad[]>([]);
   const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
@@ -122,6 +120,12 @@ const MainLayout: React.FC = () => {
     id: number;
     title: string;
   } | null>(null);
+  
+  // ❗ Performans için bu state'leri kaldır (artık gerek yok)
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [totalPages, setTotalPages] = useState(1);
+  // const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // const [hasMore, setHasMore] = useState(true);
 
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const theme = useTheme();
@@ -199,52 +203,80 @@ const MainLayout: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchData = async () => {
       try {
-        console.log("=== STARTING INITIAL API CALLS ===");
+        console.log("=== STARTING API CALLS ===");
 
-        // İlk yüklemede sadece kategoriler ve ilk 20 ilan
-        const [categoriesRes, adsRes] = await Promise.all([
-          apiClient.get("/categories").catch((err) => {
-            console.error("Categories API error:", err);
-            return { data: [] };
-          }),
-          apiClient.get("/ads?status=APPROVED&limit=20&page=1").catch((err) => {
-            console.error("Ads API error:", err);
-            return { data: { ads: [] } };
-          }),
-        ]);
+        const [categoriesRes, citiesRes, brandsRes] = await Promise.all(
+          [
+            apiClient.get("/categories").catch((err) => {
+              console.error("Categories API error:", err);
+              return { data: [] };
+            }),
+            apiClient.get("/cities").catch((err) => {
+              console.error("Cities API error:", err);
+              return { data: [] };
+            }),
+            apiClient.get("/brands").catch((err) => {
+              console.error("Brands API error:", err);
+              console.error(
+                "Brands API error details:",
+                err.response?.data,
+                err.response?.status
+              );
+              return { data: [] };
+            }),
+          ]
+        );
 
-        console.log("=== INITIAL API RESPONSES ===");
+        console.log("=== RAW API RESPONSES ===");
         console.log("Categories response:", categoriesRes);
-        console.log("Ads response:", adsRes);
+        console.log("Cities response:", citiesRes);
+        console.log("Brands response:", brandsRes);
 
         // Güvenli veri kontrolü
         const categoriesData = Array.isArray(categoriesRes.data)
           ? categoriesRes.data
           : [];
 
-        // Backend response format: { ads: [], pagination: {} }
-        const adsResponse = adsRes.data as unknown as ApiAdsResponse;
-        const adsData = adsResponse?.ads
-          ? Array.isArray(adsResponse.ads)
-            ? adsResponse.ads
-            : []
-          : Array.isArray(adsRes.data)
-          ? (adsRes.data as Ad[])
-          : [];
+        // ❗ Ads artık AdsGrid bileşeni tarafından yüklenir
+        const citiesData = Array.isArray(citiesRes.data) ? citiesRes.data : [];
+        const brandsData = Array.isArray(brandsRes.data) ? brandsRes.data : [];
+
+        console.log("=== BRANDS API DEBUG ===");
+        console.log("Brands response raw:", brandsRes);
+        console.log("Brands data type:", typeof brandsRes.data);
+        console.log("Brands data is array:", Array.isArray(brandsRes.data));
+        console.log("Brands data length:", brandsData.length);
+        console.log("Brands data sample:", brandsData.slice(0, 3));
 
         setCategories(categoriesData as Category[]);
-        setAds(adsData as Ad[]);
+        // ❗ Ads artık AdsGrid bileşeni tarafından yüklenir
+        setCities(citiesData);
+        setBrands(brandsData as Brand[]);
 
-        console.log("=== INITIAL DATA LOADED ===");
+        console.log("=== API DATA FETCH RESULTS ===");
         console.log("Categories:", categoriesData.length);
-        console.log("Ads:", adsData.length);
+        console.log("Cities:", citiesData.length);
+        console.log("Brands:", brandsData.length);
 
-        // Şehirler ve markalar lazy loading olarak ayrı yüklenecek
-        loadCitiesAndBrands();
+        // Brands'i ayrıca console'a yazdır
+        console.log("BRANDS DETAIL:");
+        if (brandsData.length > 0) {
+          console.log("First 5 brands:", brandsData.slice(0, 5));
+        }
+
+        if (adsData.length > 0) {
+          console.log("First ad sample:", adsData[0]);
+          console.log("First ad images:", adsData[0].images);
+          console.log("First ad category:", adsData[0].category);
+          console.log("First ad brand:", adsData[0].brand);
+          console.log("First ad city:", adsData[0].city);
+        } else {
+          console.warn("No ads found in API response!");
+        }
       } catch (error) {
-        console.error("Initial data fetch error:", error);
+        console.error("Data fetch error:", error);
         // Fallback data sadece kategoriler için
         setCategories([
           { id: "1", name: "Çekici", slug: "cekici", displayOrder: 1 },
@@ -282,205 +314,10 @@ const MainLayout: React.FC = () => {
       }
     };
 
-    fetchInitialData();
+    fetchData();
   }, []);
 
-  // Lazy loading function for cities and brands
-  const loadCitiesAndBrands = async () => {
-    try {
-      const [citiesRes, brandsRes] = await Promise.all([
-        apiClient.get("/cities").catch((err) => {
-          console.error("Cities API error:", err);
-          return { data: [] };
-        }),
-        apiClient.get("/brands").catch((err) => {
-          console.error("Brands API error:", err);
-          return { data: [] };
-        }),
-      ]);
-
-      const citiesData = Array.isArray(citiesRes.data) ? citiesRes.data : [];
-      const brandsData = Array.isArray(brandsRes.data) ? brandsRes.data : [];
-
-      setCities(citiesData);
-      setBrands(brandsData as Brand[]);
-
-      console.log("=== LAZY LOADED DATA ===");
-      console.log("Cities:", citiesData.length);
-      console.log("Brands:", brandsData.length);
-    } catch (error) {
-      console.error("Lazy loading error:", error);
-    }
-  };
-
-  // İlk yüklemede tüm markaları yükle, sonra kategoriye göre filtrele
-  // useEffect kaldırıldı - artık category değiştiğinde API çağrısı yapmıyoruz
-
-  // Gelişmiş filtreleme
-  useEffect(() => {
-    console.log("Filtering with:", {
-      selectedCategory,
-      selectedBrand,
-      searchTerm,
-      priceMin,
-      priceMax,
-      yearMin,
-      yearMax,
-      selectedCity,
-      totalAds: ads.length,
-    });
-
-    if (
-      !selectedCategory &&
-      !selectedBrand &&
-      !searchTerm &&
-      !priceMin &&
-      !priceMax &&
-      !yearMin &&
-      !yearMax &&
-      !selectedCity
-    ) {
-      setFilteredAds(ads);
-      console.log("No filters applied, showing all ads:", ads.length);
-    } else {
-      let filtered = [...ads];
-      console.log("Starting with ads:", filtered.length);
-
-      // Kategori filtresi - slug ile eşleştir
-      if (selectedCategory) {
-        const selectedCategoryName = categories.find(
-          (cat) => cat.slug === selectedCategory
-        )?.name;
-        if (selectedCategoryName) {
-          filtered = filtered.filter((ad) => {
-            const categoryMatch =
-              ad.category?.name?.toLowerCase() ===
-              selectedCategoryName.toLowerCase();
-            return categoryMatch;
-          });
-          console.log(
-            "After category filter:",
-            filtered.length,
-            "Category:",
-            selectedCategoryName
-          );
-        }
-      }
-
-      // Marka filtresi
-      if (selectedBrand) {
-        const selectedBrandName = brands.find(
-          (brand) => brand.slug === selectedBrand
-        )?.name;
-        if (selectedBrandName) {
-          filtered = filtered.filter((ad) => {
-            const brandMatch =
-              ad.brand?.name?.toLowerCase() === selectedBrandName.toLowerCase();
-            return brandMatch;
-          });
-          console.log(
-            "After brand filter:",
-            filtered.length,
-            "Brand:",
-            selectedBrandName
-          );
-        }
-      }
-
-      // Arama terimi filtresi
-      if (searchTerm.trim()) {
-        const searchLower = searchTerm.toLowerCase();
-        filtered = filtered.filter((ad) => {
-          const titleMatch = ad.title?.toLowerCase().includes(searchLower);
-          const brandMatch = ad.brand?.name
-            ?.toLowerCase()
-            .includes(searchLower);
-          const modelMatch = ad.model?.name
-            ?.toLowerCase()
-            .includes(searchLower);
-          const cityMatch = ad.city?.name?.toLowerCase().includes(searchLower);
-          const districtMatch = ad.district?.name
-            ?.toLowerCase()
-            .includes(searchLower);
-          const locationMatch = ad.location
-            ?.toLowerCase()
-            .includes(searchLower);
-
-          return (
-            titleMatch ||
-            brandMatch ||
-            modelMatch ||
-            cityMatch ||
-            districtMatch ||
-            locationMatch
-          );
-        });
-        console.log(
-          "After search filter:",
-          filtered.length,
-          "Search term:",
-          searchTerm
-        );
-      }
-
-      // Fiyat aralığı filtresi
-      if (priceMin || priceMax) {
-        filtered = filtered.filter((ad) => {
-          const price = ad.price;
-          if (price === null || price === undefined) return false;
-
-          const minCheck = !priceMin || price >= parseFloat(priceMin);
-          const maxCheck = !priceMax || price <= parseFloat(priceMax);
-
-          return minCheck && maxCheck;
-        });
-        console.log("After price filter:", filtered.length);
-      }
-
-      // Yıl aralığı filtresi
-      if (yearMin || yearMax) {
-        filtered = filtered.filter((ad) => {
-          const year = ad.year;
-          if (year === null || year === undefined) return false;
-
-          const minCheck = !yearMin || year >= parseInt(yearMin);
-          const maxCheck = !yearMax || year <= parseInt(yearMax);
-
-          return minCheck && maxCheck;
-        });
-        console.log("After year filter:", filtered.length);
-      }
-
-      // Şehir filtresi - ID ile eşleştir
-      if (selectedCity) {
-        filtered = filtered.filter((ad) => {
-          const cityMatch = ad.city?.id?.toString() === selectedCity.toString();
-          return cityMatch;
-        });
-        console.log(
-          "After city filter:",
-          filtered.length,
-          "City ID:",
-          selectedCity
-        );
-      }
-
-      setFilteredAds(filtered);
-      console.log("Final filtered ads:", filtered.length);
-    }
-  }, [
-    ads,
-    selectedCategory,
-    selectedBrand,
-    searchTerm,
-    priceMin,
-    priceMax,
-    yearMin,
-    yearMax,
-    selectedCity,
-    categories,
-    brands,
-  ]);
+  // ❗ Filtreleme artık AdsGrid bileşeni tarafından yapılır
 
   // Favorites count'u yükle
   useEffect(() => {
@@ -1062,7 +899,23 @@ const MainLayout: React.FC = () => {
                 </Typography>
               </Box>
 
-              {/* Conditional Rendering: Grid for "Tüm İlanlar", List for categories */}
+              {/* ❗ Performanslı AdsGrid Bileşeni */}
+              <AdsGrid
+                filters={{
+                  categoryId: selectedCategory && selectedCategory !== "Tüm İlanlar" 
+                    ? categories.find(c => c.name === selectedCategory)?.id 
+                    : undefined,
+                  brandId: selectedBrand 
+                    ? brands.find(b => b.name === selectedBrand)?.id?.toString()
+                    : undefined,
+                  minPrice: priceMin || undefined,
+                  maxPrice: priceMax || undefined,
+                  minYear: yearMin || undefined,
+                  maxYear: yearMax || undefined,
+                  city: selectedCity || undefined,
+                  searchTerm: searchTerm || undefined,
+                }}
+              />
               {!selectedCategory || selectedCategory === "Tüm İlanlar" ? (
                 // Grid View for All Ads
                 <Box
@@ -1116,23 +969,18 @@ const MainLayout: React.FC = () => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
+                            backgroundImage: getImageUrl(ad.images)
+                              ? `url(${getImageUrl(ad.images)})`
+                              : "none",
+                            backgroundSize: "contain",
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "center",
                             position: "relative",
                             overflow: "hidden",
                             padding: "8px",
                           }}
                         >
-                          {getImageUrl(ad.images) ? (
-                            <LazyImage
-                              src={getImageUrl(ad.images)!}
-                              alt={ad.title}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "contain",
-                              }}
-                              placeholder="/placeholder-image.jpg"
-                            />
-                          ) : (
+                          {!getImageUrl(ad.images) && (
                             <Box
                               sx={{
                                 display: "flex",
@@ -1370,24 +1218,18 @@ const MainLayout: React.FC = () => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
+                            backgroundImage: getImageUrl(ad.images)
+                              ? `url(${getImageUrl(ad.images)})`
+                              : "none",
+                            backgroundSize: "cover",
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "center",
                             borderRadius: 1,
                             mr: 2,
                             flexShrink: 0,
-                            overflow: "hidden",
                           }}
                         >
-                          {getImageUrl(ad.images) ? (
-                            <LazyImage
-                              src={getImageUrl(ad.images)!}
-                              alt={ad.title}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
-                              placeholder="/placeholder-image.jpg"
-                            />
-                          ) : (
+                          {!getImageUrl(ad.images) && (
                             <Box
                               sx={{
                                 display: "flex",
