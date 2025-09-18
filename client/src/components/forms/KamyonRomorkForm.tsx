@@ -143,6 +143,21 @@ const KamyonRomorkForm: React.FC = () => {
     }
   }, [formData.cityId]);
 
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
+  };
+
   const handleInputChange = (
     field: string,
     value: string | File[] | boolean
@@ -244,32 +259,6 @@ const KamyonRomorkForm: React.FC = () => {
     <>
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            🚛 Kamyon Römorku İlanı Ver
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ fontWeight: 500 }}
-          >
-            {categorySlug} - {brandSlug} - {modelSlug} - {variantSlug}
-          </Typography>
-        </Box>
-
         <Paper elevation={3} sx={{ p: 4 }}>
           <form onSubmit={handleSubmit}>
             {/* Temel Bilgiler */}
@@ -322,11 +311,17 @@ const KamyonRomorkForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  type="number"
                   label="Fiyat (TL) *"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  type="text"
+                  value={formatNumber(formData.price)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "price",
+                      parseFormattedNumber(e.target.value)
+                    )
+                  }
                   required
+                  placeholder="Örn: 250.000"
                 />
               </Box>
             </Box>
@@ -463,44 +458,6 @@ const KamyonRomorkForm: React.FC = () => {
             <Divider sx={{ my: 4 }} />
 
             {/* İletişim Bilgileri */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📞 İletişim Bilgileri
-            </Typography>
-
-            <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
-              <TextField
-                fullWidth
-                label="İletişim Adı *"
-                value={formData.contactName}
-                onChange={(e) =>
-                  handleInputChange("contactName", e.target.value)
-                }
-                required
-              />
-
-              <Box
-                sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-              >
-                <TextField
-                  fullWidth
-                  label="Telefon *"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="(5XX) XXX XX XX"
-                  required
-                />
-
-                <TextField
-                  fullWidth
-                  type="email"
-                  label="E-posta"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                />
-              </Box>
-            </Box>
-
-            <Divider sx={{ my: 4 }} />
 
             {/* Fotoğraflar */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>

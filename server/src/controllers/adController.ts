@@ -249,14 +249,22 @@ export const getAdById = async (req: Request, res: Response) => {
         c.name as category_name, b.name as brand_name, m.name as model_name, 
         v.name as variant_name, city.name as city_name, dist.name as district_name,
         COALESCE((
-          SELECT json_agg(json_build_object(
-            'id', ai.id,
-            'imageUrl', ai.image_url,
-            'isPrimary', ai.is_primary,
-            'displayOrder', ai.display_order,
-            'altText', ai.alt_text
-          ) ORDER BY ai.is_primary DESC, ai.display_order ASC LIMIT 5)
-          FROM ad_images ai WHERE ai.ad_id = a.id
+          SELECT json_agg(
+            json_build_object(
+              'id', ai.id,
+              'imageUrl', ai.image_url,
+              'isPrimary', ai.is_primary,
+              'displayOrder', ai.display_order,
+              'altText', ai.alt_text
+            )
+          )
+          FROM (
+            SELECT ai.id, ai.image_url, ai.is_primary, ai.display_order, ai.alt_text
+            FROM ad_images ai 
+            WHERE ai.ad_id = a.id
+            ORDER BY ai.is_primary DESC, ai.display_order ASC 
+            LIMIT 5
+          ) ai
         ), '[]'::json) as images_json,
         (SELECT COUNT(*)::int FROM ads a2 WHERE a2.user_id = a.user_id AND a2.status = 'APPROVED') as user_total_ads
       FROM ads a
@@ -271,7 +279,7 @@ export const getAdById = async (req: Request, res: Response) => {
     `;
 
     const result = await prisma.$queryRawUnsafe(lightningQuery, adId);
-    const ad = (result as any[])[0];
+    const ad = (result as any[])[0] as any;
 
     // ❗ IMMEDIATE view count increment (fire and forget)
     setImmediate(() => {
@@ -386,6 +394,12 @@ export const getAdById = async (req: Request, res: Response) => {
     return res.json(responseData);
   } catch (error) {
     console.error("❌ Error fetching ad:", error);
+    console.error("❌ Error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : "No stack trace",
+      adId: adId,
+      timestamp: new Date().toISOString(),
+    });
     const errorTime = performance.now() - startTime;
     console.log(`❌ Error response time: ${errorTime.toFixed(2)}ms`);
 
@@ -394,7 +408,11 @@ export const getAdById = async (req: Request, res: Response) => {
 
     return res.status(500).json({
       error: "Server error",
-      _debug: { responseTime: errorTime.toFixed(2) + "ms" },
+      message: error instanceof Error ? error.message : "Unknown error",
+      _debug: {
+        responseTime: errorTime.toFixed(2) + "ms",
+        adId: adId,
+      },
     });
   }
 };
@@ -3137,6 +3155,157 @@ export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Uzayabilir şasi ilan oluşturma hatası:", error);
     return res.status(500).json({
+      error: "İlan oluşturulurken hata oluştu",
+      details: error instanceof Error ? error.message : "Bilinmeyen hata",
+    });
+  }
+};
+
+// Kamyon Römork ilan oluşturma
+export const createKamyonRomorkAd = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const {
+      title,
+      description,
+      price,
+      productionYear,
+      length,
+      width,
+      hasTent,
+      hasDamper,
+      exchangeable,
+      cityId,
+      districtId,
+      contactName,
+      phone,
+      email,
+      currency,
+      detailedInfo,
+      categorySlug,
+      brandSlug,
+      modelSlug,
+      variantSlug,
+    } = req.body;
+
+    // Slug'lardan ID'leri bul
+    let categoryId = null;
+    let brandId = null;
+    let modelId = null;
+    let variantId = null;
+
+    if (categorySlug) {
+      const category = await prisma.category.findFirst({
+        where: { slug: categorySlug },
+      });
+      categoryId = category?.id;
+    }
+
+    if (brandSlug) {
+      const brand = await prisma.brand.findFirst({
+        where: { slug: brandSlug },
+      });
+      brandId = brand?.id;
+    }
+
+    if (modelSlug) {
+      const model = await prisma.model.findFirst({
+        where: { slug: modelSlug },
+      });
+      modelId = model?.id;
+    }
+
+    if (variantSlug) {
+      const variant = await prisma.variant.findFirst({
+        where: { slug: variantSlug },
+      });
+      variantId = variant?.id;
+    }
+
+    // Şehir ve ilçe bilgilerini al
+    let locationString = "";
+    if (cityId && districtId) {
+      const city = await prisma.city.findUnique({
+        where: { id: parseInt(cityId) },
+      });
+      const district = await prisma.district.findUnique({
+        where: { id: parseInt(districtId) },
+      });
+      locationString = `${city?.name || ""}, ${district?.name || ""}`;
+    }
+
+    // Römork özel alanları
+    const customFields = {
+      length: length || "",
+      width: width || "",
+      hasTent: hasTent === "true" || hasTent === true,
+      hasDamper: hasDamper === "true" || hasDamper === true,
+      exchangeable: exchangeable || "",
+      contactName: contactName || "",
+      phone: phone || "",
+      email: email || "",
+      currency: currency || "TL",
+      detailedInfo: detailedInfo || "",
+      cityId: cityId || "",
+      districtId: districtId || "",
+    };
+
+    // İlanı oluştur
+    const ad = await prisma.ad.create({
+      data: {
+        userId,
+        categoryId: categoryId || 1, // Varsayılan kategori ID'si
+        brandId: brandId || undefined,
+        modelId: modelId || undefined,
+        variantId: variantId || undefined,
+        title,
+        description,
+        price: price ? parseFloat(price) : null,
+        year: productionYear ? parseInt(productionYear) : null,
+        location: locationString,
+        customFields: JSON.stringify(customFields),
+        status: "PENDING", // Admin onayı gerekli
+        cityId: cityId ? parseInt(cityId) : null,
+        districtId: districtId ? parseInt(districtId) : null,
+      },
+      include: {
+        category: true,
+        brand: true,
+        model: true,
+        variant: true,
+      },
+    });
+
+    // Fotoğraf yükleme (varsa)
+    const files = req.files as Express.Multer.File[];
+    if (files && files.length > 0) {
+      const imagePromises = files.map(async (file, index) => {
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
+
+        return prisma.adImage.create({
+          data: {
+            adId: ad.id,
+            imageUrl: base64Image,
+            displayOrder: index,
+            isPrimary: index === 0, // İlk fotoğraf vitrin fotoğrafı
+            altText: `${title} - Fotoğraf ${index + 1}`,
+          },
+        });
+      });
+
+      await Promise.all(imagePromises);
+    }
+
+    console.log(`✅ Kamyon Römork ilanı oluşturuldu: ${ad.id}`);
+    res.status(201).json({
+      message: "Kamyon Römork ilanı başarıyla oluşturuldu",
+      ad,
+    });
+  } catch (error) {
+    console.error("Kamyon Römork ilanı oluşturulurken hata:", error);
+    res.status(500).json({
       error: "İlan oluşturulurken hata oluştu",
       details: error instanceof Error ? error.message : "Bilinmeyen hata",
     });

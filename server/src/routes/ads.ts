@@ -96,6 +96,14 @@ router.post(
   adController.createUzayabilirSasiAd
 );
 
+// Kamyon Römork ilan oluşturma (multipart/form-data desteği ile)
+router.post(
+  "/kamyon-romork",
+  authenticateToken,
+  upload.any(),
+  adController.createKamyonRomorkAd
+);
+
 // Kullanıcının ilanları
 router.get("/user/my-ads", authenticateToken, adController.getUserAds);
 
