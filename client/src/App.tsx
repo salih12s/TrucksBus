@@ -100,6 +100,11 @@ const OzelKasaForm = React.lazy(
   () => import("./components/forms/KaroserUstyapi/SabitKabin/OzelKasaForm")
 );
 
+// Tarım Römorku Forms
+const TarimRomorkAcikKasaForm = React.lazy(
+  () => import("./components/forms/TarimRomork/AcikKasa/AcikKasaForm")
+);
+
 // Oto Kurtarıcı ve Taşıyıcı Forms
 const TekliAracForm = React.lazy(
   () => import("./components/forms/OtoKurtariciTasiyici/TekliAracForm")
@@ -723,6 +728,16 @@ function App() {
                           element={
                             <ProtectedRoute>
                               <KamyonRomorkForm />
+                            </ProtectedRoute>
+                          }
+                        />
+
+                        {/* Tarım Römorku - Açık Kasa Route */}
+                        <Route
+                          path="/categories/romork/brands/tarim-romorklari/models/tarim-romorklari-acik-kasa/variants/tarim-romorklari-acik-kasa-acik-kasa/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <TarimRomorkAcikKasaForm />
                             </ProtectedRoute>
                           }
                         />

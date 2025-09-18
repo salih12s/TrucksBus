@@ -3195,9 +3195,11 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
     let variantId = null;
 
     if (categorySlug) {
+      console.log("🔍 Gelen categorySlug:", categorySlug);
       const category = await prisma.category.findFirst({
         where: { slug: categorySlug },
       });
+      console.log("📁 Bulunan kategori:", category);
       categoryId = category?.id;
     }
 

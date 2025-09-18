@@ -104,6 +104,14 @@ router.post(
   adController.createKamyonRomorkAd
 );
 
+// Tarım Römork ilan oluşturma (multipart/form-data desteği ile)
+router.post(
+  "/tarim-romork",
+  authenticateToken,
+  upload.any(),
+  adController.createKamyonRomorkAd // Aynı controller'ı kullanabilir
+);
+
 // Kullanıcının ilanları
 router.get("/user/my-ads", authenticateToken, adController.getUserAds);
 

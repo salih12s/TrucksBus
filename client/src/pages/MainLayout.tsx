@@ -335,7 +335,6 @@ const MainLayout: React.FC = () => {
       !selectedCity
     ) {
       setFilteredAds(ads);
-      console.log("No filters applied, showing all ads:", ads.length);
     } else {
       let filtered = [...ads];
       console.log("Starting with ads:", filtered.length);
