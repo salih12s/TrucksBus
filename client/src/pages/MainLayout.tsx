@@ -292,6 +292,34 @@ const MainLayout: React.FC = () => {
     fetchInitialData();
   }, []);
 
+  // ❗ Admin'den onaylanan ilanları otomatik yenile
+  useEffect(() => {
+    const checkForRefresh = () => {
+      const shouldRefresh = localStorage.getItem("refreshHomepage");
+      if (shouldRefresh === "true") {
+        console.log("🔄 Admin onayından sonra anasayfa yenileniyor...");
+        loadAdsLazy();
+        localStorage.removeItem("refreshHomepage");
+      }
+    };
+
+    // Sayfa focus olduğunda kontrol et
+    const handleFocus = () => checkForRefresh();
+    window.addEventListener("focus", handleFocus);
+
+    // İlk yüklemede de kontrol et
+    checkForRefresh();
+
+    // Her 30 saniyede bir otomatik kontrol et
+    const intervalId = setInterval(checkForRefresh, 30000);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      clearInterval(intervalId);
+    };
+  }, []);
+
   // ❗ Şehirler ve markalar lazy loading - optimize edildi
   const loadCitiesAndBrands = async () => {
     try {
@@ -1046,20 +1074,43 @@ const MainLayout: React.FC = () => {
             <>
               {/* Page Title and Filters */}
               <Box sx={{ mb: 3 }}>
-                <Typography
-                  variant="h4"
+                <Box
                   sx={{
-                    fontWeight: "600",
-                    color: "#dc3545",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                     mb: 2,
-                    fontSize: { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" },
-                    textAlign: "center",
                   }}
                 >
-                  {selectedCategory && selectedCategory !== "Tüm İlanlar"
-                    ? selectedCategory
-                    : "Vitrin"}
-                </Typography>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontWeight: "600",
+                      color: "#dc3545",
+                      fontSize: { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" },
+                    }}
+                  >
+                    {selectedCategory && selectedCategory !== "Tüm İlanlar"
+                      ? selectedCategory
+                      : "Vitrin"}
+                  </Typography>
+
+                  {/* Yenileme Butonu */}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={loadAdsLazy}
+                    sx={{
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontSize: "0.875rem",
+                      px: 2,
+                      py: 0.5,
+                    }}
+                  >
+                    🔄 Yenile
+                  </Button>
+                </Box>
               </Box>
 
               {/* Conditional Rendering: Grid for "Tüm İlanlar", List for categories */}

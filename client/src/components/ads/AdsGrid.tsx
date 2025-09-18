@@ -150,6 +150,28 @@ const AdsGrid: React.FC<AdsGridProps> = React.memo(({ filters = {} }) => {
     loadAds(1, false);
   }, [loadAds]);
 
+  // ❗ Admin onayından sonra otomatik yenileme
+  useEffect(() => {
+    const checkForRefresh = () => {
+      const shouldRefresh = localStorage.getItem("refreshHomepage");
+      if (shouldRefresh === "true") {
+        console.log("🔄 AdsGrid: Admin onayından sonra yenileniyor...");
+        loadAds(1, false);
+        localStorage.removeItem("refreshHomepage");
+      }
+    };
+
+    // Sayfa focus olduğunda kontrol et
+    const handleFocus = () => checkForRefresh();
+    window.addEventListener("focus", handleFocus);
+
+    // İlk yüklemede de kontrol et
+    checkForRefresh();
+
+    // Cleanup
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [loadAds]);
+
   const getImageUrl = (images?: Ad["images"]) => {
     if (!images || images.length === 0) {
       return "/placeholder-image.jpg";

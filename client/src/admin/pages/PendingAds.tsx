@@ -160,6 +160,10 @@ const PendingAds: React.FC = () => {
       await apiClient.put(`/ads/admin/${adId}/approve`);
       // İlanı listeden kaldır
       setAds((prev) => prev.filter((ad) => ad.id !== adId));
+
+      // Anasayfayı yenilemek için flag ekle
+      localStorage.setItem("refreshHomepage", "true");
+
       alert("İlan başarıyla onaylandı!");
     } catch (error) {
       console.error("İlan onaylanırken hata:", error);
