@@ -3170,6 +3170,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       description,
       price,
       productionYear,
+      volume,
       length,
       width,
       hasTent,
@@ -3186,6 +3187,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       brandSlug,
       modelSlug,
       variantSlug,
+      subType,
     } = req.body;
 
     // Slug'lardan ID'leri bul
@@ -3238,6 +3240,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
 
     // Römork özel alanları
     const customFields = {
+      volume: volume || "",
       length: length || "",
       width: width || "",
       hasTent: hasTent === "true" || hasTent === true,
@@ -3250,6 +3253,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       detailedInfo: detailedInfo || "",
       cityId: cityId || "",
       districtId: districtId || "",
+      subType: subType || "",
     };
 
     // İlanı oluştur
