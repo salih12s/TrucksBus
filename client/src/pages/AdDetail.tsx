@@ -119,24 +119,20 @@ const AdDetail: React.FC = () => {
         }
 
         const data = await adResponse.json();
-        const totalTime = performance.now() - startTime;
 
-        console.log(`⚡ LIGHTNING Total Fetch: ${totalTime.toFixed(2)}ms`);
-        console.log(`⚡ Backend Time: ${data._debug?.responseTime || "N/A"}`);
-        console.log(
-          `⚡ Cache Status: ${adResponse.headers.get("X-Cache") || "UNKNOWN"}`
-        );
-        console.log(`⚡ Category: ${data.category?.name || "No Category"}`);
+        // ❗ FIX: Parse customFields if it's a string
+        if (typeof data.customFields === "string") {
+          try {
+            data.customFields = JSON.parse(data.customFields);
+          } catch (e) {
+            console.error("❌ Failed to parse customFields:", e);
+            data.customFields = {};
+          }
+        }
 
-        // ❗ PERFORMANCE TRICK: Set ad data immediately, load images in background
-        const adWithoutImages = { ...data, images: [] }; // Show page immediately
-        setAd(adWithoutImages);
-        setLoading(false); // ❗ INSTANT PAGE LOAD
-
-        // ❗ Load images in background after 100ms delay
-        setTimeout(() => {
-          setAd(data); // Now add images
-        }, 100);
+        // ❗ Set ad data once with all information
+        setAd(data);
+        setLoading(false);
 
         // ❗ SKIP category fields - not critical for performance
         const instantOperations = [];
@@ -934,13 +930,8 @@ const AdDetail: React.FC = () => {
                       value: ad.viewCount ? `${ad.viewCount}` : null,
                     },
 
-                    // Marka/Model Bilgileri
+                    // Marka Bilgisi (Model ve Varyant kamyon römork için gösterilmez)
                     { label: "Marka", value: ad.brand?.name || null },
-                    {
-                      label: "Model",
-                      value: ad.model?.name || ad.model || null,
-                    },
-                    { label: "Varyant", value: ad.variant?.name || null },
 
                     // Lokasyon Bilgileri
                     {
@@ -1025,6 +1016,49 @@ const AdDetail: React.FC = () => {
                     },
                     { label: "Kabin", value: ad.customFields?.cabin || null },
 
+                    // Kamyon Römork Özel Alanları
+                    {
+                      label: "Uzunluk (m)",
+                      value: ad.customFields?.length
+                        ? `${ad.customFields.length} m`
+                        : null,
+                    },
+                    {
+                      label: "Genişlik (m)",
+                      value: ad.customFields?.width
+                        ? `${ad.customFields.width} m`
+                        : null,
+                    },
+                    {
+                      label: "Tenteli",
+                      value:
+                        ad.customFields?.hasTent === true
+                          ? "Evet"
+                          : ad.customFields?.hasTent === false
+                          ? "Hayır"
+                          : null,
+                    },
+                    {
+                      label: "Damperli",
+                      value:
+                        ad.customFields?.hasDamper === true
+                          ? "Evet"
+                          : ad.customFields?.hasDamper === false
+                          ? "Hayır"
+                          : null,
+                    },
+                    {
+                      label: "Takas",
+                      value:
+                        ad.customFields?.exchangeable === "evet"
+                          ? "Evet"
+                          : ad.customFields?.exchangeable === "hayır"
+                          ? "Hayır"
+                          : ad.customFields?.exchangeable
+                          ? ad.customFields.exchangeable
+                          : null,
+                    },
+
                     // Çekici Özel Alanları
                     {
                       label: "Kabin Tipi",
@@ -1059,20 +1093,6 @@ const AdDetail: React.FC = () => {
                     {
                       label: "Kasa Tipi",
                       value: ad.customFields?.caseType || null,
-                    },
-                    {
-                      label: "Uzunluk (m)",
-                      value:
-                        ad.customFields?.length ||
-                        ad.customFields?.uzunluk ||
-                        null,
-                    },
-                    {
-                      label: "Genişlik (m)",
-                      value:
-                        ad.customFields?.width ||
-                        ad.customFields?.genislik ||
-                        null,
                     },
                     {
                       label: "Devrilme Yönü",
