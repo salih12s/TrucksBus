@@ -19,15 +19,11 @@ import {
   Card,
   FormControlLabel,
   Switch,
-  IconButton,
 } from "@mui/material";
 import {
-  CheckCircle,
   PhotoCamera,
   EditNote,
   LocationOn,
-  CloudUpload,
-  Delete,
   AttachMoney,
 } from "@mui/icons-material";
 import apiClient from "../../../api/client";
@@ -78,6 +74,8 @@ const SulamaForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<SulamaFormData>({
     title: "",
@@ -131,36 +129,58 @@ const SulamaForm: React.FC = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData((prev) => {
-      const newPhotos = [...prev.photos, ...files];
-      return {
-        ...prev,
-        photos: newPhotos,
-        showcasePhoto: prev.showcasePhoto || newPhotos[0] || null,
-      };
-    });
+  const handlePhotoUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    isShowcase = false
+  ) => {
+    const files = event.target.files;
+    if (files) {
+      if (isShowcase) {
+        const file = files[0];
+        setFormData((prev) => ({ ...prev, showcasePhoto: file }));
+
+        // Vitrin fotoğrafı önizlemesi oluştur
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setShowcasePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const currentPhotos = formData.photos;
+        const newPhotos = Array.from(files);
+        const totalPhotos = currentPhotos.length + newPhotos.length;
+
+        if (totalPhotos <= 15) {
+          setFormData((prev) => ({
+            ...prev,
+            photos: [...currentPhotos, ...newPhotos],
+          }));
+
+          // Yeni fotoğraflar için önizlemeler oluştur
+          const newPreviews: string[] = [];
+          newPhotos.forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              newPreviews.push(e.target?.result as string);
+              if (newPreviews.length === newPhotos.length) {
+                setPhotoPreviews((prev) => [...prev, ...newPreviews]);
+              }
+            };
+            reader.readAsDataURL(file);
+          });
+        } else {
+          alert("En fazla 15 fotoğraf yükleyebilirsiniz");
+        }
+      }
+    }
   };
 
-  const handleSetShowcasePhoto = (photo: File) => {
-    setFormData((prev) => ({ ...prev, showcasePhoto: photo }));
-  };
-
-  const handleRemovePhoto = (photoToRemove: File) => {
-    setFormData((prev) => {
-      const newPhotos = prev.photos.filter((photo) => photo !== photoToRemove);
-      return {
-        ...prev,
-        photos: newPhotos,
-        showcasePhoto:
-          prev.showcasePhoto === photoToRemove
-            ? newPhotos.length > 0
-              ? newPhotos[0]
-              : null
-            : prev.showcasePhoto,
-      };
-    });
+  const removePhoto = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index),
+    }));
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -273,6 +293,17 @@ const SulamaForm: React.FC = () => {
                       required
                     />
 
+                    <TextField
+                      label="Fiyat (TL)"
+                      value={formData.price}
+                      onChange={(e) =>
+                        handleInputChange("price", e.target.value)
+                      }
+                      placeholder="Örn: 150000"
+                      sx={{ maxWidth: 200 }}
+                      required
+                    />
+
                     {/* Hacim */}
                     <TextField
                       label="Hacim (Litre)"
@@ -345,15 +376,24 @@ const SulamaForm: React.FC = () => {
                 <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                   {/* Şehir */}
                   <FormControl sx={{ minWidth: 200 }}>
-                    <InputLabel>Şehir</InputLabel>
+                    <InputLabel>İl</InputLabel>
                     <Select
                       value={formData.cityId}
                       onChange={(e) => handleCityChange(e.target.value)}
+                      label="İl"
                       required
                     >
                       {cities.map((city) => (
                         <MenuItem key={city.id} value={city.id.toString()}>
-                          {city.name}
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <span>🏙️</span> {city.plateCode} - {city.name}
+                          </Box>
                         </MenuItem>
                       ))}
                     </Select>
@@ -367,6 +407,7 @@ const SulamaForm: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange("districtId", e.target.value)
                       }
+                      label="İlçe"
                       disabled={!formData.cityId}
                       required
                     >
@@ -375,7 +416,15 @@ const SulamaForm: React.FC = () => {
                           key={district.id}
                           value={district.id.toString()}
                         >
-                          {district.name}
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <span>🏘️</span> {district.name}
+                          </Box>
                         </MenuItem>
                       ))}
                     </Select>
@@ -395,107 +444,255 @@ const SulamaForm: React.FC = () => {
                 </Typography>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                  {/* Fotoğraf Yükleme */}
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    startIcon={<CloudUpload />}
-                    sx={{ alignSelf: "flex-start" }}
-                  >
-                    Fotoğraf Ekle
+                  {/* Vitrin Fotoğrafı */}
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        mb: 2,
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      🌟 Vitrin Fotoğrafı
+                      <Chip label="Zorunlu" color="error" size="small" />
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 3 }}
+                    >
+                      İlanınızın ana fotoğrafı olacak en iyi fotoğrafı seçin
+                    </Typography>
                     <input
-                      type="file"
-                      hidden
-                      multiple
                       accept="image/*"
-                      onChange={handlePhotoUpload}
+                      style={{ display: "none" }}
+                      id="showcase-photo"
+                      type="file"
+                      onChange={(e) => handlePhotoUpload(e, true)}
                     />
-                  </Button>
+                    <label htmlFor="showcase-photo">
+                      <Button
+                        variant="contained"
+                        component="span"
+                        startIcon={<PhotoCamera />}
+                        sx={{ mb: 2 }}
+                      >
+                        {formData.showcasePhoto
+                          ? "Vitrin Fotoğrafını Değiştir"
+                          : "Vitrin Fotoğrafı Seç"}
+                      </Button>
+                    </label>
 
-                  {/* Yüklenen Fotoğraflar */}
-                  {formData.photos.length > 0 && (
-                    <Box>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Yüklenen Fotoğraflar ({formData.photos.length})
-                      </Typography>
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                        {formData.photos.map((photo, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              position: "relative",
-                              width: 120,
-                              height: 120,
-                              border: "2px solid",
-                              borderColor:
-                                formData.showcasePhoto === photo
-                                  ? "primary.main"
-                                  : "grey.300",
-                              borderRadius: 1,
-                              overflow: "hidden",
-                            }}
-                          >
-                            <img
-                              src={URL.createObjectURL(photo)}
-                              alt={`Fotoğraf ${index + 1}`}
-                              style={{
+                    {/* Vitrin fotoğrafı önizlemesi */}
+                    {formData.showcasePhoto && (
+                      <Box
+                        sx={{
+                          position: "relative",
+                          width: 200,
+                          height: 150,
+                          border: "3px solid",
+                          borderColor: "primary.main",
+                          borderRadius: 2,
+                          overflow: "hidden",
+                          boxShadow: 2,
+                        }}
+                      >
+                        <img
+                          src={
+                            showcasePreview ||
+                            URL.createObjectURL(formData.showcasePhoto)
+                          }
+                          alt="Vitrin Fotoğrafı"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                        <Chip
+                          label="VİTRİN"
+                          color="primary"
+                          size="small"
+                          sx={{
+                            position: "absolute",
+                            top: 8,
+                            left: 8,
+                            fontWeight: "bold",
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Diğer Fotoğraflar */}
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        mb: 2,
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      📷 Diğer Fotoğraflar
+                      <Chip label="İsteğe Bağlı" color="info" size="small" />
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 3 }}
+                    >
+                      Aracınızın farklı açılardan fotoğraflarını ekleyin (En
+                      fazla 15 adet)
+                    </Typography>
+                    <input
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      id="other-photos"
+                      type="file"
+                      multiple
+                      onChange={(e) => handlePhotoUpload(e, false)}
+                    />
+                    <label htmlFor="other-photos">
+                      <Button
+                        variant="outlined"
+                        component="span"
+                        startIcon={<PhotoCamera />}
+                        disabled={formData.photos.length >= 15}
+                      >
+                        Fotoğraf Ekle ({formData.photos.length}/15)
+                      </Button>
+                    </label>
+
+                    {formData.photos.length > 0 && (
+                      <Box sx={{ mt: 3 }}>
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ mb: 2, fontWeight: 600 }}
+                        >
+                          Yüklenen Fotoğraflar ({formData.photos.length}/15)
+                        </Typography>
+
+                        {/* Fotoğraf önizlemeleri grid */}
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fill, minmax(120px, 1fr))",
+                            gap: 2,
+                            maxHeight: "300px",
+                            overflowY: "auto",
+                            p: 1,
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                          }}
+                        >
+                          {formData.photos.map((file, index) => (
+                            <Box
+                              key={index}
+                              sx={{
+                                position: "relative",
                                 width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
+                                paddingTop: "75%", // 4:3 Aspect Ratio
+                                border: "1px solid #ddd",
+                                borderRadius: 2,
+                                overflow: "hidden",
+                                boxShadow: 1,
                               }}
-                            />
-                            {formData.showcasePhoto === photo && (
-                              <Chip
-                                label="Vitrin"
-                                size="small"
-                                color="primary"
+                            >
+                              <img
+                                src={
+                                  photoPreviews[index] ||
+                                  URL.createObjectURL(file)
+                                }
+                                alt={`Fotoğraf ${index + 1}`}
+                                style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  left: 0,
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                              />
+
+                              <Box
+                                onClick={() => removePhoto(index)}
                                 sx={{
                                   position: "absolute",
                                   top: 4,
-                                  left: 4,
-                                  fontSize: "0.7rem",
-                                }}
-                              />
-                            )}
-                            <Box
-                              sx={{
-                                position: "absolute",
-                                top: 4,
-                                right: 4,
-                                display: "flex",
-                                gap: 0.5,
-                              }}
-                            >
-                              <IconButton
-                                size="small"
-                                onClick={() => handleSetShowcasePhoto(photo)}
-                                sx={{
-                                  backgroundColor: "rgba(255,255,255,0.8)",
+                                  right: 4,
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: "50%",
+                                  background: "rgba(255,255,255,0.9)",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  cursor: "pointer",
                                   "&:hover": {
-                                    backgroundColor: "rgba(255,255,255,0.9)",
+                                    background: "#ff1744",
+                                    color: "white",
                                   },
                                 }}
                               >
-                                <CheckCircle fontSize="small" />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleRemovePhoto(photo)}
+                                <Typography
+                                  sx={{
+                                    fontSize: 12,
+                                    fontWeight: "bold",
+                                    lineHeight: 1,
+                                  }}
+                                >
+                                  ✕
+                                </Typography>
+                              </Box>
+
+                              <Box
                                 sx={{
-                                  backgroundColor: "rgba(255,255,255,0.8)",
-                                  "&:hover": {
-                                    backgroundColor: "rgba(255,255,255,0.9)",
-                                  },
+                                  position: "absolute",
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  background: "rgba(0,0,0,0.7)",
+                                  color: "white",
+                                  textAlign: "center",
+                                  py: 0.5,
                                 }}
                               >
-                                <Delete fontSize="small" />
-                              </IconButton>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ fontSize: "10px" }}
+                                >
+                                  {index + 1}
+                                </Typography>
+                              </Box>
                             </Box>
+                          ))}
+                        </Box>
+
+                        {/* Eski chip görünümü - fallback */}
+                        {photoPreviews.length === 0 && (
+                          <Box
+                            sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}
+                          >
+                            {formData.photos.map((photo, index) => (
+                              <Chip
+                                key={index}
+                                label={photo.name}
+                                onDelete={() => removePhoto(index)}
+                                color="secondary"
+                              />
+                            ))}
                           </Box>
-                        ))}
+                        )}
                       </Box>
-                    </Box>
-                  )}
+                    )}
+                  </Box>
                 </Box>
               </Card>
 
@@ -548,14 +745,6 @@ const SulamaForm: React.FC = () => {
                   </Box>
 
                   {/* Fiyat */}
-                  <TextField
-                    label="Fiyat (TL)"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange("price", e.target.value)}
-                    placeholder="Örn: 150000"
-                    sx={{ maxWidth: 200 }}
-                    required
-                  />
                 </Box>
               </Card>
 
