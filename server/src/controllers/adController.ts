@@ -1252,11 +1252,13 @@ export const approveAd = async (req: Request, res: Response) => {
     io.emit("adApproved", {
       adId: ad.id,
       title: ad.title,
-      message: "Yeni bir ilan onaylandı!"
+      message: "Yeni bir ilan onaylandı!",
     });
 
     // Log
-    console.log(`📣 İlan onaylandı ve socket bildirimi gönderildi: ${ad.title} - Kullanıcı: ${ad.user.email}`);
+    console.log(
+      `📣 İlan onaylandı ve socket bildirimi gönderildi: ${ad.title} - Kullanıcı: ${ad.user.email}`
+    );
 
     res.json({ message: "İlan başarıyla onaylandı", ad });
   } catch (error) {

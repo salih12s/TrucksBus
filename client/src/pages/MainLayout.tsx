@@ -354,14 +354,20 @@ const MainLayout: React.FC = () => {
     // PostMessage listener (farklı tab'lar için)
     const handlePostMessage = (event: MessageEvent) => {
       if (event.data?.type === "AD_APPROVED") {
-        console.log("📬 PostMessage ile ilan onayı bildirimi alındı:", event.data.adId);
+        console.log(
+          "📬 PostMessage ile ilan onayı bildirimi alındı:",
+          event.data.adId
+        );
         loadAdsLazy();
       }
     };
 
     // CustomEvent listener (aynı sayfa için)
     const handleCustomEvent = (event: CustomEvent) => {
-      console.log("⚡ CustomEvent ile ilan onayı bildirimi alındı:", event.detail.adId);
+      console.log(
+        "⚡ CustomEvent ile ilan onayı bildirimi alındı:",
+        event.detail.adId
+      );
       loadAdsLazy();
     };
 
@@ -370,7 +376,10 @@ const MainLayout: React.FC = () => {
 
     return () => {
       window.removeEventListener("message", handlePostMessage);
-      window.removeEventListener("adApproved", handleCustomEvent as EventListener);
+      window.removeEventListener(
+        "adApproved",
+        handleCustomEvent as EventListener
+      );
     };
   }, []);
 

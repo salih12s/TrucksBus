@@ -781,6 +781,17 @@ function App() {
                           }
                         />
 
+                        {/* ===== TAŞIMA RÖMORKLAR ===== */}
+                        {/* Boru Taşıma Römorku */}
+                        <Route
+                          path="/categories/romork/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <VehicleFormSelector />
+                            </ProtectedRoute>
+                          }
+                        />
+
                         {/* Karoser Üst Yapı - Damperli Routes */}
                         {/* Kaya Tipi - hem kaya-tipi hem kaya-tipi variant'larını destekle */}
                         <Route

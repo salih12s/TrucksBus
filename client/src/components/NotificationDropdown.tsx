@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
 import {
   IconButton,
   Badge,
@@ -33,6 +34,9 @@ interface NotificationDropdownProps {
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   className,
 }) => {
+  const user = useSelector(
+    (state: { auth?: { user?: unknown } }) => state.auth?.user
+  );
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -40,7 +44,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   const open = Boolean(anchorEl);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
+    // Kullanıcı giriş yapmamışsa bildirimları çekme
+    if (!user) {
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await notificationAPI.getNotifications();
@@ -53,15 +62,18 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    fetchNotifications();
+    // Sadece kullanıcı giriş yaptıysa bildirimları çek
+    if (user) {
+      fetchNotifications();
 
-    // Her 30 saniyede bir bildirimları kontrol et
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
+      // Her 30 saniyede bir bildirimları kontrol et
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user, fetchNotifications]);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);

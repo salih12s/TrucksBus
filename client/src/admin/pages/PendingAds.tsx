@@ -167,7 +167,7 @@ const PendingAds: React.FC = () => {
       if (socket && socket.connected) {
         socket.emit("adApproved", {
           adId,
-          message: "Yeni bir ilan onaylandı ve anasayfaya eklendi!"
+          message: "Yeni bir ilan onaylandı ve anasayfaya eklendi!",
         });
         console.log("🔔 Socket bildirimi gönderildi:", adId);
       }

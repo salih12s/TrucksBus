@@ -16,24 +16,18 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  CardMedia,
-  IconButton,
-  Paper,
   RadioGroup,
   Radio,
   FormLabel,
-  Autocomplete,
+  Chip,
 } from "@mui/material";
 import {
-  Delete as DeleteIcon,
   ArrowBack,
   ArrowForward,
   CheckCircle,
-  Upload as UploadIcon,
-  Star,
-  StarBorder,
+  PhotoCamera,
 } from "@mui/icons-material";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import apiClient from "../../../api/client";
 import Header from "../../layout/Header";
@@ -60,8 +54,8 @@ interface FormData {
   isExchangeable: string;
 
   // Fotoğraf bilgileri
-  uploadedImages: File[];
-  showcaseImageIndex: number;
+  showcasePhoto: File | null;
+  photos: File[];
 
   // İletişim ve fiyat bilgileri
   price: string;
@@ -70,14 +64,17 @@ interface FormData {
   sellerPhone: string;
   sellerName: string;
   sellerEmail: string;
-  city: string;
-  district: string;
+  cityId: string;
+  districtId: string;
 }
 
 const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
 
 const BoruRomorkForm: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
+
   const user = useSelector(
     (state: {
       auth: {
@@ -92,19 +89,62 @@ const BoruRomorkForm: React.FC = () => {
       };
     }) => state.auth.user
   );
-  const location = useLocation();
 
   // Parse location state for brand/model/variant data
   const selectedBrand = location.state?.brand;
   const selectedModel = location.state?.model;
   const selectedVariant = location.state?.variant;
 
+  // Debug log location state
+  useEffect(() => {
+    console.log(
+      "🔍 URL Params - Category:",
+      categorySlug,
+      "Brand:",
+      brandSlug,
+      "Model:",
+      modelSlug,
+      "Variant:",
+      variantSlug
+    );
+    console.log("🔍 Location state:", location.state);
+    console.log("🔍 Selected Brand:", selectedBrand);
+    console.log("🔍 Selected Model:", selectedModel);
+    console.log("🔍 Selected Variant:", selectedVariant);
+  }, [
+    categorySlug,
+    brandSlug,
+    modelSlug,
+    variantSlug,
+    location.state,
+    selectedBrand,
+    selectedModel,
+    selectedVariant,
+  ]);
+
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
-  const [loadingCities, setLoadingCities] = useState(true);
-  const [loadingDistricts, setLoadingDistricts] = useState(false);
+
+  // Fotoğraf önizlemeleri için state'ler
+  const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
+  };
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -112,16 +152,16 @@ const BoruRomorkForm: React.FC = () => {
     productionYear: "",
     hasDamper: false,
     isExchangeable: "",
-    uploadedImages: [],
-    showcaseImageIndex: 0,
+    showcasePhoto: null,
+    photos: [],
     price: "",
     priceType: "fixed",
     currency: "TRY",
     sellerPhone: "",
     sellerName: "",
     sellerEmail: "",
-    city: "",
-    district: "",
+    cityId: "",
+    districtId: "",
   });
 
   // Dynamic title based on selected variant/model/brand
@@ -134,57 +174,51 @@ const BoruRomorkForm: React.FC = () => {
 
   // Load cities on component mount
   useEffect(() => {
-    const loadCities = async () => {
+    const fetchCities = async () => {
       try {
-        console.log("🏙️ Şehirler yükleniyor...");
-        const response = await apiClient.get("/locations/cities");
+        const response = await apiClient.get("/ads/cities");
         setCities(response.data as City[]);
-        console.log("✅ Şehirler yüklendi:", (response.data as City[]).length);
       } catch (error) {
-        console.error("❌ Şehirler yüklenemedi:", error);
-      } finally {
-        setLoadingCities(false);
+        console.error("Şehirler yüklenirken hata:", error);
       }
     };
 
-    loadCities();
+    fetchCities();
   }, []);
 
-  // Load districts when city changes
-  const handleCityChange = async (cityId: string, cityName: string) => {
-    try {
-      setLoadingDistricts(true);
-      setFormData((prev) => ({ ...prev, city: cityName, district: "" }));
+  const handleCityChange = async (cityId: string) => {
+    setFormData((prev) => ({ ...prev, cityId, districtId: "" }));
+    setDistricts([]);
 
-      console.log("🏘️ İlçeler yükleniyor, cityId:", cityId);
-      const response = await apiClient.get(`/locations/districts/${cityId}`);
-      setDistricts(response.data as District[]);
-      console.log("✅ İlçeler yüklendi:", (response.data as District[]).length);
-    } catch (error) {
-      console.error("❌ İlçeler yüklenemedi:", error);
-    } finally {
-      setLoadingDistricts(false);
+    if (cityId) {
+      try {
+        const response = await apiClient.get(`/ads/cities/${cityId}/districts`);
+        setDistricts(response.data as District[]);
+      } catch (error) {
+        console.error("İlçeler yüklenirken hata:", error);
+      }
     }
   };
 
   // Load user data
   useEffect(() => {
     if (user && cities.length > 0) {
-      console.log("👤 Kullanıcı verileri yükleniyor:", user);
       setFormData((prev) => ({
         ...prev,
         sellerName: `${user.first_name} ${user.last_name}`,
         sellerPhone: user.phone || "",
         sellerEmail: user.email,
-        city: user.city || "",
-        district: user.district || "",
+        cityId: user.city
+          ? cities.find((city) => city.name === user.city)?.id || ""
+          : "",
+        districtId: user.district || "",
       }));
 
       // If user has city, auto-load districts
       if (user.city) {
         const userCity = cities.find((city) => city.name === user.city);
         if (userCity) {
-          handleCityChange(userCity.id, userCity.name);
+          handleCityChange(userCity.id);
         }
       }
     }
@@ -208,42 +242,64 @@ const BoruRomorkForm: React.FC = () => {
     }));
   };
 
-  const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+  // Modern fotoğraf yönetimi
+  const handlePhotoUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    isShowcase: boolean = false
   ) => {
     const files = event.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
-    const newFiles = Array.from(files);
-    const totalFiles = formData.uploadedImages.length + newFiles.length;
+    const file = files[0];
 
-    if (totalFiles > 10) {
-      alert("En fazla 10 fotoğraf yükleyebilirsiniz.");
-      return;
+    if (isShowcase) {
+      setFormData((prev) => ({
+        ...prev,
+        showcasePhoto: file,
+      }));
+
+      // Önizleme için URL oluştur
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setShowcasePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Diğer fotoğraflar için
+      const newFiles = Array.from(files);
+      const totalFiles = formData.photos.length + newFiles.length;
+
+      if (totalFiles > 15) {
+        alert("En fazla 15 fotoğraf yükleyebilirsiniz.");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        photos: [...prev.photos, ...newFiles],
+      }));
+
+      // Önizlemeler için URL'ler oluştur
+      newFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPhotoPreviews((prev) => [...prev, e.target?.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      uploadedImages: [...prev.uploadedImages, ...newFiles],
-    }));
+    // Input'u sıfırla
+    event.target.value = "";
   };
 
-  const removeImage = (index: number) => {
+  const removePhoto = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      uploadedImages: prev.uploadedImages.filter((_, i) => i !== index),
-      showcaseImageIndex:
-        prev.showcaseImageIndex >= index && prev.showcaseImageIndex > 0
-          ? prev.showcaseImageIndex - 1
-          : prev.showcaseImageIndex,
+      photos: prev.photos.filter((_, i) => i !== index),
     }));
-  };
 
-  const setShowcaseImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      showcaseImageIndex: index,
-    }));
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const generateYearOptions = () => {
@@ -261,6 +317,11 @@ const BoruRomorkForm: React.FC = () => {
       return;
     }
 
+    if (!formData.showcasePhoto) {
+      alert("Lütfen en az bir vitrin fotoğrafı yükleyin.");
+      return;
+    }
+
     console.log("🚚 Form gönderim başlatıldı");
     console.log("Seçili Brand:", selectedBrand);
     console.log("Seçili Model:", selectedModel);
@@ -268,14 +329,14 @@ const BoruRomorkForm: React.FC = () => {
     console.log("Form Data:", formData);
 
     // City/District validation
-    if (!formData.city || !formData.district) {
+    if (!formData.cityId || !formData.districtId) {
       alert("Lütfen şehir ve ilçe seçimi yapınız.");
       return;
     }
 
-    const selectedCity = cities.find((city) => city.name === formData.city);
+    const selectedCity = cities.find((city) => city.id === formData.cityId);
     const selectedDistrict = districts.find(
-      (district) => district.name === formData.district
+      (district) => district.id === formData.districtId
     );
 
     if (!selectedCity || !selectedDistrict) {
@@ -286,52 +347,50 @@ const BoruRomorkForm: React.FC = () => {
     try {
       setLoading(true);
 
-      const base64Images = await Promise.all(
-        formData.uploadedImages.map((file) => {
-          return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-        })
-      );
+      const submitData = new FormData();
 
-      const payload = {
-        // Brand/Model/Variant info
-        brandId: selectedBrand?.id,
-        modelId: selectedModel?.id,
-        variantId: selectedVariant?.id,
+      // Temel bilgileri ekle
+      submitData.append("title", formData.title);
+      submitData.append("description", formData.description);
+      submitData.append("productionYear", formData.productionYear);
+      submitData.append("hasDamper", formData.hasDamper.toString());
+      submitData.append("isExchangeable", formData.isExchangeable);
 
-        // Form data
-        title: formData.title,
-        description: formData.description,
-        productionYear: parseInt(formData.productionYear),
-        hasDamper: formData.hasDamper,
-        isExchangeable: formData.isExchangeable === "true",
+      // Price değerini parse et
+      const parsedPrice = parseFormattedNumber(formData.price);
+      if (parsedPrice) {
+        submitData.append("price", parsedPrice);
+      }
 
-        // Images
-        images: base64Images,
-        showcaseImageIndex: formData.showcaseImageIndex,
+      submitData.append("priceType", formData.priceType);
+      submitData.append("currency", formData.currency);
+      submitData.append("sellerPhone", formData.sellerPhone);
+      submitData.append("sellerName", formData.sellerName);
+      submitData.append("sellerEmail", formData.sellerEmail);
+      submitData.append("cityId", formData.cityId);
+      submitData.append("districtId", formData.districtId);
 
-        // Price and contact
-        price: parseFloat(formData.price),
-        priceType: formData.priceType,
-        currency: formData.currency,
-        sellerPhone: formData.sellerPhone,
-        sellerName: formData.sellerName,
-        sellerEmail: formData.sellerEmail,
-        cityId: selectedCity.id,
-        districtId: selectedDistrict.id,
+      // Kategori bilgilerini ekle
+      submitData.append("categorySlug", categorySlug || "tasima-romorklari");
+      submitData.append("brandSlug", brandSlug || "");
+      submitData.append("modelSlug", modelSlug || "");
+      submitData.append("variantSlug", variantSlug || "");
+      submitData.append("subType", "boru-romork");
 
-        // Category info
-        category: "TasimaRomorklari",
-        subCategory: "BoruRomork",
-      };
+      // Fotoğrafları ekle
+      if (formData.showcasePhoto) {
+        submitData.append("showcasePhoto", formData.showcasePhoto);
+      }
 
-      console.log("📤 Payload gönderiliyor:", payload);
+      formData.photos.forEach((photo, index) => {
+        submitData.append(`photo_${index}`, photo);
+      });
 
-      const response = await apiClient.post("/listings", payload);
+      const response = await apiClient.post("/ads/tasima-romork", submitData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       console.log("✅ İlan başarıyla oluşturuldu:", response.data);
 
@@ -455,123 +514,241 @@ const BoruRomorkForm: React.FC = () => {
               Fotoğraflar
             </Typography>
 
-            <Paper
-              sx={{
-                p: 3,
-                textAlign: "center",
-                border: "2px dashed #ccc",
-                mb: 3,
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: "#f5f5f5",
-                },
-              }}
-              component="label"
-            >
-              <input
-                type="file"
-                hidden
-                multiple
-                accept="image/*"
-                onChange={handleImageUpload}
-              />
-              <UploadIcon sx={{ fontSize: 48, color: "#ccc", mb: 1 }} />
-              <Typography variant="h6" color="textSecondary">
-                Fotoğraf Yükleyin
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                En fazla 10 fotoğraf yükleyebilirsiniz
-              </Typography>
-            </Paper>
-
-            {formData.uploadedImages.length > 0 && (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              {/* Vitrin Fotoğrafı */}
               <Box>
-                <Typography variant="subtitle1" gutterBottom>
-                  Yüklenen Fotoğraflar ({formData.uploadedImages.length}/10)
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <PhotoCamera color="primary" />
+                  Vitrin Fotoğrafı
+                  <Chip label="Zorunlu" color="error" size="small" />
                 </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                  {formData.uploadedImages.map((image, index) => (
-                    <Box
-                      key={index}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  İlanınızın ana fotoğrafı olacak en iyi fotoğrafı seçin
+                </Typography>
+                <input
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  id="showcase-photo"
+                  type="file"
+                  onChange={(e) => handlePhotoUpload(e, true)}
+                />
+                <label htmlFor="showcase-photo">
+                  <Button
+                    variant="contained"
+                    component="span"
+                    startIcon={<PhotoCamera />}
+                    sx={{ mb: 2 }}
+                  >
+                    {formData.showcasePhoto
+                      ? "Vitrin Fotoğrafını Değiştir"
+                      : "Vitrin Fotoğrafı Seç"}
+                  </Button>
+                </label>
+
+                {/* Vitrin fotoğrafı önizlemesi */}
+                {formData.showcasePhoto && (
+                  <Box
+                    sx={{
+                      position: "relative",
+                      width: 200,
+                      height: 150,
+                      border: "3px solid",
+                      borderColor: "primary.main",
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      boxShadow: 2,
+                    }}
+                  >
+                    <img
+                      src={
+                        showcasePreview ||
+                        URL.createObjectURL(formData.showcasePhoto)
+                      }
+                      alt="Vitrin Fotoğrafı"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                    <Chip
+                      label="VİTRİN"
+                      color="primary"
+                      size="small"
                       sx={{
-                        width: {
-                          xs: "calc(50% - 8px)",
-                          sm: "calc(33.33% - 11px)",
-                          md: "calc(25% - 12px)",
-                        },
-                        position: "relative",
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        fontWeight: "bold",
+                      }}
+                    />
+                  </Box>
+                )}
+              </Box>
+
+              {/* Diğer Fotoğraflar */}
+              <Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  📷 Diğer Fotoğraflar
+                  <Chip label="İsteğe Bağlı" color="info" size="small" />
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  Aracınızın farklı açılardan fotoğraflarını ekleyin (En fazla
+                  15 adet)
+                </Typography>
+                <input
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  id="other-photos"
+                  type="file"
+                  multiple
+                  onChange={(e) => handlePhotoUpload(e, false)}
+                />
+                <label htmlFor="other-photos">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<PhotoCamera />}
+                    disabled={formData.photos.length >= 15}
+                  >
+                    Fotoğraf Ekle ({formData.photos.length}/15)
+                  </Button>
+                </label>
+
+                {formData.photos.length > 0 && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 2, fontWeight: 600 }}
+                    >
+                      Yüklenen Fotoğraflar ({formData.photos.length}/15)
+                    </Typography>
+
+                    {/* Fotoğraf önizlemeleri grid */}
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(120px, 1fr))",
+                        gap: 2,
+                        maxHeight: "300px",
+                        overflowY: "auto",
+                        p: 1,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 2,
                       }}
                     >
-                      <Card sx={{ position: "relative" }}>
-                        <CardMedia
-                          component="img"
-                          height="120"
-                          image={URL.createObjectURL(image)}
-                          alt={`Uploaded ${index}`}
-                          sx={{ objectFit: "cover" }}
-                        />
+                      {formData.photos.map((file, index) => (
                         <Box
+                          key={index}
                           sx={{
-                            position: "absolute",
-                            top: 4,
-                            right: 4,
-                            display: "flex",
-                            gap: 0.5,
+                            position: "relative",
+                            width: "100%",
+                            paddingTop: "75%", // 4:3 Aspect Ratio
+                            border: "1px solid #ddd",
+                            borderRadius: 2,
+                            overflow: "hidden",
+                            boxShadow: 1,
                           }}
                         >
-                          <IconButton
-                            size="small"
-                            onClick={() => setShowcaseImage(index)}
+                          <img
+                            src={
+                              photoPreviews[index] || URL.createObjectURL(file)
+                            }
+                            alt={`Fotoğraf ${index + 1}`}
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+
+                          <Box
+                            onClick={() => removePhoto(index)}
                             sx={{
-                              backgroundColor: "rgba(255,255,255,0.8)",
+                              position: "absolute",
+                              top: 4,
+                              right: 4,
+                              width: 24,
+                              height: 24,
+                              borderRadius: "50%",
+                              background: "rgba(255,255,255,0.9)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
                               "&:hover": {
-                                backgroundColor: "rgba(255,255,255,0.9)",
+                                background: "#ff1744",
+                                color: "white",
                               },
                             }}
                           >
-                            {formData.showcaseImageIndex === index ? (
-                              <Star color="warning" />
-                            ) : (
-                              <StarBorder />
-                            )}
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => removeImage(index)}
-                            sx={{
-                              backgroundColor: "rgba(255,255,255,0.8)",
-                              "&:hover": {
-                                backgroundColor: "rgba(255,255,255,0.9)",
-                              },
-                            }}
-                          >
-                            <DeleteIcon color="error" />
-                          </IconButton>
-                        </Box>
-                        {formData.showcaseImageIndex === index && (
+                            <Typography
+                              sx={{
+                                fontSize: 12,
+                                fontWeight: "bold",
+                                lineHeight: 1,
+                              }}
+                            >
+                              ✕
+                            </Typography>
+                          </Box>
+
                           <Box
                             sx={{
                               position: "absolute",
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              backgroundColor: "rgba(255,193,7,0.9)",
+                              background: "rgba(0,0,0,0.7)",
                               color: "white",
                               textAlign: "center",
                               py: 0.5,
                             }}
                           >
-                            <Typography variant="caption" fontWeight="bold">
-                              Vitrin Fotoğrafı
+                            <Typography
+                              variant="caption"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {index + 1}
                             </Typography>
                           </Box>
-                        )}
-                      </Card>
+                        </Box>
+                      ))}
                     </Box>
-                  ))}
-                </Box>
+                  </Box>
+                )}
               </Box>
-            )}
+            </Box>
           </Box>
         );
 
@@ -586,136 +763,69 @@ const BoruRomorkForm: React.FC = () => {
               <TextField
                 fullWidth
                 label="Fiyat"
-                type="number"
-                value={formData.price}
-                onChange={(e) => handleInputChange("price", e.target.value)}
+                value={formatNumber(formData.price)}
+                onChange={(e) =>
+                  handleInputChange(
+                    "price",
+                    parseFormattedNumber(e.target.value)
+                  )
+                }
                 required
                 sx={{ mb: 2 }}
                 InputProps={{
                   endAdornment: <Typography>₺</Typography>,
                 }}
               />
-
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Fiyat Türü</InputLabel>
+                <InputLabel>İl</InputLabel>
                 <Select
-                  value={formData.priceType}
-                  label="Fiyat Türü"
-                  onChange={(e) =>
-                    handleInputChange("priceType", e.target.value)
-                  }
+                  value={formData.cityId}
+                  onChange={(e) => handleCityChange(e.target.value)}
+                  label="İl"
+                  required
                 >
-                  <MenuItem value="fixed">Sabit Fiyat</MenuItem>
-                  <MenuItem value="negotiable">Pazarlık Yapılır</MenuItem>
+                  {cities.map((city) => (
+                    <MenuItem key={city.id} value={city.id.toString()}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <span>🏙️</span> {city.plateCode} - {city.name}
+                      </Box>
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
 
-              <TextField
-                fullWidth
-                label="Satıcı Adı"
-                value={formData.sellerName}
-                onChange={(e) =>
-                  handleInputChange("sellerName", e.target.value)
-                }
-                required
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                fullWidth
-                label="Telefon"
-                value={formData.sellerPhone}
-                onChange={(e) =>
-                  handleInputChange("sellerPhone", e.target.value)
-                }
-                required
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                type="email"
-                value={formData.sellerEmail}
-                onChange={(e) =>
-                  handleInputChange("sellerEmail", e.target.value)
-                }
-                required
-                sx={{ mb: 2 }}
-              />
-
-              <Autocomplete
-                options={cities}
-                getOptionLabel={(option) => option.name}
-                loading={loadingCities}
-                value={
-                  cities.find((city) => city.name === formData.city) || null
-                }
-                onChange={(_event, newValue) => {
-                  if (newValue) {
-                    handleCityChange(newValue.id, newValue.name);
-                  } else {
-                    setFormData((prev) => ({
-                      ...prev,
-                      city: "",
-                      district: "",
-                    }));
-                    setDistricts([]);
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>İlçe</InputLabel>
+                <Select
+                  value={formData.districtId}
+                  onChange={(e) =>
+                    handleInputChange("districtId", e.target.value)
                   }
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Şehir"
-                    required
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingCities ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-                sx={{ mb: 2 }}
-              />
-
-              <Autocomplete
-                options={districts}
-                getOptionLabel={(option) => option.name}
-                loading={loadingDistricts}
-                disabled={!formData.city}
-                value={
-                  districts.find(
-                    (district) => district.name === formData.district
-                  ) || null
-                }
-                onChange={(_event, newValue) => {
-                  handleInputChange("district", newValue ? newValue.name : "");
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="İlçe"
-                    required
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingDistricts ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
+                  label="İlçe"
+                  disabled={!formData.cityId}
+                  required
+                >
+                  {districts.map((district) => (
+                    <MenuItem key={district.id} value={district.id.toString()}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <span>🏘️</span> {district.name}
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Box>
           </Box>
         );

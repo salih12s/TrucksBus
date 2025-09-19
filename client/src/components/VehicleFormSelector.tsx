@@ -29,6 +29,16 @@ import KamyonRomorkForm from "./forms/KamyonRomorkForm";
 import SulamaForm from "./forms/TarimRomork/SulamaForm";
 import TarimTankerForm from "./forms/TarimRomork/TarimTankerForm";
 
+// Taşıma Römorkları Forms
+import BoruRomorkForm from "./forms/TasimaRomorklari/BoruRomorkForm";
+import FrigoRomorkForm from "./forms/TasimaRomorklari/FrigoRomorkForm";
+import HayvanRomorkForm from "./forms/TasimaRomorklari/HayvanRomorkForm";
+import PlatformRomorkForm from "./forms/TasimaRomorklari/PlatformRomorkForm";
+import SeyehatRomorkForm from "./forms/TasimaRomorklari/SeyehatRomorkForm";
+import TupDamacanaRomorkForm from "./forms/TasimaRomorklari/TupDamacanaRomorkForm";
+import VasitaRomorkForm from "./forms/TasimaRomorklari/VasitaRomorkForm";
+import YukRomorkForm from "./forms/TasimaRomorklari/YukRomorkForm";
+
 // Tanker Form
 import TankerForm from "./forms/Tanker/TankerForm";
 
@@ -58,15 +68,32 @@ const VehicleFormSelector: React.FC = () => {
     modelSlug?: string;
   }>();
 
+  // URL'den categorySlug'ı parse et (fallback)
+  const currentPath = window.location.pathname;
+  const urlParts = currentPath.split("/");
+  const categoriesIndex = urlParts.indexOf("categories");
+  const urlCategorySlug =
+    categoriesIndex !== -1 && urlParts[categoriesIndex + 1]
+      ? urlParts[categoriesIndex + 1]
+      : categorySlug;
+
+  // Aktif categorySlug'ı belirle
+  const activeCategorySlug = categorySlug || urlCategorySlug;
+
   // Debug için console'a yazdır
   console.log("🔍 VehicleFormSelector DEBUG:");
-  console.log("  categorySlug:", categorySlug);
+  console.log("  categorySlug (from params):", categorySlug);
+  console.log("  categorySlug (from URL):", urlCategorySlug);
+  console.log("  activeCategorySlug:", activeCategorySlug);
   console.log("  variantSlug:", variantSlug);
   console.log("  modelSlug:", modelSlug);
   console.log("  URL:", window.location.pathname);
 
   // Dorse kategorisi için özel mantık
-  if (categorySlug === "dorse" || categorySlug === "damperli-dorse") {
+  if (
+    activeCategorySlug === "dorse" ||
+    activeCategorySlug === "damperli-dorse"
+  ) {
     console.log("🎯 DORSE KATEGORİSİ ALGILANDI!");
     console.log("  Checking variant:", variantSlug);
     console.log("  Checking model:", modelSlug);
@@ -510,40 +537,146 @@ const VehicleFormSelector: React.FC = () => {
   }
 
   // Römork kategorisi için özel mantık
-  if (categorySlug === "romork") {
+  if (activeCategorySlug === "romork") {
     console.log("🎯 RÖMORK KATEGORİSİ ALGILANDI!");
     console.log("  Variant kontrolü yapılıyor:", variantSlug);
-    
+    console.log("  Model kontrolü yapılıyor:", modelSlug);
+
+    // ===== TARIM RÖMORK =====
     // Tarım Römork Tanker
     if (variantSlug?.includes("tarim-romorklari-tanker")) {
       console.log("✅ Tarım Tanker formu seçildi");
       return <TarimTankerForm />;
     }
-    
+
     // Tarım Römork Sulama
     if (variantSlug?.includes("tarim-romorklari-sulama")) {
       console.log("✅ Sulama formu seçildi");
       return <SulamaForm />;
     }
-    
-    // Model slug kontrolü (fallback)
+
+    // ===== TAŞIMA RÖMORKLAR =====
+    // Boru Taşıma Römorku
+    if (
+      variantSlug?.includes("boru-romork") ||
+      variantSlug?.includes("boru-romorku") ||
+      variantSlug?.includes("boru-tasima") ||
+      modelSlug?.includes("boru-tasima") ||
+      modelSlug?.includes("boru-romorku") ||
+      modelSlug?.includes("boru-romork")
+    ) {
+      console.log("✅ Boru Taşıma Römorku formu seçildi");
+      return <BoruRomorkForm />;
+    }
+
+    // Frigo Taşıma Römorku
+    if (
+      variantSlug?.includes("frigo-romork") ||
+      variantSlug?.includes("frigo-romorku") ||
+      variantSlug?.includes("frigo-tasima") ||
+      modelSlug?.includes("frigo-tasima") ||
+      modelSlug?.includes("frigo-romorku") ||
+      modelSlug?.includes("frigo-romork")
+    ) {
+      console.log("✅ Frigo Taşıma Römorku formu seçildi");
+      return <FrigoRomorkForm />;
+    }
+
+    // Hayvan Taşıma Römorku
+    if (
+      variantSlug?.includes("hayvan-romorku") ||
+      variantSlug?.includes("hayvan-romork") ||
+      variantSlug?.includes("hayvan-tasima") ||
+      modelSlug?.includes("hayvan-tasima") ||
+      modelSlug?.includes("hayvan-romorku") ||
+      modelSlug?.includes("hayvan-romork")
+    ) {
+      console.log("✅ Hayvan Taşıma Römorku formu seçildi");
+      return <HayvanRomorkForm />;
+    }
+
+    // Platform Taşıma Römorku
+    if (
+      variantSlug?.includes("platform-romorku") ||
+      variantSlug?.includes("platform-romork") ||
+      variantSlug?.includes("platform-tasima") ||
+      modelSlug?.includes("platform-tasima") ||
+      modelSlug?.includes("platform-romorku") ||
+      modelSlug?.includes("platform-romork")
+    ) {
+      console.log("✅ Platform Taşıma Römorku formu seçildi");
+      return <PlatformRomorkForm />;
+    }
+
+    // Seyahat Römorku
+    if (
+      variantSlug?.includes("seyahat-romork") ||
+      variantSlug?.includes("seyahat-romorku") ||
+      modelSlug?.includes("seyahat-romork") ||
+      modelSlug?.includes("seyahat-romorku")
+    ) {
+      console.log("✅ Seyahat Römorku formu seçildi");
+      return <SeyehatRomorkForm />;
+    }
+
+    // Tüp Damacana Taşıma Römorku
+    if (
+      variantSlug?.includes("tup-damacana") ||
+      variantSlug?.includes("tup-damacana-romork") ||
+      variantSlug?.includes("tup-damacana-romorku") ||
+      modelSlug?.includes("tup-damacana") ||
+      modelSlug?.includes("tup-damacana-romork") ||
+      modelSlug?.includes("tup-damacana-romorku")
+    ) {
+      console.log("✅ Tüp Damacana Taşıma Römorku formu seçildi");
+      return <TupDamacanaRomorkForm />;
+    }
+
+    // Vasıta Taşıma Römorku
+    if (
+      variantSlug?.includes("vasita-romorku") ||
+      variantSlug?.includes("vasita-romork") ||
+      variantSlug?.includes("vasita-tasima") ||
+      modelSlug?.includes("vasita-tasima") ||
+      modelSlug?.includes("vasita-romorku") ||
+      modelSlug?.includes("vasita-romork")
+    ) {
+      console.log("✅ Vasıta Taşıma Römorku formu seçildi");
+      return <VasitaRomorkForm />;
+    }
+
+    // Yük Taşıma Römorku
+    if (
+      variantSlug?.includes("yuk-romorku") ||
+      variantSlug?.includes("yuk-romork") ||
+      variantSlug?.includes("yuk-tasima") ||
+      modelSlug?.includes("yuk-tasima") ||
+      modelSlug?.includes("yuk-romorku") ||
+      modelSlug?.includes("yuk-romork")
+    ) {
+      console.log("✅ Yük Taşıma Römorku formu seçildi");
+      return <YukRomorkForm />;
+    }
+
+    // ===== FALLBACK KONTROLLER =====
+    // Model slug kontrolü (fallback for tarım)
     if (modelSlug?.includes("tarim-romorklari-tanker")) {
       console.log("✅ Model'e göre Tarım Tanker formu seçildi");
       return <TarimTankerForm />;
     }
-    
+
     if (modelSlug?.includes("tarim-romorklari-sulama")) {
       console.log("✅ Model'e göre Sulama formu seçildi");
       return <SulamaForm />;
     }
-    
+
     // Varsayılan Kamyon Römork
     console.log("⚠️ Varsayılan Kamyon Römork formu açılıyor");
     return <KamyonRomorkForm />;
   }
 
   // Kategori slug'ına göre doğru formu seç - GERÇEK SLUG'LARA GÖRE
-  switch (categorySlug) {
+  switch (activeCategorySlug) {
     // Minibüs & Midibüs
     case "minibus-midibus":
       console.log("✅ Minibüs formu seçildi");
@@ -648,7 +781,7 @@ const VehicleFormSelector: React.FC = () => {
     default:
       console.log(
         "⚠️ Bilinmeyen kategori slug:",
-        categorySlug,
+        activeCategorySlug,
         "- Minibüs formu açılıyor (fallback)"
       );
       return <CreateMinibusAdForm />;
