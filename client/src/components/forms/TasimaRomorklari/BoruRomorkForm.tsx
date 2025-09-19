@@ -20,6 +20,9 @@ import {
   Radio,
   FormLabel,
   Chip,
+  Modal,
+  Backdrop,
+  Fade,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -126,6 +129,7 @@ const BoruRomorkForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Fotoğraf önizlemeleri için state'ler
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
@@ -302,6 +306,11 @@ const BoruRomorkForm: React.FC = () => {
     setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    navigate("/");
+  };
+
   const generateYearOptions = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
@@ -394,11 +403,7 @@ const BoruRomorkForm: React.FC = () => {
 
       console.log("✅ İlan başarıyla oluşturuldu:", response.data);
 
-      alert(
-        "İlanınız başarıyla oluşturuldu. Ana sayfaya yönlendiriliyorsunuz."
-      );
-
-      navigate("/");
+      setShowSuccessModal(true);
     } catch (error: unknown) {
       console.error("❌ İlan oluşturulamadı:", error);
 
@@ -891,6 +896,56 @@ const BoruRomorkForm: React.FC = () => {
           </CardContent>
         </Card>
       </Box>
+
+      {/* Success Modal */}
+      <Modal
+        open={showSuccessModal}
+        onClose={handleCloseSuccessModal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={showSuccessModal}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: { xs: "90%", sm: 400 },
+              bgcolor: "background.paper",
+              borderRadius: 2,
+              boxShadow: 24,
+              p: 4,
+              textAlign: "center",
+            }}
+          >
+            <CheckCircle
+              sx={{
+                fontSize: 80,
+                color: "success.main",
+                mb: 2,
+              }}
+            />
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+              🎉 Başarılı!
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
+              İlanınız başarıyla oluşturuldu. Ana sayfaya yönlendirileceksiniz.
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleCloseSuccessModal}
+              sx={{ minWidth: 150 }}
+            >
+              Ana Sayfaya Git
+            </Button>
+          </Box>
+        </Fade>
+      </Modal>
     </Box>
   );
 };

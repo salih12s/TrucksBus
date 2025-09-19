@@ -1367,8 +1367,9 @@ const MainLayout: React.FC = () => {
                                 display: "block",
                               }}
                             >
-                              {ad.model?.name || ad.brand?.name || "Model"}{" "}
-                              {ad.year || ""}
+                              {ad.year
+                                ? `Model Yılı: ${ad.year}`
+                                : ad.model?.name || ad.brand?.name || "Model"}
                             </Typography>
                           </Box>
 
@@ -1700,7 +1701,7 @@ const MainLayout: React.FC = () => {
                               fontWeight: 500,
                             }}
                           >
-                            {ad.year || "---"}
+                            {ad.year ? `Model Yılı: ${ad.year}` : "---"}
                           </Typography>
                         </Box>
 

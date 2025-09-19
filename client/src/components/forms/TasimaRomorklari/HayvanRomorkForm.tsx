@@ -2,9 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
-  Stepper,
-  Step,
-  StepLabel,
   Button,
   TextField,
   FormControl,
@@ -16,23 +13,12 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  CardMedia,
-  IconButton,
-  Paper,
-  RadioGroup,
-  Radio,
-  FormLabel,
-  Autocomplete,
+  Modal,
+  Backdrop,
+  Fade,
+  Chip,
 } from "@mui/material";
-import {
-  Delete as DeleteIcon,
-  ArrowBack,
-  ArrowForward,
-  CheckCircle,
-  Upload as UploadIcon,
-  Star,
-  StarBorder,
-} from "@mui/icons-material";
+import { PhotoCamera, CheckCircle } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import apiClient from "../../../api/client";
@@ -60,8 +46,8 @@ interface FormData {
   isExchangeable: string;
 
   // Fotoğraf bilgileri
-  uploadedImages: File[];
-  showcaseImageIndex: number;
+  showcasePhoto: File | null;
+  photos: File[];
 
   // İletişim ve fiyat bilgileri
   price: string;
@@ -70,133 +56,117 @@ interface FormData {
   sellerPhone: string;
   sellerName: string;
   sellerEmail: string;
-  city: string;
-  district: string;
+  cityId: string;
+  districtId: string;
 }
 
-const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
+interface RootState {
+  auth: {
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      phone: string;
+    } | null;
+  };
+}
 
 const HayvanRomorkForm: React.FC = () => {
   const navigate = useNavigate();
-  const user = useSelector(
-    (state: {
-      auth: {
-        user: {
-          first_name: string;
-          last_name: string;
-          phone?: string;
-          email: string;
-          city?: string;
-          district?: string;
-        } | null;
-      };
-    }) => state.auth.user
-  );
   const location = useLocation();
+  const user = useSelector((state: RootState) => state.auth.user);
 
-  // Parse location state for brand/model/variant data
+  // Seçilen marka, model, varyant bilgileri location.state'den gelir
   const selectedBrand = location.state?.brand;
   const selectedModel = location.state?.model;
   const selectedVariant = location.state?.variant;
 
-  const [activeStep, setActiveStep] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
-  const [loadingCities, setLoadingCities] = useState(true);
-  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Fotoğraf önizlemeleri için state'ler
+  const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    return value.replace(/\D/g, "");
+  };
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
     productionYear: "",
     hasDamper: false,
-    isExchangeable: "",
-    uploadedImages: [],
-    showcaseImageIndex: 0,
+    isExchangeable: "Hayır",
+    showcasePhoto: null,
+    photos: [],
     price: "",
-    priceType: "fixed",
+    priceType: "Sabit",
     currency: "TRY",
-    sellerPhone: "",
-    sellerName: "",
-    sellerEmail: "",
-    city: "",
-    district: "",
+    sellerPhone: user?.phone || "",
+    sellerName: user?.name || "",
+    sellerEmail: user?.email || "",
+    cityId: "",
+    districtId: "",
   });
 
-  // Dynamic title based on selected variant/model/brand
-  const getFormTitle = () => {
-    if (selectedVariant?.name) return `${selectedVariant.name} İlanı Ver`;
-    if (selectedModel?.name) return `${selectedModel.name} İlanı Ver`;
-    if (selectedBrand?.name) return `${selectedBrand.name} İlanı Ver`;
-    return "Hayvan Römorku İlanı Ver";
-  };
-
-  // Load cities on component mount
+  // Şehirleri yükle
   useEffect(() => {
-    const loadCities = async () => {
+    const fetchCities = async () => {
       try {
-        console.log("🏙️ Şehirler yükleniyor...");
-        const response = await apiClient.get("/locations/cities");
+        setLoading(true);
+        const response = await apiClient.get("/ads/cities");
         setCities(response.data as City[]);
-        console.log("✅ Şehirler yüklendi:", (response.data as City[]).length);
       } catch (error) {
-        console.error("❌ Şehirler yüklenemedi:", error);
+        console.error("Şehirler yüklenirken hata oluştu:", error);
       } finally {
-        setLoadingCities(false);
+        setLoading(false);
       }
     };
 
-    loadCities();
+    fetchCities();
   }, []);
 
-  // Load districts when city changes
-  const handleCityChange = async (cityId: string, cityName: string) => {
-    try {
-      setLoadingDistricts(true);
-      setFormData((prev) => ({ ...prev, city: cityName, district: "" }));
+  // İlçeleri yükle
+  const handleCityChange = async (cityId: string) => {
+    setFormData((prev) => ({ ...prev, cityId, districtId: "" }));
+    setDistricts([]);
 
-      console.log("🏘️ İlçeler yükleniyor, cityId:", cityId);
-      const response = await apiClient.get(`/locations/districts/${cityId}`);
-      setDistricts(response.data as District[]);
-      console.log("✅ İlçeler yüklendi:", (response.data as District[]).length);
-    } catch (error) {
-      console.error("❌ İlçeler yüklenemedi:", error);
-    } finally {
-      setLoadingDistricts(false);
+    if (cityId) {
+      try {
+        setLoading(true);
+        const response = await apiClient.get(`/ads/cities/${cityId}/districts`);
+        setDistricts(response.data as District[]);
+      } catch (error) {
+        console.error("İlçeler yüklenirken hata:", error);
+        setDistricts([]);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   // Load user data
   useEffect(() => {
     if (user && cities.length > 0) {
-      console.log("👤 Kullanıcı verileri yükleniyor:", user);
       setFormData((prev) => ({
         ...prev,
-        sellerName: `${user.first_name} ${user.last_name}`,
+        sellerName: user.name || "",
         sellerPhone: user.phone || "",
         sellerEmail: user.email,
-        city: user.city || "",
-        district: user.district || "",
       }));
-
-      // If user has city, auto-load districts
-      if (user.city) {
-        const userCity = cities.find((city) => city.name === user.city);
-        if (userCity) {
-          handleCityChange(userCity.id, userCity.name);
-        }
-      }
     }
   }, [user, cities]);
-
-  const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
 
   const handleInputChange = (
     field: keyof FormData,
@@ -208,42 +178,69 @@ const HayvanRomorkForm: React.FC = () => {
     }));
   };
 
-  const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+  // Modern fotoğraf yönetimi
+  const handlePhotoUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    isShowcase: boolean = false
   ) => {
     const files = event.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
-    const newFiles = Array.from(files);
-    const totalFiles = formData.uploadedImages.length + newFiles.length;
+    const file = files[0];
 
-    if (totalFiles > 10) {
-      alert("En fazla 10 fotoğraf yükleyebilirsiniz.");
-      return;
+    if (isShowcase) {
+      setFormData((prev) => ({
+        ...prev,
+        showcasePhoto: file,
+      }));
+
+      // Önizleme için URL oluştur
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setShowcasePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Diğer fotoğraflar için
+      const newFiles = Array.from(files);
+      const totalFiles = formData.photos.length + newFiles.length;
+
+      if (totalFiles > 15) {
+        alert("En fazla 15 fotoğraf yükleyebilirsiniz.");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        photos: [...prev.photos, ...newFiles],
+      }));
+
+      // Önizlemeler için URL'ler oluştur
+      newFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPhotoPreviews((prev) => [...prev, e.target?.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      uploadedImages: [...prev.uploadedImages, ...newFiles],
-    }));
+    // Input'u sıfırla
+    event.target.value = "";
   };
 
-  const removeImage = (index: number) => {
+  const removePhoto = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      uploadedImages: prev.uploadedImages.filter((_, i) => i !== index),
-      showcaseImageIndex:
-        prev.showcaseImageIndex >= index && prev.showcaseImageIndex > 0
-          ? prev.showcaseImageIndex - 1
-          : prev.showcaseImageIndex,
+      photos: prev.photos.filter((_, i) => i !== index),
     }));
+
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const setShowcaseImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      showcaseImageIndex: index,
-    }));
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    navigate("/");
   };
 
   const generateYearOptions = () => {
@@ -261,527 +258,636 @@ const HayvanRomorkForm: React.FC = () => {
       return;
     }
 
-    console.log("🚚 Form gönderim başlatıldı");
-    console.log("Seçili Brand:", selectedBrand);
-    console.log("Seçili Model:", selectedModel);
-    console.log("Seçili Variant:", selectedVariant);
-    console.log("Form Data:", formData);
+    if (!formData.showcasePhoto) {
+      alert("Lütfen en az bir vitrin fotoğrafı yükleyin.");
+      return;
+    }
 
     // City/District validation
-    if (!formData.city || !formData.district) {
+    if (!formData.cityId || !formData.districtId) {
       alert("Lütfen şehir ve ilçe seçimi yapınız.");
       return;
     }
 
-    const selectedCity = cities.find((city) => city.name === formData.city);
+    const selectedCity = cities.find((city) => city.id === formData.cityId);
     const selectedDistrict = districts.find(
-      (district) => district.name === formData.district
+      (district) => district.id === formData.districtId
     );
 
-    if (!selectedCity || !selectedDistrict) {
-      alert("Lütfen şehir ve ilçe seçimi yapınız.");
-      return;
-    }
-
     try {
-      setLoading(true);
+      setSubmitLoading(true);
 
-      const base64Images = await Promise.all(
-        formData.uploadedImages.map((file) => {
-          return new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-        })
-      );
+      const submitData = new FormData();
 
-      const payload = {
-        // Brand/Model/Variant info
-        brandId: selectedBrand?.id,
-        modelId: selectedModel?.id,
-        variantId: selectedVariant?.id,
+      // Temel bilgiler
+      submitData.append("title", formData.title);
+      submitData.append("description", formData.description);
+      submitData.append("productionYear", formData.productionYear);
+      submitData.append("hasDamper", formData.hasDamper.toString());
+      submitData.append("isExchangeable", formData.isExchangeable);
 
-        // Form data
-        title: formData.title,
-        description: formData.description,
-        productionYear: parseInt(formData.productionYear),
-        hasDamper: formData.hasDamper,
-        isExchangeable: formData.isExchangeable === "true",
-
-        // Images
-        images: base64Images,
-        showcaseImageIndex: formData.showcaseImageIndex,
-
-        // Price and contact
-        price: parseFloat(formData.price),
-        priceType: formData.priceType,
-        currency: formData.currency,
-        sellerPhone: formData.sellerPhone,
-        sellerName: formData.sellerName,
-        sellerEmail: formData.sellerEmail,
-        cityId: selectedCity.id,
-        districtId: selectedDistrict.id,
-
-        // Category info
-        category: "TasimaRomorklari",
-        subCategory: "HayvanRomork",
-      };
-
-      console.log("📤 Payload gönderiliyor:", payload);
-
-      const response = await apiClient.post("/listings", payload);
-
-      console.log("✅ İlan başarıyla oluşturuldu:", response.data);
-
-      alert(
-        "İlanınız başarıyla oluşturuldu. Ana sayfaya yönlendiriliyorsunuz."
-      );
-
-      navigate("/");
-    } catch (error: unknown) {
-      console.error("❌ İlan oluşturulamadı:", error);
-
-      let errorMessage = "İlan oluşturulurken bir hata oluştu.";
-      if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        if (axiosError.response?.data?.message) {
-          errorMessage = axiosError.response.data.message;
-        }
-      } else if (error instanceof Error && error.message) {
-        errorMessage = error.message;
+      // Marka, model, varyant bilgileri
+      if (selectedBrand) {
+        submitData.append("brandId", selectedBrand.id);
+        submitData.append("brandName", selectedBrand.name);
+      }
+      if (selectedModel) {
+        submitData.append("modelId", selectedModel.id);
+        submitData.append("modelName", selectedModel.name);
+      }
+      if (selectedVariant) {
+        submitData.append("variantId", selectedVariant.id);
+        submitData.append("variantName", selectedVariant.name);
       }
 
-      alert(errorMessage);
+      // Kategori bilgisi
+      submitData.append("category", "TasimaRomorklari");
+      submitData.append("subType", "Hayvan");
+
+      // Fiyat ve iletişim bilgileri
+      submitData.append("price", formData.price);
+      submitData.append("priceType", formData.priceType);
+      submitData.append("currency", formData.currency);
+      submitData.append("sellerName", formData.sellerName);
+      submitData.append("sellerPhone", formData.sellerPhone);
+      submitData.append("sellerEmail", formData.sellerEmail);
+
+      // Şehir ve ilçe bilgileri
+      if (selectedCity) {
+        submitData.append("cityId", selectedCity.id);
+        submitData.append("cityName", selectedCity.name);
+      }
+      if (selectedDistrict) {
+        submitData.append("districtId", selectedDistrict.id);
+        submitData.append("districtName", selectedDistrict.name);
+      }
+
+      // Vitrin fotoğrafı
+      if (formData.showcasePhoto) {
+        submitData.append("showcasePhoto", formData.showcasePhoto);
+      }
+
+      // Diğer fotoğraflar
+      formData.photos.forEach((file) => {
+        submitData.append("photos", file);
+      });
+
+      const response = await apiClient.post("/ads/tasima-romork", submitData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data) {
+        setShowSuccessModal(true);
+      }
+    } catch (error) {
+      console.error("İlan yayınlanırken hata oluştu:", error);
+      alert("İlan yayınlanırken hata oluştu");
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
-  const renderStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              İlan Detayları
+  return (
+    <>
+      <Header />
+      <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
+        <Card>
+          <CardContent>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Hayvan Römorku İlanı Ver
             </Typography>
 
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                label="İlan Başlığı"
-                value={formData.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                required
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                fullWidth
-                label="Açıklama"
-                multiline
-                rows={4}
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-                required
-                sx={{ mb: 2 }}
-              />
-
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Üretim Yılı</InputLabel>
-                <Select
-                  value={formData.productionYear}
-                  label="Üretim Yılı"
-                  onChange={(e) =>
-                    handleInputChange("productionYear", e.target.value)
-                  }
-                >
-                  {generateYearOptions().map((year) => (
-                    <MenuItem key={year} value={year}>
-                      {year}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.hasDamper}
-                    onChange={(e) =>
-                      handleInputChange("hasDamper", e.target.checked)
-                    }
-                  />
-                }
-                label="Damperli"
-                sx={{ mb: 2, display: "block" }}
-              />
-
-              <FormControl component="fieldset" sx={{ mb: 2 }}>
-                <FormLabel component="legend">Takas</FormLabel>
-                <RadioGroup
-                  value={formData.isExchangeable}
-                  onChange={(e) =>
-                    handleInputChange("isExchangeable", e.target.value)
-                  }
-                  row
-                >
-                  <FormControlLabel
-                    value="true"
-                    control={<Radio />}
-                    label="Evet"
-                  />
-                  <FormControlLabel
-                    value="false"
-                    control={<Radio />}
-                    label="Hayır"
-                  />
-                </RadioGroup>
-              </FormControl>
-            </Box>
-          </Box>
-        );
-
-      case 1:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Fotoğraflar
-            </Typography>
-
-            <Paper
-              sx={{
-                p: 3,
-                textAlign: "center",
-                border: "2px dashed #ccc",
-                mb: 3,
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: "#f5f5f5",
-                },
-              }}
-              component="label"
-            >
-              <input
-                type="file"
-                hidden
-                multiple
-                accept="image/*"
-                onChange={handleImageUpload}
-              />
-              <UploadIcon sx={{ fontSize: 48, color: "#ccc", mb: 1 }} />
-              <Typography variant="h6" color="textSecondary">
-                Fotoğraf Yükleyin
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                En fazla 10 fotoğraf yükleyebilirsiniz
-              </Typography>
-            </Paper>
-
-            {formData.uploadedImages.length > 0 && (
-              <Box>
-                <Typography variant="subtitle1" gutterBottom>
-                  Yüklenen Fotoğraflar ({formData.uploadedImages.length}/10)
+            {selectedBrand && selectedModel && (
+              <Box sx={{ mb: 3, p: 2, bgcolor: "primary.50", borderRadius: 1 }}>
+                <Typography variant="subtitle1" color="primary.main">
+                  <strong>
+                    {selectedBrand.name} {selectedModel.name}{" "}
+                    {selectedVariant?.name || ""}
+                  </strong>{" "}
+                  için ilan oluşturuyorsunuz
                 </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                  {formData.uploadedImages.map((image, index) => (
-                    <Box
-                      key={index}
+              </Box>
+            )}
+
+            {/* Temel Bilgiler */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{ mb: 2, color: "primary.main" }}>
+                İlan Detayları
+              </Typography>
+
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <TextField
+                  fullWidth
+                  label="İlan Başlığı *"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange("title", e.target.value)}
+                  placeholder="Hayvan römorku"
+                />
+
+                <TextField
+                  fullWidth
+                  label="Açıklama *"
+                  value={formData.description}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  multiline
+                  rows={4}
+                  placeholder="Hayvan römorkunuz hakkında detaylı bilgi verin"
+                />
+
+                <FormControl fullWidth>
+                  <InputLabel>Üretim Yılı *</InputLabel>
+                  <Select
+                    value={formData.productionYear}
+                    onChange={(e) =>
+                      handleInputChange("productionYear", e.target.value)
+                    }
+                    label="Üretim Yılı *"
+                  >
+                    {generateYearOptions().map((year) => (
+                      <MenuItem key={year} value={year}>
+                        {year}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.hasDamper}
+                      onChange={(e) =>
+                        handleInputChange("hasDamper", e.target.checked)
+                      }
+                    />
+                  }
+                  label="Damperi Var"
+                />
+
+                <FormControl fullWidth>
+                  <InputLabel>Takas</InputLabel>
+                  <Select
+                    value={formData.isExchangeable}
+                    onChange={(e) =>
+                      handleInputChange("isExchangeable", e.target.value)
+                    }
+                    label="Takas"
+                  >
+                    <MenuItem value="Evet">Evet</MenuItem>
+                    <MenuItem value="Hayır">Hayır</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            </Box>
+
+            {/* Fotoğraf Bölümü */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{ mb: 2, color: "primary.main" }}>
+                Fotoğraflar
+              </Typography>
+
+              {/* Vitrin Fotoğrafı */}
+              <Box sx={{ mb: 4 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  🖼️ Vitrin Fotoğrafı
+                  <Chip label="Zorunlu" color="error" size="small" />
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  Ana fotoğraf ilanınızın vitrininde görünecektir
+                </Typography>
+
+                <input
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  id="showcase-photo"
+                  type="file"
+                  onChange={(e) => handlePhotoUpload(e, true)}
+                />
+                <label htmlFor="showcase-photo">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<PhotoCamera />}
+                    sx={{
+                      ...(formData.showcasePhoto && {
+                        borderColor: "success.main",
+                        color: "success.main",
+                      }),
+                    }}
+                  >
+                    {formData.showcasePhoto
+                      ? "Vitrin Fotoğrafını Değiştir"
+                      : "Vitrin Fotoğrafı Seç"}
+                  </Button>
+                </label>
+
+                {(formData.showcasePhoto || showcasePreview) && (
+                  <Box
+                    sx={{
+                      mt: 3,
+                      position: "relative",
+                      width: "200px",
+                      height: "150px",
+                      border: "2px solid",
+                      borderColor: "primary.main",
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      boxShadow: 3,
+                    }}
+                  >
+                    <img
+                      src={
+                        showcasePreview ||
+                        (formData.showcasePhoto
+                          ? URL.createObjectURL(formData.showcasePhoto)
+                          : "")
+                      }
+                      alt="Vitrin Fotoğrafı"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                    <Chip
+                      label="VİTRİN"
+                      color="primary"
+                      size="small"
                       sx={{
-                        width: {
-                          xs: "calc(50% - 8px)",
-                          sm: "calc(33.33% - 11px)",
-                          md: "calc(25% - 12px)",
-                        },
-                        position: "relative",
+                        position: "absolute",
+                        top: 8,
+                        left: 8,
+                        fontWeight: "bold",
+                      }}
+                    />
+                  </Box>
+                )}
+              </Box>
+
+              {/* Diğer Fotoğraflar */}
+              <Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  📷 Diğer Fotoğraflar
+                  <Chip label="İsteğe Bağlı" color="info" size="small" />
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  Aracınızın farklı açılardan fotoğraflarını ekleyin (En fazla
+                  15 adet)
+                </Typography>
+                <input
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  id="other-photos"
+                  type="file"
+                  multiple
+                  onChange={(e) => handlePhotoUpload(e, false)}
+                />
+                <label htmlFor="other-photos">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<PhotoCamera />}
+                    disabled={formData.photos.length >= 15}
+                  >
+                    Fotoğraf Ekle ({formData.photos.length}/15)
+                  </Button>
+                </label>
+
+                {formData.photos.length > 0 && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{ mb: 2, fontWeight: 600 }}
+                    >
+                      Yüklenen Fotoğraflar ({formData.photos.length}/15)
+                    </Typography>
+
+                    {/* Fotoğraf önizlemeleri grid */}
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(120px, 1fr))",
+                        gap: 2,
+                        maxHeight: "300px",
+                        overflowY: "auto",
+                        p: 1,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 2,
                       }}
                     >
-                      <Card sx={{ position: "relative" }}>
-                        <CardMedia
-                          component="img"
-                          height="120"
-                          image={URL.createObjectURL(image)}
-                          alt={`Uploaded ${index}`}
-                          sx={{ objectFit: "cover" }}
-                        />
+                      {formData.photos.map((file, index) => (
                         <Box
+                          key={index}
                           sx={{
-                            position: "absolute",
-                            top: 4,
-                            right: 4,
-                            display: "flex",
-                            gap: 0.5,
+                            position: "relative",
+                            width: "100%",
+                            paddingTop: "75%", // 4:3 Aspect Ratio
+                            border: "1px solid #ddd",
+                            borderRadius: 2,
+                            overflow: "hidden",
+                            boxShadow: 1,
                           }}
                         >
-                          <IconButton
-                            size="small"
-                            onClick={() => setShowcaseImage(index)}
+                          <img
+                            src={
+                              photoPreviews[index] || URL.createObjectURL(file)
+                            }
+                            alt={`Fotoğraf ${index + 1}`}
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+
+                          <Box
+                            onClick={() => removePhoto(index)}
                             sx={{
-                              backgroundColor: "rgba(255,255,255,0.8)",
+                              position: "absolute",
+                              top: 4,
+                              right: 4,
+                              width: 24,
+                              height: 24,
+                              borderRadius: "50%",
+                              background: "rgba(255,255,255,0.9)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              cursor: "pointer",
                               "&:hover": {
-                                backgroundColor: "rgba(255,255,255,0.9)",
+                                background: "#ff1744",
+                                color: "white",
                               },
                             }}
                           >
-                            {formData.showcaseImageIndex === index ? (
-                              <Star color="warning" />
-                            ) : (
-                              <StarBorder />
-                            )}
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => removeImage(index)}
-                            sx={{
-                              backgroundColor: "rgba(255,255,255,0.8)",
-                              "&:hover": {
-                                backgroundColor: "rgba(255,255,255,0.9)",
-                              },
-                            }}
-                          >
-                            <DeleteIcon color="error" />
-                          </IconButton>
-                        </Box>
-                        {formData.showcaseImageIndex === index && (
+                            <Typography
+                              sx={{
+                                fontSize: 12,
+                                fontWeight: "bold",
+                                lineHeight: 1,
+                              }}
+                            >
+                              ✕
+                            </Typography>
+                          </Box>
+
                           <Box
                             sx={{
                               position: "absolute",
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              backgroundColor: "rgba(255,193,7,0.9)",
+                              background: "rgba(0,0,0,0.7)",
                               color: "white",
                               textAlign: "center",
                               py: 0.5,
                             }}
                           >
-                            <Typography variant="caption" fontWeight="bold">
-                              Vitrin Fotoğrafı
+                            <Typography
+                              variant="caption"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {index + 1}
                             </Typography>
                           </Box>
-                        )}
-                      </Card>
+                        </Box>
+                      ))}
                     </Box>
-                  ))}
-                </Box>
+                  </Box>
+                )}
               </Box>
-            )}
-          </Box>
-        );
-
-      case 2:
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              İletişim & Fiyat Bilgileri
-            </Typography>
-
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                label="Fiyat"
-                type="number"
-                value={formData.price}
-                onChange={(e) => handleInputChange("price", e.target.value)}
-                required
-                sx={{ mb: 2 }}
-                InputProps={{
-                  endAdornment: <Typography>₺</Typography>,
-                }}
-              />
-
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Fiyat Türü</InputLabel>
-                <Select
-                  value={formData.priceType}
-                  label="Fiyat Türü"
-                  onChange={(e) =>
-                    handleInputChange("priceType", e.target.value)
-                  }
-                >
-                  <MenuItem value="fixed">Sabit Fiyat</MenuItem>
-                  <MenuItem value="negotiable">Pazarlık Yapılır</MenuItem>
-                </Select>
-              </FormControl>
-
-              <TextField
-                fullWidth
-                label="Satıcı Adı"
-                value={formData.sellerName}
-                onChange={(e) =>
-                  handleInputChange("sellerName", e.target.value)
-                }
-                required
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                fullWidth
-                label="Telefon"
-                value={formData.sellerPhone}
-                onChange={(e) =>
-                  handleInputChange("sellerPhone", e.target.value)
-                }
-                required
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                type="email"
-                value={formData.sellerEmail}
-                onChange={(e) =>
-                  handleInputChange("sellerEmail", e.target.value)
-                }
-                required
-                sx={{ mb: 2 }}
-              />
-
-              <Autocomplete
-                options={cities}
-                getOptionLabel={(option) => option.name}
-                loading={loadingCities}
-                value={
-                  cities.find((city) => city.name === formData.city) || null
-                }
-                onChange={(_event, newValue) => {
-                  if (newValue) {
-                    handleCityChange(newValue.id, newValue.name);
-                  } else {
-                    setFormData((prev) => ({
-                      ...prev,
-                      city: "",
-                      district: "",
-                    }));
-                    setDistricts([]);
-                  }
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Şehir"
-                    required
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingCities ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-                sx={{ mb: 2 }}
-              />
-
-              <Autocomplete
-                options={districts}
-                getOptionLabel={(option) => option.name}
-                loading={loadingDistricts}
-                disabled={!formData.city}
-                value={
-                  districts.find(
-                    (district) => district.name === formData.district
-                  ) || null
-                }
-                onChange={(_event, newValue) => {
-                  handleInputChange("district", newValue ? newValue.name : "");
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="İlçe"
-                    required
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingDistricts ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
             </Box>
-          </Box>
-        );
 
-      default:
-        return null;
-    }
-  };
+            {/* İletişim ve Fiyat Bilgileri */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{ mb: 2, color: "primary.main" }}>
+                İletişim ve Fiyat Bilgileri
+              </Typography>
 
-  return (
-    <Box sx={{ width: "100%", p: 3 }}>
-      <Header />
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>İl *</InputLabel>
+                    <Select
+                      value={formData.cityId}
+                      onChange={(e) => handleCityChange(e.target.value)}
+                      label="İl *"
+                      disabled={loading}
+                      required
+                    >
+                      {cities.map((city) => (
+                        <MenuItem key={city.id} value={city.id}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <span>🏙️</span> {city.plateCode} - {city.name}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
 
-      <Box sx={{ maxWidth: 800, mx: "auto", mt: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom align="center">
-          {getFormTitle()}
-        </Typography>
+                  <FormControl fullWidth>
+                    <InputLabel>İlçe *</InputLabel>
+                    <Select
+                      value={formData.districtId}
+                      onChange={(e) =>
+                        handleInputChange("districtId", e.target.value)
+                      }
+                      label="İlçe *"
+                      disabled={!formData.cityId}
+                      required
+                    >
+                      {loading ? (
+                        <MenuItem disabled>
+                          <CircularProgress size={20} />
+                          &nbsp; İlçeler yükleniyor...
+                        </MenuItem>
+                      ) : districts.length === 0 ? (
+                        <MenuItem disabled>
+                          {formData.cityId
+                            ? "İlçe bulunamadı"
+                            : "Önce il seçin"}
+                        </MenuItem>
+                      ) : (
+                        districts.map((district) => (
+                          <MenuItem key={district.id} value={district.id}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <span>🏘️</span> {district.name}
+                            </Box>
+                          </MenuItem>
+                        ))
+                      )}
+                    </Select>
+                  </FormControl>
+                </Box>
 
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-
-        <Card>
-          <CardContent>
-            {renderStepContent(activeStep)}
-
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mt: 3 }}
-            >
-              <Button
-                disabled={activeStep === 0}
-                onClick={handleBack}
-                startIcon={<ArrowBack />}
-              >
-                Geri
-              </Button>
-
-              {activeStep === steps.length - 1 ? (
-                <Button
-                  variant="contained"
-                  onClick={handleSubmit}
-                  disabled={loading}
-                  startIcon={
-                    loading ? <CircularProgress size={20} /> : <CheckCircle />
+                <TextField
+                  fullWidth
+                  label="Fiyat *"
+                  value={formatNumber(formData.price)}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "price",
+                      parseFormattedNumber(e.target.value)
+                    )
                   }
-                >
-                  {loading ? "Gönderiliyor..." : "İlanı Yayınla"}
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  onClick={handleNext}
-                  endIcon={<ArrowForward />}
-                >
-                  İleri
-                </Button>
-              )}
+                  InputProps={{
+                    endAdornment: <Typography>₺</Typography>,
+                  }}
+                />
+
+                <FormControl fullWidth>
+                  <InputLabel>Fiyat Tipi</InputLabel>
+                  <Select
+                    value={formData.priceType}
+                    onChange={(e) =>
+                      handleInputChange("priceType", e.target.value)
+                    }
+                    label="Fiyat Tipi"
+                  >
+                    <MenuItem value="Sabit">Sabit Fiyat</MenuItem>
+                    <MenuItem value="Pazarlık">Pazarlığa Açık</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <TextField
+                  fullWidth
+                  label="Satıcı Adı *"
+                  value={formData.sellerName}
+                  onChange={(e) =>
+                    handleInputChange("sellerName", e.target.value)
+                  }
+                />
+
+                <TextField
+                  fullWidth
+                  label="Telefon Numarası *"
+                  value={formData.sellerPhone}
+                  onChange={(e) =>
+                    handleInputChange("sellerPhone", e.target.value)
+                  }
+                />
+
+                <TextField
+                  fullWidth
+                  label="E-posta"
+                  type="email"
+                  value={formData.sellerEmail}
+                  onChange={(e) =>
+                    handleInputChange("sellerEmail", e.target.value)
+                  }
+                />
+              </Box>
+            </Box>
+
+            {/* Submit Button */}
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleSubmit}
+                disabled={submitLoading}
+                startIcon={
+                  submitLoading ? <CircularProgress size={20} /> : null
+                }
+                sx={{ minWidth: 200 }}
+              >
+                {submitLoading ? "Yayınlanıyor..." : "İlanı Yayınla"}
+              </Button>
             </Box>
           </CardContent>
         </Card>
+
+        {/* Success Modal */}
+        <Modal
+          open={showSuccessModal}
+          onClose={handleCloseSuccessModal}
+          closeAfterTransition
+          BackdropComponent={Backdrop}
+          BackdropProps={{
+            timeout: 500,
+          }}
+        >
+          <Fade in={showSuccessModal}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: 400,
+                bgcolor: "background.paper",
+                borderRadius: 2,
+                boxShadow: 24,
+                p: 4,
+                textAlign: "center",
+              }}
+            >
+              <CheckCircle
+                sx={{ fontSize: 64, color: "success.main", mb: 2 }}
+              />
+              <Typography variant="h5" component="h2" gutterBottom>
+                Başarılı!
+              </Typography>
+              <Typography sx={{ mb: 3 }}>
+                İlanınız başarıyla yayınlandı ve onay için gönderildi.
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={handleCloseSuccessModal}
+                fullWidth
+              >
+                Ana Sayfaya Dön
+              </Button>
+            </Box>
+          </Fade>
+        </Modal>
       </Box>
-    </Box>
+    </>
   );
 };
 

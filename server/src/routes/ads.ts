@@ -112,6 +112,14 @@ router.post(
   adController.createKamyonRomorkAd // Aynı controller'ı kullanabilir
 );
 
+// Taşıma Römorkları ilan oluşturma (multipart/form-data desteği ile)
+router.post(
+  "/tasima-romork",
+  authenticateToken,
+  upload.any(),
+  adController.createKamyonRomorkAd // Aynı controller'ı kullanabilir
+);
+
 // Kullanıcının ilanları
 router.get("/user/my-ads", authenticateToken, adController.getUserAds);
 
