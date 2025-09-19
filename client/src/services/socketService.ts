@@ -114,6 +114,10 @@ class SocketService {
     }
   }
 
+  getSocket() {
+    return this.socket;
+  }
+
   // Request notification permission
   static async requestNotificationPermission() {
     if ("Notification" in window && Notification.permission === "default") {

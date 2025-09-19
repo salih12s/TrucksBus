@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import { io } from "../app";
 
 // ❗ ULTRA PERFORMANCE: Connection pool optimize
 const prisma = new PrismaClient({
@@ -1247,8 +1248,15 @@ export const approveAd = async (req: Request, res: Response) => {
       },
     });
 
-    // Kullanıcıya onay bildirimi (şimdilik console log)
-    console.log(`İlan onaylandı: ${ad.title} - Kullanıcı: ${ad.user.email}`);
+    // ❗ GERÇEK ZAMANLI BİLDİRİM: Socket.io ile tüm bağlı kullanıcılara bildir
+    io.emit("adApproved", {
+      adId: ad.id,
+      title: ad.title,
+      message: "Yeni bir ilan onaylandı!"
+    });
+
+    // Log
+    console.log(`📣 İlan onaylandı ve socket bildirimi gönderildi: ${ad.title} - Kullanıcı: ${ad.user.email}`);
 
     res.json({ message: "İlan başarıyla onaylandı", ad });
   } catch (error) {

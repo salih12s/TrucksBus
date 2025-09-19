@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../store";
 import {
   Container,
   Typography,
@@ -20,12 +22,7 @@ import {
   FormControlLabel,
   Switch,
 } from "@mui/material";
-import {
-  PhotoCamera,
-  EditNote,
-  LocationOn,
-  AttachMoney,
-} from "@mui/icons-material";
+import { PhotoCamera, EditNote, LocationOn } from "@mui/icons-material";
 import apiClient from "../../../api/client";
 import Header from "../../layout/Header";
 
@@ -69,6 +66,7 @@ interface SulamaFormData {
 const SulamaForm: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -76,6 +74,21 @@ const SulamaForm: React.FC = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+
+  // Sayı formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
+  };
 
   const [formData, setFormData] = useState<SulamaFormData>({
     title: "",
@@ -185,6 +198,14 @@ const SulamaForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Kullanıcı oturum kontrolü
+    if (!user) {
+      alert("İlan oluşturmak için giriş yapmanız gerekiyor.");
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -193,7 +214,15 @@ const SulamaForm: React.FC = () => {
       // Temel bilgileri ekle
       Object.entries(formData).forEach(([key, value]) => {
         if (key !== "photos" && key !== "showcasePhoto" && value) {
-          submitData.append(key, value.toString());
+          // Price değerini parse et
+          if (key === "price") {
+            const parsedPrice = parseFormattedNumber(value.toString());
+            if (parsedPrice) {
+              submitData.append(key, parsedPrice);
+            }
+          } else {
+            submitData.append(key, value.toString());
+          }
         }
       });
 
@@ -295,11 +324,14 @@ const SulamaForm: React.FC = () => {
 
                     <TextField
                       label="Fiyat (TL)"
-                      value={formData.price}
+                      value={formatNumber(formData.price)}
                       onChange={(e) =>
-                        handleInputChange("price", e.target.value)
+                        handleInputChange(
+                          "price",
+                          parseFormattedNumber(e.target.value)
+                        )
                       }
-                      placeholder="Örn: 150000"
+                      placeholder="Örn: 150.000"
                       sx={{ maxWidth: 200 }}
                       required
                     />
@@ -693,58 +725,6 @@ const SulamaForm: React.FC = () => {
                       </Box>
                     )}
                   </Box>
-                </Box>
-              </Card>
-
-              {/* İletişim ve Fiyat Kartı */}
-              <Card variant="outlined" sx={{ p: 3 }}>
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{ mb: 3, display: "flex", alignItems: "center", gap: 1 }}
-                >
-                  <AttachMoney color="primary" />
-                  İletişim ve Fiyat Bilgileri
-                </Typography>
-
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                  <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                    {/* Satıcı Adı */}
-                    <TextField
-                      label="Satıcı Adı"
-                      value={formData.sellerName}
-                      onChange={(e) =>
-                        handleInputChange("sellerName", e.target.value)
-                      }
-                      sx={{ minWidth: 200 }}
-                      required
-                    />
-
-                    {/* Telefon */}
-                    <TextField
-                      label="Telefon"
-                      value={formData.sellerPhone}
-                      onChange={(e) =>
-                        handleInputChange("sellerPhone", e.target.value)
-                      }
-                      sx={{ minWidth: 200 }}
-                      required
-                    />
-
-                    {/* E-posta */}
-                    <TextField
-                      label="E-posta"
-                      type="email"
-                      value={formData.sellerEmail}
-                      onChange={(e) =>
-                        handleInputChange("sellerEmail", e.target.value)
-                      }
-                      sx={{ minWidth: 200 }}
-                      required
-                    />
-                  </Box>
-
-                  {/* Fiyat */}
                 </Box>
               </Card>
 

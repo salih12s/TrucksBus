@@ -18,6 +18,7 @@ import {
 import { LocalShipping } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
 import { useAppSelector } from "../hooks/redux";
+import socketService from "../services/socketService";
 import AdDetail from "./AdDetail";
 import apiClient from "../api/client";
 import ComplaintModal from "../components/complaints/ComplaintModal";
@@ -117,6 +118,7 @@ const MainLayout: React.FC = () => {
   const [yearMax, setYearMax] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [favoritesCount, setFavoritesCount] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [complaintModalOpen, setComplaintModalOpen] = useState(false);
   const [selectedAdForComplaint, setSelectedAdForComplaint] = useState<{
     id: number;
@@ -185,6 +187,7 @@ const MainLayout: React.FC = () => {
 
   // ❗ ULTRA FAST: Ads'leri minimal mode ile hızlı yükle
   const loadAdsLazy = async () => {
+    setIsRefreshing(true);
     const adsStartTime = performance.now();
     console.log("⚡ Loading ads with ultra fast mode...");
 
@@ -212,6 +215,8 @@ const MainLayout: React.FC = () => {
     } catch (error) {
       console.error("Ads lazy loading error:", error);
       setAds([]);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -317,6 +322,55 @@ const MainLayout: React.FC = () => {
     return () => {
       window.removeEventListener("focus", handleFocus);
       clearInterval(intervalId);
+    };
+  }, []);
+
+  // ❗ Socket.io ile gerçek zamanlı onaylı ilan bildirimi
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      // Socket bağlantısını kur
+      const socket = socketService.connect(user.id);
+
+      // Onaylı ilan bildirimi dinle
+      const handleAdApproved = (data: { adId: number; message: string }) => {
+        console.log("🔔 İlan onaylandı bildirimi alındı:", data);
+        // Anında ilanları yenile
+        loadAdsLazy();
+        // Toast bildirim göster (opsiyonel)
+        // toast.success(data.message || "Bir ilan onaylandı ve anasayfaya eklendi!");
+      };
+
+      socket?.on("adApproved", handleAdApproved);
+
+      // Cleanup
+      return () => {
+        socket?.off("adApproved", handleAdApproved);
+      };
+    }
+  }, [isAuthenticated, user?.id]);
+
+  // ❗ FALLBACK LİSTENER'LAR: PostMessage ve CustomEvent
+  useEffect(() => {
+    // PostMessage listener (farklı tab'lar için)
+    const handlePostMessage = (event: MessageEvent) => {
+      if (event.data?.type === "AD_APPROVED") {
+        console.log("📬 PostMessage ile ilan onayı bildirimi alındı:", event.data.adId);
+        loadAdsLazy();
+      }
+    };
+
+    // CustomEvent listener (aynı sayfa için)
+    const handleCustomEvent = (event: CustomEvent) => {
+      console.log("⚡ CustomEvent ile ilan onayı bildirimi alındı:", event.detail.adId);
+      loadAdsLazy();
+    };
+
+    window.addEventListener("message", handlePostMessage);
+    window.addEventListener("adApproved", handleCustomEvent as EventListener);
+
+    return () => {
+      window.removeEventListener("message", handlePostMessage);
+      window.removeEventListener("adApproved", handleCustomEvent as EventListener);
     };
   }, []);
 
@@ -1100,6 +1154,7 @@ const MainLayout: React.FC = () => {
                     variant="outlined"
                     size="small"
                     onClick={loadAdsLazy}
+                    disabled={isRefreshing}
                     sx={{
                       borderRadius: 2,
                       textTransform: "none",
@@ -1108,7 +1163,7 @@ const MainLayout: React.FC = () => {
                       py: 0.5,
                     }}
                   >
-                    🔄 Yenile
+                    {isRefreshing ? "🔄 Yenileniyor..." : "🔄 Yenile"}
                   </Button>
                 </Box>
               </Box>

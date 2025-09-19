@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import socketService from "../../services/socketService";
 import {
   Box,
   Container,
@@ -161,8 +162,24 @@ const PendingAds: React.FC = () => {
       // İlanı listeden kaldır
       setAds((prev) => prev.filter((ad) => ad.id !== adId));
 
-      // Anasayfayı yenilemek için flag ekle
+      // ❗ GERÇEK ZAMANLI BİLDİRİM: Socket ile tüm kullanıcılara bildir
+      const socket = socketService.getSocket();
+      if (socket && socket.connected) {
+        socket.emit("adApproved", {
+          adId,
+          message: "Yeni bir ilan onaylandı ve anasayfaya eklendi!"
+        });
+        console.log("🔔 Socket bildirimi gönderildi:", adId);
+      }
+
+      // ❗ FALLBACK 1: localStorage flag (mevcut sistem)
       localStorage.setItem("refreshHomepage", "true");
+
+      // ❗ FALLBACK 2: Window postMessage (farklı tab'lar için)
+      window.postMessage({ type: "AD_APPROVED", adId }, "*");
+
+      // ❗ FALLBACK 3: Custom event (aynı sayfa için)
+      window.dispatchEvent(new CustomEvent("adApproved", { detail: { adId } }));
 
       alert("İlan başarıyla onaylandı!");
     } catch (error) {

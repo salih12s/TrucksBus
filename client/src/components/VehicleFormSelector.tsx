@@ -25,6 +25,10 @@ import OzelKasaForm from "./forms/KaroserUstyapi/SabitKabin/OzelKasaForm";
 // Römork Forms
 import KamyonRomorkForm from "./forms/KamyonRomorkForm";
 
+// Tarım Römork Forms
+import SulamaForm from "./forms/TarimRomork/SulamaForm";
+import TarimTankerForm from "./forms/TarimRomork/TarimTankerForm";
+
 // Tanker Form
 import TankerForm from "./forms/Tanker/TankerForm";
 
@@ -508,7 +512,33 @@ const VehicleFormSelector: React.FC = () => {
   // Römork kategorisi için özel mantık
   if (categorySlug === "romork") {
     console.log("🎯 RÖMORK KATEGORİSİ ALGILANDI!");
-    console.log("  Römork formu açılıyor");
+    console.log("  Variant kontrolü yapılıyor:", variantSlug);
+    
+    // Tarım Römork Tanker
+    if (variantSlug?.includes("tarim-romorklari-tanker")) {
+      console.log("✅ Tarım Tanker formu seçildi");
+      return <TarimTankerForm />;
+    }
+    
+    // Tarım Römork Sulama
+    if (variantSlug?.includes("tarim-romorklari-sulama")) {
+      console.log("✅ Sulama formu seçildi");
+      return <SulamaForm />;
+    }
+    
+    // Model slug kontrolü (fallback)
+    if (modelSlug?.includes("tarim-romorklari-tanker")) {
+      console.log("✅ Model'e göre Tarım Tanker formu seçildi");
+      return <TarimTankerForm />;
+    }
+    
+    if (modelSlug?.includes("tarim-romorklari-sulama")) {
+      console.log("✅ Model'e göre Sulama formu seçildi");
+      return <SulamaForm />;
+    }
+    
+    // Varsayılan Kamyon Römork
+    console.log("⚠️ Varsayılan Kamyon Römork formu açılıyor");
     return <KamyonRomorkForm />;
   }
 
