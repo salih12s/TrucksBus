@@ -1443,6 +1443,86 @@ const AdDetail: React.FC = () => {
                           : null,
                     },
 
+                    // Kuruyük Özel Alanları
+                    {
+                      label: "Uzunluk",
+                      value: ad.customFields?.uzunluk
+                        ? `${ad.customFields.uzunluk} m`
+                        : null,
+                    },
+                    {
+                      label: "Genişlik",
+                      value: ad.customFields?.genislik
+                        ? `${ad.customFields.genislik} m`
+                        : null,
+                    },
+                    {
+                      label: "Kapak Yüksekliği",
+                      value: ad.customFields?.kapakYuksekligi
+                        ? `${ad.customFields.kapakYuksekligi} m`
+                        : null,
+                    },
+                    {
+                      label: "Yükseklik",
+                      value: ad.customFields?.yukseklik
+                        ? `${ad.customFields.yukseklik} m`
+                        : null,
+                    },
+                    {
+                      label: "İstiap Haddi",
+                      value: ad.customFields?.istiapHaddi
+                        ? `${ad.customFields.istiapHaddi} ton`
+                        : null,
+                    },
+                    {
+                      label: "Kriko Ayak",
+                      value: ad.customFields?.krikoAyak || null,
+                    },
+                    {
+                      label: "Lastik Durumu",
+                      value: ad.customFields?.lastikDurumu
+                        ? `${ad.customFields.lastikDurumu}%`
+                        : null,
+                    },
+                    {
+                      label: "Takaslı",
+                      value: ad.customFields?.takasli || null,
+                    },
+                    {
+                      label: "Kapak Sistemi",
+                      value: ad.customFields?.kapakSistemi || null,
+                    },
+
+                    // Silobas Özel Alanları
+                    {
+                      label: "Hacim",
+                      value: ad.customFields?.hacim
+                        ? `${ad.customFields.hacim} m³`
+                        : null,
+                    },
+                    {
+                      label: "Silobas Türü",
+                      value: ad.customFields?.silobasTuru || null,
+                    },
+                    {
+                      label: "Renk",
+                      value: ad.customFields?.renk || null,
+                    },
+
+                    // Tekstil Özel Alanları
+                    {
+                      label: "Tekstil Türü",
+                      value: ad.customFields?.tekstilTuru || null,
+                    },
+                    {
+                      label: "Malzeme",
+                      value: ad.customFields?.malzeme || null,
+                    },
+                    {
+                      label: "Ebat",
+                      value: ad.customFields?.ebat || null,
+                    },
+
                     // Plaka Bilgileri
                     {
                       label: "Plaka Tipi",

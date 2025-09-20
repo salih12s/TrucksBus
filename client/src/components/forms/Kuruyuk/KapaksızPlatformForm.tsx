@@ -150,7 +150,9 @@ const KapaksızPlatformForm: React.FC = () => {
     const fetchDistricts = async () => {
       if (formData.cityId) {
         try {
-          const response = await apiClient.get(`/districts/${formData.cityId}`);
+          const response = await apiClient.get(
+            `/cities/${formData.cityId}/districts`
+          );
           setDistricts(response.data as District[]);
         } catch (error) {
           console.error("İlçeler yüklenirken hata:", error);
@@ -309,7 +311,7 @@ const KapaksızPlatformForm: React.FC = () => {
         submitData.append(`photos`, photo);
       });
 
-      const response = await apiClient.post("/listings", submitData, {
+      const response = await apiClient.post("/ads", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -928,41 +930,6 @@ const KapaksızPlatformForm: React.FC = () => {
                 </Box>
               </CardContent>
             </Card>
-
-            {/* İletişim Bilgileri */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              İletişim Bilgileri
-            </Typography>
-
-            <TextField
-              fullWidth
-              label="Satıcı Adı"
-              value={formData.sellerName}
-              onChange={(e) => handleInputChange("sellerName", e.target.value)}
-              margin="normal"
-              required
-            />
-
-            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <TextField
-                fullWidth
-                label="Telefon"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                margin="normal"
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                margin="normal"
-                required
-              />
-            </Box>
 
             {/* Ekstra Bilgiler */}
             <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>

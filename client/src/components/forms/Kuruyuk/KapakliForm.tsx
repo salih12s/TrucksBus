@@ -311,7 +311,7 @@ const KapakliForm: React.FC = () => {
         submitData.append(`photos`, photo);
       });
 
-      const response = await apiClient.post("/listings", submitData, {
+      const response = await apiClient.post("/ads", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

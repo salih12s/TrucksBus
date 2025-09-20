@@ -436,23 +436,42 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       description,
       price,
       year,
+      productionYear,
       category,
       subcategory,
       variant_id,
       city,
       district,
+      cityId,
+      districtId,
       seller_name,
+      sellerName,
       seller_phone,
+      phone,
       seller_email,
+      email,
       warranty,
       negotiable,
       exchange,
       showcase_image_index,
-      // Tenteli specific fields
+      detailedInfo,
+
+      // Kuruyük specific fields
+      dingilSayisi,
       uzunluk,
+      genislik,
+      kapakYuksekligi,
+      yukseklik,
+      istiapHaddi,
+      krikoAyak,
       lastikDurumu,
+      takasli,
+      kapakSistemi,
+
+      // Tenteli specific fields
       catiPerdeSistemi,
       tenteliType,
+
       // Legacy fields
       categoryId,
       brandId,
@@ -473,7 +492,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       status: "PENDING",
     };
 
-    // Handle new format (tenteli forms)
+    // Handle new format (tenteli forms and Kuruyük forms)
     if (category && subcategory) {
       // Find category by name or slug
       const categoryRecord = await prisma.category.findFirst({
@@ -494,40 +513,87 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
 
       adData.categoryId = categoryRecord.id;
       adData.price = price ? parseFloat(price) : null;
-      adData.year = year ? parseInt(year) : null;
+      adData.year = year
+        ? parseInt(year)
+        : productionYear
+        ? parseInt(productionYear)
+        : null;
       adData.variantId = variant_id ? parseInt(variant_id) : null;
       adData.location = `${city}, ${district}`;
+      adData.cityId = cityId ? parseInt(cityId) : null;
+      adData.districtId = districtId ? parseInt(districtId) : null;
 
       // Add seller contact info to custom fields for now
       adData.customFields = {
-        sellerName: seller_name,
-        sellerPhone: seller_phone,
-        sellerEmail: seller_email,
-        hasWarranty: warranty === "true",
-        isNegotiable: negotiable === "true",
-        isExchangeable: exchange === "true",
+        sellerName: seller_name || sellerName,
+        sellerPhone: seller_phone || phone,
+        sellerEmail: seller_email || email,
+        hasWarranty: warranty === "evet" || warranty === "true",
+        isNegotiable: negotiable === "evet" || negotiable === "true",
+        isExchangeable: exchange === "evet" || exchange === "true",
         city: city,
         district: district,
+        detailedInfo: detailedInfo,
+
+        // Kuruyük specific fields
+        dingilSayisi: dingilSayisi || null,
+        uzunluk: uzunluk || null,
+        genislik: genislik || null,
+        kapakYuksekligi: kapakYuksekligi || null,
+        yukseklik: yukseklik || null,
+        istiapHaddi: istiapHaddi || null,
+        krikoAyak: krikoAyak || null,
+        lastikDurumu: lastikDurumu || null,
+        takasli: takasli || null,
+        kapakSistemi: kapakSistemi || null,
+
         // Tenteli specific data
-        uzunluk: uzunluk ? parseInt(uzunluk) : null,
-        lastikDurumu: lastikDurumu ? parseInt(lastikDurumu) : null,
         catiPerdeSistemi: catiPerdeSistemi || null,
         tenteliType: tenteliType || null,
       };
     }
-    // Handle legacy format
+    // Handle legacy format and direct Kuruyük submissions
     else {
       adData.categoryId = categoryId ? parseInt(categoryId) : null;
       adData.brandId = brandId ? parseInt(brandId) : null;
       adData.modelId = modelId ? parseInt(modelId) : null;
       adData.variantId = variantId ? parseInt(variantId) : null;
       adData.price = price ? parseFloat(price) : null;
-      adData.year = year ? parseInt(year) : null;
+      adData.year = year
+        ? parseInt(year)
+        : productionYear
+        ? parseInt(productionYear)
+        : null;
       adData.mileage = mileage ? parseInt(mileage) : null;
       adData.location = location;
       adData.latitude = latitude ? parseFloat(latitude) : null;
       adData.longitude = longitude ? parseFloat(longitude) : null;
-      adData.customFields = customFields || null;
+      adData.cityId = cityId ? parseInt(cityId) : null;
+      adData.districtId = districtId ? parseInt(districtId) : null;
+
+      // Merge custom fields with Kuruyük fields
+      adData.customFields = {
+        ...(customFields || {}),
+        sellerName: seller_name || sellerName,
+        sellerPhone: seller_phone || phone,
+        sellerEmail: seller_email || email,
+        hasWarranty: warranty === "evet" || warranty === "true",
+        isNegotiable: negotiable === "evet" || negotiable === "true",
+        isExchangeable: exchange === "evet" || exchange === "true",
+        detailedInfo: detailedInfo,
+
+        // Kuruyük specific fields
+        dingilSayisi: dingilSayisi || null,
+        uzunluk: uzunluk || null,
+        genislik: genislik || null,
+        kapakYuksekligi: kapakYuksekligi || null,
+        yukseklik: yukseklik || null,
+        istiapHaddi: istiapHaddi || null,
+        krikoAyak: krikoAyak || null,
+        lastikDurumu: lastikDurumu || null,
+        takasli: takasli || null,
+        kapakSistemi: kapakSistemi || null,
+      };
     }
 
     const ad = await prisma.ad.create({
