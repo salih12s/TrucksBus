@@ -272,10 +272,13 @@ const KapaksızPlatformForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
+      // Legacy format için gerekli alanlar
+      submitData.append("categoryId", "4"); // Dorse kategori ID'si
+
       // Temel bilgiler
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
-      submitData.append("productionYear", formData.productionYear);
+      submitData.append("year", formData.productionYear);
       submitData.append("price", formData.price);
 
       // Kapaksız Platform özel bilgileri
@@ -292,10 +295,10 @@ const KapaksızPlatformForm: React.FC = () => {
       submitData.append("cityId", formData.cityId);
       submitData.append("districtId", formData.districtId);
 
-      // İletişim
-      submitData.append("sellerName", formData.sellerName);
-      submitData.append("phone", formData.phone);
-      submitData.append("email", formData.email);
+      // İletişim (legacy format field names)
+      submitData.append("seller_name", formData.sellerName);
+      submitData.append("seller_phone", formData.phone);
+      submitData.append("seller_email", formData.email);
 
       // Ekstra
       submitData.append("warranty", formData.warranty);
