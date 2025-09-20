@@ -3185,55 +3185,69 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       width,
       hasTent,
       hasDamper,
-      exchangeable,
+      isExchangeable, // Modern form alanı
+      exchangeable = isExchangeable, // Backward compatibility
       cityId,
       districtId,
-      contactName,
-      phone,
-      email,
+      sellerName, // Modern form alanı
+      contactName = sellerName, // Backward compatibility
+      sellerPhone, // Modern form alanı
+      phone = sellerPhone, // Backward compatibility
+      sellerEmail, // Modern form alanı
+      email = sellerEmail, // Backward compatibility
       currency,
       detailedInfo,
       categorySlug,
       brandSlug,
       modelSlug,
       variantSlug,
+      // Modern form ID tabanlı alanlar
+      brandId: formBrandId,
+      modelId: formModelId,
+      variantId: formVariantId,
+      brandName,
+      modelName,
+      variantName,
+      category,
       subType,
     } = req.body;
 
     // Slug'lardan ID'leri bul
     let categoryId = null;
-    let brandId = null;
-    let modelId = null;
-    let variantId = null;
-
+    let brandId = formBrandId ? parseInt(formBrandId) : null;
+    let modelId = formModelId ? parseInt(formModelId) : null;
+    let variantId = formVariantId ? parseInt(formVariantId) : null;
     if (categorySlug) {
       console.log("🔍 Gelen categorySlug:", categorySlug);
       const category = await prisma.category.findFirst({
         where: { slug: categorySlug },
       });
       console.log("📁 Bulunan kategori:", category);
-      categoryId = category?.id;
+      categoryId = category?.id || null;
     }
 
-    if (brandSlug) {
+    // Brand ID slug'dan veya direkt ID'den al
+    if (!brandId && brandSlug) {
       const brand = await prisma.brand.findFirst({
         where: { slug: brandSlug },
       });
-      brandId = brand?.id;
+      brandId = brand?.id || null;
     }
 
-    if (modelSlug) {
+    // Model ID slug'dan veya direkt ID'den al
+    if (!modelId && modelSlug) {
       const model = await prisma.model.findFirst({
         where: { slug: modelSlug },
       });
-      modelId = model?.id;
+      modelId = model?.id || null;
     }
 
-    if (variantSlug) {
+    // Variant ID slug'dan veya direkt ID'den al
+    if (!variantId && variantSlug) {
       const variant = await prisma.variant.findFirst({
         where: { slug: variantSlug },
       });
-      variantId = variant?.id;
+      variantId = variant?.id || null;
     }
 
     // Şehir ve ilçe bilgilerini al
@@ -3248,22 +3262,27 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       locationString = `${city?.name || ""}, ${district?.name || ""}`;
     }
 
-    // Römork özel alanları
+    // Römork özel alanları - modern form uyumlu
     const customFields = {
       volume: volume || "",
       length: length || "",
       width: width || "",
       hasTent: hasTent === "true" || hasTent === true,
       hasDamper: hasDamper === "true" || hasDamper === true,
-      exchangeable: exchangeable || "",
-      contactName: contactName || "",
-      phone: phone || "",
-      email: email || "",
+      isExchangeable: isExchangeable || exchangeable || "",
+      sellerName: sellerName || contactName || "",
+      sellerPhone: sellerPhone || phone || "",
+      sellerEmail: sellerEmail || email || "",
       currency: currency || "TL",
       detailedInfo: detailedInfo || "",
       cityId: cityId || "",
       districtId: districtId || "",
       subType: subType || "",
+      // Modern form brand/model bilgileri
+      brandName: brandName || "",
+      modelName: modelName || "",
+      variantName: variantName || "",
+      category: category || "",
     };
 
     // İlanı oluştur

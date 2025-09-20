@@ -793,34 +793,6 @@ const HayvanRomorkForm: React.FC = () => {
                     <MenuItem value="Pazarlık">Pazarlığa Açık</MenuItem>
                   </Select>
                 </FormControl>
-
-                <TextField
-                  fullWidth
-                  label="Satıcı Adı *"
-                  value={formData.sellerName}
-                  onChange={(e) =>
-                    handleInputChange("sellerName", e.target.value)
-                  }
-                />
-
-                <TextField
-                  fullWidth
-                  label="Telefon Numarası *"
-                  value={formData.sellerPhone}
-                  onChange={(e) =>
-                    handleInputChange("sellerPhone", e.target.value)
-                  }
-                />
-
-                <TextField
-                  fullWidth
-                  label="E-posta"
-                  type="email"
-                  value={formData.sellerEmail}
-                  onChange={(e) =>
-                    handleInputChange("sellerEmail", e.target.value)
-                  }
-                />
               </Box>
             </Box>
 

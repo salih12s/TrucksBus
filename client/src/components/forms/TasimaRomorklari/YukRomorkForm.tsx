@@ -19,11 +19,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Stepper,
-  Step,
-  StepLabel,
+  IconButton,
+  styled,
 } from "@mui/material";
-import { CheckCircle, CloudUpload, PhotoCamera } from "@mui/icons-material";
+import { CheckCircle, CloudUpload, PhotoCamera, Delete as DeleteIcon, Star as StarIcon } from "@mui/icons-material";
 import apiClient from "../../../api/client";
 import Header from "../../layout/Header";
 
@@ -69,6 +68,18 @@ interface FormData {
   currency: string;
 }
 
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
+
 // Kullanım alanı seçenekleri
 const usageAreaOptions = ["Bisiklet", "Deniz Aracı", "Motosiklet", "Otomobil"];
 
@@ -94,8 +105,6 @@ const colorOptions = [
   "Bej",
 ];
 
-const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
-
 const YukRomorkForm: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
@@ -104,7 +113,6 @@ const YukRomorkForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [activeStep, setActiveStep] = useState(0);
 
   const [formData, setFormData] = useState<FormData>({
     // Temel bilgiler
@@ -211,12 +219,14 @@ const YukRomorkForm: React.FC = () => {
     }));
   };
 
-  const handleNext = () => {
-    setActiveStep((prev) => prev + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
+  const setShowcasePhoto = (index: number) => {
+    const photo = formData.photos[index];
+    const remainingPhotos = formData.photos.filter((_, i) => i !== index);
+    setFormData((prev) => ({
+      ...prev,
+      showcasePhoto: photo,
+      photos: prev.showcasePhoto ? [prev.showcasePhoto, ...remainingPhotos] : remainingPhotos,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -254,15 +264,11 @@ const YukRomorkForm: React.FC = () => {
         submitData.append(`photo_${index}`, photo);
       });
 
-      const response = await apiClient.post(
-        "/ads/tasima-romorklari",
-        submitData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await apiClient.post("/ads/tasima-romork", submitData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       console.log("İlan başarıyla oluşturuldu:", response.data);
       setSubmitSuccess(true);
@@ -279,425 +285,421 @@ const YukRomorkForm: React.FC = () => {
     navigate("/dashboard");
   };
 
-  const renderStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* İlan Başlığı */}
-            <TextField
-              fullWidth
-              label="İlan Başlığı"
-              value={formData.title}
-              onChange={(e) => handleInputChange("title", e.target.value)}
-              required
-            />
-
-            {/* Açıklama */}
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Açıklama"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              required
-            />
-
-            {/* Üretim Yılı ve Renk */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <TextField
-                  fullWidth
-                  label="Üretim Yılı"
-                  type="number"
-                  value={formData.productionYear}
-                  onChange={(e) =>
-                    handleInputChange("productionYear", e.target.value)
-                  }
-                  required
-                />
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Renk</InputLabel>
-                  <Select
-                    value={formData.color}
-                    label="Renk"
-                    onChange={(e) => handleInputChange("color", e.target.value)}
-                  >
-                    {colorOptions.map((color) => (
-                      <MenuItem key={color} value={color}>
-                        {color}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-
-            {/* Kullanım Alanı */}
-            <FormControl fullWidth>
-              <InputLabel>Kullanım Alanı</InputLabel>
-              <Select
-                value={formData.usageArea}
-                label="Kullanım Alanı"
-                onChange={(e) => handleInputChange("usageArea", e.target.value)}
-              >
-                {usageAreaOptions.map((area) => (
-                  <MenuItem key={area} value={area}>
-                    {area}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Damper */}
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.hasDamper}
-                  onChange={(e) =>
-                    handleInputChange("hasDamper", e.target.checked)
-                  }
-                />
-              }
-              label="Damper Var"
-            />
-
-            {/* Takasa Uygun */}
-            <FormControl fullWidth>
-              <InputLabel>Takasa Uygun</InputLabel>
-              <Select
-                value={formData.isExchangeable}
-                label="Takasa Uygun"
-                onChange={(e) =>
-                  handleInputChange("isExchangeable", e.target.value)
-                }
-              >
-                <MenuItem value="evet">Evet</MenuItem>
-                <MenuItem value="hayir">Hayır</MenuItem>
-                <MenuItem value="olabilir">Olabilir</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* Durum */}
-            <FormControl fullWidth>
-              <InputLabel>Durum</InputLabel>
-              <Select
-                value={formData.condition}
-                label="Durum"
-                onChange={(e) => handleInputChange("condition", e.target.value)}
-              >
-                <MenuItem value="sifir">Sıfır</MenuItem>
-                <MenuItem value="ikinci-el">İkinci El</MenuItem>
-                <MenuItem value="hasarli">Hasarlı</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        );
-
-      case 1:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Fotoğraflar
-            </Typography>
-
-            {/* Vitrin Fotoğrafı */}
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  Vitrin Fotoğrafı
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Bu fotoğraf ilanınızın ön yüzünde görünecektir
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <input
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    id="showcase-photo-upload"
-                    type="file"
-                    onChange={(e) => handlePhotoUpload(e, true)}
-                  />
-                  <label htmlFor="showcase-photo-upload">
-                    <Button
-                      variant="outlined"
-                      component="span"
-                      startIcon={<PhotoCamera />}
-                    >
-                      Vitrin Fotoğrafı Seç
-                    </Button>
-                  </label>
-                  {formData.showcasePhoto && (
-                    <Box sx={{ mt: 2 }}>
-                      <img
-                        src={URL.createObjectURL(formData.showcasePhoto)}
-                        alt="Vitrin"
-                        style={{
-                          width: "100px",
-                          height: "100px",
-                          objectFit: "cover",
-                          borderRadius: "8px",
-                        }}
-                      />
-                    </Box>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-
-            {/* Diğer Fotoğraflar */}
-            <Card>
-              <CardContent>
-                <Typography variant="subtitle1" gutterBottom>
-                  Diğer Fotoğraflar
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  En fazla 15 fotoğraf yükleyebilirsiniz
-                </Typography>
-                <Box sx={{ mt: 2 }}>
-                  <input
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    id="photos-upload"
-                    type="file"
-                    multiple
-                    onChange={(e) => handlePhotoUpload(e, false)}
-                  />
-                  <label htmlFor="photos-upload">
-                    <Button
-                      variant="outlined"
-                      component="span"
-                      startIcon={<CloudUpload />}
-                    >
-                      Fotoğraf Ekle ({formData.photos.length}/15)
-                    </Button>
-                  </label>
-                </Box>
-
-                {formData.photos.length > 0 && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: 2,
-                      mt: 2,
-                    }}
-                  >
-                    {formData.photos.map((photo, index) => (
-                      <Box key={index} sx={{ position: "relative" }}>
-                        <img
-                          src={URL.createObjectURL(photo)}
-                          alt={`Fotoğraf ${index + 1}`}
-                          style={{
-                            width: "100px",
-                            height: "100px",
-                            objectFit: "cover",
-                            borderRadius: "8px",
-                          }}
-                        />
-                        <Button
-                          size="small"
-                          color="error"
-                          sx={{
-                            position: "absolute",
-                            top: -10,
-                            right: -10,
-                            minWidth: "auto",
-                            width: 24,
-                            height: 24,
-                            borderRadius: "50%",
-                          }}
-                          onClick={() => removePhoto(index)}
-                        >
-                          ×
-                        </Button>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Box>
-        );
-
-      case 2:
-        return (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              İletişim Bilgileri & Fiyat
-            </Typography>
-
-            {/* İletişim Bilgileri */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <TextField
-                  fullWidth
-                  label="Satıcı Adı"
-                  value={formData.sellerName}
-                  onChange={(e) =>
-                    handleInputChange("sellerName", e.target.value)
-                  }
-                  required
-                />
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <TextField
-                  fullWidth
-                  label="Telefon"
-                  value={formData.sellerPhone}
-                  onChange={(e) =>
-                    handleInputChange("sellerPhone", e.target.value)
-                  }
-                  required
-                />
-              </Box>
-            </Box>
-
-            <TextField
-              fullWidth
-              label="E-posta"
-              type="email"
-              value={formData.sellerEmail}
-              onChange={(e) => handleInputChange("sellerEmail", e.target.value)}
-              required
-            />
-
-            {/* Konum */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Şehir</InputLabel>
-                  <Select
-                    value={formData.cityId}
-                    label="Şehir"
-                    onChange={(e) =>
-                      handleInputChange("cityId", e.target.value)
-                    }
-                  >
-                    {cities.map((city) => (
-                      <MenuItem key={city.id} value={city.id.toString()}>
-                        {city.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 200 }}>
-                <FormControl fullWidth>
-                  <InputLabel>İlçe</InputLabel>
-                  <Select
-                    value={formData.districtId}
-                    label="İlçe"
-                    onChange={(e) =>
-                      handleInputChange("districtId", e.target.value)
-                    }
-                    disabled={!formData.cityId}
-                  >
-                    {districts.map((district) => (
-                      <MenuItem
-                        key={district.id}
-                        value={district.id.toString()}
-                      >
-                        {district.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-
-            {/* Fiyat */}
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              <Box sx={{ flex: 2, minWidth: 200 }}>
-                <TextField
-                  fullWidth
-                  label="Fiyat"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
-                  required
-                />
-              </Box>
-              <Box sx={{ flex: 1, minWidth: 150 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Para Birimi</InputLabel>
-                  <Select
-                    value={formData.currency}
-                    label="Para Birimi"
-                    onChange={(e) =>
-                      handleInputChange("currency", e.target.value)
-                    }
-                  >
-                    <MenuItem value="TRY">TRY</MenuItem>
-                    <MenuItem value="USD">USD</MenuItem>
-                    <MenuItem value="EUR">EUR</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </Box>
-
-            <FormControl fullWidth>
-              <InputLabel>Fiyat Tipi</InputLabel>
-              <Select
-                value={formData.priceType}
-                label="Fiyat Tipi"
-                onChange={(e) => handleInputChange("priceType", e.target.value)}
-              >
-                <MenuItem value="fixed">Sabit Fiyat</MenuItem>
-                <MenuItem value="negotiable">Pazarlık Olur</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        );
-
-      default:
-        return <div>Bilinmeyen adım</div>;
-    }
-  };
-
   return (
     <>
       <Header />
-      <Container maxWidth="md" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper elevation={3} sx={{ p: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom align="center">
             Yük Römork İlanı Ver
           </Typography>
 
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
           <form onSubmit={handleSubmit}>
-            {renderStepContent(activeStep)}
+            <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 4 }}>
+              {/* Sol Kolon - İlan Detayları */}
+              <Box sx={{ flex: { xs: "1", md: "2" } }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    İlan Detayları
+                  </Typography>
 
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}
-            >
-              <Button disabled={activeStep === 0} onClick={handleBack}>
-                Geri
+                  {/* İlan Başlığı */}
+                  <TextField
+                    fullWidth
+                    label="İlan Başlığı"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange("title", e.target.value)}
+                    required
+                  />
+
+                  {/* Açıklama */}
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    label="Açıklama"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange("description", e.target.value)}
+                    required
+                  />
+
+                  {/* Üretim Yılı ve Renk */}
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+                    <Box>
+                      <TextField
+                        fullWidth
+                        label="Üretim Yılı"
+                        type="number"
+                        value={formData.productionYear}
+                        onChange={(e) =>
+                          handleInputChange("productionYear", e.target.value)
+                        }
+                        required
+                      />
+                    </Box>
+                    <Box>
+                      <FormControl fullWidth>
+                        <InputLabel>Renk</InputLabel>
+                        <Select
+                          value={formData.color}
+                          label="Renk"
+                          onChange={(e) => handleInputChange("color", e.target.value)}
+                        >
+                          {colorOptions.map((color) => (
+                            <MenuItem key={color} value={color}>
+                              {color}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Box>
+
+                  {/* Kullanım Alanı */}
+                  <FormControl fullWidth>
+                    <InputLabel>Kullanım Alanı</InputLabel>
+                    <Select
+                      value={formData.usageArea}
+                      label="Kullanım Alanı"
+                      onChange={(e) => handleInputChange("usageArea", e.target.value)}
+                    >
+                      {usageAreaOptions.map((area) => (
+                        <MenuItem key={area} value={area}>
+                          {area}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Damper */}
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.hasDamper}
+                        onChange={(e) =>
+                          handleInputChange("hasDamper", e.target.checked)
+                        }
+                      />
+                    }
+                    label="Damper Var"
+                  />
+
+                  {/* Takasa Uygun */}
+                  <FormControl fullWidth>
+                    <InputLabel>Takasa Uygun</InputLabel>
+                    <Select
+                      value={formData.isExchangeable}
+                      label="Takasa Uygun"
+                      onChange={(e) =>
+                        handleInputChange("isExchangeable", e.target.value)
+                      }
+                    >
+                      <MenuItem value="evet">Evet</MenuItem>
+                      <MenuItem value="hayir">Hayır</MenuItem>
+                      <MenuItem value="olabilir">Olabilir</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {/* Durum */}
+                  <FormControl fullWidth>
+                    <InputLabel>Durum</InputLabel>
+                    <Select
+                      value={formData.condition}
+                      label="Durum"
+                      onChange={(e) => handleInputChange("condition", e.target.value)}
+                    >
+                      <MenuItem value="sifir">Sıfır</MenuItem>
+                      <MenuItem value="ikinci-el">İkinci El</MenuItem>
+                      <MenuItem value="hasarli">Hasarlı</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {/* İletişim Bilgileri */}
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                    İletişim Bilgileri
+                  </Typography>
+
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+                    <Box>
+                      <TextField
+                        fullWidth
+                        label="Satıcı Adı"
+                        value={formData.sellerName}
+                        onChange={(e) =>
+                          handleInputChange("sellerName", e.target.value)
+                        }
+                        required
+                      />
+                    </Box>
+                    <Box>
+                      <TextField
+                        fullWidth
+                        label="Telefon"
+                        value={formData.sellerPhone}
+                        onChange={(e) =>
+                          handleInputChange("sellerPhone", e.target.value)
+                        }
+                        required
+                      />
+                    </Box>
+                  </Box>
+
+                  <TextField
+                    fullWidth
+                    label="E-posta"
+                    type="email"
+                    value={formData.sellerEmail}
+                    onChange={(e) => handleInputChange("sellerEmail", e.target.value)}
+                    required
+                  />
+
+                  {/* Konum */}
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+                    <Box>
+                      <FormControl fullWidth>
+                        <InputLabel>Şehir</InputLabel>
+                        <Select
+                          value={formData.cityId}
+                          label="Şehir"
+                          onChange={(e) =>
+                            handleInputChange("cityId", e.target.value)
+                          }
+                        >
+                          {cities.map((city) => (
+                            <MenuItem key={city.id} value={city.id.toString()}>
+                              {city.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                    <Box>
+                      <FormControl fullWidth>
+                        <InputLabel>İlçe</InputLabel>
+                        <Select
+                          value={formData.districtId}
+                          label="İlçe"
+                          onChange={(e) =>
+                            handleInputChange("districtId", e.target.value)
+                          }
+                          disabled={!formData.cityId}
+                        >
+                          {districts.map((district) => (
+                            <MenuItem
+                              key={district.id}
+                              value={district.id.toString()}
+                            >
+                              {district.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Box>
+
+                  {/* Fiyat */}
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr 1fr" }, gap: 2 }}>
+                    <Box>
+                      <TextField
+                        fullWidth
+                        label="Fiyat"
+                        type="number"
+                        value={formData.price}
+                        onChange={(e) => handleInputChange("price", e.target.value)}
+                        required
+                      />
+                    </Box>
+                    <Box>
+                      <FormControl fullWidth>
+                        <InputLabel>Para Birimi</InputLabel>
+                        <Select
+                          value={formData.currency}
+                          label="Para Birimi"
+                          onChange={(e) =>
+                            handleInputChange("currency", e.target.value)
+                          }
+                        >
+                          <MenuItem value="TRY">TRY</MenuItem>
+                          <MenuItem value="USD">USD</MenuItem>
+                          <MenuItem value="EUR">EUR</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                    <Box>
+                      <FormControl fullWidth>
+                        <InputLabel>Fiyat Tipi</InputLabel>
+                        <Select
+                          value={formData.priceType}
+                          label="Fiyat Tipi"
+                          onChange={(e) => handleInputChange("priceType", e.target.value)}
+                        >
+                          <MenuItem value="fixed">Sabit Fiyat</MenuItem>
+                          <MenuItem value="negotiable">Pazarlık Olur</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Sağ Kolon - Fotoğraflar */}
+              <Box sx={{ flex: { xs: "1", md: "1" } }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Fotoğraflar
+                  </Typography>
+
+                  {/* Vitrin Fotoğrafı */}
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle1" gutterBottom>
+                        Vitrin Fotoğrafı
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Bu fotoğraf ilanınızın ön yüzünde görünecektir
+                      </Typography>
+                      
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<PhotoCamera />}
+                        fullWidth
+                        sx={{ mb: 2 }}
+                      >
+                        Vitrin Fotoğrafı Seç
+                        <VisuallyHiddenInput
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePhotoUpload(e, true)}
+                        />
+                      </Button>
+
+                      {formData.showcasePhoto && (
+                        <Box sx={{ position: "relative", display: "inline-block" }}>
+                          <img
+                            src={URL.createObjectURL(formData.showcasePhoto)}
+                            alt="Vitrin"
+                            style={{
+                              width: "100%",
+                              height: "200px",
+                              objectFit: "cover",
+                              borderRadius: "8px",
+                            }}
+                          />
+                          <IconButton
+                            size="small"
+                            sx={{
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              bgcolor: "rgba(255, 255, 255, 0.8)",
+                              "&:hover": { bgcolor: "rgba(255, 255, 255, 0.9)" },
+                            }}
+                            onClick={() => setFormData(prev => ({ ...prev, showcasePhoto: null }))}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Diğer Fotoğraflar */}
+                  <Card>
+                    <CardContent>
+                      <Typography variant="subtitle1" gutterBottom>
+                        Diğer Fotoğraflar
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        En fazla 15 fotoğraf yükleyebilirsiniz
+                      </Typography>
+                      
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<CloudUpload />}
+                        fullWidth
+                        sx={{ mb: 2 }}
+                        disabled={formData.photos.length >= 15}
+                      >
+                        Fotoğraf Ekle ({formData.photos.length}/15)
+                        <VisuallyHiddenInput
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={(e) => handlePhotoUpload(e, false)}
+                        />
+                      </Button>
+
+                      {formData.photos.length > 0 && (
+                        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1 }}>
+                          {formData.photos.map((photo, index) => (
+                            <Box key={index}>
+                              <Box sx={{ position: "relative" }}>
+                                <img
+                                  src={URL.createObjectURL(photo)}
+                                  alt={`Fotoğraf ${index + 1}`}
+                                  style={{
+                                    width: "100%",
+                                    height: "80px",
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                  }}
+                                />
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    position: "absolute",
+                                    top: 2,
+                                    right: 2,
+                                    bgcolor: "rgba(255, 255, 255, 0.8)",
+                                    "&:hover": { bgcolor: "rgba(255, 255, 255, 0.9)" },
+                                  }}
+                                  onClick={() => removePhoto(index)}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    position: "absolute",
+                                    top: 2,
+                                    left: 2,
+                                    bgcolor: "rgba(255, 255, 255, 0.8)",
+                                    "&:hover": { bgcolor: "rgba(255, 255, 255, 0.9)" },
+                                  }}
+                                  onClick={() => setShowcasePhoto(index)}
+                                  title="Vitrin fotoğrafı yap"
+                                >
+                                  <StarIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Submit Button */}
+            <Box sx={{ mt: 4, textAlign: "center" }}>
+              <Button 
+                type="submit" 
+                variant="contained" 
+                size="large"
+                disabled={loading}
+                sx={{ minWidth: 200 }}
+              >
+                {loading ? "Yükleniyor..." : "İlanı Yayınla"}
               </Button>
-
-              {activeStep === steps.length - 1 ? (
-                <Button type="submit" variant="contained" disabled={loading}>
-                  {loading ? "Yükleniyor..." : "İlanı Yayınla"}
-                </Button>
-              ) : (
-                <Button variant="contained" onClick={handleNext}>
-                  İleri
-                </Button>
-              )}
             </Box>
           </form>
         </Paper>
 
+        {/* Success Dialog */}
         <Dialog open={submitSuccess} onClose={handleSuccessClose}>
           <DialogTitle>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
