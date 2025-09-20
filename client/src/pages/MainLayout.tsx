@@ -14,6 +14,7 @@ import {
   FormControl,
   Select,
   MenuItem,
+  Pagination,
 } from "@mui/material";
 import { LocalShipping } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
@@ -125,6 +126,11 @@ const MainLayout: React.FC = () => {
     title: string;
   } | null>(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const adsPerPage = 40;
+
   const { user, isAuthenticated, token } = useAppSelector(
     (state) => state.auth
   );
@@ -152,11 +158,25 @@ const MainLayout: React.FC = () => {
   const handleCategoryClick = (categorySlug: string | null) => {
     setSelectedCategory(categorySlug);
     setSelectedBrand(null); // Reset brand when category changes
+    setCurrentPage(1); // Reset to first page
+    loadAdsLazy(1); // Load first page
   };
 
   // Brand navigation handler
   const handleBrandClick = (brandSlug: string | null) => {
     setSelectedBrand(brandSlug);
+    setCurrentPage(1); // Reset to first page
+    loadAdsLazy(1); // Load first page
+  };
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      loadAdsLazy(page);
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const getImageUrl = (images?: Ad["images"]) => {
@@ -185,18 +205,25 @@ const MainLayout: React.FC = () => {
     setSelectedAdForComplaint(null);
   };
 
-  // ❗ ULTRA FAST: Ads'leri minimal mode ile hızlı yükle
-  const loadAdsLazy = async () => {
+  // ❗ ULTRA FAST: Ads'leri minimal mode ile hızlı yükle - Pagination destekli
+  const loadAdsLazy = async (page: number = 1) => {
     setIsRefreshing(true);
     const adsStartTime = performance.now();
-    console.log("⚡ Loading ads with ultra fast mode...");
+    console.log(`⚡ Loading ads page ${page} with ultra fast mode...`);
 
     try {
       const adsRes = await apiClient
-        .get("/ads?status=APPROVED&limit=20&page=1&minimal=true") // ❗ 20 ilan (anasayfa için)
+        .get(
+          `/ads?status=APPROVED&limit=${adsPerPage}&page=${page}&minimal=true`
+        )
         .catch((err) => {
           console.error("Ads lazy loading error:", err);
-          return { data: { ads: [] } };
+          return {
+            data: {
+              ads: [],
+              pagination: { page: 1, limit: adsPerPage, total: 0, pages: 1 },
+            },
+          };
         });
 
       const adsResponse = adsRes.data as unknown as ApiAdsResponse;
@@ -208,13 +235,25 @@ const MainLayout: React.FC = () => {
         ? (adsRes.data as Ad[])
         : [];
 
+      // Pagination bilgilerini güncelle
+      if (adsResponse?.pagination) {
+        setTotalPages(adsResponse.pagination.pages);
+        setCurrentPage(page);
+      } else {
+        // Fallback for old API responses
+        setTotalPages(1);
+        setCurrentPage(1);
+      }
+
       const adsLoadTime = performance.now() - adsStartTime;
-      console.log(`⚡ Ads loaded in: ${adsLoadTime.toFixed(2)}ms`);
+      console.log(`⚡ Ads page ${page} loaded in: ${adsLoadTime.toFixed(2)}ms`);
 
       setAds(adsData as Ad[]);
     } catch (error) {
       console.error("Ads lazy loading error:", error);
       setAds([]);
+      setTotalPages(1);
+      setCurrentPage(1);
     } finally {
       setIsRefreshing(false);
     }
@@ -249,7 +288,7 @@ const MainLayout: React.FC = () => {
         localStorage.setItem("categories", JSON.stringify(categoriesData));
 
         // ❗ CRITICAL: Ads'leri ANINDA yükle - 2 saniye bekleme kaldırıldı
-        loadAdsLazy();
+        loadAdsLazy(1);
 
         // ❗ Şehirler ve markalar lazy loading - 500ms sonra yükle (daha hızlı)
         setTimeout(() => {
@@ -303,7 +342,7 @@ const MainLayout: React.FC = () => {
       const shouldRefresh = localStorage.getItem("refreshHomepage");
       if (shouldRefresh === "true") {
         console.log("🔄 Admin onayından sonra anasayfa yenileniyor...");
-        loadAdsLazy();
+        loadAdsLazy(1); // Sayfa 1'den başla
         localStorage.removeItem("refreshHomepage");
       }
     };
@@ -334,8 +373,8 @@ const MainLayout: React.FC = () => {
       // Onaylı ilan bildirimi dinle
       const handleAdApproved = (data: { adId: number; message: string }) => {
         console.log("🔔 İlan onaylandı bildirimi alındı:", data);
-        // Anında ilanları yenile
-        loadAdsLazy();
+        // Anında ilanları yenile (sayfa 1'e dön)
+        loadAdsLazy(1);
         // Toast bildirim göster (opsiyonel)
         // toast.success(data.message || "Bir ilan onaylandı ve anasayfaya eklendi!");
       };
@@ -358,7 +397,7 @@ const MainLayout: React.FC = () => {
           "📬 PostMessage ile ilan onayı bildirimi alındı:",
           event.data.adId
         );
-        loadAdsLazy();
+        loadAdsLazy(1); // Sayfa 1'e dön
       }
     };
 
@@ -368,7 +407,7 @@ const MainLayout: React.FC = () => {
         "⚡ CustomEvent ile ilan onayı bildirimi alındı:",
         event.detail.adId
       );
-      loadAdsLazy();
+      loadAdsLazy(1); // Sayfa 1'e dön
     };
 
     window.addEventListener("message", handlePostMessage);
@@ -1162,7 +1201,7 @@ const MainLayout: React.FC = () => {
                   <Button
                     variant="outlined"
                     size="small"
-                    onClick={loadAdsLazy}
+                    onClick={() => loadAdsLazy(1)}
                     disabled={isRefreshing}
                     sx={{
                       borderRadius: 2,
@@ -1179,212 +1218,637 @@ const MainLayout: React.FC = () => {
 
               {/* Conditional Rendering: Grid for "Tüm İlanlar", List for categories */}
               {!selectedCategory || selectedCategory === "Tüm İlanlar" ? (
-                // Grid View for All Ads
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "repeat(2, 1fr)", // Mobile: 2 sütun
-                      sm: "repeat(3, 1fr)", // Small tablet: 3 sütun
-                      md: "repeat(4, 1fr)", // Medium: 4 sütun
-                      lg: "repeat(6, 1fr)", // Large: 6 sütun
-                      xl: "repeat(6, 1fr)", // Extra Large: 6 sütun
-                    },
-                    gap: { xs: 1, sm: 1.5, md: 2 },
-                    width: "100%",
-                  }}
-                >
-                  {!Array.isArray(filteredAds) ? (
-                    // ⚡ SKELETON LOADING - Anında görsel feedback (20 ilan)
-                    <>
-                      {Array.from({ length: 20 }, (_, i) => i + 1).map((i) => (
+                <>
+                  {/* Grid View for All Ads */}
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "repeat(2, 1fr)", // Mobile: 2 sütun
+                        sm: "repeat(3, 1fr)", // Small tablet: 3 sütun
+                        md: "repeat(4, 1fr)", // Medium: 4 sütun
+                        lg: "repeat(6, 1fr)", // Large: 6 sütun
+                        xl: "repeat(6, 1fr)", // Extra Large: 6 sütun
+                      },
+                      gap: { xs: 1, sm: 1.5, md: 2 },
+                      width: "100%",
+                    }}
+                  >
+                    {!Array.isArray(filteredAds) ? (
+                      // ⚡ SKELETON LOADING - Anında görsel feedback (20 ilan)
+                      <>
+                        {Array.from({ length: 20 }, (_, i) => i + 1).map(
+                          (i) => (
+                            <Card
+                              key={`skeleton-${i}`}
+                              className="skeleton-pulse"
+                              sx={{
+                                borderRadius: 1,
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                                cursor: "default",
+                                height: 200,
+                                display: "flex",
+                                flexDirection: "column",
+                                backgroundColor: "#f5f5f5",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  height: 120,
+                                  backgroundColor: "#e0e0e0",
+                                  borderRadius: "4px 4px 0 0",
+                                }}
+                              />
+                              <Box sx={{ p: 1, flex: 1 }}>
+                                <Box
+                                  sx={{
+                                    height: 16,
+                                    backgroundColor: "#e0e0e0",
+                                    borderRadius: 1,
+                                    mb: 1,
+                                  }}
+                                />
+                                <Box
+                                  sx={{
+                                    height: 14,
+                                    backgroundColor: "#e0e0e0",
+                                    borderRadius: 1,
+                                    mb: 1,
+                                    width: "70%",
+                                  }}
+                                />
+                                <Box
+                                  sx={{
+                                    height: 14,
+                                    backgroundColor: "#e0e0e0",
+                                    borderRadius: 1,
+                                    width: "50%",
+                                  }}
+                                />
+                              </Box>
+                            </Card>
+                          )
+                        )}
+                      </>
+                    ) : filteredAds.length === 0 ? (
+                      <Typography>Henüz ilan bulunmuyor.</Typography>
+                    ) : (
+                      filteredAds.map((ad) => (
                         <Card
-                          key={`skeleton-${i}`}
-                          className="skeleton-pulse"
+                          key={ad.id}
+                          onClick={() => {
+                            console.log(
+                              "Card clicked, navigating to:",
+                              `/ad/${ad.id}`
+                            );
+                            navigate(`/ad/${ad.id}`);
+                          }}
                           sx={{
                             borderRadius: 1,
                             boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                            cursor: "default",
-                            height: 200,
-                            display: "flex",
-                            flexDirection: "column",
-                            backgroundColor: "#f5f5f5",
+                            "&:hover": {
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                            },
+                            transition: "all 0.2s ease",
+                            cursor: "pointer",
+                            width: "100%",
+                            backgroundColor: "white",
+                            border: "1px solid #e0e0e0",
                           }}
                         >
+                          {/* Vitrin Görseli */}
                           <Box
+                            component="div"
                             sx={{
                               height: 120,
-                              backgroundColor: "#e0e0e0",
-                              borderRadius: "4px 4px 0 0",
-                            }}
-                          />
-                          <Box sx={{ p: 1, flex: 1 }}>
-                            <Box
-                              sx={{
-                                height: 16,
-                                backgroundColor: "#e0e0e0",
-                                borderRadius: 1,
-                                mb: 1,
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                height: 14,
-                                backgroundColor: "#e0e0e0",
-                                borderRadius: 1,
-                                mb: 1,
-                                width: "70%",
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                height: 14,
-                                backgroundColor: "#e0e0e0",
-                                borderRadius: 1,
-                                width: "50%",
-                              }}
-                            />
-                          </Box>
-                        </Card>
-                      ))}
-                    </>
-                  ) : filteredAds.length === 0 ? (
-                    <Typography>Henüz ilan bulunmuyor.</Typography>
-                  ) : (
-                    filteredAds.map((ad) => (
-                      <Card
-                        key={ad.id}
-                        onClick={() => {
-                          console.log(
-                            "Card clicked, navigating to:",
-                            `/ad/${ad.id}`
-                          );
-                          navigate(`/ad/${ad.id}`);
-                        }}
-                        sx={{
-                          borderRadius: 1,
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                          "&:hover": {
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                          },
-                          transition: "all 0.2s ease",
-                          cursor: "pointer",
-                          width: "100%",
-                          backgroundColor: "white",
-                          border: "1px solid #e0e0e0",
-                        }}
-                      >
-                        {/* Vitrin Görseli */}
-                        <Box
-                          component="div"
-                          sx={{
-                            height: 120,
-                            backgroundColor: "#f8f9fa",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            position: "relative",
-                            overflow: "hidden",
-                            padding: "8px",
-                          }}
-                        >
-                          {getImageUrl(ad.images) ? (
-                            <LazyImage
-                              src={getImageUrl(ad.images)!}
-                              alt={ad.title}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "contain",
-                              }}
-                              placeholder="/placeholder-image.jpg"
-                            />
-                          ) : (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                color: "#999",
-                              }}
-                            >
-                              <LocalShipping sx={{ fontSize: 24, mb: 0.5 }} />
-                              <Typography variant="caption" fontSize="10px">
-                                Görsel Yok
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-
-                        <Box
-                          sx={{
-                            p: 1.5,
-                            display: "flex",
-                            flexDirection: "column",
-                            position: "relative",
-                            height: "auto",
-                          }}
-                        >
-                          {/* İlan Başlığı */}
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: 500,
-                              fontSize: "13px",
-                              color: "#333",
-                              lineHeight: 1.3,
-                              mb: 1,
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
+                              backgroundColor: "#f8f9fa",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              position: "relative",
                               overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              minHeight: "32px",
+                              padding: "8px",
                             }}
                           >
-                            {ad.title}
-                          </Typography>
-
-                          {/* Konum ve Model Yılı - Alt alta */}
-                          <Box sx={{ mb: 1 }}>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                fontSize: "12px",
-                                color: "#666",
-                                display: "block",
-                              }}
-                            >
-                              {ad.city?.name ||
-                                ad.district?.name ||
-                                "Belirtilmemiş"}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                fontSize: "12px",
-                                color: "#666",
-                                display: "block",
-                              }}
-                            >
-                              {ad.year
-                                ? `Model Yılı: ${ad.year}`
-                                : ad.model?.name || ad.brand?.name || "Model"}
-                            </Typography>
+                            {getImageUrl(ad.images) ? (
+                              <LazyImage
+                                src={getImageUrl(ad.images)!}
+                                alt={ad.title}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "contain",
+                                }}
+                                placeholder="/placeholder-image.jpg"
+                              />
+                            ) : (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "center",
+                                  color: "#999",
+                                }}
+                              >
+                                <LocalShipping sx={{ fontSize: 24, mb: 0.5 }} />
+                                <Typography variant="caption" fontSize="10px">
+                                  Görsel Yok
+                                </Typography>
+                              </Box>
+                            )}
                           </Box>
 
-                          {/* Fiyat - Sağ Alt Köşe */}
                           <Box
                             sx={{
-                              position: "absolute",
-                              bottom: 8,
-                              right: 12,
+                              p: 1.5,
+                              display: "flex",
+                              flexDirection: "column",
+                              position: "relative",
+                              height: "auto",
+                            }}
+                          >
+                            {/* İlan Başlığı */}
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 500,
+                                fontSize: "13px",
+                                color: "#333",
+                                lineHeight: 1.3,
+                                mb: 1,
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                minHeight: "32px",
+                              }}
+                            >
+                              {ad.title}
+                            </Typography>
+
+                            {/* Konum ve Model Yılı - Alt alta */}
+                            <Box sx={{ mb: 1 }}>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: "12px",
+                                  color: "#666",
+                                  display: "block",
+                                }}
+                              >
+                                {ad.city?.name ||
+                                  ad.district?.name ||
+                                  "Belirtilmemiş"}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: "12px",
+                                  color: "#666",
+                                  display: "block",
+                                }}
+                              >
+                                {ad.year
+                                  ? `Model Yılı: ${ad.year}`
+                                  : ad.model?.name || ad.brand?.name || "Model"}
+                              </Typography>
+                            </Box>
+
+                            {/* Fiyat - Sağ Alt Köşe */}
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                bottom: 8,
+                                right: 12,
+                              }}
+                            >
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontWeight: 600,
+                                  fontSize: "14px",
+                                  color: "#dc3545",
+                                }}
+                              >
+                                {ad.price
+                                  ? `${formatPrice(ad.price)} TL`
+                                  : "Fiyat Yok"}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Card>
+                      ))
+                    )}
+                  </Box>
+
+                  {/* Pagination for Grid View */}
+                  {totalPages > 1 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mt: 4,
+                        mb: 2,
+                      }}
+                    >
+                      <Pagination
+                        count={totalPages}
+                        page={currentPage}
+                        onChange={(_, page) => handlePageChange(page)}
+                        variant="outlined"
+                        shape="rounded"
+                        size="large"
+                        sx={{
+                          "& .MuiPaginationItem-root": {
+                            borderColor: "#dc3545",
+                            color: "#dc3545",
+                            "&:hover": {
+                              backgroundColor: "#fdeaea",
+                              borderColor: "#dc3545",
+                            },
+                            "&.Mui-selected": {
+                              backgroundColor: "#dc3545",
+                              color: "white",
+                              borderColor: "#dc3545",
+                              "&:hover": {
+                                backgroundColor: "#c82333",
+                              },
+                            },
+                          },
+                        }}
+                      />
+                    </Box>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* List View for Category Selection */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1,
+                      width: "100%",
+                    }}
+                  >
+                    {/* List Header */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        backgroundColor: "#f8f9fa",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 1,
+                        p: 2,
+                        alignItems: "center",
+                        fontWeight: 600,
+                        fontSize: "12px",
+                        color: "#666",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>
+                        Görsel
+                      </Box>
+                      <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>Model</Box>
+                      <Box sx={{ flex: 1, mr: 2 }}>İlan Başlığı</Box>
+                      <Box
+                        sx={{
+                          width: 60,
+                          mr: 2,
+                          flexShrink: 0,
+                          textAlign: "center",
+                        }}
+                      >
+                        Yıl
+                      </Box>
+                      <Box
+                        sx={{
+                          width: 80,
+                          mr: 2,
+                          flexShrink: 0,
+                          textAlign: "center",
+                        }}
+                      >
+                        Kilometre
+                      </Box>
+                      <Box
+                        sx={{
+                          width: 80,
+                          mr: 2,
+                          flexShrink: 0,
+                          textAlign: "center",
+                        }}
+                      >
+                        Kategori
+                      </Box>
+                      <Box
+                        sx={{
+                          width: 100,
+                          mr: 2,
+                          flexShrink: 0,
+                          textAlign: "center",
+                        }}
+                      >
+                        Fiyat
+                      </Box>
+                      <Box
+                        sx={{
+                          width: 80,
+                          mr: 2,
+                          flexShrink: 0,
+                          textAlign: "center",
+                        }}
+                      >
+                        Tarih
+                      </Box>
+                      <Box
+                        sx={{ width: 120, flexShrink: 0, textAlign: "center" }}
+                      >
+                        İl / İlçe
+                      </Box>
+                    </Box>
+                    {(() => {
+                      console.log("=== RENDERING ADS ===", {
+                        filteredAdsCount: filteredAds.length,
+                        totalAdsCount: ads.length,
+                        isArray: Array.isArray(filteredAds),
+                        firstAd: filteredAds[0],
+                      });
+                      return null;
+                    })()}
+
+                    {!Array.isArray(filteredAds) ? (
+                      // ⚡ SKELETON LOADING - Liste görünümü için (20 ilan)
+                      <>
+                        {Array.from({ length: 20 }, (_, i) => i + 1).map(
+                          (i) => (
+                            <Box
+                              key={`skeleton-list-${i}`}
+                              className="skeleton-pulse"
+                              sx={{
+                                display: "flex",
+                                borderBottom: "1px solid #e0e0e0",
+                                padding: 1.5,
+                                backgroundColor: "#f9f9f9",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: 80,
+                                  height: 60,
+                                  backgroundColor: "#e0e0e0",
+                                  borderRadius: 1,
+                                  mr: 2,
+                                }}
+                              />
+                              <Box sx={{ flex: 1, mr: 2 }}>
+                                <Box
+                                  sx={{
+                                    height: 16,
+                                    backgroundColor: "#e0e0e0",
+                                    borderRadius: 1,
+                                    mb: 0.5,
+                                  }}
+                                />
+                                <Box
+                                  sx={{
+                                    height: 14,
+                                    backgroundColor: "#e0e0e0",
+                                    borderRadius: 1,
+                                    width: "60%",
+                                  }}
+                                />
+                              </Box>
+                              <Box sx={{ width: 100, mr: 2 }}>
+                                <Box
+                                  sx={{
+                                    height: 14,
+                                    backgroundColor: "#e0e0e0",
+                                    borderRadius: 1,
+                                  }}
+                                />
+                              </Box>
+                              <Box sx={{ width: 80, mr: 2 }}>
+                                <Box
+                                  sx={{
+                                    height: 14,
+                                    backgroundColor: "#e0e0e0",
+                                    borderRadius: 1,
+                                  }}
+                                />
+                              </Box>
+                              <Box sx={{ width: 80, mr: 2 }}>
+                                <Box
+                                  sx={{
+                                    height: 14,
+                                    backgroundColor: "#e0e0e0",
+                                    borderRadius: 1,
+                                  }}
+                                />
+                              </Box>
+                              <Box sx={{ width: 120 }}>
+                                <Box
+                                  sx={{
+                                    height: 14,
+                                    backgroundColor: "#e0e0e0",
+                                    borderRadius: 1,
+                                  }}
+                                />
+                              </Box>
+                            </Box>
+                          )
+                        )}
+                      </>
+                    ) : filteredAds.length === 0 ? (
+                      <Typography>Henüz ilan bulunmuyor.</Typography>
+                    ) : (
+                      filteredAds.map((ad) => (
+                        <Card
+                          key={ad.id}
+                          onClick={() => {
+                            console.log(
+                              "Card clicked (mobile), navigating to:",
+                              `/ad/${ad.id}`
+                            );
+                            navigate(`/ad/${ad.id}`);
+                          }}
+                          sx={{
+                            display: "flex",
+                            flexDirection: "row",
+                            borderRadius: 1,
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                            "&:hover": {
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                              backgroundColor: "#f8f9fa",
+                            },
+                            transition: "all 0.2s ease",
+                            cursor: "pointer",
+                            width: "100%",
+                            backgroundColor: "white",
+                            border: "1px solid #e0e0e0",
+                            mb: 1,
+                            p: 2,
+                            alignItems: "center",
+                          }}
+                        >
+                          {/* Vitrin Görseli */}
+                          <Box
+                            sx={{
+                              width: 120,
+                              height: 80,
+                              backgroundColor: "#f8f9fa",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: 1,
+                              mr: 2,
+                              flexShrink: 0,
+                              overflow: "hidden",
+                            }}
+                          >
+                            {getImageUrl(ad.images) ? (
+                              <LazyImage
+                                src={getImageUrl(ad.images)!}
+                                alt={ad.title}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                                placeholder="/placeholder-image.jpg"
+                              />
+                            ) : (
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "center",
+                                  color: "#999",
+                                }}
+                              >
+                                <LocalShipping sx={{ fontSize: 20 }} />
+                                <Typography variant="caption" fontSize="8px">
+                                  Görsel Yok
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+
+                          {/* Model */}
+                          <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 600,
+                                fontSize: "13px",
+                                color: "#333",
+                              }}
+                            >
+                              {ad.model?.name || ad.brand?.name || "Model"}
+                            </Typography>
+                          </Box>
+
+                          {/* İlan Başlığı */}
+                          <Box sx={{ flex: 1, mr: 2 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 500,
+                                fontSize: "13px",
+                                color: "#333",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              {ad.title}
+                            </Typography>
+                          </Box>
+
+                          {/* Yıl */}
+                          <Box
+                            sx={{
+                              width: 60,
+                              mr: 2,
+                              flexShrink: 0,
+                              textAlign: "center",
                             }}
                           >
                             <Typography
-                              variant="h6"
+                              variant="body2"
                               sx={{
-                                fontWeight: 600,
+                                fontSize: "13px",
+                                color: "#333",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {ad.year ? `Model Yılı: ${ad.year}` : "---"}
+                            </Typography>
+                          </Box>
+
+                          {/* Kilometre */}
+                          <Box
+                            sx={{
+                              width: 80,
+                              mr: 2,
+                              flexShrink: 0,
+                              textAlign: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "13px",
+                                color: "#333",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {ad.mileage
+                                ? `${ad.mileage.toLocaleString("tr-TR")}`
+                                : "---"}
+                            </Typography>
+                          </Box>
+
+                          {/* Kategori */}
+                          <Box
+                            sx={{
+                              width: 80,
+                              mr: 2,
+                              flexShrink: 0,
+                              textAlign: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: "12px",
+                                color: "#666",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {ad.category?.name || "---"}
+                            </Typography>
+                          </Box>
+
+                          {/* Fiyat */}
+                          <Box
+                            sx={{
+                              width: 100,
+                              mr: 2,
+                              flexShrink: 0,
+                              textAlign: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                fontWeight: 700,
                                 fontSize: "14px",
                                 color: "#dc3545",
                               }}
@@ -1394,440 +1858,103 @@ const MainLayout: React.FC = () => {
                                 : "Fiyat Yok"}
                             </Typography>
                           </Box>
-                        </Box>
-                      </Card>
-                    ))
-                  )}
-                </Box>
-              ) : (
-                // List View for Category Selection
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                    width: "100%",
-                  }}
-                >
-                  {/* List Header */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "row",
-                      backgroundColor: "#f8f9fa",
-                      border: "1px solid #e0e0e0",
-                      borderRadius: 1,
-                      p: 2,
-                      alignItems: "center",
-                      fontWeight: 600,
-                      fontSize: "12px",
-                      color: "#666",
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>Görsel</Box>
-                    <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>Model</Box>
-                    <Box sx={{ flex: 1, mr: 2 }}>İlan Başlığı</Box>
-                    <Box
-                      sx={{
-                        width: 60,
-                        mr: 2,
-                        flexShrink: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      Yıl
-                    </Box>
-                    <Box
-                      sx={{
-                        width: 80,
-                        mr: 2,
-                        flexShrink: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      Kilometre
-                    </Box>
-                    <Box
-                      sx={{
-                        width: 80,
-                        mr: 2,
-                        flexShrink: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      Kategori
-                    </Box>
-                    <Box
-                      sx={{
-                        width: 100,
-                        mr: 2,
-                        flexShrink: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      Fiyat
-                    </Box>
-                    <Box
-                      sx={{
-                        width: 80,
-                        mr: 2,
-                        flexShrink: 0,
-                        textAlign: "center",
-                      }}
-                    >
-                      Tarih
-                    </Box>
-                    <Box
-                      sx={{ width: 120, flexShrink: 0, textAlign: "center" }}
-                    >
-                      İl / İlçe
-                    </Box>
-                  </Box>
-                  {(() => {
-                    console.log("=== RENDERING ADS ===", {
-                      filteredAdsCount: filteredAds.length,
-                      totalAdsCount: ads.length,
-                      isArray: Array.isArray(filteredAds),
-                      firstAd: filteredAds[0],
-                    });
-                    return null;
-                  })()}
 
-                  {!Array.isArray(filteredAds) ? (
-                    // ⚡ SKELETON LOADING - Liste görünümü için (20 ilan)
-                    <>
-                      {Array.from({ length: 20 }, (_, i) => i + 1).map((i) => (
-                        <Box
-                          key={`skeleton-list-${i}`}
-                          className="skeleton-pulse"
-                          sx={{
-                            display: "flex",
-                            borderBottom: "1px solid #e0e0e0",
-                            padding: 1.5,
-                            backgroundColor: "#f9f9f9",
-                            alignItems: "center",
-                          }}
-                        >
+                          {/* Tarih */}
                           <Box
                             sx={{
                               width: 80,
-                              height: 60,
-                              backgroundColor: "#e0e0e0",
-                              borderRadius: 1,
                               mr: 2,
+                              flexShrink: 0,
+                              textAlign: "center",
                             }}
-                          />
-                          <Box sx={{ flex: 1, mr: 2 }}>
-                            <Box
+                          >
+                            <Typography
+                              variant="body2"
                               sx={{
-                                height: 16,
-                                backgroundColor: "#e0e0e0",
-                                borderRadius: 1,
-                                mb: 0.5,
+                                fontSize: "11px",
+                                color: "#666",
                               }}
-                            />
-                            <Box
-                              sx={{
-                                height: 14,
-                                backgroundColor: "#e0e0e0",
-                                borderRadius: 1,
-                                width: "60%",
-                              }}
-                            />
+                            >
+                              {ad.createdAt
+                                ? new Date(ad.createdAt).toLocaleDateString(
+                                    "tr-TR"
+                                  )
+                                : "---"}
+                            </Typography>
                           </Box>
-                          <Box sx={{ width: 100, mr: 2 }}>
-                            <Box
+
+                          {/* İl/İlçe */}
+                          <Box
+                            sx={{
+                              width: 120,
+                              flexShrink: 0,
+                              textAlign: "center",
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
                               sx={{
-                                height: 14,
-                                backgroundColor: "#e0e0e0",
-                                borderRadius: 1,
+                                fontSize: "12px",
+                                color: "#666",
+                                fontWeight: 500,
                               }}
-                            />
-                          </Box>
-                          <Box sx={{ width: 80, mr: 2 }}>
-                            <Box
+                            >
+                              {ad.city?.name || "Belirtilmemiş"}
+                            </Typography>
+                            <Typography
+                              variant="caption"
                               sx={{
-                                height: 14,
-                                backgroundColor: "#e0e0e0",
-                                borderRadius: 1,
-                              }}
-                            />
-                          </Box>
-                          <Box sx={{ width: 80, mr: 2 }}>
-                            <Box
-                              sx={{
-                                height: 14,
-                                backgroundColor: "#e0e0e0",
-                                borderRadius: 1,
-                              }}
-                            />
-                          </Box>
-                          <Box sx={{ width: 120 }}>
-                            <Box
-                              sx={{
-                                height: 14,
-                                backgroundColor: "#e0e0e0",
-                                borderRadius: 1,
-                              }}
-                            />
-                          </Box>
-                        </Box>
-                      ))}
-                    </>
-                  ) : filteredAds.length === 0 ? (
-                    <Typography>Henüz ilan bulunmuyor.</Typography>
-                  ) : (
-                    filteredAds.map((ad) => (
-                      <Card
-                        key={ad.id}
-                        onClick={() => {
-                          console.log(
-                            "Card clicked (mobile), navigating to:",
-                            `/ad/${ad.id}`
-                          );
-                          navigate(`/ad/${ad.id}`);
-                        }}
-                        sx={{
-                          display: "flex",
-                          flexDirection: "row",
-                          borderRadius: 1,
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                          "&:hover": {
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                            backgroundColor: "#f8f9fa",
-                          },
-                          transition: "all 0.2s ease",
-                          cursor: "pointer",
-                          width: "100%",
-                          backgroundColor: "white",
-                          border: "1px solid #e0e0e0",
-                          mb: 1,
-                          p: 2,
-                          alignItems: "center",
-                        }}
-                      >
-                        {/* Vitrin Görseli */}
-                        <Box
-                          sx={{
-                            width: 120,
-                            height: 80,
-                            backgroundColor: "#f8f9fa",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: 1,
-                            mr: 2,
-                            flexShrink: 0,
-                            overflow: "hidden",
-                          }}
-                        >
-                          {getImageUrl(ad.images) ? (
-                            <LazyImage
-                              src={getImageUrl(ad.images)!}
-                              alt={ad.title}
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
-                              placeholder="/placeholder-image.jpg"
-                            />
-                          ) : (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
+                                fontSize: "10px",
                                 color: "#999",
                               }}
                             >
-                              <LocalShipping sx={{ fontSize: 20 }} />
-                              <Typography variant="caption" fontSize="8px">
-                                Görsel Yok
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
+                              {ad.district?.name || "---"}
+                            </Typography>
+                          </Box>
+                        </Card>
+                      ))
+                    )}
+                  </Box>
 
-                        {/* Model */}
-                        <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: 600,
-                              fontSize: "13px",
-                              color: "#333",
-                            }}
-                          >
-                            {ad.model?.name || ad.brand?.name || "Model"}
-                          </Typography>
-                        </Box>
-
-                        {/* İlan Başlığı */}
-                        <Box sx={{ flex: 1, mr: 2 }}>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: 500,
-                              fontSize: "13px",
-                              color: "#333",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            }}
-                          >
-                            {ad.title}
-                          </Typography>
-                        </Box>
-
-                        {/* Yıl */}
-                        <Box
-                          sx={{
-                            width: 60,
-                            mr: 2,
-                            flexShrink: 0,
-                            textAlign: "center",
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: "13px",
-                              color: "#333",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {ad.year ? `Model Yılı: ${ad.year}` : "---"}
-                          </Typography>
-                        </Box>
-
-                        {/* Kilometre */}
-                        <Box
-                          sx={{
-                            width: 80,
-                            mr: 2,
-                            flexShrink: 0,
-                            textAlign: "center",
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: "13px",
-                              color: "#333",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {ad.mileage
-                              ? `${ad.mileage.toLocaleString("tr-TR")}`
-                              : "---"}
-                          </Typography>
-                        </Box>
-
-                        {/* Kategori */}
-                        <Box
-                          sx={{
-                            width: 80,
-                            mr: 2,
-                            flexShrink: 0,
-                            textAlign: "center",
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: "12px",
-                              color: "#666",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {ad.category?.name || "---"}
-                          </Typography>
-                        </Box>
-
-                        {/* Fiyat */}
-                        <Box
-                          sx={{
-                            width: 100,
-                            mr: 2,
-                            flexShrink: 0,
-                            textAlign: "center",
-                          }}
-                        >
-                          <Typography
-                            variant="body1"
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: "14px",
-                              color: "#dc3545",
-                            }}
-                          >
-                            {ad.price
-                              ? `${formatPrice(ad.price)} TL`
-                              : "Fiyat Yok"}
-                          </Typography>
-                        </Box>
-
-                        {/* Tarih */}
-                        <Box
-                          sx={{
-                            width: 80,
-                            mr: 2,
-                            flexShrink: 0,
-                            textAlign: "center",
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: "11px",
-                              color: "#666",
-                            }}
-                          >
-                            {ad.createdAt
-                              ? new Date(ad.createdAt).toLocaleDateString(
-                                  "tr-TR"
-                                )
-                              : "---"}
-                          </Typography>
-                        </Box>
-
-                        {/* İl/İlçe */}
-                        <Box
-                          sx={{
-                            width: 120,
-                            flexShrink: 0,
-                            textAlign: "center",
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: "12px",
-                              color: "#666",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {ad.city?.name || "Belirtilmemiş"}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              fontSize: "10px",
-                              color: "#999",
-                            }}
-                          >
-                            {ad.district?.name || "---"}
-                          </Typography>
-                        </Box>
-                      </Card>
-                    ))
+                  {/* Pagination for List View */}
+                  {totalPages > 1 && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        mt: 4,
+                        mb: 2,
+                      }}
+                    >
+                      <Pagination
+                        count={totalPages}
+                        page={currentPage}
+                        onChange={(_, page) => handlePageChange(page)}
+                        variant="outlined"
+                        shape="rounded"
+                        size="large"
+                        sx={{
+                          "& .MuiPaginationItem-root": {
+                            borderColor: "#dc3545",
+                            color: "#dc3545",
+                            "&:hover": {
+                              backgroundColor: "#fdeaea",
+                              borderColor: "#dc3545",
+                            },
+                            "&.Mui-selected": {
+                              backgroundColor: "#dc3545",
+                              color: "white",
+                              borderColor: "#dc3545",
+                              "&:hover": {
+                                backgroundColor: "#c82333",
+                              },
+                            },
+                          },
+                        }}
+                      />
+                    </Box>
                   )}
-                </Box>
+                </>
               )}
             </>
           )}

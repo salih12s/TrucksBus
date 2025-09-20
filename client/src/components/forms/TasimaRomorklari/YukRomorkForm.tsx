@@ -22,7 +22,13 @@ import {
   IconButton,
   styled,
 } from "@mui/material";
-import { CheckCircle, CloudUpload, PhotoCamera, Delete as DeleteIcon, Star as StarIcon } from "@mui/icons-material";
+import {
+  CheckCircle,
+  CloudUpload,
+  PhotoCamera,
+  Delete as DeleteIcon,
+  Star as StarIcon,
+} from "@mui/icons-material";
 import apiClient from "../../../api/client";
 import Header from "../../layout/Header";
 
@@ -225,7 +231,9 @@ const YukRomorkForm: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       showcasePhoto: photo,
-      photos: prev.showcasePhoto ? [prev.showcasePhoto, ...remainingPhotos] : remainingPhotos,
+      photos: prev.showcasePhoto
+        ? [prev.showcasePhoto, ...remainingPhotos]
+        : remainingPhotos,
     }));
   };
 
@@ -295,7 +303,13 @@ const YukRomorkForm: React.FC = () => {
           </Typography>
 
           <form onSubmit={handleSubmit}>
-            <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 4 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", md: "row" },
+                gap: 4,
+              }}
+            >
               {/* Sol Kolon - İlan Detayları */}
               <Box sx={{ flex: { xs: "1", md: "2" } }}>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -319,12 +333,20 @@ const YukRomorkForm: React.FC = () => {
                     rows={4}
                     label="Açıklama"
                     value={formData.description}
-                    onChange={(e) => handleInputChange("description", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("description", e.target.value)
+                    }
                     required
                   />
 
                   {/* Üretim Yılı ve Renk */}
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                      gap: 2,
+                    }}
+                  >
                     <Box>
                       <TextField
                         fullWidth
@@ -343,7 +365,9 @@ const YukRomorkForm: React.FC = () => {
                         <Select
                           value={formData.color}
                           label="Renk"
-                          onChange={(e) => handleInputChange("color", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("color", e.target.value)
+                          }
                         >
                           {colorOptions.map((color) => (
                             <MenuItem key={color} value={color}>
@@ -361,7 +385,9 @@ const YukRomorkForm: React.FC = () => {
                     <Select
                       value={formData.usageArea}
                       label="Kullanım Alanı"
-                      onChange={(e) => handleInputChange("usageArea", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("usageArea", e.target.value)
+                      }
                     >
                       {usageAreaOptions.map((area) => (
                         <MenuItem key={area} value={area}>
@@ -406,7 +432,9 @@ const YukRomorkForm: React.FC = () => {
                     <Select
                       value={formData.condition}
                       label="Durum"
-                      onChange={(e) => handleInputChange("condition", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("condition", e.target.value)
+                      }
                     >
                       <MenuItem value="sifir">Sıfır</MenuItem>
                       <MenuItem value="ikinci-el">İkinci El</MenuItem>
@@ -419,7 +447,13 @@ const YukRomorkForm: React.FC = () => {
                     İletişim Bilgileri
                   </Typography>
 
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                      gap: 2,
+                    }}
+                  >
                     <Box>
                       <TextField
                         fullWidth
@@ -449,12 +483,20 @@ const YukRomorkForm: React.FC = () => {
                     label="E-posta"
                     type="email"
                     value={formData.sellerEmail}
-                    onChange={(e) => handleInputChange("sellerEmail", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("sellerEmail", e.target.value)
+                    }
                     required
                   />
 
                   {/* Konum */}
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                      gap: 2,
+                    }}
+                  >
                     <Box>
                       <FormControl fullWidth>
                         <InputLabel>Şehir</InputLabel>
@@ -498,14 +540,22 @@ const YukRomorkForm: React.FC = () => {
                   </Box>
 
                   {/* Fiyat */}
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr 1fr" }, gap: 2 }}>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: { xs: "1fr", sm: "2fr 1fr 1fr" },
+                      gap: 2,
+                    }}
+                  >
                     <Box>
                       <TextField
                         fullWidth
                         label="Fiyat"
                         type="number"
                         value={formData.price}
-                        onChange={(e) => handleInputChange("price", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("price", e.target.value)
+                        }
                         required
                       />
                     </Box>
@@ -531,7 +581,9 @@ const YukRomorkForm: React.FC = () => {
                         <Select
                           value={formData.priceType}
                           label="Fiyat Tipi"
-                          onChange={(e) => handleInputChange("priceType", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("priceType", e.target.value)
+                          }
                         >
                           <MenuItem value="fixed">Sabit Fiyat</MenuItem>
                           <MenuItem value="negotiable">Pazarlık Olur</MenuItem>
@@ -555,10 +607,14 @@ const YukRomorkForm: React.FC = () => {
                       <Typography variant="subtitle1" gutterBottom>
                         Vitrin Fotoğrafı
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 2 }}
+                      >
                         Bu fotoğraf ilanınızın ön yüzünde görünecektir
                       </Typography>
-                      
+
                       <Button
                         variant="outlined"
                         component="label"
@@ -575,7 +631,9 @@ const YukRomorkForm: React.FC = () => {
                       </Button>
 
                       {formData.showcasePhoto && (
-                        <Box sx={{ position: "relative", display: "inline-block" }}>
+                        <Box
+                          sx={{ position: "relative", display: "inline-block" }}
+                        >
                           <img
                             src={URL.createObjectURL(formData.showcasePhoto)}
                             alt="Vitrin"
@@ -593,9 +651,16 @@ const YukRomorkForm: React.FC = () => {
                               top: 8,
                               right: 8,
                               bgcolor: "rgba(255, 255, 255, 0.8)",
-                              "&:hover": { bgcolor: "rgba(255, 255, 255, 0.9)" },
+                              "&:hover": {
+                                bgcolor: "rgba(255, 255, 255, 0.9)",
+                              },
                             }}
-                            onClick={() => setFormData(prev => ({ ...prev, showcasePhoto: null }))}
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                showcasePhoto: null,
+                              }))
+                            }
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -610,10 +675,14 @@ const YukRomorkForm: React.FC = () => {
                       <Typography variant="subtitle1" gutterBottom>
                         Diğer Fotoğraflar
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 2 }}
+                      >
                         En fazla 15 fotoğraf yükleyebilirsiniz
                       </Typography>
-                      
+
                       <Button
                         variant="outlined"
                         component="label"
@@ -632,7 +701,13 @@ const YukRomorkForm: React.FC = () => {
                       </Button>
 
                       {formData.photos.length > 0 && (
-                        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1 }}>
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(2, 1fr)",
+                            gap: 1,
+                          }}
+                        >
                           {formData.photos.map((photo, index) => (
                             <Box key={index}>
                               <Box sx={{ position: "relative" }}>
@@ -653,7 +728,9 @@ const YukRomorkForm: React.FC = () => {
                                     top: 2,
                                     right: 2,
                                     bgcolor: "rgba(255, 255, 255, 0.8)",
-                                    "&:hover": { bgcolor: "rgba(255, 255, 255, 0.9)" },
+                                    "&:hover": {
+                                      bgcolor: "rgba(255, 255, 255, 0.9)",
+                                    },
                                   }}
                                   onClick={() => removePhoto(index)}
                                 >
@@ -666,7 +743,9 @@ const YukRomorkForm: React.FC = () => {
                                     top: 2,
                                     left: 2,
                                     bgcolor: "rgba(255, 255, 255, 0.8)",
-                                    "&:hover": { bgcolor: "rgba(255, 255, 255, 0.9)" },
+                                    "&:hover": {
+                                      bgcolor: "rgba(255, 255, 255, 0.9)",
+                                    },
                                   }}
                                   onClick={() => setShowcasePhoto(index)}
                                   title="Vitrin fotoğrafı yap"
@@ -686,9 +765,9 @@ const YukRomorkForm: React.FC = () => {
 
             {/* Submit Button */}
             <Box sx={{ mt: 4, textAlign: "center" }}>
-              <Button 
-                type="submit" 
-                variant="contained" 
+              <Button
+                type="submit"
+                variant="contained"
                 size="large"
                 disabled={loading}
                 sx={{ minWidth: 200 }}
