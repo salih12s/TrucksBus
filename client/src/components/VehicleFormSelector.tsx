@@ -63,6 +63,9 @@ import MidilliForm from "./forms/Tenteli/MidilliForm";
 import PilotForm from "./forms/Tenteli/PilotForm";
 import YariMidilliForm from "./forms/Tenteli/YariMidilliForm";
 
+// Frigorifik Form
+import FrigofirikForm from "./forms/FrigofirikForm";
+
 // Oto Kurtarıcı ve Taşıyıcı Forms
 import TekliAracForm from "./forms/OtoKurtariciTasiyici/TekliAracForm";
 import CokluAracForm from "./forms/OtoKurtariciTasiyici/CokluAracForm";
@@ -194,6 +197,7 @@ const VehicleFormSelector: React.FC = () => {
           return <KapaksızPlatformForm />;
         // Tenteli Dorse Variants
         case "tenteli-tenteli-midilli":
+        case "tenteli-tenteli-tenteli":
         case "midilli":
           console.log("✅ Midilli Tenteli Dorse formu seçildi (variant)");
           return <MidilliForm />;
@@ -202,9 +206,15 @@ const VehicleFormSelector: React.FC = () => {
           console.log("✅ Pilot Tenteli Dorse formu seçildi (variant)");
           return <PilotForm />;
         case "tenteli-tenteli-yari-midilli":
+        case "tenteli-tenteli-yarimidilli":
         case "yari-midilli":
           console.log("✅ Yarı Midilli Tenteli Dorse formu seçildi (variant)");
           return <YariMidilliForm />;
+        // Frigorifik Dorse Variants
+        case "frigorifik-frigorifik-frigorifik":
+        case "frigorifik":
+          console.log("✅ Frigorifik Dorse formu seçildi (variant)");
+          return <FrigofirikForm />;
         default:
           console.log(
             "⚠️ Bilinmeyen dorse variant:",

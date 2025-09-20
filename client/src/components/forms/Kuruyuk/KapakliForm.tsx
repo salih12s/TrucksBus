@@ -16,9 +16,10 @@ import {
   Container,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import Header from "../../layout/Header";
 import apiClient from "../../../api/client";
+import SuccessModal from "../../common/SuccessModal";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -122,12 +123,14 @@ const KapakliForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdAdId, setCreatedAdId] = useState<string | null>(null);
 
   // Şehirleri yükle
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await apiClient.get("/ads/cities");
+        const response = await apiClient.get("/cities");
         setCities(response.data as City[]);
       } catch (error) {
         console.error("Şehirler yüklenirken hata:", error);
@@ -142,7 +145,7 @@ const KapakliForm: React.FC = () => {
       if (formData.cityId) {
         try {
           const response = await apiClient.get(
-            `/ads/districts/${formData.cityId}`
+            `/cities/${formData.cityId}/districts`
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -283,19 +286,49 @@ const KapakliForm: React.FC = () => {
         submitData.append(`photos`, photo);
       });
 
-      await apiClient.post("/ads/dorse", submitData, {
+      const response = await apiClient.post("/listings", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      navigate("/ads/success");
+      const responseData = response.data as {
+        success: boolean;
+        message?: string;
+        id?: string;
+      };
+
+      if (responseData.success) {
+        setCreatedAdId(responseData.id || null);
+        setShowSuccessModal(true);
+      } else {
+        throw new Error(responseData.message || "İlan oluşturulamadı");
+      }
     } catch (error) {
       console.error("Form gönderilirken hata:", error);
       setErrors(["İlan gönderilirken bir hata oluştu. Lütfen tekrar deneyin."]);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Success Modal Handlers
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+  };
+
+  const handleViewAd = () => {
+    if (createdAdId) {
+      navigate(`/ads/${createdAdId}`);
+    }
+  };
+
+  const handleGoHome = () => {
+    navigate("/");
+  };
+
+  const handleMyAds = () => {
+    navigate("/user/my-listings");
   };
 
   return (
@@ -522,57 +555,193 @@ const KapakliForm: React.FC = () => {
 
             {/* Fotoğraflar */}
             <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              Fotoğraflar
+              Fotoğraf Ekle
             </Typography>
 
-            <Box sx={{ mb: 2 }}>
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<CloudUploadIcon />}
-                sx={{ mr: 2 }}
+            <Box
+              sx={{
+                border: "2px dashed #2196f3",
+                borderRadius: "16px",
+                padding: "32px",
+                textAlign: "center",
+                backgroundColor: "#f8fafe",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  borderColor: "#1976d2",
+                  backgroundColor: "#e3f2fd",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 25px rgba(33, 150, 243, 0.15)",
+                },
+                mb: 3,
+              }}
+              component="label"
+            >
+              <PhotoCameraIcon
+                sx={{
+                  fontSize: 56,
+                  mb: 2,
+                  color: "#2196f3",
+                  filter: "drop-shadow(0 2px 4px rgba(33, 150, 243, 0.3))",
+                }}
+              />
+              <Typography
+                variant="h5"
+                gutterBottom
+                sx={{ color: "#1976d2", fontWeight: 600 }}
               >
-                Vitrin Fotoğrafı Yükle
-                <VisuallyHiddenInput
-                  type="file"
-                  accept="image/*"
-                  onChange={handleShowcasePhotoUpload}
-                />
+                Fotoğraf Yükle
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{ mb: 3, color: "#666", maxWidth: 400, mx: "auto" }}
+              >
+                İlk yüklediğiniz fotoğraf vitrin fotoğrafı olacaktır. En fazla
+                10 fotoğraf yükleyebilirsiniz.
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<PhotoCameraIcon />}
+                sx={{
+                  backgroundColor: "#2196f3",
+                  color: "white",
+                  paddingX: 4,
+                  paddingY: 1.5,
+                  fontSize: "1.1rem",
+                  borderRadius: "25px",
+                  boxShadow: "0 4px 15px rgba(33, 150, 243, 0.4)",
+                  "&:hover": {
+                    backgroundColor: "#1976d2",
+                    boxShadow: "0 6px 20px rgba(33, 150, 243, 0.6)",
+                    transform: "translateY(-1px)",
+                  },
+                }}
+              >
+                Vitrin Fotoğrafı Seç
               </Button>
-              {formData.showcasePhoto && (
-                <Chip
-                  label={formData.showcasePhoto.name}
-                  onDelete={() => handleInputChange("showcasePhoto", null)}
-                  sx={{ ml: 1 }}
-                />
-              )}
+              <VisuallyHiddenInput
+                type="file"
+                accept="image/*"
+                onChange={handleShowcasePhotoUpload}
+              />
             </Box>
 
-            <Box sx={{ mb: 2 }}>
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={<CloudUploadIcon />}
+            {formData.showcasePhoto && (
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ color: "#1976d2", mb: 2 }}
+                >
+                  ✨ Vitrin Fotoğrafı
+                </Typography>
+                <Box sx={{ position: "relative", display: "inline-block" }}>
+                  <Chip
+                    label={formData.showcasePhoto.name}
+                    onDelete={() => handleInputChange("showcasePhoto", null)}
+                    sx={{
+                      backgroundColor: "#4caf50",
+                      color: "white",
+                      fontWeight: "bold",
+                      "& .MuiChip-deleteIcon": {
+                        color: "white",
+                      },
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
+
+            <Box
+              sx={{
+                border: "2px dashed #ff9800",
+                borderRadius: "16px",
+                padding: "24px",
+                textAlign: "center",
+                backgroundColor: "#fffaf0",
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  borderColor: "#f57c00",
+                  backgroundColor: "#fff3e0",
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 6px 20px rgba(255, 152, 0, 0.15)",
+                },
+                mb: 3,
+              }}
+              component="label"
+            >
+              <PhotoCameraIcon
+                sx={{
+                  fontSize: 48,
+                  mb: 2,
+                  color: "#ff9800",
+                  filter: "drop-shadow(0 2px 4px rgba(255, 152, 0, 0.3))",
+                }}
+              />
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ color: "#f57c00", fontWeight: 600 }}
               >
-                Diğer Fotoğrafları Yükle
-                <VisuallyHiddenInput
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                />
+                Ek Fotoğraflar Yükle
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 2, color: "#666" }}>
+                Ürününüzün farklı açılardan fotoğraflarını ekleyin
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<PhotoCameraIcon />}
+                sx={{
+                  borderColor: "#ff9800",
+                  color: "#ff9800",
+                  paddingX: 3,
+                  paddingY: 1,
+                  borderRadius: "20px",
+                  "&:hover": {
+                    borderColor: "#f57c00",
+                    backgroundColor: "#fff3e0",
+                  },
+                }}
+              >
+                Fotoğraf Seç
               </Button>
+              <VisuallyHiddenInput
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handlePhotoUpload}
+              />
             </Box>
 
             {formData.photos.length > 0 && (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-                {formData.photos.map((photo, index) => (
-                  <Chip
-                    key={index}
-                    label={photo.name}
-                    onDelete={() => removePhoto(index)}
-                  />
-                ))}
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ color: "#1976d2", mb: 2 }}
+                >
+                  📸 Ek Fotoğraflar ({formData.photos.length})
+                </Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                  {formData.photos.map((photo, index) => (
+                    <Chip
+                      key={index}
+                      label={`${index + 1}. ${photo.name.substring(0, 20)}${
+                        photo.name.length > 20 ? "..." : ""
+                      }`}
+                      onDelete={() => removePhoto(index)}
+                      sx={{
+                        backgroundColor: "#e3f2fd",
+                        color: "#1976d2",
+                        fontWeight: "500",
+                        "& .MuiChip-deleteIcon": {
+                          color: "#1976d2",
+                        },
+                      }}
+                    />
+                  ))}
+                </Box>
               </Box>
             )}
 
@@ -686,6 +855,17 @@ const KapakliForm: React.FC = () => {
             </Box>
           </Box>
         </Paper>
+
+        {/* Success Modal */}
+        <SuccessModal
+          open={showSuccessModal}
+          onClose={handleSuccessModalClose}
+          onGoHome={handleGoHome}
+          onViewAd={handleViewAd}
+          onMyAds={handleMyAds}
+          title="🎉 İlan Başarıyla Yayınlandı!"
+          message="Kapaklı Kuruyük ilanınız başarıyla yayınlandı. Artık alıcılar tarafından görülebilir ve iletişime geçebilirler."
+        />
       </Container>
     </Box>
   );

@@ -419,18 +419,45 @@ export const getAdById = async (req: Request, res: Response) => {
 };
 
 // Create new ad
-export const createAd = async (req: Request, res: Response) => {
+export const createAd = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = (req as any).user.id;
+    const userId = (req as any).user?.id || (req as any).userId;
+    if (!userId) {
+      res
+        .status(401)
+        .json({ success: false, error: "Kullanıcı doğrulaması gerekli" });
+      return;
+    }
+
+    const files = req.files as Express.Multer.File[];
     const {
-      categoryId,
-      brandId,
-      modelId,
-      variantId,
+      // Basic fields
       title,
       description,
       price,
       year,
+      category,
+      subcategory,
+      variant_id,
+      city,
+      district,
+      seller_name,
+      seller_phone,
+      seller_email,
+      warranty,
+      negotiable,
+      exchange,
+      showcase_image_index,
+      // Tenteli specific fields
+      uzunluk,
+      lastikDurumu,
+      catiPerdeSistemi,
+      tenteliType,
+      // Legacy fields
+      categoryId,
+      brandId,
+      modelId,
+      variantId,
       mileage,
       location,
       latitude,
@@ -438,24 +465,73 @@ export const createAd = async (req: Request, res: Response) => {
       customFields,
     } = req.body;
 
+    // Support both new and legacy formats
+    const adData: any = {
+      userId: parseInt(userId),
+      title,
+      description,
+      status: "PENDING",
+    };
+
+    // Handle new format (tenteli forms)
+    if (category && subcategory) {
+      // Find category by name or slug
+      const categoryRecord = await prisma.category.findFirst({
+        where: {
+          OR: [
+            { name: { contains: category, mode: "insensitive" } },
+            { slug: category.toLowerCase() },
+          ],
+        },
+      });
+
+      if (!categoryRecord) {
+        res
+          .status(400)
+          .json({ success: false, error: `Kategori bulunamadı: ${category}` });
+        return;
+      }
+
+      adData.categoryId = categoryRecord.id;
+      adData.price = price ? parseFloat(price) : null;
+      adData.year = year ? parseInt(year) : null;
+      adData.variantId = variant_id ? parseInt(variant_id) : null;
+      adData.location = `${city}, ${district}`;
+
+      // Add seller contact info to custom fields for now
+      adData.customFields = {
+        sellerName: seller_name,
+        sellerPhone: seller_phone,
+        sellerEmail: seller_email,
+        hasWarranty: warranty === "true",
+        isNegotiable: negotiable === "true",
+        isExchangeable: exchange === "true",
+        city: city,
+        district: district,
+        // Tenteli specific data
+        uzunluk: uzunluk ? parseInt(uzunluk) : null,
+        lastikDurumu: lastikDurumu ? parseInt(lastikDurumu) : null,
+        catiPerdeSistemi: catiPerdeSistemi || null,
+        tenteliType: tenteliType || null,
+      };
+    }
+    // Handle legacy format
+    else {
+      adData.categoryId = categoryId ? parseInt(categoryId) : null;
+      adData.brandId = brandId ? parseInt(brandId) : null;
+      adData.modelId = modelId ? parseInt(modelId) : null;
+      adData.variantId = variantId ? parseInt(variantId) : null;
+      adData.price = price ? parseFloat(price) : null;
+      adData.year = year ? parseInt(year) : null;
+      adData.mileage = mileage ? parseInt(mileage) : null;
+      adData.location = location;
+      adData.latitude = latitude ? parseFloat(latitude) : null;
+      adData.longitude = longitude ? parseFloat(longitude) : null;
+      adData.customFields = customFields || null;
+    }
+
     const ad = await prisma.ad.create({
-      data: {
-        userId,
-        categoryId: parseInt(categoryId),
-        brandId: brandId ? parseInt(brandId) : null,
-        modelId: modelId ? parseInt(modelId) : null,
-        variantId: variantId ? parseInt(variantId) : null,
-        title,
-        description,
-        price: price ? parseFloat(price) : null,
-        year: year ? parseInt(year) : null,
-        mileage: mileage ? parseInt(mileage) : null,
-        location,
-        latitude: latitude ? parseFloat(latitude) : null,
-        longitude: longitude ? parseFloat(longitude) : null,
-        customFields: customFields || null,
-        status: "PENDING", // All ads require approval
-      },
+      data: adData,
       include: {
         category: true,
         brand: true,
@@ -464,14 +540,47 @@ export const createAd = async (req: Request, res: Response) => {
       },
     });
 
-    res.status(201).json(ad);
-  } catch (error) {
-    console.error("Error creating ad:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-};
+    // Handle images if provided
+    if (files && files.length > 0) {
+      const showcaseIndex = showcase_image_index
+        ? parseInt(showcase_image_index)
+        : 0;
 
-// Update ad
+      const imagePromises = files.map((file, index) => {
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
+
+        return prisma.adImage.create({
+          data: {
+            adId: ad.id,
+            imageUrl: base64Image,
+            displayOrder: index,
+            isPrimary: index === showcaseIndex,
+            altText: `${title} - Fotoğraf ${index + 1}`,
+          },
+        });
+      });
+
+      await Promise.all(imagePromises);
+    }
+
+    console.log(`✅ İlan oluşturuldu: ${ad.id}`);
+    res.status(201).json({
+      success: true,
+      message: "İlan başarıyla oluşturuldu",
+      listing: { id: ad.id },
+      ad, // Legacy compatibility
+    });
+  } catch (error) {
+    console.error("İlan oluşturulurken hata:", error);
+    res.status(500).json({
+      success: false,
+      error: "İlan oluşturulurken hata oluştu",
+      details: error instanceof Error ? error.message : "Bilinmeyen hata",
+    });
+  }
+}; // Update ad
 export const updateAd = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

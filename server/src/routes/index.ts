@@ -21,6 +21,7 @@ router.use("/auth", authRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/brands", brandRoutes);
 router.use("/ads", adRoutes);
+router.use("/listings", adRoutes); // Alias for ads
 router.use("/admin/logs", adminLogRoutes);
 router.use("/feedback", feedbackRoutes);
 router.use("/notifications", notificationRoutes);

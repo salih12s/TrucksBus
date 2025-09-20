@@ -20,7 +20,7 @@ router.get("/cities/:cityId/districts", adController.getDistricts);
 router.get("/", adController.getAds);
 router.get("/:id/similar", adController.getSimilarAds);
 router.get("/:id", adController.getAdById);
-router.post("/", authenticateToken, adController.createAd);
+router.post("/", authenticateToken, upload.any(), adController.createAd);
 router.put("/:id", authenticateToken, adController.updateAd);
 router.delete("/:id", authenticateToken, adController.deleteAd);
 

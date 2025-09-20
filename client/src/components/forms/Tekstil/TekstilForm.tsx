@@ -38,6 +38,7 @@ import {
   DateRange,
 } from "@mui/icons-material";
 import apiClient from "../../../api/client";
+import SuccessModal from "../../common/SuccessModal";
 
 interface TekstilFormData {
   // Temel Bilgiler
@@ -86,6 +87,8 @@ const TekstilForm: React.FC = () => {
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [showcaseImageIndex, setShowcaseImageIndex] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdAdId, setCreatedAdId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<TekstilFormData>({
     title: "",
@@ -119,7 +122,7 @@ const TekstilForm: React.FC = () => {
     const loadCities = async () => {
       setLoadingCities(true);
       try {
-        const response = await apiClient.get("/ads/cities");
+        const response = await apiClient.get("/cities");
         setCities(response.data as City[]);
       } catch (err) {
         console.error("Şehirler yüklenirken hata:", err);
@@ -138,9 +141,7 @@ const TekstilForm: React.FC = () => {
     try {
       const city = cities.find((c) => c.name === cityName);
       if (city) {
-        const response = await apiClient.get(
-          `/ads/cities/${city.id}/districts`
-        );
+        const response = await apiClient.get(`/cities/${city.id}/districts`);
         setDistricts(response.data as District[]);
       }
     } catch (err) {
@@ -283,7 +284,7 @@ const TekstilForm: React.FC = () => {
         }
       });
 
-      const response = await apiClient.post("/ads/dorse", formDataToSend, {
+      const response = await apiClient.post("/listings", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -292,14 +293,12 @@ const TekstilForm: React.FC = () => {
       const responseData = response.data as {
         success: boolean;
         message?: string;
+        id?: string;
       };
 
       if (responseData.success) {
-        navigate("/user/my-listings", {
-          state: {
-            message: "Tekstil ilanınız başarıyla oluşturuldu!",
-          },
-        });
+        setCreatedAdId(responseData.id || null);
+        setShowSuccessModal(true);
       } else {
         throw new Error(responseData.message || "İlan oluşturulamadı");
       }
@@ -317,6 +316,25 @@ const TekstilForm: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Success Modal Handlers
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+  };
+
+  const handleViewAd = () => {
+    if (createdAdId) {
+      navigate(`/ads/${createdAdId}`);
+    }
+  };
+
+  const handleGoHome = () => {
+    navigate("/");
+  };
+
+  const handleMyAds = () => {
+    navigate("/user/my-listings");
   };
 
   const renderStepContent = (step: number) => {
@@ -758,6 +776,17 @@ const TekstilForm: React.FC = () => {
           )}
         </Box>
       </Paper>
+
+      {/* Success Modal */}
+      <SuccessModal
+        open={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        onGoHome={handleGoHome}
+        onViewAd={handleViewAd}
+        onMyAds={handleMyAds}
+        title="🎉 İlan Başarıyla Yayınlandı!"
+        message="Tekstil ilanınız başarıyla yayınlandı. Artık alıcılar tarafından görülebilir ve iletişime geçebilirler."
+      />
     </Container>
   );
 };

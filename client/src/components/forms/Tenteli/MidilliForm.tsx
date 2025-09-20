@@ -132,7 +132,7 @@ const MidilliForm: React.FC = () => {
     const fetchCities = async () => {
       setLoadingCities(true);
       try {
-        const response = await apiClient.get("/api/cities");
+        const response = await apiClient.get("/cities");
         setCities(response.data as City[]);
       } catch (error) {
         console.error("Şehirler yüklenirken hata:", error);
@@ -150,7 +150,7 @@ const MidilliForm: React.FC = () => {
         setLoadingDistricts(true);
         try {
           const response = await apiClient.get(
-            `/api/cities/${formData.cityId}/districts`
+            `/cities/${formData.cityId}/districts`
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -366,7 +366,7 @@ const MidilliForm: React.FC = () => {
         submitData.append(`photo_${index}`, photo);
       });
 
-      const response = await apiClient.post("/api/ads/dorse", submitData, {
+      const response = await apiClient.post("/listings", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

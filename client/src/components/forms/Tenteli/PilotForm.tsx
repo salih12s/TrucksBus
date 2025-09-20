@@ -146,7 +146,7 @@ const PilotForm: React.FC = () => {
     const loadCities = async () => {
       setLoadingCities(true);
       try {
-        const response = await apiClient.get("/api/cities");
+        const response = await apiClient.get("/cities");
         setCities(response.data as City[]);
       } catch (err) {
         console.error("Şehirler yüklenirken hata:", err);
@@ -165,9 +165,7 @@ const PilotForm: React.FC = () => {
     try {
       const city = cities.find((c) => c.name === cityName);
       if (city) {
-        const response = await apiClient.get(
-          `/api/cities/${city.id}/districts`
-        );
+        const response = await apiClient.get(`/cities/${city.id}/districts`);
         setDistricts(response.data as District[]);
       }
     } catch (err) {
@@ -340,7 +338,7 @@ const PilotForm: React.FC = () => {
         }
       });
 
-      const response = await apiClient.post("/api/ads/dorse", formDataToSend, {
+      const response = await apiClient.post("/listings", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

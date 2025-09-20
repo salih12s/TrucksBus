@@ -32,8 +32,6 @@ import {
   CloudUpload,
   Close,
   Person,
-  Phone,
-  Email,
   LocationOn,
   AttachMoney,
   LocalShipping,
@@ -146,7 +144,7 @@ const YariMidilliForm: React.FC = () => {
     const loadCities = async () => {
       setLoadingCities(true);
       try {
-        const response = await apiClient.get("/api/cities");
+        const response = await apiClient.get("/cities");
         setCities(response.data as City[]);
       } catch (err) {
         console.error("Şehirler yüklenirken hata:", err);
@@ -165,9 +163,7 @@ const YariMidilliForm: React.FC = () => {
     try {
       const city = cities.find((c) => c.name === cityName);
       if (city) {
-        const response = await apiClient.get(
-          `/api/cities/${city.id}/districts`
-        );
+        const response = await apiClient.get(`/cities/${city.id}/districts`);
         setDistricts(response.data as District[]);
       }
     } catch (err) {
@@ -177,21 +173,6 @@ const YariMidilliForm: React.FC = () => {
     } finally {
       setLoadingDistricts(false);
     }
-  };
-
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    if (numbers.length <= 11) {
-      return numbers
-        .replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4")
-        .trim();
-    }
-    return value;
-  };
-
-  const handlePhoneChange = (value: string) => {
-    const formattedPhone = formatPhoneNumber(value);
-    setFormData((prev) => ({ ...prev, sellerPhone: formattedPhone }));
   };
 
   const handleInputChange = (
@@ -241,7 +222,7 @@ const YariMidilliForm: React.FC = () => {
 
   const handleGoHome = () => {
     setShowSuccessModal(false);
-    navigate("/create-listing");
+    navigate("/");
   };
 
   const handleMyAds = () => {
@@ -361,7 +342,7 @@ const YariMidilliForm: React.FC = () => {
         }
       });
 
-      const response = await apiClient.post("/api/ads/dorse", formDataToSend, {
+      const response = await apiClient.post("/listings", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -652,59 +633,6 @@ const YariMidilliForm: React.FC = () => {
               <Person color="primary" />
               İletişim & Fiyat Bilgileri
             </Typography>
-
-            <TextField
-              fullWidth
-              label="Ad Soyad"
-              value={formData.sellerName}
-              onChange={(e) => handleInputChange("sellerName", e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Person />
-                  </InputAdornment>
-                ),
-              }}
-              required
-            />
-
-            <Box
-              sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-            >
-              <TextField
-                fullWidth
-                label="Telefon"
-                value={formData.sellerPhone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                placeholder="0xxx xxx xx xx"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                type="email"
-                value={formData.sellerEmail}
-                onChange={(e) =>
-                  handleInputChange("sellerEmail", e.target.value)
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-            </Box>
 
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}

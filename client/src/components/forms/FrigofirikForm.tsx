@@ -32,8 +32,6 @@ import {
   CloudUpload,
   Close,
   Person,
-  Phone,
-  Email,
   LocationOn,
   AttachMoney,
   AcUnit,
@@ -41,6 +39,7 @@ import {
   DateRange,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
+import SuccessModal from "../common/SuccessModal";
 
 interface FrigofirikFormData {
   // Temel Bilgiler
@@ -90,6 +89,8 @@ const FrigofirikForm: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdAdId, setCreatedAdId] = useState<string | null>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
@@ -134,7 +135,7 @@ const FrigofirikForm: React.FC = () => {
     const loadCities = async () => {
       setLoadingCities(true);
       try {
-        const response = await apiClient.get("/api/cities");
+        const response = await apiClient.get("/cities");
         setCities(response.data as City[]);
       } catch (err) {
         console.error("Şehirler yüklenirken hata:", err);
@@ -153,9 +154,7 @@ const FrigofirikForm: React.FC = () => {
     try {
       const city = cities.find((c) => c.name === cityName);
       if (city) {
-        const response = await apiClient.get(
-          `/api/districts?cityId=${city.id}`
-        );
+        const response = await apiClient.get(`/cities/${city.id}/districts`);
         setDistricts(response.data as District[]);
       }
     } catch (err) {
@@ -165,21 +164,6 @@ const FrigofirikForm: React.FC = () => {
     } finally {
       setLoadingDistricts(false);
     }
-  };
-
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    if (numbers.length <= 11) {
-      return numbers
-        .replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4")
-        .trim();
-    }
-    return value;
-  };
-
-  const handlePhoneChange = (value: string) => {
-    const formattedPhone = formatPhoneNumber(value);
-    setFormData((prev) => ({ ...prev, sellerPhone: formattedPhone }));
   };
 
   const handleInputChange = (
@@ -282,6 +266,27 @@ const FrigofirikForm: React.FC = () => {
     setActiveStep((prev) => prev - 1);
   };
 
+  // Success modal handlers
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+  };
+
+  const handleViewAd = () => {
+    if (createdAdId) {
+      navigate(`/listings/${createdAdId}`);
+    }
+  };
+
+  const handleGoHome = () => {
+    setShowSuccessModal(false);
+    navigate("/");
+  };
+
+  const handleMyAds = () => {
+    setShowSuccessModal(false);
+    navigate("/user/my-listings");
+  };
+
   const handleSubmit = async () => {
     if (!validateStep(2)) return;
 
@@ -331,7 +336,7 @@ const FrigofirikForm: React.FC = () => {
         }
       });
 
-      const response = await apiClient.post("/api/listings", formDataToSend, {
+      const response = await apiClient.post("/listings", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -340,14 +345,12 @@ const FrigofirikForm: React.FC = () => {
       const responseData = response.data as {
         success: boolean;
         message?: string;
+        listing?: { id: string };
       };
 
       if (responseData.success) {
-        navigate("/user/my-listings", {
-          state: {
-            message: "Frigofirik ilanınız başarıyla oluşturuldu!",
-          },
-        });
+        setCreatedAdId(responseData.listing?.id || null);
+        setShowSuccessModal(true);
       } else {
         throw new Error(responseData.message || "İlan oluşturulamadı");
       }
@@ -623,59 +626,6 @@ const FrigofirikForm: React.FC = () => {
               İletişim & Fiyat Bilgileri
             </Typography>
 
-            <TextField
-              fullWidth
-              label="Ad Soyad"
-              value={formData.sellerName}
-              onChange={(e) => handleInputChange("sellerName", e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Person />
-                  </InputAdornment>
-                ),
-              }}
-              required
-            />
-
-            <Box
-              sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-            >
-              <TextField
-                fullWidth
-                label="Telefon"
-                value={formData.sellerPhone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                placeholder="0xxx xxx xx xx"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                type="email"
-                value={formData.sellerEmail}
-                onChange={(e) =>
-                  handleInputChange("sellerEmail", e.target.value)
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-            </Box>
-
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
             >
@@ -906,6 +856,17 @@ const FrigofirikForm: React.FC = () => {
           )}
         </Box>
       </Paper>
+
+      {/* Success Modal */}
+      <SuccessModal
+        open={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        onGoHome={handleGoHome}
+        onViewAd={handleViewAd}
+        onMyAds={handleMyAds}
+        title="🎉 İlan Başarıyla Yayınlandı!"
+        message="Frigofirik dorse ilanınız başarıyla yayınlandı. Artık alıcılar tarafından görülebilir ve iletişime geçebilirler."
+      />
     </Container>
   );
 };
