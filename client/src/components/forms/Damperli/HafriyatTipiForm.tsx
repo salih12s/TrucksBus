@@ -243,6 +243,31 @@ const HafriyatTipiForm: React.FC = () => {
         }
       });
 
+      // Detaylı bilgiyi teknik özelliklerle birleştir
+      let detailedDescription = formData.detailedInfo;
+
+      // Damperli dorse teknik özellikler eklentisi
+      const technicalSpecs = [];
+      if (formData.genislik)
+        technicalSpecs.push(`Dorse Genişliği: ${formData.genislik}m`);
+      if (formData.uzunluk)
+        technicalSpecs.push(`Dorse Uzunluğu: ${formData.uzunluk}m`);
+      if (formData.lastikDurumu)
+        technicalSpecs.push(`Lastik Durumu: ${formData.lastikDurumu}%`);
+      if (formData.devrilmeYonu)
+        technicalSpecs.push(`Devrilme Yönü: ${formData.devrilmeYonu}`);
+
+      if (technicalSpecs.length > 0) {
+        const techSpecsText =
+          "\n\n--- Teknik Özellikler ---\n" + technicalSpecs.join("\n");
+        detailedDescription = detailedDescription
+          ? detailedDescription + techSpecsText
+          : techSpecsText;
+      }
+
+      // detailedInfo'yu ayrıca append et (Object.entries'de zaten eklendi ama üzerine yazıyoruz)
+      submitData.set("detailedInfo", detailedDescription);
+
       // Kategori bilgilerini ekle
       submitData.append("categorySlug", categorySlug || "");
       submitData.append("brandSlug", brandSlug || "");
@@ -279,7 +304,7 @@ const HafriyatTipiForm: React.FC = () => {
 
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/dashboard");
+    navigate("/");
   };
 
   return (

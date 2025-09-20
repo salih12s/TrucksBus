@@ -38,6 +38,7 @@ import SeyehatRomorkForm from "./forms/TasimaRomorklari/SeyehatRomorkForm";
 import TupDamacanaRomorkForm from "./forms/TasimaRomorklari/TupDamacanaRomorkForm";
 import VasitaRomorkForm from "./forms/TasimaRomorklari/VasitaRomorkForm";
 import YukRomorkForm from "./forms/TasimaRomorklari/YukRomorkForm";
+import OzelAmacliRomorkForm from "./forms/OzelAmacliRomorkForm";
 
 // Tanker Form
 import TankerForm from "./forms/Tanker/TankerForm";
@@ -56,6 +57,11 @@ import OndekirmalıForm from "./forms/Lowbed/OndekirmalıForm";
 import KapakliForm from "./forms/Kuruyuk/KapakliForm";
 import KapakliKayaTipiForm from "./forms/Kuruyuk/KapakliKayaTipiForm";
 import KapaksızPlatformForm from "./forms/Kuruyuk/KapaksızPlatformForm";
+
+// Tenteli Forms
+import MidilliForm from "./forms/Tenteli/MidilliForm";
+import PilotForm from "./forms/Tenteli/PilotForm";
+import YariMidilliForm from "./forms/Tenteli/YariMidilliForm";
 
 // Oto Kurtarıcı ve Taşıyıcı Forms
 import TekliAracForm from "./forms/OtoKurtariciTasiyici/TekliAracForm";
@@ -186,6 +192,19 @@ const VehicleFormSelector: React.FC = () => {
             "✅ Kapaksız Platform Kuruyük Dorse formu seçildi (variant)"
           );
           return <KapaksızPlatformForm />;
+        // Tenteli Dorse Variants
+        case "tenteli-tenteli-midilli":
+        case "midilli":
+          console.log("✅ Midilli Tenteli Dorse formu seçildi (variant)");
+          return <MidilliForm />;
+        case "tenteli-tenteli-pilot":
+        case "pilot":
+          console.log("✅ Pilot Tenteli Dorse formu seçildi (variant)");
+          return <PilotForm />;
+        case "tenteli-tenteli-yari-midilli":
+        case "yari-midilli":
+          console.log("✅ Yarı Midilli Tenteli Dorse formu seçildi (variant)");
+          return <YariMidilliForm />;
         default:
           console.log(
             "⚠️ Bilinmeyen dorse variant:",
@@ -656,6 +675,17 @@ const VehicleFormSelector: React.FC = () => {
     ) {
       console.log("✅ Yük Taşıma Römorku formu seçildi");
       return <YukRomorkForm />;
+    }
+
+    // Özel Amaçlı Römork
+    if (
+      variantSlug?.includes("ozel-amacli-romorklar") ||
+      variantSlug?.includes("ozel-amacli-romork") ||
+      modelSlug?.includes("ozel-amacli-romorklar") ||
+      modelSlug?.includes("ozel-amacli-romork")
+    ) {
+      console.log("✅ Özel Amaçlı Römork formu seçildi");
+      return <OzelAmacliRomorkForm />;
     }
 
     // ===== FALLBACK KONTROLLER =====

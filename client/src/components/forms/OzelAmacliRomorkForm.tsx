@@ -1,36 +1,46 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Box,
-  Stepper,
-  Step,
-  StepLabel,
-  Button,
+  Paper,
   Typography,
-  Stack,
   TextField,
+  Button,
+  Box,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  FormLabel,
-  RadioGroup,
   FormControlLabel,
-  Radio,
-  Paper,
   Card,
   CardContent,
-  Chip,
+  Stepper,
+  Step,
+  StepLabel,
+  FormLabel,
+  RadioGroup,
+  Radio,
   InputAdornment,
   Alert,
+  IconButton,
+  styled,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
 } from "@mui/material";
-import { Upload, AttachMoney, Person, Phone, Email } from "@mui/icons-material";
-import Header from "../layout/Header";
+import {
+  PhotoCamera,
+  Delete as DeleteIcon,
+  Star as StarIcon,
+  AttachMoney,
+} from "@mui/icons-material";
 import apiClient from "../../api/client";
 
 interface City {
   id: number;
   name: string;
+  plateCode: string;
 }
 
 interface District {
@@ -39,25 +49,54 @@ interface District {
   cityId: number;
 }
 
-interface ApiResponse {
-  success: boolean;
-  message: string;
+interface FormData {
+  // Temel bilgiler
+  title: string;
+  description: string;
+  productionYear: string;
+  type: string;
+  isExchangeable: string;
+  // Fotoğraflar
+  photos: File[];
+  showcasePhoto: File | null;
+  images: File[]; // Backward compatibility
+  // İletişim & Fiyat
+  price: string;
+  currency: string;
+  contactName: string;
+  phone: string;
+  email: string;
+  cityId: string;
+  districtId: string;
 }
 
 const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
 
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
+
 const OzelAmacliRomorkForm: React.FC = () => {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // City/District state
+  // Dropdown states
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loadingCities, setLoadingCities] = useState(true);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     // İlan Detayları
     title: "",
     description: "",
@@ -65,7 +104,9 @@ const OzelAmacliRomorkForm: React.FC = () => {
     type: "",
     isExchangeable: "",
     // Fotoğraflar
-    images: [] as File[],
+    photos: [],
+    showcasePhoto: null,
+    images: [], // Backward compatibility
     // İletişim & Fiyat
     price: "",
     currency: "TL",
@@ -76,59 +117,171 @@ const OzelAmacliRomorkForm: React.FC = () => {
     districtId: "",
   });
 
-  // Tip seçenekleri
+  // Römork tipleri
   const typeOptions = [
-    "Cenaze Hizmeti",
-    "Deniz Araçları",
-    "Gezici Büfe",
-    "Gezici Hizmetler",
-    "İlkyardım Sedyesi",
-    "Mobil Ev Taşıma",
-    "Nakliye Asansörlü",
-    "Reklam Platformu",
-    "Sahneli & Kulisli",
-    "Stantlı",
+    "Açık Kasa",
+    "Kapalı Kasa",
+    "Damperli",
+    "Tanker",
+    "Frigo",
+    "Konteyner",
+    "Platform",
+    "Diğer",
   ];
 
-  // Load cities on component mount
+  // Üretim yılları (son 30 yıl)
+  const currentYear = new Date().getFullYear();
+  const productionYears = Array.from({ length: 30 }, (_, i) => currentYear - i);
+
+  // API çağrıları
   useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        setLoadingCities(true);
+        const response = await apiClient.get("/ads/cities");
+        setCities(response.data as City[]);
+      } catch (error) {
+        console.error("Şehirler yüklenirken hata:", error);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+
     fetchCities();
   }, []);
 
-  const fetchCities = async () => {
-    try {
-      setLoadingCities(true);
-      const response = await apiClient.get("/cities");
-      setCities(response.data as City[]);
-      console.log("🏙️ Şehirler yüklendi:", (response.data as City[]).length);
-    } catch (error) {
-      console.error("❌ Şehirler yüklenemedi:", error);
-    } finally {
-      setLoadingCities(false);
-    }
-  };
-
-  const fetchDistricts = async (cityId: string) => {
-    if (!cityId) {
+  // İlçeleri yükle
+  useEffect(() => {
+    if (formData.cityId) {
+      const fetchDistricts = async () => {
+        try {
+          setLoadingDistricts(true);
+          const response = await apiClient.get(
+            `/ads/cities/${formData.cityId}/districts`
+          );
+          setDistricts(response.data as District[]);
+        } catch (error) {
+          console.error("İlçeler yüklenirken hata:", error);
+        } finally {
+          setLoadingDistricts(false);
+        }
+      };
+      fetchDistricts();
+    } else {
       setDistricts([]);
-      return;
+      setFormData((prev) => ({ ...prev, districtId: "" }));
     }
+  }, [formData.cityId]);
 
-    try {
-      setLoadingDistricts(true);
-      const response = await apiClient.get(`/cities/${cityId}/districts`);
-      setDistricts(response.data as District[]);
-      console.log("🏘️ İlçeler yüklendi:", (response.data as District[]).length);
-    } catch (error) {
-      console.error("❌ İlçeler yüklenemedi:", error);
-    } finally {
-      setLoadingDistricts(false);
+  const handleInputChange = (
+    field: keyof FormData,
+    value: string | boolean
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handlePhotoUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    isShowcase = false
+  ) => {
+    const files = event.target.files;
+    if (files) {
+      if (isShowcase) {
+        setFormData((prev) => ({ ...prev, showcasePhoto: files[0] }));
+      } else {
+        const currentPhotos = formData.photos;
+        const newPhotos = Array.from(files);
+        const totalPhotos = currentPhotos.length + newPhotos.length;
+
+        if (totalPhotos <= 15) {
+          setFormData((prev) => ({
+            ...prev,
+            photos: [...currentPhotos, ...newPhotos],
+          }));
+        } else {
+          alert("En fazla 15 fotoğraf yükleyebilirsiniz");
+        }
+      }
     }
   };
 
-  const handleCityChange = (cityId: string) => {
-    setFormData((prev) => ({ ...prev, cityId, districtId: "" }));
-    fetchDistricts(cityId);
+  const removePhoto = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index),
+    }));
+  };
+
+  const setShowcasePhoto = (index: number) => {
+    const photo = formData.photos[index];
+    const remainingPhotos = formData.photos.filter((_, i) => i !== index);
+    setFormData((prev) => ({
+      ...prev,
+      showcasePhoto: photo,
+      photos: prev.showcasePhoto
+        ? [prev.showcasePhoto, ...remainingPhotos]
+        : remainingPhotos,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const submitData = new FormData();
+
+      // Temel bilgileri ekle
+      Object.entries(formData).forEach(([key, value]) => {
+        if (
+          key !== "photos" &&
+          key !== "showcasePhoto" &&
+          key !== "images" &&
+          value !== null &&
+          value !== undefined
+        ) {
+          submitData.append(key, value.toString());
+        }
+      });
+
+      // Kategori bilgilerini ekle
+      submitData.append("subType", "ozel-amacli-romork");
+
+      // Fotoğrafları ekle
+      if (formData.showcasePhoto) {
+        submitData.append("showcasePhoto", formData.showcasePhoto);
+      }
+
+      formData.photos.forEach((photo, index) => {
+        submitData.append(`photo_${index}`, photo);
+      });
+
+      const response = await apiClient.post(
+        "/ads/ozel-amacli-romork",
+        submitData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("İlan başarıyla oluşturuldu:", response.data);
+      setSubmitSuccess(true);
+    } catch (error) {
+      console.error("İlan oluşturulurken hata:", error);
+      alert("İlan oluşturulurken bir hata oluştu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSuccessClose = () => {
+    setSubmitSuccess(false);
+    navigate("/");
   };
 
   const handleNext = () => {
@@ -139,266 +292,302 @@ const OzelAmacliRomorkForm: React.FC = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
-  const handleSubmit = async () => {
-    if (isSubmitting) return;
-
-    try {
-      setIsSubmitting(true);
-
-      // Gerekli alanların kontrolü
-      if (
-        !formData.title ||
-        !formData.description ||
-        !formData.productionYear ||
-        !formData.type ||
-        !formData.price ||
-        !formData.contactName ||
-        !formData.phone ||
-        !formData.cityId ||
-        !formData.districtId
-      ) {
-        alert("Lütfen tüm gerekli alanları doldurun.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // FormData oluştur
-      const submitData = new FormData();
-
-      // Temel bilgiler
-      submitData.append("title", formData.title);
-      submitData.append("description", formData.description);
-      submitData.append("productionYear", formData.productionYear);
-      submitData.append("type", formData.type);
-      submitData.append("isExchangeable", formData.isExchangeable);
-      submitData.append("contactName", formData.contactName);
-      submitData.append("phone", formData.phone);
-      submitData.append("email", formData.email);
-      submitData.append("price", formData.price);
-      submitData.append("currency", formData.currency);
-      submitData.append("cityId", formData.cityId);
-      submitData.append("districtId", formData.districtId);
-
-      // Fotoğrafları ekle
-      formData.images.forEach((image) => {
-        submitData.append(`images`, image);
-      });
-
-      const response = await apiClient.post("/ads/romork", submitData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if ((response.data as ApiResponse).success) {
-        alert("İlan başarıyla oluşturuldu!");
-        navigate("/");
-      } else {
-        throw new Error(
-          (response.data as ApiResponse).message || "İlan oluşturulamadı"
-        );
-      }
-    } catch (error) {
-      console.error("İlan oluşturma hatası:", error);
-      alert("İlan oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    const newFiles = Array.from(files);
-    const totalFiles = formData.images.length + newFiles.length;
-
-    if (totalFiles > 15) {
-      alert("En fazla 15 fotoğraf yükleyebilirsiniz.");
-      return;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      images: [...prev.images, ...newFiles],
-    }));
-  };
-
-  const removeImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
-
-  // Üretim yılları (son 30 yıl)
-  const currentYear = new Date().getFullYear();
-  const productionYears = Array.from({ length: 30 }, (_, i) => currentYear - i);
-
   const renderStepContent = (step: number) => {
     switch (step) {
       case 0:
         return (
-          <Stack spacing={3}>
+          <Box>
             <Typography variant="h5" gutterBottom>
               Özel Amaçlı Römork - İlan Detayları
             </Typography>
 
-            <TextField
-              label="İlan Başlığı"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, title: e.target.value }))
-              }
-              required
-              fullWidth
-              placeholder="Örn: 2020 Model Gezici Büfe Römorku Satılık"
-            />
-
-            <TextField
-              label="Açıklama"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              required
-              fullWidth
-              multiline
-              rows={4}
-              placeholder="Özel amaçlı römorkla ilgili detaylı bilgi verin..."
-            />
-
-            <FormControl fullWidth required>
-              <InputLabel>Üretim Yılı</InputLabel>
-              <Select
-                value={formData.productionYear}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: 3,
+                mt: 3,
+              }}
+            >
+              <TextField
+                label="İlan Başlığı"
+                value={formData.title}
                 onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    productionYear: e.target.value,
-                  }))
+                  setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
-                label="Üretim Yılı"
-              >
-                {productionYears.map((year) => (
-                  <MenuItem key={year} value={year.toString()}>
-                    {year}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                required
+                fullWidth
+                placeholder="Örn: 2020 Model Açık Kasa Römork"
+              />
 
-            <FormControl fullWidth required>
-              <InputLabel>Tip</InputLabel>
-              <Select
-                value={formData.type}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, type: e.target.value }))
-                }
-                label="Tip"
-              >
-                {typeOptions.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+              <FormControl fullWidth required>
+                <InputLabel>Üretim Yılı</InputLabel>
+                <Select
+                  value={formData.productionYear}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      productionYear: e.target.value,
+                    }))
+                  }
+                  label="Üretim Yılı"
+                >
+                  {productionYears.map((year) => (
+                    <MenuItem key={year} value={year.toString()}>
+                      {year}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-            <FormControl>
-              <FormLabel>Takas Durumu</FormLabel>
-              <RadioGroup
-                value={formData.isExchangeable}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    isExchangeable: e.target.value,
-                  }))
-                }
-                row
-              >
-                <FormControlLabel
-                  value="yes"
-                  control={<Radio />}
-                  label="Takas Olur"
+              <FormControl fullWidth required>
+                <InputLabel>Tip</InputLabel>
+                <Select
+                  value={formData.type}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, type: e.target.value }))
+                  }
+                  label="Tip"
+                >
+                  {typeOptions.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <Box sx={{ gridColumn: { xs: "1", md: "1 / -1" } }}>
+                <TextField
+                  label="Açıklama"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  required
+                  fullWidth
+                  multiline
+                  rows={4}
+                  placeholder="Römorkınız hakkında detaylı bilgi verin..."
                 />
-                <FormControlLabel
-                  value="no"
-                  control={<Radio />}
-                  label="Takas Olmaz"
-                />
-                <FormControlLabel
-                  value="negotiable"
-                  control={<Radio />}
-                  label="Görüşülebilir"
-                />
-              </RadioGroup>
-            </FormControl>
-          </Stack>
+              </Box>
+
+              <Box sx={{ gridColumn: { xs: "1", md: "1 / -1" } }}>
+                <FormControl>
+                  <FormLabel>Takas Durumu</FormLabel>
+                  <RadioGroup
+                    value={formData.isExchangeable}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        isExchangeable: e.target.value,
+                      }))
+                    }
+                    row
+                  >
+                    <FormControlLabel
+                      value="yes"
+                      control={<Radio />}
+                      label="Takas Olur"
+                    />
+                    <FormControlLabel
+                      value="no"
+                      control={<Radio />}
+                      label="Takas Olmaz"
+                    />
+                    <FormControlLabel
+                      value="negotiable"
+                      control={<Radio />}
+                      label="Görüşülebilir"
+                    />
+                  </RadioGroup>
+                </FormControl>
+              </Box>
+            </Box>
+          </Box>
         );
 
       case 1:
         return (
-          <Stack spacing={3}>
+          <Box>
             <Typography variant="h5" gutterBottom>
               Özel Amaçlı Römork - Fotoğraflar
             </Typography>
 
-            <Card variant="outlined">
+            {/* Vitrin Fotoğrafı */}
+            <Card sx={{ mt: 3, mb: 3 }}>
               <CardContent>
-                <input
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  id="image-upload"
-                  multiple
-                  type="file"
-                  onChange={handleImageUpload}
-                />
-                <label htmlFor="image-upload">
+                <Typography variant="h6" gutterBottom>
+                  Vitrin Fotoğrafı
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  İlanınızda öne çıkacak ana fotoğrafı seçin
+                </Typography>
+
+                {formData.showcasePhoto ? (
+                  <Box sx={{ position: "relative", display: "inline-block" }}>
+                    <img
+                      src={URL.createObjectURL(formData.showcasePhoto)}
+                      alt="Vitrin"
+                      style={{
+                        width: 200,
+                        height: 150,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                      }}
+                    />
+                    <IconButton
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        backgroundColor: "rgba(255, 255, 255, 0.8)",
+                        "&:hover": {
+                          backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        },
+                      }}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          showcasePhoto: null,
+                        }))
+                      }
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                ) : (
                   <Button
                     variant="outlined"
-                    component="span"
-                    startIcon={<Upload />}
-                    fullWidth
+                    component="label"
+                    startIcon={<PhotoCamera />}
                   >
-                    Fotoğraf Yükle (Maksimum 15 adet)
+                    Vitrin Fotoğrafı Seç
+                    <VisuallyHiddenInput
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handlePhotoUpload(e, true)}
+                    />
                   </Button>
-                </label>
+                )}
+              </CardContent>
+            </Card>
 
-                {formData.images.length > 0 && (
-                  <Box mt={2}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Yüklenen Fotoğraflar ({formData.images.length}/15)
-                    </Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      {formData.images.map((image, index) => (
-                        <Chip
-                          key={index}
-                          label={image.name}
-                          onDelete={() => removeImage(index)}
-                          color="primary"
-                          variant="outlined"
+            {/* Diğer Fotoğraflar */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Diğer Fotoğraflar ({formData.photos.length}/15)
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 2 }}
+                >
+                  En fazla 15 fotoğraf yükleyebilirsiniz
+                </Typography>
+
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<PhotoCamera />}
+                  sx={{ mb: 3 }}
+                  disabled={formData.photos.length >= 15}
+                >
+                  Fotoğraf Ekle
+                  <VisuallyHiddenInput
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handlePhotoUpload(e, false)}
+                  />
+                </Button>
+
+                {formData.photos.length > 0 && (
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fill, minmax(150px, 1fr))",
+                      gap: 2,
+                    }}
+                  >
+                    {formData.photos.map((photo, index) => (
+                      <Box key={index} sx={{ position: "relative" }}>
+                        <img
+                          src={URL.createObjectURL(photo)}
+                          alt={`Fotoğraf ${index + 1}`}
+                          style={{
+                            width: "100%",
+                            height: 120,
+                            objectFit: "cover",
+                            borderRadius: 8,
+                          }}
                         />
-                      ))}
-                    </Stack>
+
+                        {/* Vitrin Yap Butonu */}
+                        <IconButton
+                          sx={{
+                            position: "absolute",
+                            top: 4,
+                            left: 4,
+                            backgroundColor: "rgba(255, 255, 255, 0.8)",
+                            "&:hover": {
+                              backgroundColor: "rgba(255, 255, 255, 0.9)",
+                            },
+                          }}
+                          onClick={() => setShowcasePhoto(index)}
+                          title="Vitrin fotoğrafı yap"
+                        >
+                          <StarIcon />
+                        </IconButton>
+
+                        {/* Sil Butonu */}
+                        <IconButton
+                          sx={{
+                            position: "absolute",
+                            top: 4,
+                            right: 4,
+                            backgroundColor: "rgba(255, 255, 255, 0.8)",
+                            "&:hover": {
+                              backgroundColor: "rgba(255, 255, 255, 0.9)",
+                            },
+                          }}
+                          onClick={() => removePhoto(index)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    ))}
                   </Box>
                 )}
               </CardContent>
             </Card>
-          </Stack>
+          </Box>
         );
 
       case 2:
         return (
-          <Stack spacing={3}>
+          <Box>
             <Typography variant="h5" gutterBottom>
               Özel Amaçlı Römork - İletişim & Fiyat
             </Typography>
 
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gap: 3,
+                mt: 3,
+              }}
+            >
               <TextField
                 label="Fiyat"
                 value={formData.price}
@@ -427,27 +616,42 @@ const OzelAmacliRomorkForm: React.FC = () => {
                     }))
                   }
                   label="Para Birimi"
-                  sx={{ minWidth: 120 }}
                 >
                   <MenuItem value="TL">TL</MenuItem>
                   <MenuItem value="USD">USD</MenuItem>
                   <MenuItem value="EUR">EUR</MenuItem>
                 </Select>
               </FormControl>
-            </Stack>
 
-            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
               <FormControl fullWidth required>
                 <InputLabel>Şehir</InputLabel>
                 <Select
                   value={formData.cityId}
-                  onChange={(e) => handleCityChange(e.target.value)}
+                  onChange={(e) => handleInputChange("cityId", e.target.value)}
                   label="Şehir"
                   disabled={loadingCities}
                 >
                   {cities.map((city) => (
                     <MenuItem key={city.id} value={city.id.toString()}>
-                      {city.name}
+                      {city.plateCode} - {city.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth required>
+                <InputLabel>İlçe</InputLabel>
+                <Select
+                  value={formData.districtId}
+                  onChange={(e) =>
+                    handleInputChange("districtId", e.target.value)
+                  }
+                  label="İlçe"
+                  disabled={loadingDistricts || !formData.cityId}
+                >
+                  {districts.map((district) => (
+                    <MenuItem key={district.id} value={district.id.toString()}>
+                      {district.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -473,127 +677,86 @@ const OzelAmacliRomorkForm: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
-            </Stack>
 
-            <TextField
-              label="İletişim Adı"
-              value={formData.contactName}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  contactName: e.target.value,
-                }))
-              }
-              required
-              fullWidth
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Person />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              label="Telefon"
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, phone: e.target.value }))
-              }
-              required
-              fullWidth
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Phone />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              label="E-posta (Opsiyonel)"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, email: e.target.value }))
-              }
-              fullWidth
-              type="email"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Email />
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <Alert severity="info">
-              <strong>Önemli:</strong> İlanınız yayına alınmadan önce
-              moderatörlerimiz tarafından incelenecektir.
-            </Alert>
-          </Stack>
+              <Box sx={{ gridColumn: { xs: "1", md: "1 / -1" } }}>
+                <Alert severity="info">
+                  <strong>Önemli:</strong> İlanınız yayına alınmadan önce
+                  moderatörlerimiz tarafından incelenecektir.
+                </Alert>
+              </Box>
+            </Box>
+          </Box>
         );
 
       default:
-        return null;
+        return (
+          <Box>
+            <Typography>Bilinmeyen adım</Typography>
+          </Box>
+        );
     }
   };
 
   return (
-    <>
-      <Header />
-      <Box sx={{ minHeight: "100vh", bgcolor: "grey.50", py: 4 }}>
-        <Box sx={{ maxWidth: 800, mx: "auto", px: 2 }}>
-          <Paper elevation={1} sx={{ p: 4 }}>
-            <Typography
-              variant="h4"
-              gutterBottom
-              align="center"
-              color="primary"
-            >
-              Özel Amaçlı Römork İlanı
-            </Typography>
-
-            <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-              {steps.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
-
-            <Box sx={{ mb: 4 }}>{renderStepContent(activeStep)}</Box>
-
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Button
-                disabled={activeStep === 0}
-                onClick={handleBack}
-                variant="outlined"
-              >
-                Geri
-              </Button>
-
-              {activeStep === steps.length - 1 ? (
-                <Button
-                  variant="contained"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  size="large"
-                >
-                  {isSubmitting ? "Gönderiliyor..." : "İlanı Yayınla"}
-                </Button>
-              ) : (
-                <Button variant="contained" onClick={handleNext}>
-                  İleri
-                </Button>
-              )}
-            </Box>
-          </Paper>
+    <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
+      <Paper sx={{ p: 4 }}>
+        {/* Stepper */}
+        <Box sx={{ mb: 4 }}>
+          <Stepper activeStep={activeStep}>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
         </Box>
-      </Box>
-    </>
+
+        {/* Step Content */}
+        <Box sx={{ mb: 4 }}>{renderStepContent(activeStep)}</Box>
+
+        {/* Navigation Buttons */}
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Button
+            variant="outlined"
+            onClick={handleBack}
+            disabled={activeStep === 0}
+          >
+            Geri
+          </Button>
+
+          {activeStep === steps.length - 1 ? (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSubmit}
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} /> : null}
+            >
+              {loading ? "Yayınlanıyor..." : "İlanı Yayınla"}
+            </Button>
+          ) : (
+            <Button variant="contained" onClick={handleNext}>
+              İleri
+            </Button>
+          )}
+        </Box>
+      </Paper>
+
+      {/* Başarı Modal'ı */}
+      <Dialog open={submitSuccess} onClose={handleSuccessClose}>
+        <DialogTitle>Başarılı!</DialogTitle>
+        <DialogContent>
+          <Typography>
+            İlanınız başarıyla oluşturuldu. Dashboard'a yönlendirileceksiniz.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleSuccessClose} variant="contained">
+            Tamam
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

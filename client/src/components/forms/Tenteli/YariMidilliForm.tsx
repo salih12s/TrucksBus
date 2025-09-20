@@ -41,6 +41,7 @@ import {
   Straighten,
 } from "@mui/icons-material";
 import apiClient from "../../../api/client";
+import SuccessModal from "../../common/SuccessModal";
 
 // Çatı Perde Sistemi Türleri
 const CATI_PERDE_SISTEMLERI = [
@@ -97,6 +98,8 @@ const YariMidilliForm: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
 
   const [activeStep, setActiveStep] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdAdId, setCreatedAdId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cities, setCities] = useState<City[]>([]);
@@ -163,7 +166,7 @@ const YariMidilliForm: React.FC = () => {
       const city = cities.find((c) => c.name === cityName);
       if (city) {
         const response = await apiClient.get(
-          `/api/districts?cityId=${city.id}`
+          `/api/cities/${city.id}/districts`
         );
         setDistricts(response.data as District[]);
       }
@@ -223,6 +226,27 @@ const YariMidilliForm: React.FC = () => {
 
   const setShowcaseImage = (index: number) => {
     setShowcaseImageIndex(index);
+  };
+
+  // Success modal handlers
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+  };
+
+  const handleViewAd = () => {
+    if (createdAdId) {
+      navigate(`/listings/${createdAdId}`);
+    }
+  };
+
+  const handleGoHome = () => {
+    setShowSuccessModal(false);
+    navigate("/create-listing");
+  };
+
+  const handleMyAds = () => {
+    setShowSuccessModal(false);
+    navigate("/user/my-listings");
   };
 
   const validateStep = (step: number): boolean => {
@@ -337,7 +361,7 @@ const YariMidilliForm: React.FC = () => {
         }
       });
 
-      const response = await apiClient.post("/api/listings", formDataToSend, {
+      const response = await apiClient.post("/api/ads/dorse", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -346,14 +370,12 @@ const YariMidilliForm: React.FC = () => {
       const responseData = response.data as {
         success: boolean;
         message?: string;
+        listing?: { id: string };
       };
 
       if (responseData.success) {
-        navigate("/user/my-listings", {
-          state: {
-            message: "Yarı Midilli Tenteli ilanınız başarıyla oluşturuldu!",
-          },
-        });
+        setCreatedAdId(responseData.listing?.id || null);
+        setShowSuccessModal(true);
       } else {
         throw new Error(responseData.message || "İlan oluşturulamadı");
       }
@@ -914,6 +936,17 @@ const YariMidilliForm: React.FC = () => {
           )}
         </Box>
       </Paper>
+
+      <SuccessModal
+        open={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title="İlan Başarıyla Oluşturuldu!"
+        message="Yarı Midilli Tenteli dorse ilanınız başarıyla yayınlandı. İlanınız incelendikten sonra görünür hale gelecek."
+        adId={createdAdId || undefined}
+        onViewAd={createdAdId ? handleViewAd : undefined}
+        onGoHome={handleGoHome}
+        onMyAds={handleMyAds}
+      />
     </Container>
   );
 };

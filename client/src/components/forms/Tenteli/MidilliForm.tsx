@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../../store";
 import {
   Box,
   Container,
@@ -16,8 +13,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  Checkbox,
   Alert,
   InputAdornment,
   Card,
@@ -32,15 +27,15 @@ import {
   CloudUpload,
   Close,
   Person,
-  Phone,
-  Email,
   LocationOn,
   AttachMoney,
   Umbrella,
   DateRange,
   Straighten,
 } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import apiClient from "../../../api/client";
+import SuccessModal from "../../common/SuccessModal";
 
 // Çatı Perde Sistemi Türleri
 const CATI_PERDE_SISTEMLERI = [
@@ -50,6 +45,18 @@ const CATI_PERDE_SISTEMLERI = [
   "Yana Kayar Perde",
   "Tavana Sabit Yana Kayar Perde",
 ];
+
+interface City {
+  id: number;
+  name: string;
+  plateCode: string;
+}
+
+interface District {
+  id: number;
+  name: string;
+  cityId: number;
+}
 
 interface MidilliFormData {
   // Genel Bilgiler
@@ -64,165 +71,168 @@ interface MidilliFormData {
   catiPerdeSistemi: string;
 
   // Konum
-  city: string;
-  district: string;
+  cityId: string;
+  districtId: string;
 
-  // İletişim Bilgileri
-  sellerName: string;
-  sellerPhone: string;
-  sellerEmail: string;
+  // Fotoğraflar
+  photos: File[];
+  showcasePhoto: File | null;
 
   // Ekstra
   warranty: boolean;
   negotiable: boolean;
   exchange: boolean;
-}
 
-interface City {
-  id: string;
-  name: string;
-}
+  detailedInfo: string;
 
-interface District {
-  id: string;
-  name: string;
-  city_id: string;
+  // İletişim bilgileri
+  sellerName?: string;
+  sellerPhone?: string;
+  sellerEmail?: string;
+  city?: string;
+  district?: string;
 }
 
 const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
 
 const MidilliForm: React.FC = () => {
   const navigate = useNavigate();
-  const { variantId } = useParams<{ variantId: string }>();
-  const user = useSelector((state: RootState) => state.auth.user);
 
   const [activeStep, setActiveStep] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
+  const [loading, setLoading] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
-  const [images, setImages] = useState<File[]>([]);
-  const [showcaseImageIndex, setShowcaseImageIndex] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [showcaseImageIndex, setShowcaseImageIndex] = useState<number>(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdAdId, setCreatedAdId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<MidilliFormData>({
     title: "",
     description: "",
-    year: new Date().getFullYear(),
+    year: 0,
     price: "",
     uzunluk: 0,
     lastikDurumu: 100,
     catiPerdeSistemi: "",
-    city: "",
-    district: "",
-    sellerName: "",
-    sellerPhone: "",
-    sellerEmail: "",
+    cityId: "",
+    districtId: "",
+    photos: [],
+    showcasePhoto: null,
     warranty: false,
     negotiable: false,
     exchange: false,
+    detailedInfo: "",
   });
 
-  // Kullanıcı bilgilerini yükle
+  // Şehirleri yükle
   useEffect(() => {
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        sellerName: `${user.firstName} ${user.lastName}`,
-        sellerPhone: user.phone || "",
-        sellerEmail: user.email || "",
-        city: user.city || "",
-        district: "",
-      }));
-    }
-  }, [user]);
-
-  // Şehirler yükle
-  useEffect(() => {
-    const loadCities = async () => {
+    const fetchCities = async () => {
       setLoadingCities(true);
       try {
         const response = await apiClient.get("/api/cities");
         setCities(response.data as City[]);
-      } catch (err) {
-        console.error("Şehirler yüklenirken hata:", err);
-        setError("Şehirler yüklenirken hata oluştu");
+      } catch (error) {
+        console.error("Şehirler yüklenirken hata:", error);
       } finally {
         setLoadingCities(false);
       }
     };
-    loadCities();
+    fetchCities();
   }, []);
 
-  const handleCityChange = async (cityName: string) => {
-    setFormData((prev) => ({ ...prev, city: cityName, district: "" }));
-    setLoadingDistricts(true);
-
-    try {
-      const city = cities.find((c) => c.name === cityName);
-      if (city) {
-        const response = await apiClient.get(
-          `/api/districts?cityId=${city.id}`
-        );
-        setDistricts(response.data as District[]);
-      }
-    } catch (err) {
-      console.error("İlçeler yüklenirken hata:", err);
+  // İlçeleri yükle
+  useEffect(() => {
+    if (formData.cityId) {
+      const fetchDistricts = async () => {
+        setLoadingDistricts(true);
+        try {
+          const response = await apiClient.get(
+            `/api/cities/${formData.cityId}/districts`
+          );
+          setDistricts(response.data as District[]);
+        } catch (error) {
+          console.error("İlçeler yüklenirken hata:", error);
+        } finally {
+          setLoadingDistricts(false);
+        }
+      };
+      fetchDistricts();
+    } else {
       setDistricts([]);
-      setError("İlçeler yüklenirken hata oluştu");
-    } finally {
-      setLoadingDistricts(false);
+      setFormData((prev) => ({ ...prev, districtId: "" }));
     }
-  };
-
-  const formatPhoneNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
-    if (numbers.length <= 11) {
-      return numbers
-        .replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4")
-        .trim();
-    }
-    return value;
-  };
-
-  const handlePhoneChange = (value: string) => {
-    const formattedPhone = formatPhoneNumber(value);
-    setFormData((prev) => ({ ...prev, sellerPhone: formattedPhone }));
-  };
+  }, [formData.cityId]);
 
   const handleInputChange = (
     field: keyof MidilliFormData,
-    value: string | number | boolean
+    value: string | number | File[] | File | null | boolean
   ) => {
+    if (field === "year" || field === "uzunluk" || field === "lastikDurumu") {
+      const numValue =
+        field === "year" || field === "uzunluk" || field === "lastikDurumu"
+          ? parseInt(value as string) || 0
+          : value;
+      setFormData((prev) => ({
+        ...prev,
+        [field]: numValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
+  };
+
+  // Fotoğraf yükleme fonksiyonları
+  const handlePhotoUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    isShowcase: boolean = false
+  ) => {
+    const files = e.target.files;
+    if (files) {
+      if (isShowcase) {
+        const file = files[0];
+        setFormData((prev) => ({ ...prev, showcasePhoto: file }));
+      } else {
+        if (formData.photos.length + files.length <= 10) {
+          const newPhotos = Array.from(files);
+          setFormData((prev) => ({
+            ...prev,
+            photos: [...prev.photos, ...newPhotos],
+          }));
+        } else {
+          alert("En fazla 10 fotoğraf yükleyebilirsiniz");
+        }
+      }
+    }
+  };
+
+  const removePhoto = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      photos: prev.photos.filter((_, i) => i !== index),
     }));
-  };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    const totalFiles = images.length + files.length;
-
-    if (totalFiles > 10) {
-      setError("En fazla 10 fotoğraf yükleyebilirsiniz");
-      return;
-    }
-
-    setImages((prev) => [...prev, ...files]);
-    setError(null);
-  };
-
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-    if (showcaseImageIndex >= images.length - 1) {
-      setShowcaseImageIndex(Math.max(0, images.length - 2));
+    // Showcase index'ini güncelle
+    if (showcaseImageIndex >= index && showcaseImageIndex > 0) {
+      setShowcaseImageIndex(showcaseImageIndex - 1);
     }
   };
 
   const setShowcaseImage = (index: number) => {
     setShowcaseImageIndex(index);
+  };
+
+  const handleCityChange = (cityName: string) => {
+    const selectedCity = cities.find((city) => city.name === cityName);
+    if (selectedCity) {
+      handleInputChange("cityId", selectedCity.id.toString());
+      handleInputChange("city", cityName);
+    }
   };
 
   const validateStep = (step: number): boolean => {
@@ -249,13 +259,13 @@ const MidilliForm: React.FC = () => {
         }
         break;
       case 1: // Fotoğraflar
-        if (images.length === 0) {
+        if (formData.photos.length === 0) {
           setError("En az 1 fotoğraf yüklemeniz gerekli");
           return false;
         }
         break;
       case 2: // İletişim & Fiyat
-        if (!formData.sellerPhone.trim()) {
+        if (!formData.sellerPhone?.trim()) {
           setError("Telefon numarası gereklidir");
           return false;
         }
@@ -263,11 +273,11 @@ const MidilliForm: React.FC = () => {
           setError("Fiyat bilgisi gereklidir");
           return false;
         }
-        if (!formData.city) {
+        if (!formData.cityId) {
           setError("Şehir seçimi gereklidir");
           return false;
         }
-        if (!formData.district) {
+        if (!formData.districtId) {
           setError("İlçe seçimi gereklidir");
           return false;
         }
@@ -287,90 +297,127 @@ const MidilliForm: React.FC = () => {
     setActiveStep((prev) => prev - 1);
   };
 
-  const handleSubmit = async () => {
-    if (!validateStep(2)) return;
+  const parseFormattedNumber = (value: string): string => {
+    return value.replace(/\D/g, "");
+  };
 
+  // Form gönderimi
+  const handleSubmit = async () => {
     setLoading(true);
     try {
-      const formDataToSend = new FormData();
+      const submitData = new FormData();
 
-      // Midilli bilgileri
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("description", formData.description);
-      formDataToSend.append("price", formData.price);
-      formDataToSend.append("year", formData.year.toString());
-      formDataToSend.append("category", "Dorse");
-      formDataToSend.append("subcategory", "Tenteli");
-      formDataToSend.append("variant_id", variantId || "");
+      // Temel bilgiler
+      submitData.append("title", formData.title);
+      submitData.append("description", formData.description);
+      submitData.append("productionYear", formData.year.toString());
 
-      // Teknik özellikler
-      formDataToSend.append("uzunluk", formData.uzunluk.toString());
-      formDataToSend.append("lastikDurumu", formData.lastikDurumu.toString());
-      formDataToSend.append("catiPerdeSistemi", formData.catiPerdeSistemi);
-      formDataToSend.append("tenteliType", "Midilli");
+      // Fiyatı parse ederek ekle
+      const parsedPrice = parseFormattedNumber(formData.price);
+      if (parsedPrice) {
+        submitData.append("price", parsedPrice);
+      }
 
-      // Konum bilgileri
-      formDataToSend.append("city", formData.city);
-      formDataToSend.append("district", formData.district);
+      submitData.append("category", "dorse");
+      submitData.append("variant", "midilli");
 
-      // İletişim bilgileri
-      formDataToSend.append("seller_name", formData.sellerName);
-      formDataToSend.append(
-        "seller_phone",
-        formData.sellerPhone.replace(/\s/g, "")
-      );
-      formDataToSend.append("seller_email", formData.sellerEmail);
+      // Tenteli midilli özel bilgileri
+      submitData.append("uzunluk", formData.uzunluk.toString());
+      submitData.append("lastikDurumu", formData.lastikDurumu.toString());
+      submitData.append("catiPerdeSistemi", formData.catiPerdeSistemi);
 
-      // Ekstra özellikler
-      formDataToSend.append("warranty", formData.warranty ? "true" : "false");
-      formDataToSend.append(
-        "negotiable",
-        formData.negotiable ? "true" : "false"
-      );
-      formDataToSend.append("exchange", formData.exchange ? "true" : "false");
+      // Konum
+      submitData.append("cityId", formData.cityId);
+      submitData.append("districtId", formData.districtId);
 
-      // Fotoğraflar
-      images.forEach((image, index) => {
-        formDataToSend.append("images", image);
-        if (index === showcaseImageIndex) {
-          formDataToSend.append("showcase_image_index", index.toString());
-        }
+      // Ekstra
+      submitData.append("warranty", formData.warranty ? "evet" : "hayir");
+      submitData.append("negotiable", formData.negotiable ? "evet" : "hayir");
+      submitData.append("exchange", formData.exchange ? "evet" : "hayir");
+
+      // Detaylı bilgiyi teknik özelliklerle birleştir
+      let detailedDescription = formData.detailedInfo;
+
+      // Tenteli teknik özellikler eklentisi
+      const technicalSpecs = [];
+      if (formData.uzunluk)
+        technicalSpecs.push(`Uzunluk: ${formData.uzunluk}m`);
+      if (formData.lastikDurumu)
+        technicalSpecs.push(`Lastik Durumu: ${formData.lastikDurumu}%`);
+      if (formData.catiPerdeSistemi)
+        technicalSpecs.push(`Çatı Perde Sistemi: ${formData.catiPerdeSistemi}`);
+
+      if (technicalSpecs.length > 0) {
+        const techSpecsText =
+          "\n\n--- Teknik Özellikler ---\n" + technicalSpecs.join("\n");
+        detailedDescription = detailedDescription
+          ? detailedDescription + techSpecsText
+          : techSpecsText;
+      }
+
+      submitData.append("detailedInfo", detailedDescription);
+
+      // Fotoğrafları ekle
+      if (formData.showcasePhoto) {
+        submitData.append("showcasePhoto", formData.showcasePhoto);
+      }
+
+      formData.photos.forEach((photo, index) => {
+        submitData.append(`photo_${index}`, photo);
       });
 
-      const response = await apiClient.post("/api/listings", formDataToSend, {
+      const response = await apiClient.post("/api/ads/dorse", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      const responseData = response.data as {
-        success: boolean;
-        message?: string;
-      };
+      console.log(
+        "Midilli Tenteli Dorse ilanı başarıyla oluşturuldu:",
+        response.data
+      );
 
-      if (responseData.success) {
-        navigate("/user/my-listings", {
-          state: {
-            message: "Midilli Tenteli ilanınız başarıyla oluşturuldu!",
-          },
-        });
+      // İlan ID'sini kaydet ve başarı modal'ını göster
+      const responseData = response.data as { id?: string; success?: boolean };
+      if (responseData && responseData.id) {
+        setCreatedAdId(responseData.id);
+        setShowSuccessModal(true);
       } else {
-        throw new Error(responseData.message || "İlan oluşturulamadı");
+        setShowSuccessModal(true);
       }
-    } catch (err: unknown) {
-      console.error("Midilli ilanı oluşturma hatası:", err);
-      const error = err as {
+    } catch (error: unknown) {
+      console.error("İlan oluşturulurken hata:", error);
+      const err = error as {
         response?: { data?: { message?: string } };
         message?: string;
       };
       setError(
-        error.response?.data?.message ||
-          error.message ||
-          "İlan oluşturulurken bir hata oluştu"
+        err.response?.data?.message ||
+          err.message ||
+          "İlan oluşturulurken bir hata oluştu. Lütfen tekrar deneyin."
       );
     } finally {
       setLoading(false);
     }
+  };
+
+  // Modal handler fonksiyonları
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+  };
+
+  const handleViewAd = () => {
+    if (createdAdId) {
+      navigate(`/ads/${createdAdId}`);
+    }
+  };
+
+  const handleGoHome = () => {
+    navigate("/");
+  };
+
+  const handleMyAds = () => {
+    navigate("/my-ads");
   };
 
   const renderStepContent = (step: number) => {
@@ -414,9 +461,7 @@ const MidilliForm: React.FC = () => {
                 type="number"
                 label="Üretim Yılı"
                 value={formData.year}
-                onChange={(e) =>
-                  handleInputChange("year", parseInt(e.target.value))
-                }
+                onChange={(e) => handleInputChange("year", e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -436,9 +481,7 @@ const MidilliForm: React.FC = () => {
                 type="number"
                 label="Uzunluk"
                 value={formData.uzunluk}
-                onChange={(e) =>
-                  handleInputChange("uzunluk", parseFloat(e.target.value))
-                }
+                onChange={(e) => handleInputChange("uzunluk", e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -464,7 +507,7 @@ const MidilliForm: React.FC = () => {
                 label="Lastik Durumu"
                 value={formData.lastikDurumu}
                 onChange={(e) =>
-                  handleInputChange("lastikDurumu", parseInt(e.target.value))
+                  handleInputChange("lastikDurumu", e.target.value)
                 }
                 InputProps={{
                   endAdornment: (
@@ -527,7 +570,7 @@ const MidilliForm: React.FC = () => {
                     type="file"
                     multiple
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={handlePhotoUpload}
                     style={{ display: "none" }}
                     id="image-upload"
                   />
@@ -536,7 +579,7 @@ const MidilliForm: React.FC = () => {
                       variant="contained"
                       component="span"
                       startIcon={<CloudUpload />}
-                      disabled={images.length >= 10}
+                      disabled={formData.photos.length >= 10}
                     >
                       Fotoğraf Seç
                     </Button>
@@ -545,10 +588,10 @@ const MidilliForm: React.FC = () => {
               </CardContent>
             </Card>
 
-            {images.length > 0 && (
+            {formData.photos.length > 0 && (
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                  Yüklenen Fotoğraflar ({images.length}/10)
+                  Yüklenen Fotoğraflar ({formData.photos.length}/10)
                 </Typography>
                 <Box
                   sx={{
@@ -558,7 +601,7 @@ const MidilliForm: React.FC = () => {
                     gap: 2,
                   }}
                 >
-                  {images.map((file, index) => (
+                  {formData.photos.map((file, index) => (
                     <Card
                       key={index}
                       sx={{
@@ -607,7 +650,7 @@ const MidilliForm: React.FC = () => {
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          removeImage(index);
+                          removePhoto(index);
                         }}
                       >
                         <Close fontSize="small" />
@@ -630,59 +673,6 @@ const MidilliForm: React.FC = () => {
               <Person color="primary" />
               İletişim & Fiyat Bilgileri
             </Typography>
-
-            <TextField
-              fullWidth
-              label="Ad Soyad"
-              value={formData.sellerName}
-              onChange={(e) => handleInputChange("sellerName", e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Person />
-                  </InputAdornment>
-                ),
-              }}
-              required
-            />
-
-            <Box
-              sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-            >
-              <TextField
-                fullWidth
-                label="Telefon"
-                value={formData.sellerPhone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                placeholder="0xxx xxx xx xx"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                type="email"
-                value={formData.sellerEmail}
-                onChange={(e) =>
-                  handleInputChange("sellerEmail", e.target.value)
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-            </Box>
 
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
@@ -729,16 +719,17 @@ const MidilliForm: React.FC = () => {
                 getOptionLabel={(option) => option.name}
                 value={
                   districts.find(
-                    (district) => district.name === formData.district
+                    (district) => district.id.toString() === formData.districtId
                   ) || null
                 }
                 onChange={(_, newValue) => {
                   if (newValue) {
+                    handleInputChange("districtId", newValue.id.toString());
                     handleInputChange("district", newValue.name);
                   }
                 }}
                 loading={loadingDistricts}
-                disabled={!formData.city || loadingDistricts}
+                disabled={!formData.cityId || loadingDistricts}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -783,42 +774,6 @@ const MidilliForm: React.FC = () => {
               placeholder="150000"
               required
             />
-
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.warranty}
-                    onChange={(e) =>
-                      handleInputChange("warranty", e.target.checked)
-                    }
-                  />
-                }
-                label="Garanti var"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.negotiable}
-                    onChange={(e) =>
-                      handleInputChange("negotiable", e.target.checked)
-                    }
-                  />
-                }
-                label="Pazarlık yapılabilir"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.exchange}
-                    onChange={(e) =>
-                      handleInputChange("exchange", e.target.checked)
-                    }
-                  />
-                }
-                label="Takas yapılabilir"
-              />
-            </Box>
           </Box>
         );
 
@@ -914,6 +869,18 @@ const MidilliForm: React.FC = () => {
           )}
         </Box>
       </Paper>
+
+      {/* Success Modal */}
+      <SuccessModal
+        open={showSuccessModal}
+        onClose={handleCloseSuccessModal}
+        title="🎪 İlan Başarıyla Yayınlandı!"
+        message="Midilli tenteli dorse ilanınız başarıyla oluşturuldu ve yayına alındı."
+        adId={createdAdId || undefined}
+        onViewAd={createdAdId ? handleViewAd : undefined}
+        onGoHome={handleGoHome}
+        onMyAds={handleMyAds}
+      />
     </Container>
   );
 };

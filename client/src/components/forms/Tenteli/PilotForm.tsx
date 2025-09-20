@@ -41,6 +41,7 @@ import {
   Straighten,
 } from "@mui/icons-material";
 import apiClient from "../../../api/client";
+import SuccessModal from "../../common/SuccessModal";
 
 // Çatı Perde Sistemi Türleri
 const CATI_PERDE_SISTEMLERI = [
@@ -105,6 +106,8 @@ const PilotForm: React.FC = () => {
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [showcaseImageIndex, setShowcaseImageIndex] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [createdAdId, setCreatedAdId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<PilotFormData>({
     title: "",
@@ -163,7 +166,7 @@ const PilotForm: React.FC = () => {
       const city = cities.find((c) => c.name === cityName);
       if (city) {
         const response = await apiClient.get(
-          `/api/districts?cityId=${city.id}`
+          `/api/cities/${city.id}/districts`
         );
         setDistricts(response.data as District[]);
       }
@@ -337,7 +340,7 @@ const PilotForm: React.FC = () => {
         }
       });
 
-      const response = await apiClient.post("/api/listings", formDataToSend, {
+      const response = await apiClient.post("/api/ads/dorse", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -345,15 +348,16 @@ const PilotForm: React.FC = () => {
 
       const responseData = response.data as {
         success: boolean;
+        id?: string;
         message?: string;
       };
 
       if (responseData.success) {
-        navigate("/user/my-listings", {
-          state: {
-            message: "Pilot Tenteli ilanınız başarıyla oluşturuldu!",
-          },
-        });
+        // İlan ID'sini kaydet ve başarı modal'ını göster
+        if (responseData.id) {
+          setCreatedAdId(responseData.id);
+        }
+        setShowSuccessModal(true);
       } else {
         throw new Error(responseData.message || "İlan oluşturulamadı");
       }
@@ -371,6 +375,25 @@ const PilotForm: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Modal handler fonksiyonları
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+  };
+
+  const handleViewAd = () => {
+    if (createdAdId) {
+      navigate(`/ads/${createdAdId}`);
+    }
+  };
+
+  const handleGoHome = () => {
+    navigate("/");
+  };
+
+  const handleMyAds = () => {
+    navigate("/user/my-listings");
   };
 
   const renderStepContent = (step: number) => {
@@ -914,6 +937,18 @@ const PilotForm: React.FC = () => {
           )}
         </Box>
       </Paper>
+
+      {/* Success Modal */}
+      <SuccessModal
+        open={showSuccessModal}
+        onClose={handleCloseSuccessModal}
+        title="✈️ İlan Başarıyla Yayınlandı!"
+        message="Pilot tenteli dorse ilanınız başarıyla oluşturuldu ve yayına alındı."
+        adId={createdAdId || undefined}
+        onViewAd={createdAdId ? handleViewAd : undefined}
+        onGoHome={handleGoHome}
+        onMyAds={handleMyAds}
+      />
     </Container>
   );
 };

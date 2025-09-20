@@ -120,7 +120,7 @@ const OndekirmalıForm: React.FC = () => {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await apiClient.get("/cities");
+        const response = await apiClient.get("/ads/cities");
         setCities(response.data as City[]);
       } catch (error) {
         console.error("Şehirler yüklenirken hata:", error);
@@ -133,7 +133,7 @@ const OndekirmalıForm: React.FC = () => {
   const fetchDistricts = async (cityId: string) => {
     if (!cityId) return;
     try {
-      const response = await apiClient.get(`/districts?cityId=${cityId}`);
+      const response = await apiClient.get(`/ads/cities/${cityId}/districts`);
       setDistricts(response.data as District[]);
     } catch (error) {
       console.error("İlçeler yüklenirken hata:", error);
@@ -145,6 +145,21 @@ const OndekirmalıForm: React.FC = () => {
     setFormData({ ...formData, cityId, districtId: "" });
     setDistricts([]);
     fetchDistricts(cityId);
+  };
+
+  // Fiyat formatlama fonksiyonları
+  const formatNumber = (value: string): string => {
+    // Sadece rakamları al
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+
+    // Sayıyı formatlayalım (binlik ayracı)
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const parseFormattedNumber = (value: string): string => {
+    // Formatlı sayıdan sadece rakamları döndür
+    return value.replace(/\D/g, "");
   };
 
   // Rampa mekanizması değişikliği
@@ -232,7 +247,13 @@ const OndekirmalıForm: React.FC = () => {
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
       submitData.append("productionYear", formData.productionYear);
-      submitData.append("price", formData.price);
+
+      // Fiyatı parse ederek ekle
+      const parsedPrice = parseFormattedNumber(formData.price);
+      if (parsedPrice) {
+        submitData.append("price", parsedPrice);
+      }
+
       submitData.append("category", "dorse");
       submitData.append("variant", "ondekirmalı");
 
@@ -261,7 +282,42 @@ const OndekirmalıForm: React.FC = () => {
       submitData.append("warranty", formData.warranty);
       submitData.append("negotiable", formData.negotiable);
       submitData.append("exchange", formData.exchange);
-      submitData.append("detailedInfo", formData.detailedInfo);
+
+      // Detaylı bilgiyi teknik özelliklerle birleştir
+      let detailedDescription = formData.detailedInfo;
+
+      // Teknik özellikler eklentisi
+      const technicalSpecs = [];
+      if (formData.havuzDerinligi)
+        technicalSpecs.push(`Havuz Derinliği: ${formData.havuzDerinligi}m`);
+      if (formData.havuzGenisligi)
+        technicalSpecs.push(`Havuz Genişliği: ${formData.havuzGenisligi}m`);
+      if (formData.havuzUzunlugu)
+        technicalSpecs.push(`Havuz Uzunluğu: ${formData.havuzUzunlugu}m`);
+      if (formData.istiapHaddi)
+        technicalSpecs.push(`İstiap Haddi: ${formData.istiapHaddi} ton`);
+      if (formData.dingilSayisi)
+        technicalSpecs.push(`Dingil Sayısı: ${formData.dingilSayisi}`);
+      if (formData.lastikDurumu)
+        technicalSpecs.push(`Lastik Durumu: ${formData.lastikDurumu}`);
+      if (formData.uzatilabilirProfil)
+        technicalSpecs.push(
+          `Uzatılabilir Profil: ${formData.uzatilabilirProfil}`
+        );
+      if (formData.rampaMekanizmasi.length > 0)
+        technicalSpecs.push(
+          `Rampa Mekanizması: ${formData.rampaMekanizmasi.join(", ")}`
+        );
+
+      if (technicalSpecs.length > 0) {
+        const techSpecsText =
+          "\n\n--- Teknik Özellikler ---\n" + technicalSpecs.join("\n");
+        detailedDescription = detailedDescription
+          ? detailedDescription + techSpecsText
+          : techSpecsText;
+      }
+
+      submitData.append("detailedInfo", detailedDescription);
 
       // Fotoğrafları ekle
       formData.photos.forEach((photo) => {
@@ -290,7 +346,7 @@ const OndekirmalıForm: React.FC = () => {
   // Başarı dialogu
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/profile/my-ads");
+    navigate("/");
   };
 
   return (
@@ -343,15 +399,17 @@ const OndekirmalıForm: React.FC = () => {
 
               <TextField
                 label="Fiyat"
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
-                }
+                value={formatNumber(formData.price)}
+                onChange={(e) => {
+                  const rawValue = parseFormattedNumber(e.target.value);
+                  setFormData({ ...formData, price: rawValue });
+                }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">TL</InputAdornment>
                   ),
                 }}
+                placeholder="Örn: 250.000"
                 required
                 sx={{ flex: 1 }}
               />

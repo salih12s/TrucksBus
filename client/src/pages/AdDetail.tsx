@@ -33,6 +33,7 @@ interface Ad {
   id: number;
   title: string;
   description?: string;
+  detailedInfo?: string;
   price: number;
   year?: number;
   city?: { id: number; name: string };
@@ -1223,6 +1224,225 @@ const AdDetail: React.FC = () => {
                       value: ad.customFields?.superstructure || null,
                     },
 
+                    // Lowbed (Havuzlu/Öndekirmalı) Dorse Özel Alanları
+                    {
+                      label: "Havuz Derinliği",
+                      value: ad.customFields?.havuzDerinligi
+                        ? `${ad.customFields.havuzDerinligi} m`
+                        : null,
+                    },
+                    {
+                      label: "Havuz Genişliği",
+                      value: ad.customFields?.havuzGenisligi
+                        ? `${ad.customFields.havuzGenisligi} m`
+                        : null,
+                    },
+                    {
+                      label: "Havuz Uzunluğu",
+                      value: ad.customFields?.havuzUzunlugu
+                        ? `${ad.customFields.havuzUzunlugu} m`
+                        : null,
+                    },
+                    {
+                      label: "İstiap Haddi",
+                      value: ad.customFields?.istiapHaddi
+                        ? `${ad.customFields.istiapHaddi} ton`
+                        : null,
+                    },
+                    {
+                      label: "Dingil Sayısı",
+                      value: ad.customFields?.dingilSayisi || null,
+                    },
+                    {
+                      label: "Uzatılabilir Profil",
+                      value: ad.customFields?.uzatilabilirProfil || null,
+                    },
+                    {
+                      label: "Rampa Mekanizması",
+                      value: ad.customFields?.rampaMekanizmasi
+                        ? (() => {
+                            try {
+                              if (
+                                typeof ad.customFields.rampaMekanizmasi ===
+                                "string"
+                              ) {
+                                const parsed = JSON.parse(
+                                  ad.customFields.rampaMekanizmasi
+                                );
+                                return Array.isArray(parsed)
+                                  ? parsed.join(", ")
+                                  : ad.customFields.rampaMekanizmasi;
+                              } else if (
+                                Array.isArray(ad.customFields.rampaMekanizmasi)
+                              ) {
+                                return ad.customFields.rampaMekanizmasi.join(
+                                  ", "
+                                );
+                              } else {
+                                return ad.customFields.rampaMekanizmasi;
+                              }
+                            } catch {
+                              return ad.customFields.rampaMekanizmasi;
+                            }
+                          })()
+                        : null,
+                    },
+
+                    // Damperli Dorse Özel Alanları
+                    {
+                      label: "Dorse Genişliği",
+                      value: ad.customFields?.genislik
+                        ? `${ad.customFields.genislik} m`
+                        : null,
+                    },
+                    {
+                      label: "Dorse Uzunluğu",
+                      value: ad.customFields?.uzunluk
+                        ? `${ad.customFields.uzunluk} m`
+                        : null,
+                    },
+                    {
+                      label: "Devrilme Yönü",
+                      value: ad.customFields?.devrilmeYonu || null,
+                    },
+
+                    // Tenteli Dorse Özel Alanları
+                    {
+                      label: "Çatı Perde Sistemi",
+                      value: ad.customFields?.catiPerdeSistemi || null,
+                    },
+
+                    // Tanker Özel Alanları
+                    {
+                      label: "Hacim",
+                      value: ad.customFields?.hacim
+                        ? `${ad.customFields.hacim} m³`
+                        : null,
+                    },
+                    {
+                      label: "Göz Sayısı",
+                      value: ad.customFields?.gozSayisi || null,
+                    },
+
+                    // Silobas Özel Alanları
+                    {
+                      label: "Silobas Türü",
+                      value: ad.customFields?.silobasTuru || null,
+                    },
+
+                    // Frigofirik Özel Alanları
+                    {
+                      label: "Soğutucu Durumu",
+                      value: ad.customFields?.sogutucu || null,
+                    },
+
+                    // Ortak Dorse Özellikleri
+                    {
+                      label: "Takaslı",
+                      value: ad.customFields?.takasli || null,
+                    },
+
+                    // Oto Kurtarıcı/Taşıyıcı Özel Alanları
+                    {
+                      label: "Çekici Ekipmanı",
+                      value: ad.customFields?.cekiciEkipmani
+                        ? (() => {
+                            try {
+                              const equipment =
+                                typeof ad.customFields.cekiciEkipmani ===
+                                "string"
+                                  ? JSON.parse(ad.customFields.cekiciEkipmani)
+                                  : ad.customFields.cekiciEkipmani;
+
+                              if (
+                                typeof equipment === "object" &&
+                                equipment !== null
+                              ) {
+                                const equipmentList = Object.entries(equipment)
+                                  .filter(([, value]) => value === true)
+                                  .map(([key]) => {
+                                    // Convert camelCase to readable text
+                                    const readableMap: {
+                                      [key: string]: string;
+                                    } = {
+                                      kayarPlatform: "Kayar Platform",
+                                      palet: "Palet",
+                                      rampa: "Rampa",
+                                      makara: "Makara",
+                                      vinc: "Vinç",
+                                      ahtapotVinc: "Ahtapot Vinç",
+                                      gozluk: "Gözlük",
+                                      hiUp: "Hi-Up",
+                                    };
+                                    return readableMap[key] || key;
+                                  });
+                                return equipmentList.length > 0
+                                  ? equipmentList.join(", ")
+                                  : null;
+                              }
+                              return null;
+                            } catch {
+                              return null;
+                            }
+                          })()
+                        : null,
+                    },
+                    {
+                      label: "Ek Ekipmanlar",
+                      value: ad.customFields?.ekEkipmanlar
+                        ? (() => {
+                            try {
+                              const equipment =
+                                typeof ad.customFields.ekEkipmanlar === "string"
+                                  ? JSON.parse(ad.customFields.ekEkipmanlar)
+                                  : ad.customFields.ekEkipmanlar;
+
+                              if (
+                                typeof equipment === "object" &&
+                                equipment !== null
+                              ) {
+                                const equipmentList = Object.entries(equipment)
+                                  .filter(([, value]) => value === true)
+                                  .map(([key]) => {
+                                    const readableMap: {
+                                      [key: string]: string;
+                                    } = {
+                                      pistonAyak: "Piston Ayak",
+                                      takoz: "Takoz",
+                                      sabitlemeHalati: "Sabitleme Halatı",
+                                    };
+                                    return readableMap[key] || key;
+                                  });
+                                return equipmentList.length > 0
+                                  ? equipmentList.join(", ")
+                                  : null;
+                              }
+                              return null;
+                            } catch {
+                              return null;
+                            }
+                          })()
+                        : null,
+                    },
+
+                    // Şasi/Römork Genel Özellikleri
+                    {
+                      label: "Dingil Sayısı",
+                      value:
+                        ad.customFields?.axleCount ||
+                        ad.customFields?.dingilSayisi ||
+                        null,
+                    },
+                    {
+                      label: "Damperli",
+                      value:
+                        ad.customFields?.hasDamper === true
+                          ? "Evet"
+                          : ad.customFields?.hasDamper === false
+                          ? "Hayır"
+                          : null,
+                    },
+
                     // Plaka Bilgileri
                     {
                       label: "Plaka Tipi",
@@ -1602,6 +1822,8 @@ const AdDetail: React.FC = () => {
                 >
                   {typeof ad.description === "string"
                     ? ad.description
+                    : typeof ad.detailedInfo === "string"
+                    ? ad.detailedInfo
                     : typeof ad.customFields?.detailedInfo === "string"
                     ? ad.customFields.detailedInfo
                     : "Açıklama bulunmuyor."}
@@ -1610,50 +1832,59 @@ const AdDetail: React.FC = () => {
             </Box>
 
             {/* Detaylı Bilgi Section */}
-            {ad.customFields?.detailedInfo &&
-              typeof ad.customFields.detailedInfo === "string" &&
-              ad.customFields.detailedInfo.trim() !== "" && (
+            {((ad.detailedInfo &&
+              typeof ad.detailedInfo === "string" &&
+              ad.detailedInfo.trim() !== "") ||
+              (ad.customFields?.detailedInfo &&
+                typeof ad.customFields.detailedInfo === "string" &&
+                ad.customFields.detailedInfo.trim() !== "")) && (
+              <Box
+                sx={{
+                  backgroundColor: "white",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 1,
+                  mb: 2,
+                }}
+              >
                 <Box
                   sx={{
-                    backgroundColor: "white",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 1,
-                    mb: 2,
+                    backgroundColor: "#f8f9fa",
+                    px: 1.5,
+                    py: 1,
+                    borderBottom: "1px solid #e0e0e0",
                   }}
                 >
-                  <Box
+                  <Typography
                     sx={{
-                      backgroundColor: "#f8f9fa",
-                      px: 1.5,
-                      py: 1,
-                      borderBottom: "1px solid #e0e0e0",
+                      fontSize: "13px",
+                      fontWeight: "bold",
+                      color: "#333",
                     }}
                   >
-                    <Typography
-                      sx={{
-                        fontSize: "13px",
-                        fontWeight: "bold",
-                        color: "#333",
-                      }}
-                    >
-                      Detaylı Bilgi
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ p: 1.5 }}>
-                    <Typography
-                      sx={{
-                        fontSize: "12px",
-                        color: "#333",
-                        lineHeight: 1.6,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {ad.customFields.detailedInfo}
-                    </Typography>
-                  </Box>
+                    Detaylı Bilgi
+                  </Typography>
                 </Box>
-              )}
+
+                <Box sx={{ p: 1.5 }}>
+                  <Typography
+                    sx={{
+                      fontSize: "12px",
+                      color: "#333",
+                      lineHeight: 1.6,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {ad.detailedInfo &&
+                    typeof ad.detailedInfo === "string" &&
+                    ad.detailedInfo.trim() !== ""
+                      ? ad.detailedInfo
+                      : typeof ad.customFields?.detailedInfo === "string"
+                      ? ad.customFields.detailedInfo
+                      : "Detaylı bilgi bulunmuyor."}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
 
             {/* Özellikler Section */}
             {((ad.customFields?.features &&
