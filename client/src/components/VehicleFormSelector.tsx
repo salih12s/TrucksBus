@@ -210,6 +210,20 @@ const VehicleFormSelector: React.FC = () => {
         case "yari-midilli":
           console.log("✅ Yarı Midilli Tenteli Dorse formu seçildi (variant)");
           return <YariMidilliForm />;
+        // Kuruyük Dorse Variants
+        case "kuru-yuk-kuru-yuk-kapakli":
+          console.log("✅ Kuruyük Kapaklı Dorse formu seçildi (variant)");
+          return <KapakliForm />;
+        case "kuru-yuk-kuru-yuk-kapakli-kaya-tip":
+          console.log(
+            "✅ Kuruyük Kapaklı Kaya Tipi Dorse formu seçildi (variant)"
+          );
+          return <KapakliKayaTipiForm />;
+        case "kuru-yuk-kuru-yuk-kapaksiz-platform":
+          console.log(
+            "✅ Kuruyük Kapaksız Platform Dorse formu seçildi (variant)"
+          );
+          return <KapaksızPlatformForm />;
         // Frigorifik Dorse Variants
         case "frigorifik-frigorifik-frigorifik":
         case "frigorifik":

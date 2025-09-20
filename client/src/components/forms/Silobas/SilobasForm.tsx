@@ -52,6 +52,11 @@ interface FormData {
   cityId: string;
   districtId: string;
 
+  // İletişim Bilgileri
+  sellerName: string;
+  phone: string;
+  email: string;
+
   // Fotoğraflar
   photos: File[];
   showcasePhoto: File | null;
@@ -110,6 +115,9 @@ const SilobasForm: React.FC = () => {
     silobasTuru: "",
     cityId: "",
     districtId: "",
+    sellerName: "",
+    phone: "",
+    email: "",
     photos: [],
     showcasePhoto: null,
     warranty: "yok",
@@ -249,13 +257,35 @@ const SilobasForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Temel bilgiler
+      // Temel bilgiler - server'ın beklediği format
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
-      submitData.append("productionYear", formData.productionYear);
+      submitData.append("year", formData.productionYear); // server 'year' bekliyor
       submitData.append("price", formData.price);
 
-      // Silobas özel bilgileri
+      // Kategori bilgileri - server bunları bekliyor
+      submitData.append("category", "Dorse");
+      submitData.append("subcategory", "Silobas");
+
+      // Konum bilgileri - hem ID hem de isim
+      const selectedCity = cities.find(
+        (c) => c.id.toString() === formData.cityId
+      );
+      const selectedDistrict = districts.find(
+        (d) => d.id.toString() === formData.districtId
+      );
+
+      submitData.append("city", selectedCity?.name || "");
+      submitData.append("district", selectedDistrict?.name || "");
+      submitData.append("cityId", formData.cityId);
+      submitData.append("districtId", formData.districtId);
+
+      // Satıcı bilgileri - opsiyonel
+      submitData.append("seller_name", formData.sellerName || "");
+      submitData.append("seller_phone", formData.phone || "");
+      submitData.append("seller_email", formData.email || "");
+
+      // Silobas özel bilgileri - customFields olarak geçirilecek
       submitData.append("hacim", formData.hacim);
       submitData.append("dingilSayisi", formData.dingilSayisi);
       submitData.append("lastikDurumu", formData.lastikDurumu);
@@ -263,11 +293,7 @@ const SilobasForm: React.FC = () => {
       submitData.append("takasli", formData.takasli);
       submitData.append("silobasTuru", formData.silobasTuru);
 
-      // Konum
-      submitData.append("cityId", formData.cityId);
-      submitData.append("districtId", formData.districtId);
-
-      // Ekstra
+      // Ekstra bilgiler
       submitData.append("warranty", formData.warranty);
       submitData.append("negotiable", formData.negotiable);
       submitData.append("exchange", formData.exchange);
