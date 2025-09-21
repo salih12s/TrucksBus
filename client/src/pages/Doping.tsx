@@ -15,6 +15,8 @@ import {
   Snackbar,
   Stack,
   alpha,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
@@ -37,6 +39,9 @@ import {
 
 const Doping: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [packages, setPackages] = useState<DopingPackage[]>([]);
   const [userDopings, setUserDopings] = useState<UserDoping[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,35 +161,77 @@ const Doping: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ py: isMobile ? 2 : 4, px: isMobile ? 1 : 3 }}
+      >
         {/* Header Section */}
-        <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        <Paper
+          elevation={2}
+          sx={{ p: isMobile ? 2 : 3, mb: 4, borderRadius: 2 }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 2,
+              flexDirection: isMobile ? "column" : "row",
+              gap: isMobile ? 1 : 0,
+            }}
+          >
             <IconButton
               onClick={handleGoBack}
-              sx={{ mr: 2, color: "primary.main" }}
+              sx={{ mr: isMobile ? 0 : 2, color: "primary.main" }}
             >
               <ArrowBackIcon />
             </IconButton>
-            <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
-              <StarIcon sx={{ mr: 1, color: "warning.main", fontSize: 28 }} />
-              <Typography variant="h4" component="h1" fontWeight="bold">
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                flex: 1,
+                justifyContent: isMobile ? "center" : "flex-start",
+              }}
+            >
+              <StarIcon
+                sx={{
+                  mr: 1,
+                  color: "warning.main",
+                  fontSize: isMobile ? 24 : 28,
+                }}
+              />
+              <Typography
+                variant={isMobile ? "h5" : "h4"}
+                component="h1"
+                fontWeight="bold"
+                textAlign={isMobile ? "center" : "left"}
+              >
                 Doping Paketleri
               </Typography>
             </Box>
           </Box>
 
           <Alert severity="success" sx={{ mb: 2, backgroundColor: "#e8f5e8" }}>
-            <Typography variant="body1" fontWeight="bold">
+            <Typography
+              variant={isMobile ? "body2" : "body1"}
+              fontWeight="bold"
+            >
               🎉 6 Ay Ücretsiz Kullanım Fırsatı!
             </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{ mt: 1, fontSize: isMobile ? "0.75rem" : "0.875rem" }}
+            >
               Tüm doping paketlerini 6 ay boyunca ücretsiz kullanabilirsiniz.
               İstediğiniz paketleri seçin ve hemen aktif edin!
             </Typography>
           </Alert>
 
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ fontSize: isMobile ? "0.875rem" : "1rem" }}
+          >
             İlanlarınızı daha fazla kişiye ulaştırmak ve satış şansınızı
             artırmak için özel doping paketlerimizi kullanın.
           </Typography>
@@ -270,19 +317,19 @@ const Doping: React.FC = () => {
 
                 <CardContent
                   sx={{
-                    p: 3,
-                    pt: 4,
+                    p: isMobile ? 2 : 3,
+                    pt: isMobile ? 3 : 4,
                     height: "100%",
                     display: "flex",
                     flexDirection: "column",
                   }}
                 >
                   {/* Icon and Title */}
-                  <Box sx={{ textAlign: "center", mb: 3 }}>
+                  <Box sx={{ textAlign: "center", mb: isMobile ? 2 : 3 }}>
                     <Box
                       sx={{
-                        width: 80,
-                        height: 80,
+                        width: isMobile ? 60 : 80,
+                        height: isMobile ? 60 : 80,
                         borderRadius: "50%",
                         background: `linear-gradient(135deg, ${alpha(
                           pkg.color,
@@ -312,7 +359,7 @@ const Doping: React.FC = () => {
                     </Box>
 
                     <Typography
-                      variant="h6"
+                      variant={isMobile ? "subtitle1" : "h6"}
                       fontWeight="bold"
                       gutterBottom
                       sx={{
@@ -329,6 +376,7 @@ const Doping: React.FC = () => {
                       sx={{
                         mb: 2,
                         lineHeight: 1.5,
+                        fontSize: isMobile ? "0.75rem" : "0.875rem",
                       }}
                     >
                       {pkg.description}
@@ -336,14 +384,14 @@ const Doping: React.FC = () => {
                   </Box>
 
                   {/* Price Section */}
-                  <Box sx={{ textAlign: "center", mb: 3 }}>
+                  <Box sx={{ textAlign: "center", mb: isMobile ? 2 : 3 }}>
                     {pkg.originalPrice && (
                       <Typography
                         variant="body2"
                         sx={{
                           textDecoration: "line-through",
                           color: "text.disabled",
-                          fontSize: "0.9rem",
+                          fontSize: isMobile ? "0.75rem" : "0.9rem",
                           mb: 0.5,
                         }}
                       >
@@ -351,7 +399,7 @@ const Doping: React.FC = () => {
                       </Typography>
                     )}
                     <Typography
-                      variant="h5"
+                      variant={isMobile ? "h6" : "h5"}
                       fontWeight="bold"
                       sx={{
                         background: `linear-gradient(45deg, ${
@@ -364,7 +412,11 @@ const Doping: React.FC = () => {
                     >
                       ÜCRETSİZ
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontSize: isMobile ? "0.625rem" : "0.75rem" }}
+                    >
                       {pkg.duration} gün geçerli
                     </Typography>
                   </Box>
@@ -372,7 +424,7 @@ const Doping: React.FC = () => {
                   <Divider sx={{ my: 2, opacity: 0.5 }} />
 
                   {/* Features */}
-                  <Stack spacing={1} sx={{ flex: 1, mb: 3 }}>
+                  <Stack spacing={1} sx={{ flex: 1, mb: isMobile ? 2 : 3 }}>
                     {pkg.features.map((feature: string, index: number) => (
                       <Box
                         key={index}
@@ -384,7 +436,7 @@ const Doping: React.FC = () => {
                       >
                         <CheckCircleIcon
                           sx={{
-                            fontSize: 16,
+                            fontSize: isMobile ? 14 : 16,
                             color: pkg.color,
                             flexShrink: 0,
                           }}
@@ -392,7 +444,7 @@ const Doping: React.FC = () => {
                         <Typography
                           variant="body2"
                           color="text.secondary"
-                          sx={{ fontSize: "0.875rem" }}
+                          sx={{ fontSize: isMobile ? "0.75rem" : "0.875rem" }}
                         >
                           {feature}
                         </Typography>
@@ -405,6 +457,7 @@ const Doping: React.FC = () => {
                     variant="contained"
                     fullWidth
                     disabled={isActive || activating}
+                    size={isMobile ? "small" : "medium"}
                     sx={{
                       background: isActive
                         ? "#e0e0e0"
@@ -414,10 +467,10 @@ const Doping: React.FC = () => {
                           )})`,
                       color: "white",
                       fontWeight: "bold",
-                      py: 1.5,
+                      py: isMobile ? 1 : 1.5,
                       borderRadius: 2,
                       textTransform: "none",
-                      fontSize: "1rem",
+                      fontSize: isMobile ? "0.875rem" : "1rem",
                       boxShadow: isActive
                         ? "none"
                         : `0 4px 15px ${alpha(pkg.color, 0.3)}`,

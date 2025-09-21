@@ -19,6 +19,8 @@ import {
   InputLabel,
   Alert,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -77,6 +79,9 @@ interface FavoriteAd {
 }
 
 const Bookmarks: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [filterBy, setFilterBy] = useState("all");
@@ -252,36 +257,54 @@ const Bookmarks: React.FC = () => {
   return (
     <>
       <Header />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, md: 3 } }}
+      >
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
+        <Box sx={{ mb: { xs: 3, md: 4 } }}>
           <Typography
-            variant="h4"
-            sx={{ fontWeight: "bold", color: "#313B4C" }}
+            variant={isMobile ? "h5" : "h4"}
+            sx={{
+              fontWeight: "bold",
+              color: "#313B4C",
+              fontSize: { xs: "1.5rem", md: "2.125rem" },
+            }}
           >
             Kaydettiğim İlanlar
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ fontSize: { xs: "0.9rem", md: "1rem" } }}
+          >
             Beğendiğiniz ve kaydettiğiniz ilanları buradan takip edebilirsiniz
           </Typography>
         </Box>
 
         {/* Filters and Search */}
-        <Paper sx={{ p: 3, mb: 3 }}>
+        <Paper sx={{ p: { xs: 2, md: 3 }, mb: { xs: 2, md: 3 } }}>
           <Box
             sx={{
               display: "flex",
-              gap: 3,
+              gap: { xs: 2, md: 3 },
               alignItems: "center",
-              flexWrap: "wrap",
+              flexDirection: { xs: "column", md: "row" },
             }}
           >
-            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+            <Box
+              sx={{
+                width: { xs: "100%", md: "auto" },
+                flex: { md: "1 1 300px" },
+                minWidth: { md: "250px" },
+              }}
+            >
               <TextField
                 fullWidth
                 placeholder="İlan ara..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                size={isMobile ? "small" : "medium"}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -292,8 +315,14 @@ const Bookmarks: React.FC = () => {
               />
             </Box>
 
-            <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
-              <FormControl fullWidth>
+            <Box
+              sx={{
+                width: { xs: "100%", md: "auto" },
+                flex: { md: "0 1 200px" },
+                minWidth: { md: "150px" },
+              }}
+            >
+              <FormControl fullWidth size={isMobile ? "small" : "medium"}>
                 <InputLabel>Sırala</InputLabel>
                 <Select
                   value={sortBy}

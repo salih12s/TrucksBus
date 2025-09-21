@@ -15,6 +15,8 @@ import {
   Tabs,
   Tab,
   Alert,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Notifications as NotificationsIcon,
@@ -37,6 +39,9 @@ interface Notification {
 }
 
 const Notifications: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [tabValue, setTabValue] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -135,19 +140,24 @@ const Notifications: React.FC = () => {
   const unreadCount = notifications.filter((notif) => !notif.isRead).length;
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container
+      maxWidth="lg"
+      sx={{ py: isMobile ? 2 : 4, px: isMobile ? 1 : 3 }}
+    >
       {/* Header */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: isMobile ? "flex-start" : "center",
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 2 : 0,
           mb: 3,
         }}
       >
         <Box>
           <Typography
-            variant="h4"
+            variant={isMobile ? "h5" : "h4"}
             sx={{ fontWeight: "bold", color: "#313B4C" }}
           >
             Bildirimler
@@ -155,7 +165,11 @@ const Notifications: React.FC = () => {
               <Badge badgeContent={unreadCount} color="error" sx={{ ml: 2 }} />
             )}
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ fontSize: isMobile ? "0.875rem" : "1rem" }}
+          >
             Hesabınızla ilgili önemli bildirimler
           </Typography>
         </Box>
@@ -165,6 +179,7 @@ const Notifications: React.FC = () => {
             variant="outlined"
             startIcon={<MarkReadIcon />}
             onClick={markAllAsRead}
+            size={isMobile ? "small" : "medium"}
           >
             Tümünü Okundu İşaretle
           </Button>
@@ -174,11 +189,21 @@ const Notifications: React.FC = () => {
       <Paper sx={{ width: "100%" }}>
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs value={tabValue} onChange={handleTabChange}>
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            variant={isMobile ? "scrollable" : "standard"}
+            scrollButtons={isMobile ? "auto" : false}
+            allowScrollButtonsMobile={isMobile}
+          >
             <Tab
               label={`Tümü (${notifications.length})`}
               icon={<NotificationsIcon />}
               iconPosition="start"
+              sx={{
+                fontSize: isMobile ? "0.75rem" : "0.875rem",
+                minWidth: isMobile ? "auto" : 160,
+              }}
             />
             <Tab
               label={`Okunmamış (${unreadCount})`}
@@ -188,6 +213,10 @@ const Notifications: React.FC = () => {
                 </Badge>
               }
               iconPosition="start"
+              sx={{
+                fontSize: isMobile ? "0.75rem" : "0.875rem",
+                minWidth: isMobile ? "auto" : 160,
+              }}
             />
             <Tab
               label={`Teklifler (${
@@ -195,12 +224,16 @@ const Notifications: React.FC = () => {
               })`}
               icon={<OfferIcon />}
               iconPosition="start"
+              sx={{
+                fontSize: isMobile ? "0.75rem" : "0.875rem",
+                minWidth: isMobile ? "auto" : 160,
+              }}
             />
           </Tabs>
         </Box>
 
         {/* Notifications List */}
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: isMobile ? 1 : 2 }}>
           {getFilteredNotifications().length === 0 ? (
             <Alert severity="info" sx={{ mt: 2 }}>
               {tabValue === 1
@@ -224,17 +257,32 @@ const Notifications: React.FC = () => {
                     backgroundColor: notification.isRead
                       ? "transparent"
                       : "action.hover",
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    p: isMobile ? 2 : 1,
                   }}
                 >
-                  <ListItemIcon>{getIcon(notification.type)}</ListItemIcon>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: isMobile ? "auto" : 56,
+                      mb: isMobile ? 1 : 0,
+                    }}
+                  >
+                    {getIcon(notification.type)}
+                  </ListItemIcon>
 
                   <ListItemText
                     primary={
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{
+                          display: "flex",
+                          alignItems: isMobile ? "flex-start" : "center",
+                          gap: 1,
+                          flexDirection: isMobile ? "column" : "row",
+                        }}
                       >
                         <Typography
-                          variant="subtitle1"
+                          variant={isMobile ? "body1" : "subtitle1"}
                           sx={{ fontWeight: "bold" }}
                         >
                           {notification.title}
@@ -249,11 +297,18 @@ const Notifications: React.FC = () => {
                         <Typography
                           variant="body2"
                           color="text.secondary"
-                          sx={{ mb: 1 }}
+                          sx={{
+                            mb: 1,
+                            fontSize: isMobile ? "0.75rem" : "0.875rem",
+                          }}
                         >
                           {notification.message}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontSize: isMobile ? "0.625rem" : "0.75rem" }}
+                        >
                           {notification.time}
                         </Typography>
                       </Box>
@@ -261,7 +316,12 @@ const Notifications: React.FC = () => {
                   />
 
                   <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: isMobile ? "row" : "column",
+                      gap: 1,
+                      mt: isMobile ? 1 : 0,
+                    }}
                   >
                     {!notification.isRead && (
                       <IconButton

@@ -22,11 +22,14 @@ import {
   IconButton,
   Chip,
   InputLabel,
+  Drawer,
 } from "@mui/material";
 import {
   LocalShipping,
   Search as SearchIcon,
   Delete as DeleteIcon,
+  Menu as MenuIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
 import { useAppSelector } from "../hooks/redux";
@@ -194,6 +197,9 @@ const MainLayout: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const adsPerPage = 40;
+
+  // Mobile drawer state
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const { user, isAuthenticated, token } = useAppSelector(
     (state) => state.auth
@@ -1683,11 +1689,65 @@ const MainLayout: React.FC = () => {
           flexDirection: "row",
         }}
       >
-        {/* Enhanced Sidebar with better borders */}
-        {!shouldHideSidebar && (
+        {/* Mobile Menu Button - Only visible on mobile */}
+        {isMobile && (
+          <IconButton
+            onClick={() => setMobileDrawerOpen(true)}
+            sx={{
+              position: "fixed",
+              top: 70,
+              left: 16,
+              zIndex: 1200,
+              backgroundColor: "white",
+              boxShadow: 2,
+              "&:hover": {
+                backgroundColor: "#f0f0f0",
+              },
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+
+        {/* Mobile Drawer */}
+        <Drawer
+          anchor="left"
+          open={mobileDrawerOpen}
+          onClose={() => setMobileDrawerOpen(false)}
+          sx={{
+            "& .MuiDrawer-paper": {
+              width: 280,
+              boxSizing: "border-box",
+              mt: 8,
+            },
+          }}
+        >
           <Box
             sx={{
-              width: "180px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              p: 2,
+              borderBottom: "1px solid #e0e0e0",
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              Filtreler
+            </Typography>
+            <IconButton onClick={() => setMobileDrawerOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <Box sx={{ p: 1 }}>
+            {renderSidebarContent()}
+          </Box>
+        </Drawer>
+
+        {/* Enhanced Sidebar with better borders */}
+        {!shouldHideSidebar && !isMobile && (
+          <Box
+            sx={{
+              width: isTablet ? "160px" : "180px",
               flexShrink: 0,
               backgroundColor: "transparent",
               ml: 1,
@@ -1704,6 +1764,7 @@ const MainLayout: React.FC = () => {
           sx={{
             flex: 1,
             p: isMobile ? 1 : isTablet ? 2 : 3,
+            pl: isMobile ? 7 : undefined, // Extra left padding on mobile for hamburger menu
             width: "100%",
           }}
         >
@@ -1934,7 +1995,7 @@ const MainLayout: React.FC = () => {
                           sx={{
                             borderRadius: 1,
                             boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                            height: 235,
+                            height: isMobile ? 200 : 235,
                             "&:hover": {
                               boxShadow: "0 4px 12px rgba(211, 66, 55, 0.15)",
                               backgroundColor: "rgba(211, 66, 55, 0.02)",
@@ -1952,14 +2013,14 @@ const MainLayout: React.FC = () => {
                           <Box
                             component="div"
                             sx={{
-                              height: 120,
+                              height: isMobile ? 100 : 120,
                               backgroundColor: "#f8f9fa",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               position: "relative",
                               overflow: "hidden",
-                              padding: "8px",
+                              padding: isMobile ? "4px" : "8px",
                             }}
                           >
                             {getImageUrl(ad.images) ? (
@@ -1992,7 +2053,7 @@ const MainLayout: React.FC = () => {
 
                           <Box
                             sx={{
-                              p: 1.5,
+                              p: isMobile ? 1 : 1.5,
                               display: "flex",
                               flexDirection: "column",
                               position: "relative",
@@ -2004,7 +2065,7 @@ const MainLayout: React.FC = () => {
                               variant="body2"
                               sx={{
                                 fontWeight: 500,
-                                fontSize: "13px",
+                                fontSize: isMobile ? "11px" : "13px",
                                 color: "#333",
                                 lineHeight: 1.3,
                                 mb: 1,
@@ -2013,7 +2074,7 @@ const MainLayout: React.FC = () => {
                                 WebkitBoxOrient: "vertical",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
-                                minHeight: "32px",
+                                minHeight: isMobile ? "28px" : "32px",
                               }}
                             >
                               {ad.title}
@@ -2024,7 +2085,7 @@ const MainLayout: React.FC = () => {
                               <Typography
                                 variant="caption"
                                 sx={{
-                                  fontSize: "12px",
+                                  fontSize: isMobile ? "10px" : "12px",
                                   color: "#666",
                                   display: "block",
                                 }}
@@ -2036,7 +2097,7 @@ const MainLayout: React.FC = () => {
                               <Typography
                                 variant="caption"
                                 sx={{
-                                  fontSize: "12px",
+                                  fontSize: isMobile ? "10px" : "12px",
                                   color: "#666",
                                   display: "block",
                                 }}
@@ -2059,7 +2120,7 @@ const MainLayout: React.FC = () => {
                                 variant="h6"
                                 sx={{
                                   fontWeight: 600,
-                                  fontSize: "14px",
+                                  fontSize: isMobile ? "12px" : "14px",
                                   color: "#dc3545",
                                 }}
                               >
@@ -2323,21 +2384,21 @@ const MainLayout: React.FC = () => {
                             backgroundColor: "white",
                             border: "1px solid #e0e0e0",
                             mb: 1,
-                            p: 2,
+                            p: isMobile ? 1.5 : 2,
                             alignItems: "center",
                           }}
                         >
                           {/* Vitrin Görseli */}
                           <Box
                             sx={{
-                              width: 120,
-                              height: 80,
+                              width: isMobile ? 100 : 120,
+                              height: isMobile ? 70 : 80,
                               backgroundColor: "#f8f9fa",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               borderRadius: 1,
-                              mr: 2,
+                              mr: isMobile ? 1.5 : 2,
                               flexShrink: 0,
                               overflow: "hidden",
                             }}
@@ -2371,12 +2432,18 @@ const MainLayout: React.FC = () => {
                           </Box>
 
                           {/* Model */}
-                          <Box sx={{ width: 120, mr: 2, flexShrink: 0 }}>
+                          <Box
+                            sx={{
+                              width: isMobile ? 100 : 120,
+                              mr: isMobile ? 1.5 : 2,
+                              flexShrink: 0,
+                            }}
+                          >
                             <Typography
                               variant="body2"
                               sx={{
                                 fontWeight: 600,
-                                fontSize: "13px",
+                                fontSize: isMobile ? "11px" : "13px",
                                 color: "#333",
                               }}
                             >
@@ -2385,12 +2452,12 @@ const MainLayout: React.FC = () => {
                           </Box>
 
                           {/* İlan Başlığı */}
-                          <Box sx={{ flex: 1, mr: 2 }}>
+                          <Box sx={{ flex: 1, mr: isMobile ? 1.5 : 2 }}>
                             <Typography
                               variant="body2"
                               sx={{
                                 fontWeight: 500,
-                                fontSize: "13px",
+                                fontSize: isMobile ? "11px" : "13px",
                                 color: "#333",
                                 display: "-webkit-box",
                                 WebkitLineClamp: 2,
@@ -2406,8 +2473,8 @@ const MainLayout: React.FC = () => {
                           {/* Yıl */}
                           <Box
                             sx={{
-                              width: 60,
-                              mr: 2,
+                              width: isMobile ? 50 : 60,
+                              mr: isMobile ? 1 : 2,
                               flexShrink: 0,
                               textAlign: "center",
                             }}
@@ -2415,7 +2482,7 @@ const MainLayout: React.FC = () => {
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: "13px",
+                                fontSize: isMobile ? "10px" : "13px",
                                 color: "#333",
                                 fontWeight: 500,
                               }}
@@ -2427,8 +2494,8 @@ const MainLayout: React.FC = () => {
                           {/* Kilometre */}
                           <Box
                             sx={{
-                              width: 80,
-                              mr: 2,
+                              width: isMobile ? 60 : 80,
+                              mr: isMobile ? 1 : 2,
                               flexShrink: 0,
                               textAlign: "center",
                             }}
@@ -2436,7 +2503,7 @@ const MainLayout: React.FC = () => {
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: "13px",
+                                fontSize: isMobile ? "10px" : "13px",
                                 color: "#333",
                                 fontWeight: 500,
                               }}
@@ -2450,8 +2517,8 @@ const MainLayout: React.FC = () => {
                           {/* Kategori */}
                           <Box
                             sx={{
-                              width: 80,
-                              mr: 2,
+                              width: isMobile ? 60 : 80,
+                              mr: isMobile ? 1 : 2,
                               flexShrink: 0,
                               textAlign: "center",
                             }}
@@ -2459,7 +2526,7 @@ const MainLayout: React.FC = () => {
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: "12px",
+                                fontSize: isMobile ? "9px" : "12px",
                                 color: "#666",
                                 fontWeight: 500,
                               }}
@@ -2471,8 +2538,8 @@ const MainLayout: React.FC = () => {
                           {/* Fiyat */}
                           <Box
                             sx={{
-                              width: 100,
-                              mr: 2,
+                              width: isMobile ? 80 : 100,
+                              mr: isMobile ? 1 : 2,
                               flexShrink: 0,
                               textAlign: "center",
                             }}
@@ -2481,7 +2548,7 @@ const MainLayout: React.FC = () => {
                               variant="body1"
                               sx={{
                                 fontWeight: 700,
-                                fontSize: "14px",
+                                fontSize: isMobile ? "11px" : "14px",
                                 color: "#dc3545",
                               }}
                             >
@@ -2494,8 +2561,8 @@ const MainLayout: React.FC = () => {
                           {/* Tarih */}
                           <Box
                             sx={{
-                              width: 80,
-                              mr: 2,
+                              width: isMobile ? 60 : 80,
+                              mr: isMobile ? 1 : 2,
                               flexShrink: 0,
                               textAlign: "center",
                             }}
@@ -2503,7 +2570,7 @@ const MainLayout: React.FC = () => {
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: "11px",
+                                fontSize: isMobile ? "9px" : "11px",
                                 color: "#666",
                               }}
                             >
@@ -2518,7 +2585,7 @@ const MainLayout: React.FC = () => {
                           {/* İl/İlçe */}
                           <Box
                             sx={{
-                              width: 120,
+                              width: isMobile ? 80 : 120,
                               flexShrink: 0,
                               textAlign: "center",
                             }}
@@ -2526,7 +2593,7 @@ const MainLayout: React.FC = () => {
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: "12px",
+                                fontSize: isMobile ? "9px" : "12px",
                                 color: "#666",
                                 fontWeight: 500,
                               }}
@@ -2536,7 +2603,7 @@ const MainLayout: React.FC = () => {
                             <Typography
                               variant="caption"
                               sx={{
-                                fontSize: "10px",
+                                fontSize: isMobile ? "8px" : "10px",
                                 color: "#999",
                               }}
                             >

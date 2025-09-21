@@ -21,6 +21,8 @@ import {
   DialogActions,
   Button,
   Divider,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Visibility as ViewIcon,
@@ -33,6 +35,8 @@ import { feedbackAPI, type Feedback } from "../api/feedback";
 
 const Complaints: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [complaints, setComplaints] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -182,6 +186,8 @@ const Complaints: React.FC = () => {
             justifyContent: "space-between",
             alignItems: "center",
             mb: 3,
+            flexDirection: isMobile ? "column" : "row",
+            gap: isMobile ? 2 : 0,
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -192,7 +198,7 @@ const Complaints: React.FC = () => {
             >
               <ArrowBackIcon />
             </IconButton>
-            <Typography variant="h4" component="h1">
+            <Typography variant={isMobile ? "h5" : "h4"} component="h1">
               Şikayetlerim
             </Typography>
           </Box>
@@ -201,6 +207,7 @@ const Complaints: React.FC = () => {
             startIcon={<RefreshIcon />}
             onClick={loadComplaints}
             disabled={loading}
+            size={isMobile ? "small" : "medium"}
           >
             Yenile
           </Button>
@@ -214,67 +221,131 @@ const Complaints: React.FC = () => {
 
         <Card>
           <CardContent>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Şikayet Konusu</TableCell>
-                    <TableCell>Kategori</TableCell>
-                    <TableCell>Öncelik</TableCell>
-                    <TableCell>Durum</TableCell>
-                    <TableCell>Tarih</TableCell>
-                    <TableCell>İşlemler</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {complaints.map((complaint) => (
-                    <TableRow key={complaint.id}>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="medium">
-                          {complaint.title}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={getCategoryLabel(complaint.category)}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={getPriorityLabel(complaint.priority)}
-                          size="small"
-                          color={getPriorityColor(complaint.priority)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={getStatusLabel(complaint.status)}
-                          size="small"
-                          color={getStatusColor(complaint.status)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption">
-                          {new Date(complaint.createdAt).toLocaleDateString(
-                            "tr-TR"
-                          )}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleViewComplaint(complaint)}
-                        >
-                          <ViewIcon />
-                        </IconButton>
-                      </TableCell>
+            {!isMobile ? (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Şikayet Konusu</TableCell>
+                      <TableCell>Kategori</TableCell>
+                      <TableCell>Öncelik</TableCell>
+                      <TableCell>Durum</TableCell>
+                      <TableCell>Tarih</TableCell>
+                      <TableCell>İşlemler</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {complaints.map((complaint) => (
+                      <TableRow key={complaint.id}>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="medium">
+                            {complaint.title}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={getCategoryLabel(complaint.category)}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={getPriorityLabel(complaint.priority)}
+                            size="small"
+                            color={getPriorityColor(complaint.priority)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={getStatusLabel(complaint.status)}
+                            size="small"
+                            color={getStatusColor(complaint.status)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption">
+                            {new Date(complaint.createdAt).toLocaleDateString(
+                              "tr-TR"
+                            )}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleViewComplaint(complaint)}
+                          >
+                            <ViewIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Box
+                sx={{
+                  display: "grid",
+                  gap: 2,
+                  gridTemplateColumns: "1fr",
+                }}
+              >
+                {complaints.map((complaint) => (
+                  <Card key={complaint.id} variant="outlined" sx={{ p: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        mb: 2,
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        component="div"
+                        sx={{ fontWeight: "medium", flex: 1, mr: 1 }}
+                      >
+                        {complaint.title}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleViewComplaint(complaint)}
+                        sx={{ ml: 1 }}
+                      >
+                        <ViewIcon />
+                      </IconButton>
+                    </Box>
+
+                    <Box
+                      sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}
+                    >
+                      <Chip
+                        label={getCategoryLabel(complaint.category)}
+                        size="small"
+                        variant="outlined"
+                      />
+                      <Chip
+                        label={getPriorityLabel(complaint.priority)}
+                        size="small"
+                        color={getPriorityColor(complaint.priority)}
+                      />
+                      <Chip
+                        label={getStatusLabel(complaint.status)}
+                        size="small"
+                        color={getStatusColor(complaint.status)}
+                      />
+                    </Box>
+
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(complaint.createdAt).toLocaleDateString(
+                        "tr-TR"
+                      )}
+                    </Typography>
+                  </Card>
+                ))}
+              </Box>
+            )}
 
             {complaints.length === 0 && (
               <Box sx={{ textAlign: "center", py: 4 }}>
@@ -292,6 +363,7 @@ const Complaints: React.FC = () => {
           onClose={handleCloseModal}
           maxWidth="md"
           fullWidth
+          fullScreen={isMobile}
         >
           {selectedComplaint && (
             <>
@@ -300,14 +372,17 @@ const Complaints: React.FC = () => {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  pb: isMobile ? 1 : 2,
                 }}
               >
-                <Typography variant="h6">Şikayet Detayı</Typography>
+                <Typography variant={isMobile ? "h6" : "h5"}>
+                  Şikayet Detayı
+                </Typography>
                 <IconButton onClick={handleCloseModal}>
                   <CloseIcon />
                 </IconButton>
               </DialogTitle>
-              <DialogContent dividers>
+              <DialogContent dividers sx={{ p: isMobile ? 2 : 3 }}>
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="subtitle1" gutterBottom>
                     <strong>Şikayet Konusu:</strong> {selectedComplaint.title}

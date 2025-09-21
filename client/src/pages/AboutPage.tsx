@@ -6,15 +6,23 @@ import {
   Card,
   CardContent,
   Button,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 const AboutPage: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   return (
-    <Container maxWidth="lg" sx={{ py: 2 }}>
+    <Container
+      maxWidth="lg"
+      sx={{ py: { xs: 1, md: 2 }, px: { xs: 2, md: 3 } }}
+    >
       {/* Header */}
-      <Box textAlign="center" mb={4}>
+      <Box textAlign="center" mb={{ xs: 3, md: 4 }}>
         <Typography
-          variant="h3"
+          variant={isMobile ? "h4" : "h3"}
           component="h1"
           gutterBottom
           sx={{
@@ -23,22 +31,32 @@ const AboutPage: React.FC = () => {
             alignItems: "center",
             justifyContent: "center",
             gap: 1,
+            flexDirection: { xs: "column", sm: "row" },
+            fontSize: { xs: "2rem", md: "3rem" },
           }}
         >
           🚛 Trucksbus Hakkında
         </Typography>
-        <Typography variant="h6" color="text.secondary">
+        <Typography
+          variant={isMobile ? "body1" : "h6"}
+          color="text.secondary"
+          sx={{ fontSize: { xs: "1rem", md: "1.25rem" } }}
+        >
           Türkiye'nin En Güvenilir Ticari Araç Platformu
         </Typography>
       </Box>
 
       {/* Main Content */}
-      <Card sx={{ p: 4, mb: 4 }}>
-        <CardContent>
+      <Card sx={{ p: { xs: 2, md: 4 }, mb: { xs: 3, md: 4 } }}>
+        <CardContent sx={{ p: { xs: 1, md: 2 } }}>
           <Typography
             variant="body1"
             paragraph
-            sx={{ textAlign: "justify", lineHeight: 1.8 }}
+            sx={{
+              textAlign: "justify",
+              lineHeight: 1.8,
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
           >
             TrucksBus; kamyon, çekici, otobüs, minibüs–midibüs, dorse ve benzeri
             ağır ticari araçların alım–satımını kolaylaştıran modern bir
@@ -50,7 +68,11 @@ const AboutPage: React.FC = () => {
           <Typography
             variant="body1"
             paragraph
-            sx={{ textAlign: "justify", lineHeight: 1.8 }}
+            sx={{
+              textAlign: "justify",
+              lineHeight: 1.8,
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
           >
             Deneyimli ekibimiz ve güncel teknoloji yığınımızla; detaylı ilan
             yapısı, akıllı filtreleme, güçlü arama, mesajlaşma ve destek
@@ -59,16 +81,24 @@ const AboutPage: React.FC = () => {
           </Typography>
 
           <Typography
-            variant="h5"
+            variant={isMobile ? "h6" : "h5"}
             gutterBottom
-            sx={{ mt: 3, color: "#313B4C" }}
+            sx={{
+              mt: { xs: 2, md: 3 },
+              color: "#313B4C",
+              fontSize: { xs: "1.25rem", md: "1.5rem" },
+            }}
           >
             Misyonumuz
           </Typography>
           <Typography
             variant="body1"
             paragraph
-            sx={{ textAlign: "justify", lineHeight: 1.8 }}
+            sx={{
+              textAlign: "justify",
+              lineHeight: 1.8,
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
           >
             Ağır ticari araç pazarında, güvenilir bilgiyi standart hâline
             getirip, karar alma süresini kısaltan, pazarlık ve iletişimi
@@ -76,16 +106,24 @@ const AboutPage: React.FC = () => {
           </Typography>
 
           <Typography
-            variant="h5"
+            variant={isMobile ? "h6" : "h5"}
             gutterBottom
-            sx={{ mt: 3, color: "#313B4C" }}
+            sx={{
+              mt: { xs: 2, md: 3 },
+              color: "#313B4C",
+              fontSize: { xs: "1.25rem", md: "1.5rem" },
+            }}
           >
             Vizyonumuz
           </Typography>
           <Typography
             variant="body1"
             paragraph
-            sx={{ textAlign: "justify", lineHeight: 1.8 }}
+            sx={{
+              textAlign: "justify",
+              lineHeight: 1.8,
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
           >
             Türkiye'de ticari araç ekosisteminin buluşma noktası olmak; araç
             keşfinden ilana, vitrinden satış sonrası süreçlere kadar uçtan uca
@@ -93,9 +131,13 @@ const AboutPage: React.FC = () => {
           </Typography>
 
           <Typography
-            variant="h5"
+            variant={isMobile ? "h6" : "h5"}
             gutterBottom
-            sx={{ mt: 3, color: "#313B4C" }}
+            sx={{
+              mt: { xs: 2, md: 3 },
+              color: "#313B4C",
+              fontSize: { xs: "1.25rem", md: "1.5rem" },
+            }}
           >
             Neden TruckBus?
           </Typography>
@@ -104,7 +146,12 @@ const AboutPage: React.FC = () => {
             <Typography
               variant="body1"
               paragraph
-              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+              sx={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: { xs: 0.5, md: 1 },
+                fontSize: { xs: "0.9rem", md: "1rem" },
+              }}
             >
               <span style={{ color: "#4caf50", fontWeight: "bold" }}>✅</span>
               <span>
@@ -116,7 +163,12 @@ const AboutPage: React.FC = () => {
             <Typography
               variant="body1"
               paragraph
-              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+              sx={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: { xs: 0.5, md: 1 },
+                fontSize: { xs: "0.9rem", md: "1rem" },
+              }}
             >
               <span style={{ color: "#4caf50", fontWeight: "bold" }}>✅</span>
               <span>
@@ -128,7 +180,12 @@ const AboutPage: React.FC = () => {
             <Typography
               variant="body1"
               paragraph
-              sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}
+              sx={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: { xs: 0.5, md: 1 },
+                fontSize: { xs: "0.9rem", md: "1rem" },
+              }}
             >
               <span style={{ color: "#4caf50", fontWeight: "bold" }}>✅</span>
               <span>

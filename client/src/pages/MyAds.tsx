@@ -23,6 +23,8 @@ import {
   Divider,
   Tooltip,
   Snackbar,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Visibility as ViewIcon,
@@ -38,6 +40,8 @@ import { getMyAds, deleteAd, type Ad, type AdImage } from "../api/ads";
 
 const MyAds: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -180,12 +184,14 @@ const MyAds: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
+      <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 3 } }}>
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: { xs: "flex-start", md: "center" },
+            flexDirection: { xs: "column", md: "row" },
+            gap: { xs: 2, md: 0 },
             mb: 3,
           }}
         >
@@ -193,26 +199,41 @@ const MyAds: React.FC = () => {
             <IconButton onClick={handleGoBack} sx={{ mr: 1 }} color="primary">
               <ArrowBackIcon />
             </IconButton>
-            <Typography variant="h4" component="h1">
+            <Typography
+              variant={isMobile ? "h5" : "h4"}
+              component="h1"
+              sx={{ fontSize: { xs: "1.5rem", md: "2.125rem" } }}
+            >
               İlanlarım
             </Typography>
           </Box>
-          <Box sx={{ display: "flex", gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              width: { xs: "100%", md: "auto" },
+              justifyContent: { xs: "stretch", md: "flex-end" },
+            }}
+          >
             <Button
               variant="contained"
-              startIcon={<AddIcon />}
+              startIcon={!isMobile ? <AddIcon /> : undefined}
               onClick={handleCreateAd}
               color="primary"
+              size={isMobile ? "small" : "medium"}
+              sx={{ flex: { xs: 1, md: "none" } }}
             >
-              Yeni İlan
+              {isMobile ? "Yeni" : "Yeni İlan"}
             </Button>
             <Button
               variant="outlined"
-              startIcon={<RefreshIcon />}
+              startIcon={!isMobile ? <RefreshIcon /> : undefined}
               onClick={loadMyAds}
               disabled={loading}
+              size={isMobile ? "small" : "medium"}
+              sx={{ flex: { xs: 1, md: "none" } }}
             >
-              Yenile
+              {isMobile ? "Yenile" : "Yenile"}
             </Button>
           </Box>
         </Box>
@@ -225,115 +246,269 @@ const MyAds: React.FC = () => {
 
         <Card>
           <CardContent>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>İlan</TableCell>
-                    <TableCell>Kategori</TableCell>
-                    <TableCell>Fiyat</TableCell>
-                    <TableCell>Durum</TableCell>
-                    <TableCell>Görüntüleme</TableCell>
-                    <TableCell>İletişim</TableCell>
-                    <TableCell>Tarih</TableCell>
-                    <TableCell>İşlemler</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {ads.map((ad) => (
-                    <TableRow key={ad.id}>
-                      <TableCell>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                        >
-                          <img
-                            src={getImageUrl(ad.images)}
-                            alt={ad.title}
-                            style={{
-                              width: 60,
-                              height: 40,
-                              objectFit: "cover",
-                              borderRadius: 4,
+            {/* Desktop Table View */}
+            {!isMobile ? (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>İlan</TableCell>
+                      <TableCell>Kategori</TableCell>
+                      <TableCell>Fiyat</TableCell>
+                      <TableCell>Durum</TableCell>
+                      <TableCell>Görüntüleme</TableCell>
+                      <TableCell>İletişim</TableCell>
+                      <TableCell>Tarih</TableCell>
+                      <TableCell>İşlemler</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {ads.map((ad) => (
+                      <TableRow key={ad.id}>
+                        <TableCell>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 2,
                             }}
+                          >
+                            <img
+                              src={getImageUrl(ad.images)}
+                              alt={ad.title}
+                              style={{
+                                width: 60,
+                                height: 40,
+                                objectFit: "cover",
+                                borderRadius: 4,
+                              }}
+                            />
+                            <Box>
+                              <Typography variant="body2" fontWeight="medium">
+                                {ad.title}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {ad.location}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={ad.category.name}
+                            size="small"
+                            variant="outlined"
                           />
-                          <Box>
-                            <Typography variant="body2" fontWeight="medium">
-                              {ad.title}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {ad.location}
-                            </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="medium">
+                            {formatPrice(ad.price)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={getStatusLabel(ad.status)}
+                            size="small"
+                            color={getStatusColor(ad.status)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {ad.viewCount}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">-</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption">
+                            {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: "flex", gap: 0.5 }}>
+                            <Tooltip title="Görüntüle">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleViewAd(ad)}
+                              >
+                                <ViewIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Düzenle">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleEditAd(ad.id)}
+                                color="primary"
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Sil">
+                              <IconButton
+                                size="small"
+                                onClick={() => handleDeleteAd(ad.id)}
+                                color="error"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              /* Mobile Card View */
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {ads.map((ad) => (
+                  <Card
+                    key={ad.id}
+                    variant="outlined"
+                    sx={{
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 2,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <CardContent sx={{ p: 2 }}>
+                      {/* Image and Title */}
+                      <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                        <img
+                          src={getImageUrl(ad.images)}
+                          alt={ad.title}
+                          style={{
+                            width: 80,
+                            height: 60,
+                            objectFit: "cover",
+                            borderRadius: 8,
+                            flexShrink: 0,
+                          }}
+                        />
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography
+                            variant="body1"
+                            fontWeight="medium"
+                            sx={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              lineHeight: 1.2,
+                              mb: 0.5,
+                            }}
+                          >
+                            {ad.title}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {ad.location}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Info Grid */}
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: 1,
+                          mb: 2,
+                        }}
+                      >
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Kategori
+                          </Typography>
+                          <Box sx={{ mt: 0.5 }}>
+                            <Chip
+                              label={ad.category.name}
+                              size="small"
+                              variant="outlined"
+                            />
                           </Box>
                         </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={ad.category.name}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="medium">
-                          {formatPrice(ad.price)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={getStatusLabel(ad.status)}
-                          size="small"
-                          color={getStatusColor(ad.status)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">{ad.viewCount}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">-</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="caption">
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Fiyat
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight="medium"
+                            sx={{ mt: 0.5 }}
+                          >
+                            {formatPrice(ad.price)}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Durum
+                          </Typography>
+                          <Box sx={{ mt: 0.5 }}>
+                            <Chip
+                              label={getStatusLabel(ad.status)}
+                              size="small"
+                              color={getStatusColor(ad.status)}
+                            />
+                          </Box>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Görüntüleme
+                          </Typography>
+                          <Typography variant="body2" sx={{ mt: 0.5 }}>
+                            {ad.viewCount}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Date and Actions */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          pt: 1,
+                          borderTop: "1px solid #f0f0f0",
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
                           {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
                         </Typography>
-                      </TableCell>
-                      <TableCell>
                         <Box sx={{ display: "flex", gap: 0.5 }}>
-                          <Tooltip title="Görüntüle">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleViewAd(ad)}
-                            >
-                              <ViewIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Düzenle">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleEditAd(ad.id)}
-                              color="primary"
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Sil">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteAd(ad.id)}
-                              color="error"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleViewAd(ad)}
+                            sx={{ color: "#666" }}
+                          >
+                            <ViewIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditAd(ad.id)}
+                            color="primary"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteAd(ad.id)}
+                            color="error"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
                         </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+            )}
 
             {ads.length === 0 && (
               <Box sx={{ textAlign: "center", py: 4 }}>

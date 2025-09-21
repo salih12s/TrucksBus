@@ -20,6 +20,8 @@ import {
   IconButton,
   Tab,
   Tabs,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -45,6 +47,8 @@ import { authApi } from "@/api/auth";
 
 const Profile: React.FC = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // State management
   const [currentTab, setCurrentTab] = useState(0);
@@ -242,7 +246,7 @@ const Profile: React.FC = () => {
         {/* Header */}
         <Box sx={{ mb: 4 }}>
           <Typography
-            variant="h4"
+            variant={isMobile ? "h5" : "h4"}
             sx={{
               fontWeight: 600,
               color: "#1a1a1a",
@@ -254,7 +258,10 @@ const Profile: React.FC = () => {
           </Typography>
           <Typography
             variant="body1"
-            sx={{ color: "#6b7280", fontSize: "1rem" }}
+            sx={{
+              color: "#6b7280",
+              fontSize: isMobile ? "0.875rem" : "1rem",
+            }}
           >
             Hesap bilgilerinizi yönetin ve güncelleyin
           </Typography>
@@ -298,7 +305,7 @@ const Profile: React.FC = () => {
             <Box sx={{ flex: { md: "0 0 350px" }, width: "100%" }}>
               <Paper
                 sx={{
-                  p: 3,
+                  p: isMobile ? 2 : 3,
                   textAlign: "center",
                   background:
                     "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -320,12 +327,12 @@ const Profile: React.FC = () => {
                 <Box sx={{ position: "relative", zIndex: 1 }}>
                   <Avatar
                     sx={{
-                      width: 100,
-                      height: 100,
+                      width: isMobile ? 80 : 100,
+                      height: isMobile ? 80 : 100,
                       mx: "auto",
                       mb: 2,
                       bgcolor: "rgba(255,255,255,0.2)",
-                      fontSize: "2.5rem",
+                      fontSize: isMobile ? "2rem" : "2.5rem",
                       fontWeight: 600,
                       border: "3px solid rgba(255,255,255,0.3)",
                     }}
@@ -333,7 +340,10 @@ const Profile: React.FC = () => {
                     {getUserInitials()}
                   </Avatar>
 
-                  <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                  <Typography
+                    variant={isMobile ? "h6" : "h5"}
+                    sx={{ fontWeight: 600, mb: 1 }}
+                  >
                     {user?.firstName && user?.lastName
                       ? `${user.firstName} ${user.lastName}`
                       : "Kullanıcı"}
@@ -372,9 +382,9 @@ const Profile: React.FC = () => {
               </Paper>
 
               {/* Quick Stats */}
-              <Paper sx={{ p: 3, mt: 3 }}>
+              <Paper sx={{ p: isMobile ? 2 : 3, mt: 3 }}>
                 <Typography
-                  variant="h6"
+                  variant={isMobile ? "subtitle1" : "h6"}
                   sx={{ fontWeight: 600, mb: 2, color: "#1a1a1a" }}
                 >
                   Hesap Özeti
@@ -454,17 +464,19 @@ const Profile: React.FC = () => {
 
             {/* Profile Form */}
             <Box sx={{ flex: 1, width: "100%" }}>
-              <Paper sx={{ p: 3 }}>
+              <Paper sx={{ p: isMobile ? 2 : 3 }}>
                 <Box
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
                     mb: 3,
+                    flexDirection: isMobile ? "column" : "row",
+                    gap: isMobile ? 2 : 0,
                   }}
                 >
                   <Typography
-                    variant="h6"
+                    variant={isMobile ? "subtitle1" : "h6"}
                     sx={{ fontWeight: 600, color: "#1a1a1a" }}
                   >
                     Kişisel Bilgiler
@@ -651,18 +663,24 @@ const Profile: React.FC = () => {
 
         {/* Active Dopings Tab */}
         {currentTab === 1 && (
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ p: isMobile ? 2 : 3 }}>
             <Typography
-              variant="h6"
+              variant={isMobile ? "subtitle1" : "h6"}
               sx={{ fontWeight: 600, mb: 3, color: "#1a1a1a" }}
             >
               Aktif Doping Paketlerim
             </Typography>
 
             {userDopings.length === 0 ? (
-              <Box sx={{ textAlign: "center", py: 6 }}>
-                <Star sx={{ fontSize: 64, color: "#e5e7eb", mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" gutterBottom>
+              <Box sx={{ textAlign: "center", py: isMobile ? 4 : 6 }}>
+                <Star
+                  sx={{ fontSize: isMobile ? 48 : 64, color: "#e5e7eb", mb: 2 }}
+                />
+                <Typography
+                  variant={isMobile ? "subtitle1" : "h6"}
+                  color="text.secondary"
+                  gutterBottom
+                >
                   Aktif doping paketiniz bulunmamaktadır
                 </Typography>
                 <Typography
@@ -675,6 +693,7 @@ const Profile: React.FC = () => {
                 <Button
                   variant="contained"
                   onClick={() => (window.location.href = "/doping")}
+                  size={isMobile ? "small" : "medium"}
                   sx={{
                     borderRadius: 2,
                     textTransform: "none",
@@ -771,25 +790,30 @@ const Profile: React.FC = () => {
 
         {/* Security Tab */}
         {currentTab === 2 && (
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ p: isMobile ? 2 : 3 }}>
             <Typography
-              variant="h6"
+              variant={isMobile ? "subtitle1" : "h6"}
               sx={{ fontWeight: 600, mb: 3, color: "#1a1a1a" }}
             >
               Güvenlik Ayarları
             </Typography>
 
             <Card sx={{ border: "1px solid #e5e7eb", borderRadius: 2 }}>
-              <CardContent sx={{ p: 3 }}>
+              <CardContent sx={{ p: isMobile ? 2 : 3 }}>
                 <Box
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    flexDirection: isMobile ? "column" : "row",
+                    gap: isMobile ? 2 : 0,
                   }}
                 >
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                    <Typography
+                      variant={isMobile ? "subtitle1" : "h6"}
+                      sx={{ fontWeight: 600, mb: 1 }}
+                    >
                       Şifre Değiştir
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -801,6 +825,7 @@ const Profile: React.FC = () => {
                     variant="outlined"
                     startIcon={<LockIcon />}
                     onClick={() => setPasswordDialogOpen(true)}
+                    size={isMobile ? "small" : "medium"}
                     sx={{
                       borderRadius: 2,
                       textTransform: "none",

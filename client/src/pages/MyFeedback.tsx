@@ -21,6 +21,8 @@ import {
   DialogActions,
   Button,
   Divider,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Visibility as ViewIcon,
@@ -30,6 +32,9 @@ import {
 import { feedbackAPI, type Feedback } from "../api/feedback";
 
 const MyFeedback: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,16 +176,18 @@ const MyFeedback: React.FC = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
+    <Box sx={{ maxWidth: 1200, mx: "auto", p: isMobile ? 2 : 3 }}>
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           mb: 3,
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 2 : 0,
         }}
       >
-        <Typography variant="h4" component="h1">
+        <Typography variant={isMobile ? "h5" : "h4"} component="h1">
           Geri Bildirimlerim
         </Typography>
         <Button
@@ -188,6 +195,7 @@ const MyFeedback: React.FC = () => {
           startIcon={<RefreshIcon />}
           onClick={loadFeedbacks}
           disabled={loading}
+          size={isMobile ? "small" : "medium"}
         >
           Yenile
         </Button>
@@ -201,67 +209,129 @@ const MyFeedback: React.FC = () => {
 
       <Card>
         <CardContent>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Konu</TableCell>
-                  <TableCell>Kategori</TableCell>
-                  <TableCell>Öncelik</TableCell>
-                  <TableCell>Durum</TableCell>
-                  <TableCell>Tarih</TableCell>
-                  <TableCell>İşlemler</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {feedbacks.map((feedback) => (
-                  <TableRow key={feedback.id}>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="medium">
-                        {feedback.title}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getCategoryLabel(feedback.category)}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getPriorityLabel(feedback.priority)}
-                        size="small"
-                        color={getPriorityColor(feedback.priority)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={getStatusLabel(feedback.status)}
-                        size="small"
-                        color={getStatusColor(feedback.status)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption">
-                        {new Date(feedback.createdAt).toLocaleDateString(
-                          "tr-TR"
-                        )}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleViewFeedback(feedback)}
-                      >
-                        <ViewIcon />
-                      </IconButton>
-                    </TableCell>
+          {!isMobile ? (
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Konu</TableCell>
+                    <TableCell>Kategori</TableCell>
+                    <TableCell>Öncelik</TableCell>
+                    <TableCell>Durum</TableCell>
+                    <TableCell>Tarih</TableCell>
+                    <TableCell>İşlemler</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {feedbacks.map((feedback) => (
+                    <TableRow key={feedback.id}>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="medium">
+                          {feedback.title}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={getCategoryLabel(feedback.category)}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={getPriorityLabel(feedback.priority)}
+                          size="small"
+                          color={getPriorityColor(feedback.priority)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={getStatusLabel(feedback.status)}
+                          size="small"
+                          color={getStatusColor(feedback.status)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="caption">
+                          {new Date(feedback.createdAt).toLocaleDateString(
+                            "tr-TR"
+                          )}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleViewFeedback(feedback)}
+                        >
+                          <ViewIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          ) : (
+            <Box
+              sx={{
+                display: "grid",
+                gap: 2,
+                gridTemplateColumns: "1fr",
+              }}
+            >
+              {feedbacks.map((feedback) => (
+                <Card key={feedback.id} variant="outlined" sx={{ p: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      mb: 2,
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      component="div"
+                      sx={{ fontWeight: "medium", flex: 1, mr: 1 }}
+                    >
+                      {feedback.title}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleViewFeedback(feedback)}
+                      sx={{ ml: 1 }}
+                    >
+                      <ViewIcon />
+                    </IconButton>
+                  </Box>
+
+                  <Box
+                    sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}
+                  >
+                    <Chip
+                      label={getCategoryLabel(feedback.category)}
+                      size="small"
+                      variant="outlined"
+                    />
+                    <Chip
+                      label={getPriorityLabel(feedback.priority)}
+                      size="small"
+                      color={getPriorityColor(feedback.priority)}
+                    />
+                    <Chip
+                      label={getStatusLabel(feedback.status)}
+                      size="small"
+                      color={getStatusColor(feedback.status)}
+                    />
+                  </Box>
+
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(feedback.createdAt).toLocaleDateString("tr-TR")}
+                  </Typography>
+                </Card>
+              ))}
+            </Box>
+          )}
 
           {feedbacks.length === 0 && (
             <Box sx={{ textAlign: "center", py: 4 }}>
@@ -279,6 +349,7 @@ const MyFeedback: React.FC = () => {
         onClose={handleCloseModal}
         maxWidth="md"
         fullWidth
+        fullScreen={isMobile}
       >
         {selectedFeedback && (
           <>
@@ -287,14 +358,17 @@ const MyFeedback: React.FC = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                pb: isMobile ? 1 : 2,
               }}
             >
-              <Typography variant="h6">Geri Bildirim Detayı</Typography>
+              <Typography variant={isMobile ? "h6" : "h5"}>
+                Geri Bildirim Detayı
+              </Typography>
               <IconButton onClick={handleCloseModal}>
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <DialogContent dividers>
+            <DialogContent dividers sx={{ p: isMobile ? 2 : 3 }}>
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" gutterBottom>
                   <strong>Konu:</strong> {selectedFeedback.title}
