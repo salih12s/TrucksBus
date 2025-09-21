@@ -54,8 +54,8 @@ interface FrigofirikFormData {
   sogutucu: string; // Çalışıyor/Arızalı/Yok
 
   // Konum
-  city: string;
-  district: string;
+  cityId: string;
+  districtId: string;
 
   // İletişim Bilgileri
   sellerName: string;
@@ -69,14 +69,15 @@ interface FrigofirikFormData {
 }
 
 interface City {
-  id: string;
+  id: number;
   name: string;
+  plateCode: string;
 }
 
 interface District {
-  id: string;
+  id: number;
   name: string;
-  city_id: string;
+  cityId: number;
 }
 
 const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
@@ -106,8 +107,8 @@ const FrigofirikForm: React.FC = () => {
     uzunluk: 0,
     lastikDurumu: 100,
     sogutucu: "",
-    city: "",
-    district: "",
+    cityId: "",
+    districtId: "",
     sellerName: "",
     sellerPhone: "",
     sellerEmail: "",
@@ -124,8 +125,8 @@ const FrigofirikForm: React.FC = () => {
         sellerName: `${user.firstName} ${user.lastName}`,
         sellerPhone: user.phone || "",
         sellerEmail: user.email || "",
-        city: user.city || "",
-        district: "",
+        cityId: "",
+        districtId: "",
       }));
     }
   }, [user]);
@@ -147,15 +148,16 @@ const FrigofirikForm: React.FC = () => {
     loadCities();
   }, []);
 
-  const handleCityChange = async (cityName: string) => {
-    setFormData((prev) => ({ ...prev, city: cityName, district: "" }));
+  const handleCityChange = async (cityId: string) => {
+    setFormData((prev) => ({ ...prev, cityId: cityId, districtId: "" }));
     setLoadingDistricts(true);
 
     try {
-      const city = cities.find((c) => c.name === cityName);
-      if (city) {
-        const response = await apiClient.get(`/cities/${city.id}/districts`);
+      if (cityId) {
+        const response = await apiClient.get(`/cities/${cityId}/districts`);
         setDistricts(response.data as District[]);
+      } else {
+        setDistricts([]);
       }
     } catch (err) {
       console.error("İlçeler yüklenirken hata:", err);
@@ -242,11 +244,11 @@ const FrigofirikForm: React.FC = () => {
           setError("Fiyat bilgisi gereklidir");
           return false;
         }
-        if (!formData.city) {
+        if (!formData.cityId) {
           setError("Şehir seçimi gereklidir");
           return false;
         }
-        if (!formData.district) {
+        if (!formData.districtId) {
           setError("İlçe seçimi gereklidir");
           return false;
         }
@@ -308,9 +310,18 @@ const FrigofirikForm: React.FC = () => {
       formDataToSend.append("lastikDurumu", formData.lastikDurumu.toString());
       formDataToSend.append("sogutucu", formData.sogutucu);
 
-      // Konum bilgileri
-      formDataToSend.append("city", formData.city);
-      formDataToSend.append("district", formData.district);
+      // Konum bilgileri - hem ID hem de isim
+      const selectedCity = cities.find(
+        (c) => c.id.toString() === formData.cityId
+      );
+      const selectedDistrict = districts.find(
+        (d) => d.id.toString() === formData.districtId
+      );
+
+      formDataToSend.append("city", selectedCity?.name || "");
+      formDataToSend.append("district", selectedDistrict?.name || "");
+      formDataToSend.append("cityId", formData.cityId);
+      formDataToSend.append("districtId", formData.districtId);
 
       // İletişim bilgileri
       formDataToSend.append("seller_name", formData.sellerName);
@@ -633,11 +644,13 @@ const FrigofirikForm: React.FC = () => {
                 options={cities}
                 getOptionLabel={(option) => option.name}
                 value={
-                  cities.find((city) => city.name === formData.city) || null
+                  cities.find(
+                    (city) => city.id.toString() === formData.cityId
+                  ) || null
                 }
                 onChange={(_, newValue) => {
                   if (newValue) {
-                    handleCityChange(newValue.name);
+                    handleCityChange(newValue.id.toString());
                   }
                 }}
                 loading={loadingCities}
@@ -671,16 +684,16 @@ const FrigofirikForm: React.FC = () => {
                 getOptionLabel={(option) => option.name}
                 value={
                   districts.find(
-                    (district) => district.name === formData.district
+                    (district) => district.id.toString() === formData.districtId
                   ) || null
                 }
                 onChange={(_, newValue) => {
                   if (newValue) {
-                    handleInputChange("district", newValue.name);
+                    handleInputChange("districtId", newValue.id.toString());
                   }
                 }}
                 loading={loadingDistricts}
-                disabled={!formData.city || loadingDistricts}
+                disabled={!formData.cityId || loadingDistricts}
                 renderInput={(params) => (
                   <TextField
                     {...params}

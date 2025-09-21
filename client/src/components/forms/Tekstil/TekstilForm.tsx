@@ -51,8 +51,8 @@ interface TekstilFormData {
   takasli: string; // "Evet" veya "Hayır"
 
   // Konum
-  city: string;
-  district: string;
+  cityId: string;
+  districtId: string;
 
   // Ekstra
   warranty: boolean;
@@ -61,14 +61,15 @@ interface TekstilFormData {
 }
 
 interface City {
-  id: string;
+  id: number;
   name: string;
+  plateCode: string;
 }
 
 interface District {
-  id: string;
+  id: number;
   name: string;
-  city_id: string;
+  cityId: number;
 }
 
 const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
@@ -96,8 +97,8 @@ const TekstilForm: React.FC = () => {
     price: "",
     year: new Date().getFullYear(),
     takasli: "Hayır",
-    city: "",
-    district: "",
+    cityId: "",
+    districtId: "",
     warranty: false,
     negotiable: false,
     exchange: false,
@@ -111,8 +112,8 @@ const TekstilForm: React.FC = () => {
         sellerName: `${user.firstName} ${user.lastName}`,
         sellerPhone: user.phone || "",
         sellerEmail: user.email || "",
-        city: user.city || "",
-        district: "",
+        cityId: "",
+        districtId: "",
       }));
     }
   }, [user]);
@@ -134,15 +135,16 @@ const TekstilForm: React.FC = () => {
     loadCities();
   }, []);
 
-  const handleCityChange = async (cityName: string) => {
-    setFormData((prev) => ({ ...prev, city: cityName, district: "" }));
+  const handleCityChange = async (cityId: string) => {
+    setFormData((prev) => ({ ...prev, cityId: cityId, districtId: "" }));
     setLoadingDistricts(true);
 
     try {
-      const city = cities.find((c) => c.name === cityName);
-      if (city) {
-        const response = await apiClient.get(`/cities/${city.id}/districts`);
+      if (cityId) {
+        const response = await apiClient.get(`/cities/${cityId}/districts`);
         setDistricts(response.data as District[]);
+      } else {
+        setDistricts([]);
       }
     } catch (err) {
       console.error("İlçeler yüklenirken hata:", err);
@@ -221,11 +223,11 @@ const TekstilForm: React.FC = () => {
           setError("Fiyat bilgisi gereklidir");
           return false;
         }
-        if (!formData.city) {
+        if (!formData.cityId) {
           setError("Şehir seçimi gereklidir");
           return false;
         }
-        if (!formData.district) {
+        if (!formData.districtId) {
           setError("İlçe seçimi gereklidir");
           return false;
         }
@@ -264,9 +266,18 @@ const TekstilForm: React.FC = () => {
       // Teknik özellikler
       formDataToSend.append("takasli", formData.takasli);
 
-      // Konum bilgileri
-      formDataToSend.append("city", formData.city);
-      formDataToSend.append("district", formData.district);
+      // Konum bilgileri - hem ID hem de isim
+      const selectedCity = cities.find(
+        (c) => c.id.toString() === formData.cityId
+      );
+      const selectedDistrict = districts.find(
+        (d) => d.id.toString() === formData.districtId
+      );
+
+      formDataToSend.append("city", selectedCity?.name || "");
+      formDataToSend.append("district", selectedDistrict?.name || "");
+      formDataToSend.append("cityId", formData.cityId);
+      formDataToSend.append("districtId", formData.districtId);
 
       // Ekstra özellikler
       formDataToSend.append("warranty", formData.warranty ? "true" : "false");
@@ -553,11 +564,13 @@ const TekstilForm: React.FC = () => {
                 options={cities}
                 getOptionLabel={(option) => option.name}
                 value={
-                  cities.find((city) => city.name === formData.city) || null
+                  cities.find(
+                    (city) => city.id.toString() === formData.cityId
+                  ) || null
                 }
                 onChange={(_, newValue) => {
                   if (newValue) {
-                    handleCityChange(newValue.name);
+                    handleCityChange(newValue.id.toString());
                   }
                 }}
                 loading={loadingCities}
@@ -591,16 +604,16 @@ const TekstilForm: React.FC = () => {
                 getOptionLabel={(option) => option.name}
                 value={
                   districts.find(
-                    (district) => district.name === formData.district
+                    (district) => district.id.toString() === formData.districtId
                   ) || null
                 }
                 onChange={(_, newValue) => {
                   if (newValue) {
-                    handleInputChange("district", newValue.name);
+                    handleInputChange("districtId", newValue.id.toString());
                   }
                 }}
                 loading={loadingDistricts}
-                disabled={!formData.city || loadingDistricts}
+                disabled={!formData.cityId || loadingDistricts}
                 renderInput={(params) => (
                   <TextField
                     {...params}

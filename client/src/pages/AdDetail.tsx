@@ -1332,6 +1332,18 @@ const AdDetail: React.FC = () => {
 
                     // Frigofirik Özel Alanları
                     {
+                      label: "Frigofirik Uzunluk",
+                      value: ad.customFields?.uzunluk
+                        ? `${ad.customFields.uzunluk} m`
+                        : null,
+                    },
+                    {
+                      label: "Lastik Durumu",
+                      value: ad.customFields?.lastikDurumu
+                        ? `${ad.customFields.lastikDurumu}%`
+                        : null,
+                    },
+                    {
                       label: "Soğutucu Durumu",
                       value: ad.customFields?.sogutucu || null,
                     },
@@ -1501,6 +1513,16 @@ const AdDetail: React.FC = () => {
                         : null,
                     },
                     {
+                      label: "Dingil Sayısı",
+                      value: ad.customFields?.dingilSayisi || null,
+                    },
+                    {
+                      label: "Lastik Durumu",
+                      value: ad.customFields?.lastikDurumu
+                        ? `${ad.customFields.lastikDurumu}%`
+                        : null,
+                    },
+                    {
                       label: "Silobas Türü",
                       value: ad.customFields?.silobasTuru || null,
                     },
@@ -1510,6 +1532,10 @@ const AdDetail: React.FC = () => {
                     },
 
                     // Tekstil Özel Alanları
+                    {
+                      label: "Takaslı",
+                      value: ad.customFields?.takasli || null,
+                    },
                     {
                       label: "Tekstil Türü",
                       value: ad.customFields?.tekstilTuru || null,
@@ -1535,8 +1561,43 @@ const AdDetail: React.FC = () => {
 
                     // Diğer Bilgiler
                     {
+                      label: "Garanti",
+                      value:
+                        ad.customFields?.hasWarranty === true
+                          ? "Var"
+                          : ad.customFields?.hasWarranty === false
+                          ? "Yok"
+                          : ad.customFields?.warranty === "true"
+                          ? "Var"
+                          : ad.customFields?.warranty === "false"
+                          ? "Yok"
+                          : null,
+                    },
+                    {
+                      label: "Pazarlık",
+                      value:
+                        ad.customFields?.isNegotiable === true
+                          ? "Yapılabilir"
+                          : ad.customFields?.isNegotiable === false
+                          ? "Yapılamaz"
+                          : ad.customFields?.negotiable === "true"
+                          ? "Yapılabilir"
+                          : ad.customFields?.negotiable === "false"
+                          ? "Yapılamaz"
+                          : null,
+                    },
+                    {
                       label: "Takas",
-                      value: ad.customFields?.exchange || ad.takas || null,
+                      value:
+                        ad.customFields?.isExchangeable === true
+                          ? "Yapılabilir"
+                          : ad.customFields?.isExchangeable === false
+                          ? "Yapılamaz"
+                          : ad.customFields?.exchange === "true"
+                          ? "Yapılabilir"
+                          : ad.customFields?.exchange === "false"
+                          ? "Yapılamaz"
+                          : ad.customFields?.exchange || ad.takas || null,
                     },
                     { label: "Hasar Durumu", value: ad.damage || null },
 
