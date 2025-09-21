@@ -52,6 +52,7 @@ const RegisterCorporate: React.FC = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
+  const [validationError, setValidationError] = useState("");
 
   // Load cities on component mount
   useEffect(() => {
@@ -154,18 +155,52 @@ const RegisterCorporate: React.FC = () => {
     if (error) {
       dispatch(clearError());
     }
+
+    // Clear validation error when user starts typing
+    if (validationError) {
+      setValidationError("");
+    }
+  };
+
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return "Şifre en az 8 karakter olmalıdır";
+    }
+    if (!/[A-Z]/.test(password)) {
+      return "Şifre en az 1 büyük harf içermelidir";
+    }
+    if (!/[a-z]/.test(password)) {
+      return "Şifre en az 1 küçük harf içermelidir";
+    }
+    if (!/[0-9]/.test(password)) {
+      return "Şifre en az 1 rakam içermelidir";
+    }
+    if (!/[@$!%*?&]/.test(password)) {
+      return "Şifre en az 1 özel karakter (@$!%*?&) içermelidir";
+    }
+    return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Clear previous validation errors
+    setValidationError("");
+
+    // Validate password strength
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      setValidationError(passwordError);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Şifreler eşleşmiyor!");
+      setValidationError("Şifreler eşleşmiyor!");
       return;
     }
 
     if (!acceptTerms) {
-      alert("Kullanım şartlarını kabul etmelisiniz!");
+      setValidationError("Kullanım şartlarını kabul etmelisiniz!");
       return;
     }
 
@@ -254,9 +289,9 @@ const RegisterCorporate: React.FC = () => {
         {/* Form Container */}
         <Box sx={{ px: 6, pb: 6 }}>
           {/* Error Alert */}
-          {error && (
+          {(error || validationError) && (
             <Alert severity="error" sx={{ mb: 3 }}>
-              {error}
+              {validationError || error}
             </Alert>
           )}
 
@@ -280,6 +315,7 @@ const RegisterCorporate: React.FC = () => {
                 onChange={handleChange}
                 required
                 variant="outlined"
+                autoComplete="given-name"
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "transparent",
@@ -310,6 +346,7 @@ const RegisterCorporate: React.FC = () => {
                 onChange={handleChange}
                 required
                 variant="outlined"
+                autoComplete="family-name"
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "transparent",
@@ -344,6 +381,7 @@ const RegisterCorporate: React.FC = () => {
               onChange={handleChange}
               required
               variant="outlined"
+              autoComplete="email"
               sx={{
                 mb: 2,
                 "& .MuiOutlinedInput-root": {
@@ -378,6 +416,8 @@ const RegisterCorporate: React.FC = () => {
               onChange={handleChange}
               required
               variant="outlined"
+              autoComplete="new-password"
+              helperText="En az 8 karakter, 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter (@$!%*?&)"
               sx={{
                 mb: 2,
                 "& .MuiOutlinedInput-root": {
@@ -399,6 +439,11 @@ const RegisterCorporate: React.FC = () => {
                   py: 2,
                   fontSize: "16px",
                 },
+                "& .MuiFormHelperText-root": {
+                  fontSize: "12px",
+                  color: "#666",
+                  mt: 1,
+                },
               }}
               InputProps={{
                 endAdornment: (
@@ -412,6 +457,41 @@ const RegisterCorporate: React.FC = () => {
                     </IconButton>
                   </InputAdornment>
                 ),
+              }}
+            />
+
+            {/* Confirm Password */}
+            <TextField
+              fullWidth
+              name="confirmPassword"
+              type={showPassword ? "text" : "password"}
+              placeholder="Şifre Tekrarı"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              autoComplete="new-password"
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "transparent",
+                  borderRadius: 1,
+                  "& fieldset": {
+                    borderColor: "#ddd",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#4A90E2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4A90E2",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  py: 2,
+                  fontSize: "16px",
+                },
               }}
             />
 

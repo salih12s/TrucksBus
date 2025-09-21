@@ -53,8 +53,26 @@ export const authApi = {
 
   // Register user
   register: async (data: RegisterRequest): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>("/auth/register", data);
-    return response.data;
+    try {
+      console.log("🚀 Sending registration request with data:", data);
+      const response = await apiClient.post<AuthResponse>(
+        "/auth/register",
+        data
+      );
+      console.log("✅ Registration successful:", response.data);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { status?: number; data?: unknown };
+        message?: string;
+      };
+      console.error("❌ Registration failed:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        error: err.message,
+      });
+      throw error;
+    }
   },
 
   // Logout user

@@ -27,7 +27,6 @@ const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
 
 // ❗ Secondary pages - Daha sonra yüklenebilir
 const Notifications = React.lazy(() => import("./pages/Notifications"));
-const Bookmarks = React.lazy(() => import("./pages/Bookmarks"));
 const RegisterCorporate = React.lazy(
   () => import("./components/auth/RegisterCorporate")
 );
@@ -448,7 +447,7 @@ function App() {
                           path="/bookmarks"
                           element={
                             <ProtectedRoute>
-                              <Bookmarks />
+                              <MainLayout />
                             </ProtectedRoute>
                           }
                         />

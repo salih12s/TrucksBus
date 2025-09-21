@@ -31,6 +31,7 @@ const Register: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [validationError, setValidationError] = useState("");
 
   // Telefon formatı: 0555 555 55 55
   const formatPhoneNumber = (value: string) => {
@@ -92,18 +93,52 @@ const Register: React.FC = () => {
     if (error) {
       dispatch(clearError());
     }
+
+    // Clear validation error when user starts typing
+    if (validationError) {
+      setValidationError("");
+    }
+  };
+
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return "Şifre en az 8 karakter olmalıdır";
+    }
+    if (!/[A-Z]/.test(password)) {
+      return "Şifre en az 1 büyük harf içermelidir";
+    }
+    if (!/[a-z]/.test(password)) {
+      return "Şifre en az 1 küçük harf içermelidir";
+    }
+    if (!/[0-9]/.test(password)) {
+      return "Şifre en az 1 rakam içermelidir";
+    }
+    if (!/[@$!%*?&]/.test(password)) {
+      return "Şifre en az 1 özel karakter (@$!%*?&) içermelidir";
+    }
+    return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Clear previous validation errors
+    setValidationError("");
+
+    // Validate password strength
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      setValidationError(passwordError);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Şifreler eşleşmiyor!");
+      setValidationError("Şifreler eşleşmiyor!");
       return;
     }
 
     if (!acceptTerms) {
-      alert("Kullanım şartlarını kabul etmelisiniz!");
+      setValidationError("Kullanım şartlarını kabul etmelisiniz!");
       return;
     }
 
@@ -116,6 +151,8 @@ const Register: React.FC = () => {
       role: "USER" as const,
       kvkkAccepted: acceptTerms,
     };
+
+    console.log("📤 Registration data being sent:", userData);
 
     const result = await dispatch(registerUser(userData));
     if (registerUser.fulfilled.match(result)) {
@@ -188,9 +225,9 @@ const Register: React.FC = () => {
         {/* Form Container */}
         <Box sx={{ px: 4, pb: 6 }}>
           {/* Error Alert */}
-          {error && (
+          {(error || validationError) && (
             <Alert severity="error" sx={{ mb: 3 }}>
-              {error}
+              {validationError || error}
             </Alert>
           )}
 
@@ -206,6 +243,7 @@ const Register: React.FC = () => {
               onChange={handleChange}
               required
               variant="outlined"
+              autoComplete="email"
               sx={{
                 mb: 2,
                 "& .MuiOutlinedInput-root": {
@@ -246,6 +284,7 @@ const Register: React.FC = () => {
                 onChange={handleChange}
                 required
                 variant="outlined"
+                autoComplete="given-name"
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "transparent",
@@ -276,6 +315,7 @@ const Register: React.FC = () => {
                 onChange={handleChange}
                 required
                 variant="outlined"
+                autoComplete="family-name"
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     backgroundColor: "transparent",
@@ -300,6 +340,39 @@ const Register: React.FC = () => {
               />
             </Box>
 
+            {/* Phone Field */}
+            <TextField
+              fullWidth
+              name="phone"
+              placeholder="Telefon Numarası (0555 555 55 55)"
+              value={formData.phone}
+              onChange={handleChange}
+              variant="outlined"
+              autoComplete="tel"
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "transparent",
+                  borderRadius: 1,
+                  "& fieldset": {
+                    borderColor: "#ddd",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#4A90E2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4A90E2",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  py: 2,
+                  fontSize: "16px",
+                },
+              }}
+            />
+
             {/* Password Field */}
             <TextField
               fullWidth
@@ -310,6 +383,61 @@ const Register: React.FC = () => {
               onChange={handleChange}
               required
               variant="outlined"
+              autoComplete="new-password"
+              helperText="En az 8 karakter, 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter (@$!%*?&)"
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "transparent",
+                  borderRadius: 1,
+                  "& fieldset": {
+                    borderColor: "#ddd",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#4A90E2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4A90E2",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  py: 2,
+                  fontSize: "16px",
+                },
+                "& .MuiFormHelperText-root": {
+                  fontSize: "12px",
+                  color: "#666",
+                  mt: 1,
+                },
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                      sx={{ color: "#666" }}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            {/* Confirm Password Field */}
+            <TextField
+              fullWidth
+              name="confirmPassword"
+              type={showPassword ? "text" : "password"}
+              placeholder="Şifre Tekrarı"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              autoComplete="new-password"
               sx={{
                 mb: 3,
                 "& .MuiOutlinedInput-root": {
@@ -331,19 +459,6 @@ const Register: React.FC = () => {
                   py: 2,
                   fontSize: "16px",
                 },
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      sx={{ color: "#666" }}
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
               }}
             />
 

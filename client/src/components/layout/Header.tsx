@@ -13,8 +13,6 @@ import {
   Divider,
   ListItemIcon,
   ListItemText,
-  TextField,
-  InputAdornment,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
@@ -27,7 +25,6 @@ import {
   ExitToApp as LogoutIcon,
   Dashboard as DashboardIcon,
   Store as StoreIcon,
-  Search as SearchIcon,
 } from "@mui/icons-material";
 import { useAppSelector, useAppDispatch } from "../../hooks/redux";
 import { logoutUser } from "../../store/authSlice";
@@ -36,17 +33,9 @@ import NotificationDropdown from "../NotificationDropdown";
 
 interface HeaderProps {
   favoritesCount?: number;
-  searchTerm?: string;
-  onSearchChange?: (value: string) => void;
-  showSearch?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({
-  favoritesCount = 0,
-  searchTerm = "",
-  onSearchChange,
-  showSearch = false,
-}) => {
+const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
   const { user, isAuthenticated, isLoading } = useAppSelector(
     (state) => state.auth
   );
@@ -148,66 +137,6 @@ const Header: React.FC<HeaderProps> = ({
             <span style={{ color: "#333" }}> ile Mutlu Kalın</span>
           </Typography>
         </Box>
-
-        {/* Search Bar - Center */}
-        {showSearch && !isMobile && (
-          <Box
-            sx={{
-              flex: 1,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              px: isMobile ? 1 : isTablet ? 2 : 4,
-              mx: isMobile ? 0.5 : isTablet ? 1 : 2,
-              ml: { xs: 0, sm: 4, md: 32, lg: 64 },
-            }}
-          >
-            <TextField
-              fullWidth
-              size="small"
-              placeholder={isMobile ? "Ara..." : "Araç ara..."}
-              value={searchTerm}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: "#D34237" }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                maxWidth: isMobile ? 250 : isTablet ? 350 : 400,
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                  borderRadius: 25,
-                  fontSize: isMobile ? "0.75rem" : "0.8rem",
-                  height: isMobile ? 32 : 36,
-                  transition: "all 0.3s ease",
-                  border: "2px solid transparent",
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.95)",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                  },
-                  "&.Mui-focused": {
-                    backgroundColor: "white",
-                    border: "2px solid #D34237",
-                    boxShadow: "0 4px 12px rgba(211, 66, 55, 0.2)",
-                  },
-                  "& fieldset": {
-                    border: "none",
-                  },
-                },
-                "& .MuiInputBase-input": {
-                  padding: "8px 12px",
-                  "&::placeholder": {
-                    color: "#666",
-                    opacity: 0.8,
-                  },
-                },
-              }}
-            />
-          </Box>
-        )}
 
         {/* Right side content */}
         <Box

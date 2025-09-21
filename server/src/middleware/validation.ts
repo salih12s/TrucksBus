@@ -24,10 +24,10 @@ const emailSchema = Joi.string().email().max(254).required().messages({
 
 // Phone validation (Turkish format)
 const phoneSchema = Joi.string()
-  .pattern(/^(\+90|0)?[45]\d{9}$/)
+  .pattern(/^(\+90|0)?[2-5]\d{9}$/)
   .messages({
     "string.pattern.base":
-      "Lütfen geçerli bir Türk telefon numarası giriniz (örnek: 05551234567 veya 05441234567)",
+      "Lütfen geçerli bir Türk telefon numarası giriniz (örnek: 05551234567)",
     "any.required": "Telefon numarası zorunludur",
   });
 
@@ -256,11 +256,15 @@ export const validate = (
         field: detail.path.join("."),
         message: detail.message,
         value: detail.context?.value,
+        type: detail.type,
       }));
 
-      console.log("Validation failed:", {
+      console.log("❌ Validation failed:", {
+        endpoint: req.path,
+        method: req.method,
         errors: errorDetails,
         originalData: data,
+        receivedData: JSON.stringify(data, null, 2),
       });
 
       res.status(400).json({

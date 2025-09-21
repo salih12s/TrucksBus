@@ -15,8 +15,19 @@ import {
   Select,
   MenuItem,
   Pagination,
+  InputAdornment,
+  Paper,
+  Alert,
+  CircularProgress,
+  IconButton,
+  Chip,
+  InputLabel,
 } from "@mui/material";
-import { LocalShipping } from "@mui/icons-material";
+import {
+  LocalShipping,
+  Search as SearchIcon,
+  Delete as DeleteIcon,
+} from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
 import { useAppSelector } from "../hooks/redux";
 import socketService from "../services/socketService";
@@ -52,6 +63,7 @@ interface Brand {
 interface Ad {
   id: number;
   title: string;
+  description?: string;
   price: number | null;
   year: number | null;
   createdAt: string;
@@ -76,6 +88,7 @@ interface Ad {
     firstName: string | null;
     lastName: string | null;
     phone: string | null;
+    companyName?: string | null;
   };
   category?: {
     name: string;
@@ -98,6 +111,50 @@ interface ApiAdsResponse {
     limit: number;
     total: number;
     pages: number;
+  };
+}
+
+interface FavoriteAd {
+  id: number;
+  createdAt: string;
+  ad: {
+    id: number;
+    title: string;
+    price: number | null;
+    year: number | null;
+    mileage: number | null;
+    createdAt: string;
+    city?: {
+      id: number;
+      name: string;
+    };
+    district?: {
+      id: number;
+      name: string;
+    };
+    images?: Array<{
+      id: number;
+      imageUrl: string;
+      isPrimary: boolean;
+      displayOrder: number;
+      altText?: string;
+    }>;
+    user: {
+      firstName: string | null;
+      lastName: string | null;
+      phone: string | null;
+      companyName?: string | null;
+    };
+    category?: {
+      name: string;
+    };
+    brand?: {
+      name: string;
+    };
+    model?: {
+      name: string;
+    };
+    status: string;
   };
 }
 
@@ -126,6 +183,14 @@ const MainLayout: React.FC = () => {
     title: string;
   } | null>(null);
 
+  // Bookmarks states
+  const [favorites, setFavorites] = useState<FavoriteAd[]>([]);
+  const [bookmarksLoading, setBookmarksLoading] = useState(false);
+  const [bookmarksError, setBookmarksError] = useState<string | null>(null);
+  const [bookmarkSearchQuery, setBookmarkSearchQuery] = useState("");
+  const [bookmarkSortBy, setBookmarkSortBy] = useState("newest");
+  const [bookmarkFilterBy, setBookmarkFilterBy] = useState("all");
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -146,11 +211,13 @@ const MainLayout: React.FC = () => {
     "/messages",
     "/complaints",
     "/store",
+    "/bookmarks",
   ];
   const isAvatarMenuPage = avatarMenuPages.includes(location.pathname);
   const isContactOrAboutPage =
     location.pathname === "/contact" || location.pathname === "/about";
   const isAdDetailPage = location.pathname.startsWith("/ad/") && params.id;
+  const isBookmarksPage = location.pathname === "/bookmarks";
   const shouldHideSidebar =
     isAvatarMenuPage || isContactOrAboutPage || isAdDetailPage;
 
@@ -198,6 +265,454 @@ const MainLayout: React.FC = () => {
     if (!price) return "Belirtilmemiş";
     // Sayıyı string'e çevir ve nokta ile ayır
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
+
+  // Bookmarks utility functions
+  const getBookmarkImageUrl = (images?: FavoriteAd["ad"]["images"]) => {
+    if (!images || images.length === 0) {
+      return null;
+    }
+
+    // Önce vitrin resmini ara
+    const primaryImage = images.find((img) => img.isPrimary);
+    const imageToUse = primaryImage || images[0];
+
+    // Ana ads ile aynı yaklaşım - Base64 veya URL formatında döndür
+    return imageToUse?.imageUrl || null;
+  };
+
+  const handleRemoveFavorite = async (favoriteId: number, adId: number) => {
+    try {
+      await apiClient.delete(`/favorites/${adId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setFavorites(favorites.filter((fav) => fav.id !== favoriteId));
+      // Update favorites count
+      setFavoritesCount((prev) => Math.max(0, prev - 1));
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { error?: string } } };
+      setBookmarksError(
+        axiosError.response?.data?.error ||
+          "Favorilerden kaldırılırken hata oluştu"
+      );
+    }
+  };
+
+  const getFilteredBookmarks = () => {
+    let filtered = favorites;
+
+    // Search filter
+    if (bookmarkSearchQuery) {
+      filtered = filtered.filter(
+        (fav) =>
+          fav.ad.title
+            .toLowerCase()
+            .includes(bookmarkSearchQuery.toLowerCase()) ||
+          fav.ad.brand?.name
+            ?.toLowerCase()
+            .includes(bookmarkSearchQuery.toLowerCase()) ||
+          fav.ad.model?.name
+            ?.toLowerCase()
+            .includes(bookmarkSearchQuery.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (bookmarkFilterBy === "active") {
+      filtered = filtered.filter((fav) => fav.ad.status === "APPROVED");
+    } else if (bookmarkFilterBy === "inactive") {
+      filtered = filtered.filter((fav) => fav.ad.status !== "APPROVED");
+    }
+
+    // Sort
+    if (bookmarkSortBy === "newest") {
+      filtered.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    } else if (bookmarkSortBy === "oldest") {
+      filtered.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    } else if (bookmarkSortBy === "price-high") {
+      filtered.sort((a, b) => (b.ad.price || 0) - (a.ad.price || 0));
+    } else if (bookmarkSortBy === "price-low") {
+      filtered.sort((a, b) => (a.ad.price || 0) - (b.ad.price || 0));
+    }
+
+    return filtered;
+  };
+
+  const renderBookmarksContent = () => {
+    if (bookmarksLoading) {
+      return (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "400px",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    if (bookmarksError) {
+      return (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {bookmarksError}
+        </Alert>
+      );
+    }
+
+    return (
+      <Box
+        sx={{
+          maxWidth: "1200px", // Narrow the content from both sides
+          mx: "auto", // Center the content
+          px: { xs: 1, sm: 2, md: 3 }, // Add padding on sides
+        }}
+      >
+        {/* Header */}
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: "600",
+              color: "#dc3545",
+              fontSize: { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" },
+              mb: 1,
+            }}
+          >
+            Kaydettiğim İlanlar
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Beğendiğiniz ve kaydettiğiniz ilanları buradan takip edebilirsiniz
+          </Typography>
+        </Box>
+
+        {/* Filters and Search */}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 3,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <Box sx={{ flex: "1 1 300px", minWidth: "250px" }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="İlan ara..."
+                value={bookmarkSearchQuery}
+                onChange={(e) => setBookmarkSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "#D34237" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "8px",
+                    "&:hover fieldset": {
+                      borderColor: "#D34237",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#D34237",
+                    },
+                  },
+                }}
+              />
+            </Box>
+
+            <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Sırala</InputLabel>
+                <Select
+                  value={bookmarkSortBy}
+                  label="Sırala"
+                  onChange={(e) => setBookmarkSortBy(e.target.value)}
+                >
+                  <MenuItem value="newest">En Yeni</MenuItem>
+                  <MenuItem value="oldest">En Eski</MenuItem>
+                  <MenuItem value="price-high">Fiyat (Yüksek-Düşük)</MenuItem>
+                  <MenuItem value="price-low">Fiyat (Düşük-Yüksek)</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Filtrele</InputLabel>
+                <Select
+                  value={bookmarkFilterBy}
+                  label="Filtrele"
+                  onChange={(e) => setBookmarkFilterBy(e.target.value)}
+                >
+                  <MenuItem value="all">Tümü</MenuItem>
+                  <MenuItem value="active">Aktif İlanlar</MenuItem>
+                  <MenuItem value="inactive">Pasif İlanlar</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+          </Box>
+        </Paper>
+
+        {/* Results Count */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body1" color="text.secondary">
+            {getFilteredBookmarks().length} kaydettiğiniz ilan bulundu
+          </Typography>
+        </Box>
+
+        {/* Bookmarks Grid - Matching main ads structure exactly */}
+        {getFilteredBookmarks().length === 0 ? (
+          <Alert severity="info">
+            {bookmarkSearchQuery || bookmarkFilterBy !== "all"
+              ? "Arama kriterlerinize uygun kaydettiğiniz ilan bulunamadı."
+              : "Henüz kaydettiğiniz ilan bulunmuyor. İlanları görüntülerken Kaydet butonuna tıklayarak kaydedebilirsiniz."}
+          </Alert>
+        ) : (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "repeat(2, 1fr)",
+                sm: "repeat(3, 1fr)",
+                md: "repeat(4, 1fr)",
+                lg: "repeat(6, 1fr)",
+                xl: "repeat(6, 1fr)",
+              },
+              gap: { xs: 1, sm: 1.5, md: 2 },
+              width: "100%",
+            }}
+          >
+            {getFilteredBookmarks().map((favorite) => (
+              <Card
+                key={favorite.id}
+                onClick={() => {
+                  if (favorite.ad.status === "APPROVED") {
+                    navigate(`/ad/${favorite.ad.id}`);
+                  }
+                }}
+                sx={{
+                  borderRadius: 1,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                  "&:hover": {
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                    "& .remove-button": {
+                      opacity: 1,
+                    },
+                  },
+                  transition: "all 0.2s ease",
+                  cursor:
+                    favorite.ad.status === "APPROVED" ? "pointer" : "default",
+                  width: "100%",
+                  backgroundColor: "white",
+                  border: "1px solid #e0e0e0",
+                  opacity: favorite.ad.status === "APPROVED" ? 1 : 0.7,
+                  position: "relative",
+                  height: 320,
+                }}
+              >
+                {/* Status Badge for non-approved ads */}
+                {favorite.ad.status !== "APPROVED" && (
+                  <Chip
+                    label="Onaylanmamış"
+                    color="warning"
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: 6,
+                      left: 6,
+                      zIndex: 3,
+                      fontSize: "9px",
+                      height: "18px",
+                    }}
+                  />
+                )}
+
+                {/* Remove from Favorites Button - Only visible on hover */}
+                <IconButton
+                  className="remove-button"
+                  sx={{
+                    position: "absolute",
+                    top: 6,
+                    right: 6,
+                    zIndex: 3,
+                    backgroundColor: "rgba(220, 53, 69, 0.9)",
+                    width: 20,
+                    height: 20,
+                    opacity: 0,
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: "rgba(220, 53, 69, 1)",
+                      transform: "scale(1.1)",
+                    },
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFavorite(favorite.id, favorite.ad.id);
+                  }}
+                >
+                  <DeleteIcon sx={{ fontSize: 12, color: "white" }} />
+                </IconButton>
+
+                {/* Vitrin Görseli - Matching exact structure */}
+                <Box
+                  component="div"
+                  sx={{
+                    height: 120,
+                    backgroundColor: "#f8f9fa",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "relative",
+                    overflow: "hidden",
+                    padding: "8px",
+                  }}
+                >
+                  {getBookmarkImageUrl(favorite.ad.images) ? (
+                    <LazyImage
+                      src={getBookmarkImageUrl(favorite.ad.images)!}
+                      alt={favorite.ad.title}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                      }}
+                      placeholder="/placeholder-image.jpg"
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        color: "#999",
+                      }}
+                    >
+                      <LocalShipping sx={{ fontSize: 24, mb: 0.5 }} />
+                      <Typography variant="caption" fontSize="10px">
+                        Görsel Yok
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Content - Matching exact structure */}
+                <Box
+                  sx={{
+                    p: 1.5,
+                    display: "flex",
+                    flexDirection: "column",
+                    position: "relative",
+                    height: "auto",
+                  }}
+                >
+                  {/* İlan Başlığı */}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 500,
+                      fontSize: "13px",
+                      color: "#333",
+                      lineHeight: 1.3,
+                      mb: 1,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      minHeight: "32px",
+                    }}
+                  >
+                    {favorite.ad.title}
+                  </Typography>
+
+                  {/* Konum ve Model Yılı - Alt alta */}
+                  <Box sx={{ mb: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: "12px",
+                        color: "#666",
+                        display: "block",
+                      }}
+                    >
+                      {favorite.ad.city?.name ||
+                        favorite.ad.district?.name ||
+                        "Belirtilmemiş"}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: "12px",
+                        color: "#666",
+                        display: "block",
+                      }}
+                    >
+                      {favorite.ad.year
+                        ? `Model Yılı: ${favorite.ad.year}`
+                        : favorite.ad.model?.name ||
+                          favorite.ad.brand?.name ||
+                          "Model"}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: "11px",
+                        color: "#999",
+                        display: "block",
+                        mt: 0.5,
+                      }}
+                    >
+                      Kaydedildi:{" "}
+                      {new Date(favorite.createdAt).toLocaleDateString("tr-TR")}
+                    </Typography>
+                  </Box>
+
+                  {/* Fiyat - Sağ Alt Köşe */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      bottom: 12,
+                      right: 16,
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      padding: "6px 10px",
+                      borderRadius: "6px",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: "14px",
+                        color: "#dc3545",
+                      }}
+                    >
+                      {favorite.ad.price
+                        ? `${formatPrice(favorite.ad.price)} TL`
+                        : "Fiyat Yok"}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Card>
+            ))}
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   const handleCloseComplaintModal = () => {
@@ -510,15 +1025,21 @@ const MainLayout: React.FC = () => {
         }
       }
 
-      // Arama terimi filtresi
+      // Gelişmiş arama terimi filtresi - Her şeyi arar
       if (searchTerm.trim()) {
         const searchLower = searchTerm.toLowerCase();
         filtered = filtered.filter((ad) => {
           const titleMatch = ad.title?.toLowerCase().includes(searchLower);
+          const descriptionMatch = ad.description
+            ?.toLowerCase()
+            .includes(searchLower);
           const brandMatch = ad.brand?.name
             ?.toLowerCase()
             .includes(searchLower);
           const modelMatch = ad.model?.name
+            ?.toLowerCase()
+            .includes(searchLower);
+          const categoryMatch = ad.category?.name
             ?.toLowerCase()
             .includes(searchLower);
           const cityMatch = ad.city?.name?.toLowerCase().includes(searchLower);
@@ -528,18 +1049,36 @@ const MainLayout: React.FC = () => {
           const locationMatch = ad.location
             ?.toLowerCase()
             .includes(searchLower);
+          const priceMatch = ad.price?.toString().includes(searchTerm);
+          const yearMatch = ad.year?.toString().includes(searchTerm);
+          const mileageMatch = ad.mileage?.toString().includes(searchTerm);
+
+          // Seller bilgileri de aranabilir
+          const sellerNameMatch =
+            ad.user?.firstName?.toLowerCase().includes(searchLower) ||
+            ad.user?.lastName?.toLowerCase().includes(searchLower);
+          const sellerCompanyMatch = ad.user?.companyName
+            ?.toLowerCase()
+            .includes(searchLower);
 
           return (
             titleMatch ||
+            descriptionMatch ||
             brandMatch ||
             modelMatch ||
+            categoryMatch ||
             cityMatch ||
             districtMatch ||
-            locationMatch
+            locationMatch ||
+            priceMatch ||
+            yearMatch ||
+            mileageMatch ||
+            sellerNameMatch ||
+            sellerCompanyMatch
           );
         });
         console.log(
-          "After search filter:",
+          "After enhanced search filter:",
           filtered.length,
           "Search term:",
           searchTerm
@@ -632,6 +1171,41 @@ const MainLayout: React.FC = () => {
 
     fetchFavoritesCount();
   }, [user, token]); // token dependency eklendi
+
+  // Load bookmarks when on bookmarks page
+  useEffect(() => {
+    const fetchBookmarks = async () => {
+      if (!isBookmarksPage) return;
+
+      if (!user || !token) {
+        setBookmarksError("Favorileri görüntülemek için giriş yapmalısınız");
+        setBookmarksLoading(false);
+        return;
+      }
+
+      try {
+        setBookmarksLoading(true);
+        setBookmarksError(null);
+        const response = await apiClient.get("/favorites", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setFavorites(response.data as FavoriteAd[]);
+      } catch (err: unknown) {
+        const axiosError = err as { response?: { data?: { error?: string } } };
+        setBookmarksError(
+          axiosError.response?.data?.error ||
+            "Favoriler yüklenirken hata oluştu"
+        );
+      } finally {
+        setBookmarksLoading(false);
+      }
+    };
+
+    fetchBookmarks();
+  }, [isBookmarksPage, user, token]);
 
   // Category count helper function - dinamik olarak ads verilerinden hesaplar
   const getCategoryCount = (slug: string | null) => {
@@ -1111,12 +1685,7 @@ const MainLayout: React.FC = () => {
         padding: 0,
       }}
     >
-      <Header
-        favoritesCount={favoritesCount}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        showSearch={true}
-      />
+      <Header favoritesCount={favoritesCount} />
 
       <Box
         sx={{
@@ -1129,16 +1698,24 @@ const MainLayout: React.FC = () => {
           flexDirection: "row",
         }}
       >
-        {/* Fixed Sidebar - Always visible on left */}
+        {/* Enhanced Sidebar with better borders */}
         {!shouldHideSidebar && (
           <Box
             sx={{
-              width: "180px",
+              width: "200px",
               flexShrink: 0,
-              backgroundColor: "transparent",
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
               ml: 2,
               mt: 3,
               overflow: "hidden",
+              borderRadius: 2,
+              border: "2px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              "&:hover": {
+                borderColor: "#D34237",
+                boxShadow: "0 4px 12px rgba(211, 66, 55, 0.1)",
+              },
+              transition: "all 0.3s ease",
             }}
           >
             {renderSidebarContent()}
@@ -1172,6 +1749,8 @@ const MainLayout: React.FC = () => {
             <Complaints />
           ) : location.pathname === "/store" && isAuthenticated ? (
             <Dukkanim />
+          ) : location.pathname === "/bookmarks" && isAuthenticated ? (
+            renderBookmarksContent()
           ) : (
             <>
               {/* Page Title and Filters */}
@@ -1180,24 +1759,87 @@ const MainLayout: React.FC = () => {
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "center",
+                    alignItems: { xs: "flex-start", md: "center" },
                     mb: 2,
+                    flexDirection: { xs: "column", md: "row" },
+                    gap: 2,
                   }}
                 >
-                  <Typography
-                    variant="h4"
+                  {/* Left side: Title + Search */}
+                  <Box
                     sx={{
-                      fontWeight: "600",
-                      color: "#dc3545",
-                      fontSize: { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" },
+                      display: "flex",
+                      gap: 3,
+                      flex: 1,
+                      flexDirection: { xs: "column", sm: "row" },
+                      alignItems: { xs: "flex-start", sm: "center" },
                     }}
                   >
-                    {selectedCategory && selectedCategory !== "Tüm İlanlar"
-                      ? selectedCategory
-                      : "Vitrin"}
-                  </Typography>
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        fontWeight: "600",
+                        color: "#dc3545",
+                        fontSize: { xs: "1.2rem", sm: "1.4rem", md: "1.5rem" },
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {selectedCategory && selectedCategory !== "Tüm İlanlar"
+                        ? selectedCategory
+                        : "Vitrin"}
+                    </Typography>
 
-                  {/* Yenileme Butonu */}
+                    {/* Universal Search Box */}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Araç, marka, model, konum ara..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon sx={{ color: "#D34237" }} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        maxWidth: { xs: "100%", sm: 400, md: 500 },
+                        "& .MuiOutlinedInput-root": {
+                          backgroundColor: "rgba(255, 255, 255, 0.95)",
+                          borderRadius: 3,
+                          fontSize: "0.9rem",
+                          height: 40,
+                          transition: "all 0.3s ease",
+                          border: "2px solid #e0e0e0",
+                          "&:hover": {
+                            backgroundColor: "white",
+                            borderColor: "#D34237",
+                            boxShadow: "0 2px 8px rgba(211, 66, 55, 0.1)",
+                          },
+                          "&.Mui-focused": {
+                            backgroundColor: "white",
+                            borderColor: "#D34237",
+                            boxShadow: "0 4px 12px rgba(211, 66, 55, 0.2)",
+                          },
+                          "& fieldset": {
+                            border: "none",
+                          },
+                        },
+                        "& .MuiInputBase-input": {
+                          padding: "8px 12px",
+                          fontSize: "0.9rem",
+                          color: "#333",
+                          "&::placeholder": {
+                            color: "#666",
+                            opacity: 0.8,
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Right side: Refresh Button */}
                   <Button
                     variant="outlined"
                     size="small"
@@ -1209,11 +1851,44 @@ const MainLayout: React.FC = () => {
                       fontSize: "0.875rem",
                       px: 2,
                       py: 0.5,
+                      borderColor: "#D34237",
+                      color: "#D34237",
+                      "&:hover": {
+                        borderColor: "#B02A20",
+                        backgroundColor: "rgba(211, 66, 55, 0.04)",
+                      },
+                      minWidth: "auto",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {isRefreshing ? "🔄 Yenileniyor..." : "🔄 Yenile"}
                   </Button>
                 </Box>
+
+                {/* Search Results Info */}
+                {searchTerm.trim() && (
+                  <Box
+                    sx={{
+                      mb: 2,
+                      p: 2,
+                      backgroundColor: "rgba(211, 66, 55, 0.05)",
+                      borderRadius: 2,
+                      border: "1px solid rgba(211, 66, 55, 0.2)",
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#D34237",
+                        fontWeight: 500,
+                      }}
+                    >
+                      📍 "{searchTerm}" için{" "}
+                      {Array.isArray(filteredAds) ? filteredAds.length : 0}{" "}
+                      sonuç bulundu
+                    </Typography>
+                  </Box>
+                )}
               </Box>
 
               {/* Conditional Rendering: Grid for "Tüm İlanlar", List for categories */}
@@ -1246,7 +1921,7 @@ const MainLayout: React.FC = () => {
                                 borderRadius: 1,
                                 boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                                 cursor: "default",
-                                height: 200,
+                                height: 220,
                                 display: "flex",
                                 flexDirection: "column",
                                 backgroundColor: "#f5f5f5",
@@ -1306,6 +1981,7 @@ const MainLayout: React.FC = () => {
                           sx={{
                             borderRadius: 1,
                             boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                            height: 235,
                             "&:hover": {
                               boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
                             },
@@ -1419,8 +2095,8 @@ const MainLayout: React.FC = () => {
                             <Box
                               sx={{
                                 position: "absolute",
-                                bottom: 8,
-                                right: 12,
+                                bottom: 2,
+                                right: 14,
                               }}
                             >
                               <Typography

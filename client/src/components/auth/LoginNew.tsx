@@ -140,6 +140,7 @@ const Login: React.FC = () => {
               onChange={handleChange}
               required
               variant="outlined"
+              autoComplete="email"
               sx={{
                 mb: 3,
                 "& .MuiOutlinedInput-root": {
@@ -174,6 +175,7 @@ const Login: React.FC = () => {
               onChange={handleChange}
               required
               variant="outlined"
+              autoComplete="current-password"
               sx={{
                 mb: 3,
                 "& .MuiOutlinedInput-root": {
