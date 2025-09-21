@@ -88,6 +88,34 @@ export const registerUser = createAsyncThunk(
       const response = await authApi.register(userData);
       return response;
     } catch (error: unknown) {
+      console.error("❌ Registration failed:", error);
+
+      // API'den gelen detaylı hata mesajını al
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as {
+          response?: { data?: { error?: string; details?: string[] } };
+        };
+        const errorData = apiError.response?.data;
+
+        // Detaylı hata logu
+        console.error("❌ API Error Data:", errorData);
+
+        if (errorData) {
+          // Validation hatası varsa detayları göster
+          if (errorData.error === "Validation failed" && errorData.details) {
+            const detailsText = Array.isArray(errorData.details)
+              ? errorData.details.join(", ")
+              : errorData.details;
+            console.error("❌ Validation errors:", errorData.details);
+            return rejectWithValue(`Doğrulama hatası: ${detailsText}`);
+          }
+
+          // Diğer API hataları
+          return rejectWithValue(errorData.error || "Kayıt işlemi başarısız");
+        }
+      }
+
+      // Network veya diğer hatalar
       const errorMessage =
         error instanceof Error ? error.message : "Registration failed";
       return rejectWithValue(errorMessage);

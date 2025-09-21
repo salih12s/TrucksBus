@@ -19,6 +19,10 @@ import {
 } from "./components/common";
 import { PWAStatus } from "./components/pwa";
 import { ProtectedRoute } from "./components/auth";
+import MaintenanceMode from "./components/MaintenanceMode";
+
+// Bakım modu kontrolü
+const isMaintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === "true";
 
 // ❗ CRITICAL: Ana sayfa için gerekli - öncelikle yükle
 const MainLayout = React.lazy(() => import("./pages/MainLayout"));
@@ -316,6 +320,16 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  // Bakım modu kontrolü
+  if (isMaintenanceMode) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <MaintenanceMode />
+      </ThemeProvider>
+    );
+  }
+
   return (
     <SplashScreen duration={2000}>
       <Provider store={store}>

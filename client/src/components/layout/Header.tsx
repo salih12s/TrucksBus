@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
         <Box
           sx={{
             position: "absolute",
-            left: 8,
+            left: isMobile ? 12 : isTablet ? 16 : 24, // Ortaya yaklaştır
             top: "50%",
             transform: "translateY(-50%)",
             display: "flex",
@@ -145,6 +145,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
             alignItems: "center",
             gap: isMobile ? 0.3 : isTablet ? 0.5 : 0.8,
             marginLeft: "auto", // Push to right
+            marginRight: isMobile ? 1 : isTablet ? 2 : 3, // Ortaya yaklaştır
             position: "relative",
             zIndex: 2,
           }}

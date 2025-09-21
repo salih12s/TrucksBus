@@ -187,6 +187,47 @@ const RegisterCorporate: React.FC = () => {
     // Clear previous validation errors
     setValidationError("");
 
+    // Basic required field validation
+    const requiredFields = [
+      { field: "companyName", message: "Şirket adı gereklidir" },
+      { field: "taxNumber", message: "Vergi numarası gereklidir" },
+      { field: "firstName", message: "Ad gereklidir" },
+      { field: "lastName", message: "Soyad gereklidir" },
+      { field: "email", message: "E-posta adresi gereklidir" },
+      { field: "phone", message: "Telefon numarası gereklidir" },
+      { field: "address", message: "Adres gereklidir" },
+      { field: "password", message: "Şifre gereklidir" },
+    ];
+
+    for (const { field, message } of requiredFields) {
+      if (
+        !formData[field as keyof typeof formData] ||
+        formData[field as keyof typeof formData].trim() === ""
+      ) {
+        setValidationError(message);
+        return;
+      }
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setValidationError("Geçerli bir e-posta adresi giriniz!");
+      return;
+    }
+
+    // Tax number validation (basic)
+    if (formData.taxNumber.replace(/\s/g, "").length < 5) {
+      setValidationError("Vergi numarası en az 5 karakter olmalıdır!");
+      return;
+    }
+
+    // Company name validation
+    if (formData.companyName.trim().length < 2) {
+      setValidationError("Şirket adı en az 2 karakter olmalıdır!");
+      return;
+    }
+
     // Validate password strength
     const passwordError = validatePassword(formData.password);
     if (passwordError) {
@@ -216,6 +257,8 @@ const RegisterCorporate: React.FC = () => {
       address: formData.address,
       kvkkAccepted: acceptTerms,
     };
+
+    console.log("📤 Sending registration data:", userData);
 
     const result = await dispatch(registerUser(userData));
     if (registerUser.fulfilled.match(result)) {
@@ -306,7 +349,52 @@ const RegisterCorporate: React.FC = () => {
                 mb: 2,
               }}
             >
-              {/* Company Name and Last Name */}
+              {/* Company Name - Full width first */}
+            </Box>
+
+            {/* Company Name Field */}
+            <TextField
+              fullWidth
+              name="companyName"
+              placeholder="Şirket Adı"
+              value={formData.companyName}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              sx={{
+                mb: 2,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "transparent",
+                  borderRadius: 1,
+                  "& fieldset": {
+                    borderColor: "#ddd",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#4A90E2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4A90E2",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  py: 2,
+                  fontSize: "16px",
+                },
+              }}
+            />
+
+            {/* Name fields in grid */}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 2,
+                mb: 2,
+              }}
+            >
+              {/* First Name and Last Name */}
               <TextField
                 fullWidth
                 name="firstName"
@@ -617,6 +705,41 @@ const RegisterCorporate: React.FC = () => {
                 ))}
               </TextField>
             </Box>
+
+            {/* Address Field */}
+            <TextField
+              fullWidth
+              name="address"
+              placeholder="Açık Adres"
+              value={formData.address}
+              onChange={handleChange}
+              required
+              variant="outlined"
+              multiline
+              rows={3}
+              sx={{
+                mb: 3,
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "transparent",
+                  borderRadius: 1,
+                  "& fieldset": {
+                    borderColor: "#ddd",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#4A90E2",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4A90E2",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  py: 2,
+                  fontSize: "16px",
+                },
+              }}
+            />
 
             {/* Business Type Section */}
             <Typography

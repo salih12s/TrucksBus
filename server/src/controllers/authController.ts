@@ -110,6 +110,66 @@ export class AuthController {
         kvkkAccepted,
       }: RegisterRequest = req.body;
 
+      // Basic validation
+      const validationErrors: string[] = [];
+
+      if (!email || !email.includes("@")) {
+        validationErrors.push("Valid email is required");
+      }
+
+      if (!password || password.length < 6) {
+        validationErrors.push("Password must be at least 6 characters long");
+      }
+
+      if (!kvkkAccepted) {
+        validationErrors.push("KVKK acceptance is required");
+      }
+
+      // Additional validation for corporate users
+      if (role === "CORPORATE") {
+        console.log("🏢 Validating corporate user:", {
+          companyName: companyName || "MISSING",
+          taxId: taxId || "MISSING",
+          firstName: firstName || "MISSING",
+          lastName: lastName || "MISSING",
+        });
+
+        if (!companyName || companyName.trim().length < 2) {
+          validationErrors.push(
+            "Company name is required for corporate accounts"
+          );
+        }
+        if (!taxId || taxId.trim().length < 5) {
+          validationErrors.push("Tax ID is required for corporate accounts");
+        }
+        if (!firstName || firstName.trim().length < 2) {
+          validationErrors.push("First name is required");
+        }
+        if (!lastName || lastName.trim().length < 2) {
+          validationErrors.push("Last name is required");
+        }
+      }
+
+      if (validationErrors.length > 0) {
+        console.error("❌ Validation failed:", {
+          errors: validationErrors,
+          receivedData: {
+            email: email || "MISSING",
+            firstName: firstName || "MISSING",
+            lastName: lastName || "MISSING",
+            companyName: companyName || "MISSING",
+            taxId: taxId || "MISSING",
+            role: role || "MISSING",
+            kvkkAccepted: kvkkAccepted,
+          },
+        });
+        res.status(400).json({
+          error: "Validation failed",
+          details: validationErrors,
+        });
+        return;
+      }
+
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
         where: { email },
