@@ -87,7 +87,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
     >
       <Toolbar
         sx={{
-          px: 2,
+          px: 1,
           py: 0.4,
           minHeight: "64px !important",
           position: "relative",
@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
         <Box
           sx={{
             position: "absolute",
-            left: 12,
+            left: 8,
             top: "50%",
             transform: "translateY(-50%)",
             display: "flex",
@@ -143,7 +143,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: isMobile ? 0.5 : isTablet ? 0.8 : 1.2,
+            gap: isMobile ? 0.3 : isTablet ? 0.5 : 0.8,
             marginLeft: "auto", // Push to right
             position: "relative",
             zIndex: 2,

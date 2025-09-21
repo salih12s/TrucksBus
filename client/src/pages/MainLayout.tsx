@@ -176,7 +176,6 @@ const MainLayout: React.FC = () => {
   const [yearMax, setYearMax] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [favoritesCount, setFavoritesCount] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [complaintModalOpen, setComplaintModalOpen] = useState(false);
   const [selectedAdForComplaint, setSelectedAdForComplaint] = useState<{
     id: number;
@@ -722,7 +721,6 @@ const MainLayout: React.FC = () => {
 
   // ❗ ULTRA FAST: Ads'leri minimal mode ile hızlı yükle - Pagination destekli
   const loadAdsLazy = async (page: number = 1) => {
-    setIsRefreshing(true);
     const adsStartTime = performance.now();
     console.log(`⚡ Loading ads page ${page} with ultra fast mode...`);
 
@@ -769,8 +767,6 @@ const MainLayout: React.FC = () => {
       setAds([]);
       setTotalPages(1);
       setCurrentPage(1);
-    } finally {
-      setIsRefreshing(false);
     }
   };
 
@@ -1279,37 +1275,31 @@ const MainLayout: React.FC = () => {
     // Eğer kategori seçilmemişse normal kategori listesini göster
     if (!selectedCategory) {
       return (
-        <Box sx={{ p: 1.5 }}>
+        <Box sx={{ p: 1 }}>
           {/* Kategoriler Başlığı */}
           <Typography
             variant="h6"
             sx={{
               color: "#333",
-              fontWeight: "600",
-              fontSize: "14px",
-              mb: 1.5,
-              pb: 0.5,
-              borderBottom: "1px solid #ff6b35",
+              fontWeight: "500",
+              fontSize: "16px",
+              mb: 1,
             }}
           >
             Kategoriler
           </Typography>
 
           {/* Categories List */}
-          <List sx={{ p: 0 }}>
+          <List sx={{ p: 0, py: 0 }}>
             {/* Tüm İlanlar Seçeneği */}
             <ListItem
               onClick={() => handleCategoryClick(null)}
               sx={{
                 cursor: "pointer",
-                py: 0.5,
-                px: 1.5,
-                backgroundColor: "#fdeaea",
-                borderLeft: "3px solid #dc3545",
-                borderRadius: "3px",
-                mb: 0.3,
+                py: 0.2,
+                px: 0,
                 "&:hover": {
-                  backgroundColor: "#f8d7da",
+                  backgroundColor: "transparent",
                 },
               }}
             >
@@ -1318,15 +1308,14 @@ const MainLayout: React.FC = () => {
                 secondary={getCategoryCount(null)}
                 sx={{
                   "& .MuiListItemText-primary": {
-                    color: "#dc3545",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    lineHeight: 1.2,
+                    color: "#333",
+                    fontSize: "14px",
+                    fontWeight: 400,
                   },
                   "& .MuiListItemText-secondary": {
-                    color: "#dc3545",
-                    fontSize: "10px",
-                    fontWeight: 500,
+                    color: "#666",
+                    fontSize: "12px",
+                    fontWeight: 400,
                   },
                 }}
               />
@@ -1338,13 +1327,10 @@ const MainLayout: React.FC = () => {
                 onClick={() => handleCategoryClick(category.slug)}
                 sx={{
                   cursor: "pointer",
-                  py: 0.5,
-                  px: 1.5,
-                  backgroundColor: "transparent",
-                  borderRadius: "3px",
-                  mb: 0.3,
+                  py: 0.2,
+                  px: 0,
                   "&:hover": {
-                    backgroundColor: "#f5f5f5",
+                    backgroundColor: "transparent",
                   },
                 }}
               >
@@ -1354,14 +1340,13 @@ const MainLayout: React.FC = () => {
                   sx={{
                     "& .MuiListItemText-primary": {
                       color: "#333",
-                      fontSize: "12px",
+                      fontSize: "14px",
                       fontWeight: 400,
-                      lineHeight: 1.2,
                     },
                     "& .MuiListItemText-secondary": {
-                      color: "#ff6b35",
-                      fontSize: "10px",
-                      fontWeight: 500,
+                      color: "#666",
+                      fontSize: "12px",
+                      fontWeight: 400,
                     },
                   }}
                 />
@@ -1702,20 +1687,12 @@ const MainLayout: React.FC = () => {
         {!shouldHideSidebar && (
           <Box
             sx={{
-              width: "200px",
+              width: "180px",
               flexShrink: 0,
-              backgroundColor: "rgba(255, 255, 255, 0.95)",
-              ml: 2,
-              mt: 3,
+              backgroundColor: "transparent",
+              ml: 1,
+              mt: 12,
               overflow: "hidden",
-              borderRadius: 2,
-              border: "2px solid #e0e0e0",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-              "&:hover": {
-                borderColor: "#D34237",
-                boxShadow: "0 4px 12px rgba(211, 66, 55, 0.1)",
-              },
-              transition: "all 0.3s ease",
             }}
           >
             {renderSidebarContent()}
@@ -1765,14 +1742,15 @@ const MainLayout: React.FC = () => {
                     gap: 2,
                   }}
                 >
-                  {/* Left side: Title + Search */}
+                  {/* Left side: Title + Search - Centered */}
                   <Box
                     sx={{
                       display: "flex",
                       gap: 3,
                       flex: 1,
                       flexDirection: { xs: "column", sm: "row" },
-                      alignItems: { xs: "flex-start", sm: "center" },
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     <Typography
@@ -1838,31 +1816,6 @@ const MainLayout: React.FC = () => {
                       }}
                     />
                   </Box>
-
-                  {/* Right side: Refresh Button */}
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={() => loadAdsLazy(1)}
-                    disabled={isRefreshing}
-                    sx={{
-                      borderRadius: 2,
-                      textTransform: "none",
-                      fontSize: "0.875rem",
-                      px: 2,
-                      py: 0.5,
-                      borderColor: "#D34237",
-                      color: "#D34237",
-                      "&:hover": {
-                        borderColor: "#B02A20",
-                        backgroundColor: "rgba(211, 66, 55, 0.04)",
-                      },
-                      minWidth: "auto",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {isRefreshing ? "🔄 Yenileniyor..." : "🔄 Yenile"}
-                  </Button>
                 </Box>
 
                 {/* Search Results Info */}
@@ -1983,9 +1936,12 @@ const MainLayout: React.FC = () => {
                             boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                             height: 235,
                             "&:hover": {
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                              boxShadow: "0 4px 12px rgba(211, 66, 55, 0.15)",
+                              backgroundColor: "rgba(211, 66, 55, 0.02)",
+                              transform: "translateY(-2px)",
+                              borderColor: "rgba(211, 66, 55, 0.3)",
                             },
-                            transition: "all 0.2s ease",
+                            transition: "all 0.3s ease",
                             cursor: "pointer",
                             width: "100%",
                             backgroundColor: "white",
