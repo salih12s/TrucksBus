@@ -598,6 +598,59 @@ const AdDetail: React.FC = () => {
 
       <Container maxWidth="lg">
         <Box sx={{ px: { xs: 1, sm: 2, md: 3 } }}>
+          {/* Back Button and Ad Info Row */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 3,
+              mb: 3,
+              flexWrap: "wrap",
+            }}
+          >
+            {/* Back Button */}
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIos />}
+              onClick={() => navigate(-1)}
+              sx={{
+                borderColor: "#007bff",
+                color: "#007bff",
+                fontSize: "14px",
+                "&:hover": {
+                  backgroundColor: "#007bff",
+                  color: "white",
+                },
+              }}
+            >
+              Geri Dön
+            </Button>
+
+            {/* Ad Info */}
+            <Box sx={{ fontSize: "14px", color: "#666" }}>
+              <strong>İlan No:</strong> #{ad.id || "56"}
+            </Box>
+            <Box sx={{ fontSize: "14px", color: "#666" }}>
+              <strong>İlan Tarihi:</strong>{" "}
+              {ad.createdAt
+                ? new Date(ad.createdAt).toLocaleDateString("tr-TR")
+                : "22.09.2025"}
+            </Box>
+            <Box sx={{ fontSize: "14px", color: "#666" }}>
+              <strong>Kategori:</strong>{" "}
+              {ad.category?.name || "Minibüs & Midibüs"}
+            </Box>
+            <Box sx={{ fontSize: "14px", color: "#666" }}>
+              <strong>Marka:</strong> {ad.brand?.name || "Volkswagen"}
+            </Box>
+            <Box sx={{ fontSize: "14px", color: "#666" }}>
+              <strong>Model:</strong> {ad.model?.name || "T Serisi"}
+            </Box>
+            <Box sx={{ fontSize: "14px", color: "#666" }}>
+              <strong>Variant:</strong> {ad.variant?.name || "T5"}
+            </Box>
+          </Box>
+
           {/* Main Title and Price */}
           <Box sx={{ mb: 3 }}>
             <Typography
@@ -614,103 +667,38 @@ const AdDetail: React.FC = () => {
                 "İLK SAHİBİNDEN KOMPLE SERVİS BAKIMLI HASARSIZ TEMİZ"}
             </Typography>
 
-            {/* Price and Actions Row */}
+            {/* Price Row */}
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                gap: 2,
                 mb: 2,
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontSize: "28px",
-                    fontWeight: "bold",
-                    color: "#dc3545",
-                  }}
-                >
-                  {formatPrice(ad.price)}
-                </Typography>
-                <Chip
-                  label="🔄"
-                  size="small"
-                  sx={{
-                    backgroundColor: "#e8f5e8",
-                    color: "#2e7d32",
-                    fontSize: "12px",
-                  }}
-                />
-              </Box>
-
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <Button
-                  variant="outlined"
-                  startIcon={isFavorited ? <Favorite /> : <FavoriteBorder />}
-                  size="small"
-                  onClick={handleFavoriteToggle}
-                  disabled={isOwner}
-                  sx={{
-                    borderColor: isOwner
-                      ? "#ccc"
-                      : isFavorited
-                      ? "#dc3545"
-                      : "#007bff",
-                    color: isOwner
-                      ? "#666"
-                      : isFavorited
-                      ? "#dc3545"
-                      : "#007bff",
-                    fontSize: "12px",
-                    "&:hover": {
-                      backgroundColor: isOwner
-                        ? "transparent"
-                        : isFavorited
-                        ? "#dc3545"
-                        : "#007bff",
-                      color: isOwner ? "#666" : "white",
-                    },
-                    "&:disabled": {
-                      borderColor: "#ccc",
-                      color: "#666",
-                    },
-                  }}
-                >
-                  {isOwner
-                    ? "Kendi İlanınız"
-                    : isFavorited
-                    ? "Favorilerden Çıkar"
-                    : "Favorilerime Ekle"}
-                </Button>
-              </Box>
-            </Box>
-
-            {/* Ad Details Row */}
-            <Box
-              sx={{
-                display: "flex",
-                gap: 3,
-                fontSize: "14px",
-                color: "#666",
-                mb: 1,
-              }}
-            >
-              <Box>
-                <strong>İlan No:</strong> #{id}
-              </Box>
-              <Box>
-                <strong>İlan Tarihi:</strong>{" "}
-                {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
-              </Box>
-              <Box>
-                <strong>Kategori:</strong> {ad.category?.name || "Çekici"}
-              </Box>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontSize: "28px",
+                  fontWeight: "bold",
+                  color: "#dc3545",
+                }}
+              >
+                {formatPrice(ad.price)}
+              </Typography>
+              <Chip
+                label="🔄"
+                size="small"
+                sx={{
+                  backgroundColor: "#e8f5e8",
+                  color: "#2e7d32",
+                  fontSize: "12px",
+                }}
+              />
             </Box>
           </Box>
 
-          {/* Main Content - Three Columns Layout */}
+          {/* Main Content - Two Columns Layout */}
           <Box
             sx={{
               display: "flex",
@@ -718,947 +706,984 @@ const AdDetail: React.FC = () => {
               flexDirection: { xs: "column", lg: "row" },
             }}
           >
-            {/* Left Side - Images (40%) */}
-            <Box sx={{ flex: { lg: "0 0 40%" } }}>
-              {/* Main Image */}
-              <Box sx={{ mb: 2, position: "relative" }}>
-                <Box
-                  sx={{
-                    width: "100%",
-                    height: 250,
-                    backgroundColor: "#f8f9fa",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    overflow: "hidden",
-                    cursor: "pointer",
-                    "&:hover": {
-                      opacity: 0.95,
-                    },
-                  }}
-                  onClick={() => {
-                    setModalImageIndex(selectedImageIndex);
-                    setModalOpen(true);
-                  }}
-                >
-                  <LazyImage
-                    src={
-                      ad.images &&
-                      ad.images.length > 0 &&
-                      selectedImageIndex < ad.images.length
-                        ? getImageUrl([ad.images[selectedImageIndex]])
-                        : "https://via.placeholder.com/400x300/f0f0f0/999999?text=Resim+Yok"
-                    }
-                    alt={ad.title}
-                    style={{
-                      maxWidth: "100%",
-                      maxHeight: "100%",
-                      objectFit: "contain",
-                    }}
-                    width="400"
-                    height="300"
-                  />
-                </Box>
-
-                {/* Büyük Fotoğraf Button */}
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => {
-                    setModalImageIndex(selectedImageIndex);
-                    setModalOpen(true);
-                  }}
-                  sx={{
-                    position: "absolute",
-                    bottom: 16,
-                    left: 16,
-                    backgroundColor: "white",
-                    color: "#333",
-                    border: "1px solid #ddd",
-                    fontSize: "12px",
-                    padding: "4px 8px",
-                    "&:hover": {
-                      backgroundColor: "#f5f5f5",
-                    },
-                  }}
-                >
-                  📷 Büyük Fotoğraf
-                </Button>
-
-                {/* Photo Counter */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    bottom: 16,
-                    right: 16,
-                    backgroundColor: "rgba(0,0,0,0.7)",
-                    color: "white",
-                    padding: "4px 8px",
-                    borderRadius: 1,
-                    fontSize: "12px",
-                  }}
-                >
-                  {selectedImageIndex + 1}/{ad.images?.length || 1} Fotoğraf
-                </Box>
-              </Box>
-
-              {/* Thumbnail Images */}
-              {ad.images && ad.images.length > 1 && (
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(5, 1fr)",
-                    gap: 1,
-                    maxHeight: 150,
-                    overflowY: "auto",
-                    "&::-webkit-scrollbar": {
-                      width: 6,
-                    },
-                    "&::-webkit-scrollbar-track": {
-                      backgroundColor: "#f1f1f1",
-                      borderRadius: 3,
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                      backgroundColor: "#c1c1c1",
-                      borderRadius: 3,
-                    },
-                  }}
-                >
-                  {ad.images.map((image, index) => {
-                    return (
-                      <Box
-                        key={index}
-                        onClick={() => {
-                          setSelectedImageIndex(index);
-                          setModalImageIndex(index);
-                          setModalOpen(true);
-                        }}
-                        sx={{
-                          width: "100%",
-                          aspectRatio: "4/3",
-                          border:
-                            selectedImageIndex === index
-                              ? "2px solid #007bff"
-                              : "1px solid #e0e0e0",
-                          borderRadius: 1,
-                          overflow: "hidden",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          "&:hover": {
-                            borderColor: "#007bff",
-                            transform: "scale(1.02)",
-                          },
-                        }}
-                      >
-                        <LazyImage
-                          src={getImageUrl([image])}
-                          alt={`${ad.title} - ${index + 1}`}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                          width="80"
-                          height="60"
-                        />
-                      </Box>
-                    );
-                  })}
-                </Box>
-              )}
-            </Box>
-
-            {/* Middle Section - Vehicle Details */}
-            <Box sx={{ flex: { lg: "0 0 35%" } }}>
+            {/* Left Side - Images and Details Combined (75%) */}
+            <Box sx={{ flex: { lg: "0 0 75%" } }}>
+              {/* Images and Vehicle Details in Flex Row */}
               <Box
                 sx={{
-                  backgroundColor: "white",
-                  border: "1px solid #e0e0e0",
-                  borderRadius: 1,
-                  maxHeight: "500px",
-                  overflowY: "auto",
+                  display: "flex",
+                  gap: 2,
+                  flexDirection: { xs: "column", md: "row" },
                 }}
               >
-                {/* Header */}
-                <Box
-                  sx={{
-                    backgroundColor: "#f8f9fa",
-                    px: 1.5,
-                    py: 1,
-                    borderBottom: "1px solid #e0e0e0",
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: "13px",
-                      fontWeight: "bold",
-                      color: "#333",
-                    }}
-                  >
-                    İlan Bilgileri
-                  </Typography>
+                {/* Images Section (60% of left area) */}
+                <Box sx={{ flex: { md: "0 0 60%" } }}>
+                  {/* Main Image */}
+                  <Box sx={{ mb: 2, position: "relative" }}>
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: 400,
+                        backgroundColor: "#f8f9fa",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        cursor: "pointer",
+                        "&:hover": {
+                          opacity: 0.95,
+                        },
+                      }}
+                      onClick={() => {
+                        setModalImageIndex(selectedImageIndex);
+                        setModalOpen(true);
+                      }}
+                    >
+                      <LazyImage
+                        src={
+                          ad.images &&
+                          ad.images.length > 0 &&
+                          selectedImageIndex < ad.images.length
+                            ? getImageUrl([ad.images[selectedImageIndex]])
+                            : "https://via.placeholder.com/400x300/f0f0f0/999999?text=Resim+Yok"
+                        }
+                        alt={ad.title}
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "100%",
+                          objectFit: "contain",
+                        }}
+                        width="400"
+                        height="300"
+                      />
+                    </Box>
+
+                    {/* Büyük Fotoğraf Button */}
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        setModalImageIndex(selectedImageIndex);
+                        setModalOpen(true);
+                      }}
+                      sx={{
+                        position: "absolute",
+                        bottom: 16,
+                        left: 16,
+                        backgroundColor: "white",
+                        color: "#333",
+                        border: "1px solid #ddd",
+                        fontSize: "12px",
+                        padding: "4px 8px",
+                        "&:hover": {
+                          backgroundColor: "#f5f5f5",
+                        },
+                      }}
+                    >
+                      📷 Büyük Fotoğraf
+                    </Button>
+
+                    {/* Photo Counter */}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        bottom: 16,
+                        right: 16,
+                        backgroundColor: "rgba(0,0,0,0.7)",
+                        color: "white",
+                        padding: "4px 8px",
+                        borderRadius: 1,
+                        fontSize: "12px",
+                      }}
+                    >
+                      {selectedImageIndex + 1}/{ad.images?.length || 1} Fotoğraf
+                    </Box>
+                  </Box>
+
+                  {/* Thumbnail Images */}
+                  {ad.images && ad.images.length > 1 && (
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(5, 1fr)",
+                        gap: 1,
+                        maxHeight: 250,
+                        overflowY: "auto",
+                        "&::-webkit-scrollbar": {
+                          width: 6,
+                        },
+                        "&::-webkit-scrollbar-track": {
+                          backgroundColor: "#f1f1f1",
+                          borderRadius: 3,
+                        },
+                        "&::-webkit-scrollbar-thumb": {
+                          backgroundColor: "#c1c1c1",
+                          borderRadius: 3,
+                        },
+                      }}
+                    >
+                      {ad.images.map((image, index) => {
+                        return (
+                          <Box
+                            key={index}
+                            onClick={() => {
+                              setSelectedImageIndex(index);
+                              setModalImageIndex(index);
+                              setModalOpen(true);
+                            }}
+                            sx={{
+                              width: "100%",
+                              aspectRatio: "4/3",
+                              border:
+                                selectedImageIndex === index
+                                  ? "2px solid #007bff"
+                                  : "1px solid #e0e0e0",
+                              borderRadius: 1,
+                              overflow: "hidden",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                              "&:hover": {
+                                borderColor: "#007bff",
+                                transform: "scale(1.02)",
+                              },
+                            }}
+                          >
+                            <LazyImage
+                              src={getImageUrl([image])}
+                              alt={`${ad.title} - ${index + 1}`}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                              width="80"
+                              height="60"
+                            />
+                          </Box>
+                        );
+                      })}
+                    </Box>
+                  )}
                 </Box>
 
-                {/* Properties Table */}
-                <Box sx={{ p: 0 }}>
-                  {[
-                    // Temel Bilgiler
-                    { label: "İlan No", value: ad.id ? `${ad.id}` : null },
-                    {
-                      label: "İlan Tarihi",
-                      value: ad.createdAt
-                        ? new Date(ad.createdAt).toLocaleDateString("tr-TR")
-                        : null,
-                    },
-                    { label: "Kategori", value: ad.category?.name || null },
-                    {
-                      label: "Fiyat",
-                      value: ad.price
-                        ? `${Number(ad.price).toLocaleString("tr-TR")} TL`
-                        : null,
-                    },
-                    { label: "Yıl", value: ad.year ? `${ad.year}` : null },
-                    {
-                      label: "KM",
-                      value: ad.mileage
-                        ? `${ad.mileage.toLocaleString("tr-TR")}`
-                        : null,
-                    },
-                    {
-                      label: "Görüntülenme",
-                      value: ad.viewCount ? `${ad.viewCount}` : null,
-                    },
-
-                    // Marka Bilgisi (Model ve Varyant kamyon römork için gösterilmez)
-                    { label: "Marka", value: ad.brand?.name || null },
-
-                    // Lokasyon Bilgileri
-                    {
-                      label: "Şehir",
-                      value:
-                        ad.city?.name ||
-                        (ad.customFields?.cityId
-                          ? `Şehir ID: ${ad.customFields.cityId}`
-                          : null) ||
-                        null,
-                    },
-                    {
-                      label: "İlçe",
-                      value:
-                        ad.district?.name ||
-                        (ad.customFields?.districtId
-                          ? `İlçe ID: ${ad.customFields.districtId}`
-                          : null) ||
-                        null,
-                    },
-                    { label: "Adres", value: ad.customFields?.address || null },
-
-                    // Araç Detayları
-                    {
-                      label: "Durum",
-                      value: ad.customFields?.condition || null,
-                    },
-                    {
-                      label: "Renk",
-                      value: ad.customFields?.color || ad.color || null,
-                    },
-                    {
-                      label: "Yakıt Tipi",
-                      value: ad.customFields?.fuelType || ad.fuel || null,
-                    },
-                    {
-                      label: "Vites",
-                      value:
-                        ad.customFields?.transmission ||
-                        ad.transmission ||
-                        null,
-                    },
-                    {
-                      label: "Çekiş",
-                      value:
-                        ad.customFields?.drivetrain || ad.wheelDrive || null,
-                    },
-                    {
-                      label: "Motor Gücü",
-                      value:
-                        ad.customFields?.motorPower ||
-                        ad.customFields?.enginePower ||
-                        ad.enginePower ||
-                        ad.customFields?.motor_power ||
-                        ad.customFields?.engine_power ||
-                        ad.dynamicFields?.enginePower ||
-                        ad.dynamicFields?.motorPower ||
-                        null,
-                    },
-                    {
-                      label: "Motor Hacmi",
-                      value:
-                        ad.customFields?.engineCapacity ||
-                        ad.customFields?.engineVolume ||
-                        ad.engineVolume ||
-                        null,
-                    },
-                    {
-                      label: "Koltuk Sayısı",
-                      value: ad.customFields?.seatCount || ad.seatCount || null,
-                    },
-                    {
-                      label: "Tavan Tipi",
-                      value: ad.customFields?.roofType || ad.roofType || null,
-                    },
-                    {
-                      label: "Şasi",
-                      value:
-                        ad.customFields?.chassis ||
-                        ad.customFields?.chasisType ||
-                        null,
-                    },
-                    { label: "Kabin", value: ad.customFields?.cabin || null },
-
-                    // Kamyon Römork Özel Alanları
-                    {
-                      label: "Uzunluk (m)",
-                      value: ad.customFields?.length
-                        ? `${ad.customFields.length} m`
-                        : null,
-                    },
-                    {
-                      label: "Genişlik (m)",
-                      value: ad.customFields?.width
-                        ? `${ad.customFields.width} m`
-                        : null,
-                    },
-                    {
-                      label: "Tenteli",
-                      value:
-                        ad.customFields?.hasTent === true
-                          ? "Evet"
-                          : ad.customFields?.hasTent === false
-                          ? "Hayır"
-                          : null,
-                    },
-                    {
-                      label: "Damperli",
-                      value:
-                        ad.customFields?.hasDamper === true
-                          ? "Evet"
-                          : ad.customFields?.hasDamper === false
-                          ? "Hayır"
-                          : null,
-                    },
-                    {
-                      label: "Takas",
-                      value:
-                        ad.customFields?.exchangeable === "evet"
-                          ? "Evet"
-                          : ad.customFields?.exchangeable === "hayır"
-                          ? "Hayır"
-                          : ad.customFields?.exchangeable
-                          ? ad.customFields.exchangeable
-                          : null,
-                    },
-
-                    // Çekici Özel Alanları
-                    {
-                      label: "Kabin Tipi",
-                      value: ad.customFields?.cabinType || null,
-                    },
-                    {
-                      label: "Yatak Sayısı",
-                      value: ad.customFields?.bedCount || null,
-                    },
-                    {
-                      label: "Dorse Mevcut",
-                      value: ad.customFields?.dorseAvailable || null,
-                    },
-                    {
-                      label: "Hasar Kaydı",
-                      value: ad.customFields?.damageRecord || null,
-                    },
-                    {
-                      label: "Boyalı",
-                      value: ad.customFields?.paintChange || null,
-                    },
-
-                    // Karoser/Ahşap Kasa Özel Alanları
-                    {
-                      label: "Kullanım Alanı",
-                      value: ad.customFields?.usageArea || null,
-                    },
-                    {
-                      label: "Karoser Yapısı",
-                      value: ad.customFields?.bodyStructure || null,
-                    },
-                    {
-                      label: "Kasa Tipi",
-                      value: ad.customFields?.caseType || null,
-                    },
-                    {
-                      label: "Devrilme Yönü",
-                      value:
-                        ad.customFields?.tippingDirection ||
-                        ad.customFields?.devrilmeYonu ||
-                        null,
-                    },
-                    {
-                      label: "Takaslı",
-                      value: ad.customFields?.isExchangeable
-                        ? ad.customFields.isExchangeable === "evet"
-                          ? "Evet"
-                          : "Hayır"
-                        : null,
-                    },
-
-                    // Otobüs Özel Alanları
-                    {
-                      label: "Motor Gücü",
-                      value:
-                        ad.customFields?.motorPower ||
-                        ad.customFields?.enginePower ||
-                        ad.enginePower ||
-                        ad.customFields?.motor_power ||
-                        ad.customFields?.engine_power ||
-                        ad.dynamicFields?.enginePower ||
-                        ad.dynamicFields?.motorPower ||
-                        null,
-                    },
-                    {
-                      label: "Kapasite",
-                      value:
-                        ad.customFields?.capacity ||
-                        ad.customFields?.passengerCapacity ||
-                        null,
-                    },
-                    {
-                      label: "Maksimum Araç Kapasitesi",
-                      value:
-                        ad.customFields?.maxVehicleCapacity ||
-                        ad.maxVehicleCapacity ||
-                        null,
-                    },
-                    {
-                      label: "Koltuk Düzeni",
-                      value:
-                        ad.customFields?.seatArrangement ||
-                        ad.customFields?.seatLayout ||
-                        null,
-                    },
-                    {
-                      label: "Koltuk Arkası Ekran",
-                      value: ad.customFields?.seatBackScreen || null,
-                    },
-                    {
-                      label: "Yakıt Hacmi (Litre)",
-                      value: ad.customFields?.fuelCapacity
-                        ? `${ad.customFields.fuelCapacity} L`
-                        : null,
-                    },
-
-                    // Oto Kurtarıcı Tekli Araç Özel Alanları
-                    {
-                      label: "İstiap Haddi",
-                      value:
-                        ad.customFields?.loadCapacity ||
-                        ad.loadCapacity ||
-                        null,
-                    },
-                    {
-                      label: "Motor Hacmi",
-                      value:
-                        ad.customFields?.engineVolume ||
-                        ad.customFields?.engineCapacity ||
-                        ad.engineVolume ||
-                        null,
-                    },
-                    {
-                      label: "Maksimum Güç",
-                      value: ad.customFields?.maxPower || ad.maxPower || null,
-                    },
-                    {
-                      label: "Maksimum Tork",
-                      value: ad.customFields?.maxTorque || ad.maxTorque || null,
-                    },
-                    {
-                      label: "Yakıt Tipi",
-                      value: ad.customFields?.fuelType || ad.fuelType || null,
-                    },
-                    {
-                      label: "Araç Plakası",
-                      value:
-                        ad.customFields?.plateNumber || ad.plateNumber || null,
-                    },
-                    {
-                      label: "Platform Uzunluk",
-                      value:
-                        ad.customFields?.platformLength ||
-                        ad.platformLength ||
-                        null,
-                    },
-                    {
-                      label: "Platform Genişlik",
-                      value:
-                        ad.customFields?.platformWidth ||
-                        ad.platformWidth ||
-                        null,
-                    },
-
-                    {
-                      label: "Lastik Durumu",
-                      value:
-                        ad.customFields?.tireCondition ||
-                        ad.customFields?.lastikDurumu
-                          ? `${
-                              ad.customFields?.tireCondition ||
-                              ad.customFields?.lastikDurumu
-                            }%`
-                          : null,
-                    },
-                    {
-                      label: "Yük Kapasitesi",
-                      value: ad.customFields?.loadCapacity || null,
-                    },
-                    {
-                      label: "Üst Yapı",
-                      value: ad.customFields?.superstructure || null,
-                    },
-
-                    // Lowbed (Havuzlu/Öndekirmalı) Dorse Özel Alanları
-                    {
-                      label: "Havuz Derinliği",
-                      value: ad.customFields?.havuzDerinligi
-                        ? `${ad.customFields.havuzDerinligi} m`
-                        : null,
-                    },
-                    {
-                      label: "Havuz Genişliği",
-                      value: ad.customFields?.havuzGenisligi
-                        ? `${ad.customFields.havuzGenisligi} m`
-                        : null,
-                    },
-                    {
-                      label: "Havuz Uzunluğu",
-                      value: ad.customFields?.havuzUzunlugu
-                        ? `${ad.customFields.havuzUzunlugu} m`
-                        : null,
-                    },
-                    {
-                      label: "İstiap Haddi",
-                      value: ad.customFields?.istiapHaddi
-                        ? `${ad.customFields.istiapHaddi} ton`
-                        : null,
-                    },
-                    {
-                      label: "Dingil Sayısı",
-                      value: ad.customFields?.dingilSayisi || null,
-                    },
-                    {
-                      label: "Uzatılabilir Profil",
-                      value: ad.customFields?.uzatilabilirProfil || null,
-                    },
-                    {
-                      label: "Rampa Mekanizması",
-                      value: ad.customFields?.rampaMekanizmasi
-                        ? (() => {
-                            try {
-                              if (
-                                typeof ad.customFields.rampaMekanizmasi ===
-                                "string"
-                              ) {
-                                const parsed = JSON.parse(
-                                  ad.customFields.rampaMekanizmasi
-                                );
-                                return Array.isArray(parsed)
-                                  ? parsed.join(", ")
-                                  : ad.customFields.rampaMekanizmasi;
-                              } else if (
-                                Array.isArray(ad.customFields.rampaMekanizmasi)
-                              ) {
-                                return ad.customFields.rampaMekanizmasi.join(
-                                  ", "
-                                );
-                              } else {
-                                return ad.customFields.rampaMekanizmasi;
-                              }
-                            } catch {
-                              return ad.customFields.rampaMekanizmasi;
-                            }
-                          })()
-                        : null,
-                    },
-
-                    // Damperli Dorse Özel Alanları
-                    {
-                      label: "Dorse Genişliği",
-                      value: ad.customFields?.genislik
-                        ? `${ad.customFields.genislik} m`
-                        : null,
-                    },
-                    {
-                      label: "Dorse Uzunluğu",
-                      value: ad.customFields?.uzunluk
-                        ? `${ad.customFields.uzunluk} m`
-                        : null,
-                    },
-                    {
-                      label: "Devrilme Yönü",
-                      value: ad.customFields?.devrilmeYonu || null,
-                    },
-
-                    // Tenteli Dorse Özel Alanları
-                    {
-                      label: "Çatı Perde Sistemi",
-                      value: ad.customFields?.catiPerdeSistemi || null,
-                    },
-
-                    // Tanker Özel Alanları
-                    {
-                      label: "Hacim",
-                      value: ad.customFields?.hacim
-                        ? `${ad.customFields.hacim} m³`
-                        : null,
-                    },
-                    {
-                      label: "Göz Sayısı",
-                      value: ad.customFields?.gozSayisi || null,
-                    },
-
-                    // Silobas Özel Alanları
-                    {
-                      label: "Silobas Türü",
-                      value: ad.customFields?.silobasTuru || null,
-                    },
-
-                    // Frigofirik Özel Alanları
-                    {
-                      label: "Frigofirik Uzunluk",
-                      value: ad.customFields?.uzunluk
-                        ? `${ad.customFields.uzunluk} m`
-                        : null,
-                    },
-                    {
-                      label: "Lastik Durumu",
-                      value: ad.customFields?.lastikDurumu
-                        ? `${ad.customFields.lastikDurumu}%`
-                        : null,
-                    },
-                    {
-                      label: "Soğutucu Durumu",
-                      value: ad.customFields?.sogutucu || null,
-                    },
-
-                    // Ortak Dorse Özellikleri
-                    {
-                      label: "Takaslı",
-                      value: ad.customFields?.takasli || null,
-                    },
-
-                    // Oto Kurtarıcı/Taşıyıcı Özel Alanları
-                    {
-                      label: "Çekici Ekipmanı",
-                      value: ad.customFields?.cekiciEkipmani
-                        ? (() => {
-                            try {
-                              const equipment =
-                                typeof ad.customFields.cekiciEkipmani ===
-                                "string"
-                                  ? JSON.parse(ad.customFields.cekiciEkipmani)
-                                  : ad.customFields.cekiciEkipmani;
-
-                              if (
-                                typeof equipment === "object" &&
-                                equipment !== null
-                              ) {
-                                const equipmentList = Object.entries(equipment)
-                                  .filter(([, value]) => value === true)
-                                  .map(([key]) => {
-                                    // Convert camelCase to readable text
-                                    const readableMap: {
-                                      [key: string]: string;
-                                    } = {
-                                      kayarPlatform: "Kayar Platform",
-                                      palet: "Palet",
-                                      rampa: "Rampa",
-                                      makara: "Makara",
-                                      vinc: "Vinç",
-                                      ahtapotVinc: "Ahtapot Vinç",
-                                      gozluk: "Gözlük",
-                                      hiUp: "Hi-Up",
-                                    };
-                                    return readableMap[key] || key;
-                                  });
-                                return equipmentList.length > 0
-                                  ? equipmentList.join(", ")
-                                  : null;
-                              }
-                              return null;
-                            } catch {
-                              return null;
-                            }
-                          })()
-                        : null,
-                    },
-                    {
-                      label: "Ek Ekipmanlar",
-                      value: ad.customFields?.ekEkipmanlar
-                        ? (() => {
-                            try {
-                              const equipment =
-                                typeof ad.customFields.ekEkipmanlar === "string"
-                                  ? JSON.parse(ad.customFields.ekEkipmanlar)
-                                  : ad.customFields.ekEkipmanlar;
-
-                              if (
-                                typeof equipment === "object" &&
-                                equipment !== null
-                              ) {
-                                const equipmentList = Object.entries(equipment)
-                                  .filter(([, value]) => value === true)
-                                  .map(([key]) => {
-                                    const readableMap: {
-                                      [key: string]: string;
-                                    } = {
-                                      pistonAyak: "Piston Ayak",
-                                      takoz: "Takoz",
-                                      sabitlemeHalati: "Sabitleme Halatı",
-                                    };
-                                    return readableMap[key] || key;
-                                  });
-                                return equipmentList.length > 0
-                                  ? equipmentList.join(", ")
-                                  : null;
-                              }
-                              return null;
-                            } catch {
-                              return null;
-                            }
-                          })()
-                        : null,
-                    },
-
-                    // Şasi/Römork Genel Özellikleri
-                    {
-                      label: "Dingil Sayısı",
-                      value:
-                        ad.customFields?.axleCount ||
-                        ad.customFields?.dingilSayisi ||
-                        null,
-                    },
-                    {
-                      label: "Damperli",
-                      value:
-                        ad.customFields?.hasDamper === true
-                          ? "Evet"
-                          : ad.customFields?.hasDamper === false
-                          ? "Hayır"
-                          : null,
-                    },
-
-                    // Kuruyük Özel Alanları
-                    {
-                      label: "Uzunluk",
-                      value: ad.customFields?.uzunluk
-                        ? `${ad.customFields.uzunluk} m`
-                        : null,
-                    },
-                    {
-                      label: "Genişlik",
-                      value: ad.customFields?.genislik
-                        ? `${ad.customFields.genislik} m`
-                        : null,
-                    },
-                    {
-                      label: "Kapak Yüksekliği",
-                      value: ad.customFields?.kapakYuksekligi
-                        ? `${ad.customFields.kapakYuksekligi} m`
-                        : null,
-                    },
-                    {
-                      label: "Yükseklik",
-                      value: ad.customFields?.yukseklik
-                        ? `${ad.customFields.yukseklik} m`
-                        : null,
-                    },
-                    {
-                      label: "İstiap Haddi",
-                      value: ad.customFields?.istiapHaddi
-                        ? `${ad.customFields.istiapHaddi} ton`
-                        : null,
-                    },
-                    {
-                      label: "Kriko Ayak",
-                      value: ad.customFields?.krikoAyak || null,
-                    },
-                    {
-                      label: "Lastik Durumu",
-                      value: ad.customFields?.lastikDurumu
-                        ? `${ad.customFields.lastikDurumu}%`
-                        : null,
-                    },
-                    {
-                      label: "Takaslı",
-                      value: ad.customFields?.takasli || null,
-                    },
-                    {
-                      label: "Kapak Sistemi",
-                      value: ad.customFields?.kapakSistemi || null,
-                    },
-
-                    // Silobas Özel Alanları
-                    {
-                      label: "Hacim",
-                      value: ad.customFields?.hacim
-                        ? `${ad.customFields.hacim} m³`
-                        : null,
-                    },
-                    {
-                      label: "Dingil Sayısı",
-                      value: ad.customFields?.dingilSayisi || null,
-                    },
-                    {
-                      label: "Lastik Durumu",
-                      value: ad.customFields?.lastikDurumu
-                        ? `${ad.customFields.lastikDurumu}%`
-                        : null,
-                    },
-                    {
-                      label: "Silobas Türü",
-                      value: ad.customFields?.silobasTuru || null,
-                    },
-                    {
-                      label: "Renk",
-                      value: ad.customFields?.renk || null,
-                    },
-
-                    // Tekstil Özel Alanları
-                    {
-                      label: "Takaslı",
-                      value: ad.customFields?.takasli || null,
-                    },
-                    {
-                      label: "Tekstil Türü",
-                      value: ad.customFields?.tekstilTuru || null,
-                    },
-                    {
-                      label: "Malzeme",
-                      value: ad.customFields?.malzeme || null,
-                    },
-                    {
-                      label: "Ebat",
-                      value: ad.customFields?.ebat || null,
-                    },
-
-                    // Plaka Bilgileri
-                    {
-                      label: "Plaka Tipi",
-                      value: ad.customFields?.plateType || ad.plateType || null,
-                    },
-                    {
-                      label: "Plaka No",
-                      value: ad.customFields?.plateNumber || null,
-                    },
-
-                    // Diğer Bilgiler
-                    {
-                      label: "Garanti",
-                      value:
-                        ad.customFields?.hasWarranty === true
-                          ? "Var"
-                          : ad.customFields?.hasWarranty === false
-                          ? "Yok"
-                          : ad.customFields?.warranty === "true"
-                          ? "Var"
-                          : ad.customFields?.warranty === "false"
-                          ? "Yok"
-                          : null,
-                    },
-                    {
-                      label: "Pazarlık",
-                      value:
-                        ad.customFields?.isNegotiable === true
-                          ? "Yapılabilir"
-                          : ad.customFields?.isNegotiable === false
-                          ? "Yapılamaz"
-                          : ad.customFields?.negotiable === "true"
-                          ? "Yapılabilir"
-                          : ad.customFields?.negotiable === "false"
-                          ? "Yapılamaz"
-                          : null,
-                    },
-                    {
-                      label: "Takas",
-                      value:
-                        ad.customFields?.isExchangeable === true
-                          ? "Yapılabilir"
-                          : ad.customFields?.isExchangeable === false
-                          ? "Yapılamaz"
-                          : ad.customFields?.exchange === "true"
-                          ? "Yapılabilir"
-                          : ad.customFields?.exchange === "false"
-                          ? "Yapılamaz"
-                          : ad.customFields?.exchange || ad.takas || null,
-                    },
-                    { label: "Hasar Durumu", value: ad.damage || null },
-
-                    // Dynamic fields removed for performance
-                  ]
-                    .filter(
-                      (item) =>
-                        item.value !== null &&
-                        item.value !== "" &&
-                        item.value !== undefined
-                    )
-                    .map((item, index, array) => (
-                      <Box
-                        key={index}
+                {/* Vehicle Details Section (40% of left area) */}
+                <Box sx={{ flex: { md: "0 0 40%" } }}>
+                  <Box
+                    sx={{
+                      backgroundColor: "white",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 1,
+                      maxHeight: "500px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {/* Header */}
+                    <Box
+                      sx={{
+                        backgroundColor: "#f8f9fa",
+                        px: 1.5,
+                        py: 1,
+                        borderBottom: "1px solid #e0e0e0",
+                      }}
+                    >
+                      <Typography
                         sx={{
-                          display: "flex",
-                          borderBottom:
-                            index < array.length - 1
-                              ? "1px solid #f0f0f0"
-                              : "none",
-                          "&:hover": {
-                            backgroundColor: "#f8f9fa",
-                          },
+                          fontSize: "13px",
+                          fontWeight: "bold",
+                          color: "#333",
                         }}
                       >
-                        <Box
-                          sx={{
-                            flex: "0 0 40%",
-                            px: 1,
-                            py: 0.3,
-                            backgroundColor: "#fafbfc",
-                            borderRight: "1px solid #f0f0f0",
-                            fontSize: "10px",
-                            fontWeight: "500",
-                            color: "#666",
-                          }}
-                        >
-                          {item.label}
-                        </Box>
-                        <Box
-                          sx={{
-                            flex: 1,
-                            px: 1,
-                            py: 0.3,
-                            fontSize: "10px",
-                            color: "#333",
-                            lineHeight: 1.2,
-                          }}
-                        >
-                          {typeof item.value === "object"
-                            ? JSON.stringify(item.value)
-                            : item.value}
-                        </Box>
-                      </Box>
-                    ))}
+                        İlan Bilgileri
+                      </Typography>
+                    </Box>
+
+                    {/* Properties Table */}
+                    <Box sx={{ p: 0 }}>
+                      {[
+                        // Temel Bilgiler
+                        { label: "İlan No", value: ad.id ? `${ad.id}` : null },
+                        {
+                          label: "İlan Tarihi",
+                          value: ad.createdAt
+                            ? new Date(ad.createdAt).toLocaleDateString("tr-TR")
+                            : null,
+                        },
+                        { label: "Kategori", value: ad.category?.name || null },
+                        {
+                          label: "Fiyat",
+                          value: ad.price
+                            ? `${Number(ad.price).toLocaleString("tr-TR")} TL`
+                            : null,
+                        },
+                        { label: "Yıl", value: ad.year ? `${ad.year}` : null },
+                        {
+                          label: "KM",
+                          value: ad.mileage
+                            ? `${ad.mileage.toLocaleString("tr-TR")}`
+                            : null,
+                        },
+                        {
+                          label: "Görüntülenme",
+                          value: ad.viewCount ? `${ad.viewCount}` : null,
+                        },
+
+                        // Marka Bilgisi (Model ve Varyant kamyon römork için gösterilmez)
+                        { label: "Marka", value: ad.brand?.name || null },
+
+                        // Lokasyon Bilgileri
+                        {
+                          label: "Şehir",
+                          value:
+                            ad.city?.name ||
+                            (ad.customFields?.cityId
+                              ? `Şehir ID: ${ad.customFields.cityId}`
+                              : null) ||
+                            null,
+                        },
+                        {
+                          label: "İlçe",
+                          value:
+                            ad.district?.name ||
+                            (ad.customFields?.districtId
+                              ? `İlçe ID: ${ad.customFields.districtId}`
+                              : null) ||
+                            null,
+                        },
+                        {
+                          label: "Adres",
+                          value: ad.customFields?.address || null,
+                        },
+
+                        // Araç Detayları
+                        {
+                          label: "Durum",
+                          value: ad.customFields?.condition || null,
+                        },
+                        {
+                          label: "Renk",
+                          value: ad.customFields?.color || ad.color || null,
+                        },
+                        {
+                          label: "Yakıt Tipi",
+                          value: ad.customFields?.fuelType || ad.fuel || null,
+                        },
+                        {
+                          label: "Vites",
+                          value:
+                            ad.customFields?.transmission ||
+                            ad.transmission ||
+                            null,
+                        },
+                        {
+                          label: "Çekiş",
+                          value:
+                            ad.customFields?.drivetrain ||
+                            ad.wheelDrive ||
+                            null,
+                        },
+                        {
+                          label: "Motor Gücü",
+                          value:
+                            ad.customFields?.motorPower ||
+                            ad.customFields?.enginePower ||
+                            ad.enginePower ||
+                            ad.customFields?.motor_power ||
+                            ad.customFields?.engine_power ||
+                            ad.dynamicFields?.enginePower ||
+                            ad.dynamicFields?.motorPower ||
+                            null,
+                        },
+                        {
+                          label: "Motor Hacmi",
+                          value:
+                            ad.customFields?.engineCapacity ||
+                            ad.customFields?.engineVolume ||
+                            ad.engineVolume ||
+                            null,
+                        },
+                        {
+                          label: "Koltuk Sayısı",
+                          value:
+                            ad.customFields?.seatCount || ad.seatCount || null,
+                        },
+                        {
+                          label: "Tavan Tipi",
+                          value:
+                            ad.customFields?.roofType || ad.roofType || null,
+                        },
+                        {
+                          label: "Şasi",
+                          value:
+                            ad.customFields?.chassis ||
+                            ad.customFields?.chasisType ||
+                            null,
+                        },
+                        {
+                          label: "Kabin",
+                          value: ad.customFields?.cabin || null,
+                        },
+
+                        // Kamyon Römork Özel Alanları
+                        {
+                          label: "Uzunluk (m)",
+                          value: ad.customFields?.length
+                            ? `${ad.customFields.length} m`
+                            : null,
+                        },
+                        {
+                          label: "Genişlik (m)",
+                          value: ad.customFields?.width
+                            ? `${ad.customFields.width} m`
+                            : null,
+                        },
+                        {
+                          label: "Tenteli",
+                          value:
+                            ad.customFields?.hasTent === true
+                              ? "Evet"
+                              : ad.customFields?.hasTent === false
+                              ? "Hayır"
+                              : null,
+                        },
+                        {
+                          label: "Damperli",
+                          value:
+                            ad.customFields?.hasDamper === true
+                              ? "Evet"
+                              : ad.customFields?.hasDamper === false
+                              ? "Hayır"
+                              : null,
+                        },
+                        {
+                          label: "Takas",
+                          value:
+                            ad.customFields?.exchangeable === "evet"
+                              ? "Evet"
+                              : ad.customFields?.exchangeable === "hayır"
+                              ? "Hayır"
+                              : ad.customFields?.exchangeable
+                              ? ad.customFields.exchangeable
+                              : null,
+                        },
+
+                        // Çekici Özel Alanları
+                        {
+                          label: "Kabin Tipi",
+                          value: ad.customFields?.cabinType || null,
+                        },
+                        {
+                          label: "Yatak Sayısı",
+                          value: ad.customFields?.bedCount || null,
+                        },
+                        {
+                          label: "Dorse Mevcut",
+                          value: ad.customFields?.dorseAvailable || null,
+                        },
+                        {
+                          label: "Hasar Kaydı",
+                          value: ad.customFields?.damageRecord || null,
+                        },
+                        {
+                          label: "Boyalı",
+                          value: ad.customFields?.paintChange || null,
+                        },
+
+                        // Karoser/Ahşap Kasa Özel Alanları
+                        {
+                          label: "Kullanım Alanı",
+                          value: ad.customFields?.usageArea || null,
+                        },
+                        {
+                          label: "Karoser Yapısı",
+                          value: ad.customFields?.bodyStructure || null,
+                        },
+                        {
+                          label: "Kasa Tipi",
+                          value: ad.customFields?.caseType || null,
+                        },
+                        {
+                          label: "Devrilme Yönü",
+                          value:
+                            ad.customFields?.tippingDirection ||
+                            ad.customFields?.devrilmeYonu ||
+                            null,
+                        },
+                        {
+                          label: "Takaslı",
+                          value: ad.customFields?.isExchangeable
+                            ? ad.customFields.isExchangeable === "evet"
+                              ? "Evet"
+                              : "Hayır"
+                            : null,
+                        },
+
+                        // Otobüs Özel Alanları
+                        {
+                          label: "Motor Gücü",
+                          value:
+                            ad.customFields?.motorPower ||
+                            ad.customFields?.enginePower ||
+                            ad.enginePower ||
+                            ad.customFields?.motor_power ||
+                            ad.customFields?.engine_power ||
+                            ad.dynamicFields?.enginePower ||
+                            ad.dynamicFields?.motorPower ||
+                            null,
+                        },
+                        {
+                          label: "Kapasite",
+                          value:
+                            ad.customFields?.capacity ||
+                            ad.customFields?.passengerCapacity ||
+                            null,
+                        },
+                        {
+                          label: "Maksimum Araç Kapasitesi",
+                          value:
+                            ad.customFields?.maxVehicleCapacity ||
+                            ad.maxVehicleCapacity ||
+                            null,
+                        },
+                        {
+                          label: "Koltuk Düzeni",
+                          value:
+                            ad.customFields?.seatArrangement ||
+                            ad.customFields?.seatLayout ||
+                            null,
+                        },
+                        {
+                          label: "Koltuk Arkası Ekran",
+                          value: ad.customFields?.seatBackScreen || null,
+                        },
+                        {
+                          label: "Yakıt Hacmi (Litre)",
+                          value: ad.customFields?.fuelCapacity
+                            ? `${ad.customFields.fuelCapacity} L`
+                            : null,
+                        },
+
+                        // Oto Kurtarıcı Tekli Araç Özel Alanları
+                        {
+                          label: "İstiap Haddi",
+                          value:
+                            ad.customFields?.loadCapacity ||
+                            ad.loadCapacity ||
+                            null,
+                        },
+                        {
+                          label: "Motor Hacmi",
+                          value:
+                            ad.customFields?.engineVolume ||
+                            ad.customFields?.engineCapacity ||
+                            ad.engineVolume ||
+                            null,
+                        },
+                        {
+                          label: "Maksimum Güç",
+                          value:
+                            ad.customFields?.maxPower || ad.maxPower || null,
+                        },
+                        {
+                          label: "Maksimum Tork",
+                          value:
+                            ad.customFields?.maxTorque || ad.maxTorque || null,
+                        },
+                        {
+                          label: "Yakıt Tipi",
+                          value:
+                            ad.customFields?.fuelType || ad.fuelType || null,
+                        },
+                        {
+                          label: "Araç Plakası",
+                          value:
+                            ad.customFields?.plateNumber ||
+                            ad.plateNumber ||
+                            null,
+                        },
+                        {
+                          label: "Platform Uzunluk",
+                          value:
+                            ad.customFields?.platformLength ||
+                            ad.platformLength ||
+                            null,
+                        },
+                        {
+                          label: "Platform Genişlik",
+                          value:
+                            ad.customFields?.platformWidth ||
+                            ad.platformWidth ||
+                            null,
+                        },
+
+                        {
+                          label: "Lastik Durumu",
+                          value:
+                            ad.customFields?.tireCondition ||
+                            ad.customFields?.lastikDurumu
+                              ? `${
+                                  ad.customFields?.tireCondition ||
+                                  ad.customFields?.lastikDurumu
+                                }%`
+                              : null,
+                        },
+                        {
+                          label: "Yük Kapasitesi",
+                          value: ad.customFields?.loadCapacity || null,
+                        },
+                        {
+                          label: "Üst Yapı",
+                          value: ad.customFields?.superstructure || null,
+                        },
+
+                        // Lowbed (Havuzlu/Öndekirmalı) Dorse Özel Alanları
+                        {
+                          label: "Havuz Derinliği",
+                          value: ad.customFields?.havuzDerinligi
+                            ? `${ad.customFields.havuzDerinligi} m`
+                            : null,
+                        },
+                        {
+                          label: "Havuz Genişliği",
+                          value: ad.customFields?.havuzGenisligi
+                            ? `${ad.customFields.havuzGenisligi} m`
+                            : null,
+                        },
+                        {
+                          label: "Havuz Uzunluğu",
+                          value: ad.customFields?.havuzUzunlugu
+                            ? `${ad.customFields.havuzUzunlugu} m`
+                            : null,
+                        },
+                        {
+                          label: "İstiap Haddi",
+                          value: ad.customFields?.istiapHaddi
+                            ? `${ad.customFields.istiapHaddi} ton`
+                            : null,
+                        },
+                        {
+                          label: "Dingil Sayısı",
+                          value: ad.customFields?.dingilSayisi || null,
+                        },
+                        {
+                          label: "Uzatılabilir Profil",
+                          value: ad.customFields?.uzatilabilirProfil || null,
+                        },
+                        {
+                          label: "Rampa Mekanizması",
+                          value: ad.customFields?.rampaMekanizmasi
+                            ? (() => {
+                                try {
+                                  if (
+                                    typeof ad.customFields.rampaMekanizmasi ===
+                                    "string"
+                                  ) {
+                                    const parsed = JSON.parse(
+                                      ad.customFields.rampaMekanizmasi
+                                    );
+                                    return Array.isArray(parsed)
+                                      ? parsed.join(", ")
+                                      : ad.customFields.rampaMekanizmasi;
+                                  } else if (
+                                    Array.isArray(
+                                      ad.customFields.rampaMekanizmasi
+                                    )
+                                  ) {
+                                    return ad.customFields.rampaMekanizmasi.join(
+                                      ", "
+                                    );
+                                  } else {
+                                    return ad.customFields.rampaMekanizmasi;
+                                  }
+                                } catch {
+                                  return ad.customFields.rampaMekanizmasi;
+                                }
+                              })()
+                            : null,
+                        },
+
+                        // Damperli Dorse Özel Alanları
+                        {
+                          label: "Dorse Genişliği",
+                          value: ad.customFields?.genislik
+                            ? `${ad.customFields.genislik} m`
+                            : null,
+                        },
+                        {
+                          label: "Dorse Uzunluğu",
+                          value: ad.customFields?.uzunluk
+                            ? `${ad.customFields.uzunluk} m`
+                            : null,
+                        },
+                        {
+                          label: "Devrilme Yönü",
+                          value: ad.customFields?.devrilmeYonu || null,
+                        },
+
+                        // Tenteli Dorse Özel Alanları
+                        {
+                          label: "Çatı Perde Sistemi",
+                          value: ad.customFields?.catiPerdeSistemi || null,
+                        },
+
+                        // Tanker Özel Alanları
+                        {
+                          label: "Hacim",
+                          value: ad.customFields?.hacim
+                            ? `${ad.customFields.hacim} m³`
+                            : null,
+                        },
+                        {
+                          label: "Göz Sayısı",
+                          value: ad.customFields?.gozSayisi || null,
+                        },
+
+                        // Silobas Özel Alanları
+                        {
+                          label: "Silobas Türü",
+                          value: ad.customFields?.silobasTuru || null,
+                        },
+
+                        // Frigofirik Özel Alanları
+                        {
+                          label: "Frigofirik Uzunluk",
+                          value: ad.customFields?.uzunluk
+                            ? `${ad.customFields.uzunluk} m`
+                            : null,
+                        },
+                        {
+                          label: "Lastik Durumu",
+                          value: ad.customFields?.lastikDurumu
+                            ? `${ad.customFields.lastikDurumu}%`
+                            : null,
+                        },
+                        {
+                          label: "Soğutucu Durumu",
+                          value: ad.customFields?.sogutucu || null,
+                        },
+
+                        // Ortak Dorse Özellikleri
+                        {
+                          label: "Takaslı",
+                          value: ad.customFields?.takasli || null,
+                        },
+
+                        // Oto Kurtarıcı/Taşıyıcı Özel Alanları
+                        {
+                          label: "Çekici Ekipmanı",
+                          value: ad.customFields?.cekiciEkipmani
+                            ? (() => {
+                                try {
+                                  const equipment =
+                                    typeof ad.customFields.cekiciEkipmani ===
+                                    "string"
+                                      ? JSON.parse(
+                                          ad.customFields.cekiciEkipmani
+                                        )
+                                      : ad.customFields.cekiciEkipmani;
+
+                                  if (
+                                    typeof equipment === "object" &&
+                                    equipment !== null
+                                  ) {
+                                    const equipmentList = Object.entries(
+                                      equipment
+                                    )
+                                      .filter(([, value]) => value === true)
+                                      .map(([key]) => {
+                                        // Convert camelCase to readable text
+                                        const readableMap: {
+                                          [key: string]: string;
+                                        } = {
+                                          kayarPlatform: "Kayar Platform",
+                                          palet: "Palet",
+                                          rampa: "Rampa",
+                                          makara: "Makara",
+                                          vinc: "Vinç",
+                                          ahtapotVinc: "Ahtapot Vinç",
+                                          gozluk: "Gözlük",
+                                          hiUp: "Hi-Up",
+                                        };
+                                        return readableMap[key] || key;
+                                      });
+                                    return equipmentList.length > 0
+                                      ? equipmentList.join(", ")
+                                      : null;
+                                  }
+                                  return null;
+                                } catch {
+                                  return null;
+                                }
+                              })()
+                            : null,
+                        },
+                        {
+                          label: "Ek Ekipmanlar",
+                          value: ad.customFields?.ekEkipmanlar
+                            ? (() => {
+                                try {
+                                  const equipment =
+                                    typeof ad.customFields.ekEkipmanlar ===
+                                    "string"
+                                      ? JSON.parse(ad.customFields.ekEkipmanlar)
+                                      : ad.customFields.ekEkipmanlar;
+
+                                  if (
+                                    typeof equipment === "object" &&
+                                    equipment !== null
+                                  ) {
+                                    const equipmentList = Object.entries(
+                                      equipment
+                                    )
+                                      .filter(([, value]) => value === true)
+                                      .map(([key]) => {
+                                        const readableMap: {
+                                          [key: string]: string;
+                                        } = {
+                                          pistonAyak: "Piston Ayak",
+                                          takoz: "Takoz",
+                                          sabitlemeHalati: "Sabitleme Halatı",
+                                        };
+                                        return readableMap[key] || key;
+                                      });
+                                    return equipmentList.length > 0
+                                      ? equipmentList.join(", ")
+                                      : null;
+                                  }
+                                  return null;
+                                } catch {
+                                  return null;
+                                }
+                              })()
+                            : null,
+                        },
+
+                        // Şasi/Römork Genel Özellikleri
+                        {
+                          label: "Dingil Sayısı",
+                          value:
+                            ad.customFields?.axleCount ||
+                            ad.customFields?.dingilSayisi ||
+                            null,
+                        },
+                        {
+                          label: "Damperli",
+                          value:
+                            ad.customFields?.hasDamper === true
+                              ? "Evet"
+                              : ad.customFields?.hasDamper === false
+                              ? "Hayır"
+                              : null,
+                        },
+
+                        // Kuruyük Özel Alanları
+                        {
+                          label: "Uzunluk",
+                          value: ad.customFields?.uzunluk
+                            ? `${ad.customFields.uzunluk} m`
+                            : null,
+                        },
+                        {
+                          label: "Genişlik",
+                          value: ad.customFields?.genislik
+                            ? `${ad.customFields.genislik} m`
+                            : null,
+                        },
+                        {
+                          label: "Kapak Yüksekliği",
+                          value: ad.customFields?.kapakYuksekligi
+                            ? `${ad.customFields.kapakYuksekligi} m`
+                            : null,
+                        },
+                        {
+                          label: "Yükseklik",
+                          value: ad.customFields?.yukseklik
+                            ? `${ad.customFields.yukseklik} m`
+                            : null,
+                        },
+                        {
+                          label: "İstiap Haddi",
+                          value: ad.customFields?.istiapHaddi
+                            ? `${ad.customFields.istiapHaddi} ton`
+                            : null,
+                        },
+                        {
+                          label: "Kriko Ayak",
+                          value: ad.customFields?.krikoAyak || null,
+                        },
+                        {
+                          label: "Lastik Durumu",
+                          value: ad.customFields?.lastikDurumu
+                            ? `${ad.customFields.lastikDurumu}%`
+                            : null,
+                        },
+                        {
+                          label: "Takaslı",
+                          value: ad.customFields?.takasli || null,
+                        },
+                        {
+                          label: "Kapak Sistemi",
+                          value: ad.customFields?.kapakSistemi || null,
+                        },
+
+                        // Silobas Özel Alanları
+                        {
+                          label: "Hacim",
+                          value: ad.customFields?.hacim
+                            ? `${ad.customFields.hacim} m³`
+                            : null,
+                        },
+                        {
+                          label: "Dingil Sayısı",
+                          value: ad.customFields?.dingilSayisi || null,
+                        },
+                        {
+                          label: "Lastik Durumu",
+                          value: ad.customFields?.lastikDurumu
+                            ? `${ad.customFields.lastikDurumu}%`
+                            : null,
+                        },
+                        {
+                          label: "Silobas Türü",
+                          value: ad.customFields?.silobasTuru || null,
+                        },
+                        {
+                          label: "Renk",
+                          value: ad.customFields?.renk || null,
+                        },
+
+                        // Tekstil Özel Alanları
+                        {
+                          label: "Takaslı",
+                          value: ad.customFields?.takasli || null,
+                        },
+                        {
+                          label: "Tekstil Türü",
+                          value: ad.customFields?.tekstilTuru || null,
+                        },
+                        {
+                          label: "Malzeme",
+                          value: ad.customFields?.malzeme || null,
+                        },
+                        {
+                          label: "Ebat",
+                          value: ad.customFields?.ebat || null,
+                        },
+
+                        // Plaka Bilgileri
+                        {
+                          label: "Plaka Tipi",
+                          value:
+                            ad.customFields?.plateType || ad.plateType || null,
+                        },
+                        {
+                          label: "Plaka No",
+                          value: ad.customFields?.plateNumber || null,
+                        },
+
+                        // Diğer Bilgiler
+                        {
+                          label: "Garanti",
+                          value:
+                            ad.customFields?.hasWarranty === true
+                              ? "Var"
+                              : ad.customFields?.hasWarranty === false
+                              ? "Yok"
+                              : ad.customFields?.warranty === "true"
+                              ? "Var"
+                              : ad.customFields?.warranty === "false"
+                              ? "Yok"
+                              : null,
+                        },
+                        {
+                          label: "Pazarlık",
+                          value:
+                            ad.customFields?.isNegotiable === true
+                              ? "Yapılabilir"
+                              : ad.customFields?.isNegotiable === false
+                              ? "Yapılamaz"
+                              : ad.customFields?.negotiable === "true"
+                              ? "Yapılabilir"
+                              : ad.customFields?.negotiable === "false"
+                              ? "Yapılamaz"
+                              : null,
+                        },
+                        {
+                          label: "Takas",
+                          value:
+                            ad.customFields?.isExchangeable === true
+                              ? "Yapılabilir"
+                              : ad.customFields?.isExchangeable === false
+                              ? "Yapılamaz"
+                              : ad.customFields?.exchange === "true"
+                              ? "Yapılabilir"
+                              : ad.customFields?.exchange === "false"
+                              ? "Yapılamaz"
+                              : ad.customFields?.exchange || ad.takas || null,
+                        },
+                        { label: "Hasar Durumu", value: ad.damage || null },
+
+                        // Dynamic fields removed for performance
+                      ]
+                        .filter(
+                          (item) =>
+                            item.value !== null &&
+                            item.value !== "" &&
+                            item.value !== undefined
+                        )
+                        .map((item, index, array) => (
+                          <Box
+                            key={index}
+                            sx={{
+                              display: "flex",
+                              borderBottom:
+                                index < array.length - 1
+                                  ? "1px solid #f0f0f0"
+                                  : "none",
+                              "&:hover": {
+                                backgroundColor: "#f8f9fa",
+                              },
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                flex: "0 0 40%",
+                                px: 1,
+                                py: 0.3,
+                                backgroundColor: "#fafbfc",
+                                borderRight: "1px solid #f0f0f0",
+                                fontSize: "10px",
+                                fontWeight: "500",
+                                color: "#666",
+                              }}
+                            >
+                              {item.label}
+                            </Box>
+                            <Box
+                              sx={{
+                                flex: 1,
+                                px: 1,
+                                py: 0.3,
+                                fontSize: "10px",
+                                color: "#333",
+                                lineHeight: 1.2,
+                              }}
+                            >
+                              {typeof item.value === "object"
+                                ? JSON.stringify(item.value)
+                                : item.value}
+                            </Box>
+                          </Box>
+                        ))}
+                    </Box>
+                  </Box>
                 </Box>
               </Box>
             </Box>
 
-            {/* Right Section - Seller Info (20%) */}
-            <Box sx={{ flex: { lg: "0 0 20%" } }}>
+            {/* Right Section - Seller Info (25%) */}
+            <Box sx={{ flex: { lg: "0 0 25%" } }}>
               {/* Seller Info Section */}
               <Box
                 sx={{
@@ -1746,6 +1771,7 @@ const AdDetail: React.FC = () => {
                       color: isOwner ? "#666" : "#007bff",
                       fontSize: "11px",
                       py: 0.8,
+                      mb: 1.5,
                       "&:hover": {
                         backgroundColor: isOwner ? "transparent" : "#f8f9fa",
                       },
@@ -1758,6 +1784,47 @@ const AdDetail: React.FC = () => {
                     {isOwner
                       ? "Kendi İlanınızı Şikayet Edemezsiniz"
                       : "İlan ile İlgili Şikayetin Var"}
+                  </Button>
+
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={isFavorited ? <Favorite /> : <FavoriteBorder />}
+                    size="small"
+                    onClick={handleFavoriteToggle}
+                    disabled={isOwner}
+                    sx={{
+                      borderColor: isOwner
+                        ? "#ccc"
+                        : isFavorited
+                        ? "#dc3545"
+                        : "#007bff",
+                      color: isOwner
+                        ? "#666"
+                        : isFavorited
+                        ? "#dc3545"
+                        : "#007bff",
+                      fontSize: "11px",
+                      py: 0.8,
+                      "&:hover": {
+                        backgroundColor: isOwner
+                          ? "transparent"
+                          : isFavorited
+                          ? "#dc3545"
+                          : "#007bff",
+                        color: isOwner ? "#666" : "white",
+                      },
+                      "&:disabled": {
+                        borderColor: "#ccc",
+                        color: "#666",
+                      },
+                    }}
+                  >
+                    {isOwner
+                      ? "Kendi İlanınız"
+                      : isFavorited
+                      ? "Favorilerden Çıkar"
+                      : "Favorilerime Ekle"}
                   </Button>
                 </Box>
               </Box>
@@ -1774,14 +1841,14 @@ const AdDetail: React.FC = () => {
                 <Box
                   sx={{
                     backgroundColor: "#f8f9fa",
-                    px: 3,
-                    py: 2,
+                    px: 1,
+                    py: 0.5,
                     borderBottom: "1px solid #e0e0e0",
                   }}
                 >
                   <Typography
                     sx={{
-                      fontSize: "14px",
+                      fontSize: "12px",
                       fontWeight: "bold",
                       color: "#333",
                     }}
@@ -1790,19 +1857,19 @@ const AdDetail: React.FC = () => {
                   </Typography>
                 </Box>
 
-                <Box sx={{ p: 2 }}>
+                <Box sx={{ p: 1 }}>
                   <Box
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 1,
-                      mb: 1,
+                      gap: 0.5,
+                      mb: 0.5,
                     }}
                   >
-                    <LocationOn sx={{ color: "#007bff", fontSize: 18 }} />
+                    <LocationOn sx={{ color: "#007bff", fontSize: 14 }} />
                     <Typography
                       sx={{
-                        fontSize: "14px",
+                        fontSize: "12px",
                         color: "#333",
                         fontWeight: "500",
                       }}
@@ -1817,7 +1884,7 @@ const AdDetail: React.FC = () => {
                   <Box
                     sx={{
                       width: "100%",
-                      minHeight: 120,
+                      minHeight: 70,
                       borderRadius: 1,
                       border: "1px solid #ddd",
                       position: "relative",
@@ -1826,8 +1893,8 @@ const AdDetail: React.FC = () => {
                       flexDirection: "column",
                       alignItems: "center",
                       justifyContent: "center",
-                      gap: 2,
-                      p: 2,
+                      gap: 0.75,
+                      p: 1.25,
                     }}
                   >
                     {/* Location Display */}
@@ -1835,14 +1902,14 @@ const AdDetail: React.FC = () => {
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 1,
-                        mb: 1,
+                        gap: 0.75,
+                        mb: 0.5,
                       }}
                     >
-                      <LocationOn sx={{ color: "#e74c3c", fontSize: 24 }} />
+                      <LocationOn sx={{ color: "#e74c3c", fontSize: 18 }} />
                       <Typography
                         sx={{
-                          fontSize: "16px",
+                          fontSize: "13px",
                           fontWeight: "bold",
                           color: "#333",
                         }}
@@ -1856,7 +1923,7 @@ const AdDetail: React.FC = () => {
                     <Box
                       sx={{
                         display: "flex",
-                        gap: 2,
+                        gap: 0.75,
                         flexWrap: "wrap",
                         justifyContent: "center",
                       }}
@@ -1864,12 +1931,14 @@ const AdDetail: React.FC = () => {
                       {/* Google Maps button */}
                       <Button
                         variant="contained"
+                        size="small"
                         sx={{
                           backgroundColor: "#4285f4",
                           color: "white",
-                          fontSize: "12px",
-                          py: 1,
-                          px: 2,
+                          fontSize: "11px",
+                          py: 0.4,
+                          px: 1.25,
+                          minWidth: "auto",
                           "&:hover": {
                             backgroundColor: "#3367d6",
                           },
@@ -1886,18 +1955,20 @@ const AdDetail: React.FC = () => {
                           );
                         }}
                       >
-                        📍 Google Maps'te Aç
+                        📍 Google
                       </Button>
 
                       {/* Yandex Maps button */}
                       <Button
                         variant="contained"
+                        size="small"
                         sx={{
                           backgroundColor: "#ffdb4d",
                           color: "#333",
-                          fontSize: "12px",
-                          py: 1,
-                          px: 2,
+                          fontSize: "11px",
+                          py: 0.4,
+                          px: 1.25,
+                          minWidth: "auto",
                           "&:hover": {
                             backgroundColor: "#ffd700",
                           },
@@ -1913,7 +1984,7 @@ const AdDetail: React.FC = () => {
                           );
                         }}
                       >
-                        🗺️ Yandex Maps'te Aç
+                        🗺️ Yandex
                       </Button>
                     </Box>
                   </Box>
@@ -2059,7 +2130,14 @@ const AdDetail: React.FC = () => {
                 </Box>
 
                 <Box sx={{ p: 1.5 }}>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(200px, 1fr))",
+                      gap: 1,
+                    }}
+                  >
                     {/* Features'dan gelen özellikler */}
                     {ad.customFields?.features &&
                       typeof ad.customFields.features === "object" &&
@@ -2068,21 +2146,27 @@ const AdDetail: React.FC = () => {
                       )
                         .filter(([, value]) => value === true)
                         .map(([key]) => (
-                          <Chip
+                          <Box
                             key={`feature-${key}`}
-                            label={formatFeatureName(key)}
-                            size="small"
                             sx={{
-                              backgroundColor: "#e3f2fd",
-                              color: "#1976d2",
-                              fontSize: "12px",
-                              height: "28px",
-                              fontWeight: "500",
-                              "& .MuiChip-label": {
-                                px: 1.5,
-                              },
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              fontSize: "13px",
+                              color: "#333",
                             }}
-                          />
+                          >
+                            <Box
+                              sx={{
+                                color: "#4caf50",
+                                fontWeight: "bold",
+                                fontSize: "14px",
+                              }}
+                            >
+                              ✓
+                            </Box>
+                            {formatFeatureName(key)}
+                          </Box>
                         ))}
 
                     {/* DetailFeatures'dan gelen özellikler */}
@@ -2096,21 +2180,27 @@ const AdDetail: React.FC = () => {
                       )
                         .filter(([, value]) => value === true)
                         .map(([key]) => (
-                          <Chip
+                          <Box
                             key={`detail-${key}`}
-                            label={formatFeatureName(key)}
-                            size="small"
                             sx={{
-                              backgroundColor: "#e8f5e8",
-                              color: "#2e7d32",
-                              fontSize: "12px",
-                              height: "28px",
-                              fontWeight: "500",
-                              "& .MuiChip-label": {
-                                px: 1.5,
-                              },
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              fontSize: "13px",
+                              color: "#333",
                             }}
-                          />
+                          >
+                            <Box
+                              sx={{
+                                color: "#4caf50",
+                                fontWeight: "bold",
+                                fontSize: "14px",
+                              }}
+                            >
+                              ✓
+                            </Box>
+                            {formatFeatureName(key)}
+                          </Box>
                         ))}
                   </Box>
                 </Box>
