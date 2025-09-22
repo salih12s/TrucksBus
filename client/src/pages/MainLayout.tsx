@@ -1738,9 +1738,7 @@ const MainLayout: React.FC = () => {
               <CloseIcon />
             </IconButton>
           </Box>
-          <Box sx={{ p: 1 }}>
-            {renderSidebarContent()}
-          </Box>
+          <Box sx={{ p: 1 }}>{renderSidebarContent()}</Box>
         </Drawer>
 
         {/* Enhanced Sidebar with better borders */}

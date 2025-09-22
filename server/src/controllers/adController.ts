@@ -843,7 +843,12 @@ export const createMinibusAd = async (req: Request, res: Response) => {
   try {
     console.log("🚛 Minibüs İlanı API'ye istek geldi");
     console.log("📦 Request body:", req.body);
-    console.log("📦 Request headers:", req.headers);
+    console.log("� ID Değerleri:");
+    console.log("  - categoryId:", req.body.categoryId);
+    console.log("  - brandId:", req.body.brandId);
+    console.log("  - modelId:", req.body.modelId);
+    console.log("  - variantId:", req.body.variantId);
+    console.log("�📦 Request headers:", req.headers);
     console.log("📦 Content-Type:", req.headers["content-type"]);
 
     const userId = (req as any).user?.id;
@@ -878,6 +883,11 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       brandSlug,
       modelSlug,
       variantSlug,
+      // ID'ler - Frontend'den gelen asıl ID değerleri
+      categoryId,
+      brandId,
+      modelId,
+      variantId,
       // Detay bilgiler
       features,
     } = req.body;
@@ -954,7 +964,12 @@ export const createMinibusAd = async (req: Request, res: Response) => {
     const ad = await prisma.ad.create({
       data: {
         userId,
-        categoryId: minibusCategory.id,
+        // Frontend'den gelen categoryId'yi kullan, yoksa fallback olarak minibusCategory.id
+        categoryId: categoryId ? parseInt(categoryId) : minibusCategory.id,
+        // Brand, Model ve Variant ID'lerini kaydet
+        brandId: brandId ? parseInt(brandId) : null,
+        modelId: modelId ? parseInt(modelId) : null,
+        variantId: variantId ? parseInt(variantId) : null,
         title,
         description,
         year: year ? parseInt(year) : null,
@@ -980,6 +995,16 @@ export const createMinibusAd = async (req: Request, res: Response) => {
           address: address || null,
           detailedInfo: detailedInfo || null,
           detailFeatures: detailFeaturesJson || null,
+          // IDs (backward compatibility için)
+          categoryId: categoryId ? parseInt(categoryId) : null,
+          brandId: brandId ? parseInt(brandId) : null,
+          modelId: modelId ? parseInt(modelId) : null,
+          variantId: variantId ? parseInt(variantId) : null,
+          // Slugs (eski uyumluluk için)
+          categorySlug: categorySlug || null,
+          brandSlug: brandSlug || null,
+          modelSlug: modelSlug || null,
+          variantSlug: variantSlug || null,
           // CustomFields'ta da sakla (backward compatibility için)
           cityId: cityId ? parseInt(cityId) : null,
           districtId: districtId ? parseInt(districtId) : null,

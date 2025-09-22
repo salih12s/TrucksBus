@@ -6,6 +6,9 @@ import {
   getBrandsByCategory,
   getModelsByBrand,
   getVariantsByModel,
+  getBrandBySlug,
+  getModelBySlug,
+  getVariantBySlug,
   createBrand,
   createModel,
   createVariant,
@@ -18,10 +21,19 @@ const router = Router();
 router.get("/", getCategories);
 router.get("/:id", getCategoryById);
 router.get("/:categorySlug/brands", getBrandsByCategory);
+router.get("/:categorySlug/brands/:brandSlug", getBrandBySlug);
 router.get("/:categorySlug/brands/:brandSlug/models", getModelsByBrand);
+router.get(
+  "/:categorySlug/brands/:brandSlug/models/:modelSlug",
+  getModelBySlug
+);
 router.get(
   "/:categorySlug/brands/:brandSlug/models/:modelSlug/variants",
   getVariantsByModel
+);
+router.get(
+  "/:categorySlug/brands/:brandSlug/models/:modelSlug/variants/:variantSlug",
+  getVariantBySlug
 );
 router.get("/:categoryId/fields", getCategoryFields);
 

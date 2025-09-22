@@ -29,9 +29,15 @@ import {
   LocationOn,
   Description,
 } from "@mui/icons-material";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Header from "../layout/Header";
 import apiClient from "@/api/client";
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
 
 interface City {
   id: number;
@@ -45,7 +51,29 @@ interface District {
   cityId: number;
 }
 
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+}
+
 interface FormData {
+  categoryId: string;
+  brandId: string;
+  modelId: string;
+  variantId: string;
   title: string;
   description: string;
   year: string;
@@ -122,15 +150,45 @@ interface FormData {
 const CreateMinibusAdForm: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
+  const [searchParams] = useSearchParams();
+
+  // URL parametrelerinden seçimleri al
+  const selectedCategorySlug = categorySlug || searchParams.get("category");
+  const selectedBrandSlug = brandSlug || searchParams.get("brand");
+  const selectedModelSlug = modelSlug || searchParams.get("model");
+  const selectedVariantSlug = variantSlug || searchParams.get("variant");
+
+  // Debug log'ları
+  console.log("URL Parametreleri:", {
+    categorySlug: selectedCategorySlug,
+    brandSlug: selectedBrandSlug,
+    modelSlug: selectedModelSlug,
+    variantSlug: selectedVariantSlug,
+  });
 
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
+  // Seçili olan kategori, brand, model ve variant bilgileri
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+    null
+  );
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+
   const [formData, setFormData] = useState<FormData>({
+    categoryId: "1", // Minibüs & Midibüs kategorisi
+    brandId: "",
+    modelId: "",
+    variantId: "",
     title: "",
     description: "",
     year: "",
@@ -202,6 +260,208 @@ const CreateMinibusAdForm: React.FC = () => {
       garantili: false,
     },
   });
+
+  // ✅ API Functions
+  const loadBrands = async (categorySlug: string) => {
+    try {
+      const response = await apiClient.get(
+        `/categories/${categorySlug}/brands`
+      );
+      const brandsData = response.data as Brand[];
+      setBrands(brandsData);
+
+      // İlk brand'ı otomatik seç
+      if (brandsData.length > 0 && !formData.brandId) {
+        setFormData((prev) => ({
+          ...prev,
+          brandId: brandsData[0].id.toString(),
+        }));
+      }
+    } catch (error) {
+      console.error("Markalar yüklenemedi:", error);
+    }
+  };
+
+  const loadModels = async (brandId: string) => {
+    try {
+      // Brand ID'den slug'ı bul
+      const brand = brands.find((b) => b.id.toString() === brandId);
+      if (!brand) {
+        console.error("Brand bulunamadı:", brandId);
+        return;
+      }
+
+      const response = await apiClient.get(
+        `/categories/minibus-midibus/brands/${brand.slug}/models`
+      );
+      const modelsData = response.data as Model[];
+      setModels(modelsData);
+
+      // İlk model'i otomatik seç
+      if (modelsData.length > 0 && !formData.modelId) {
+        setFormData((prev) => ({
+          ...prev,
+          modelId: modelsData[0].id.toString(),
+        }));
+      }
+    } catch (error) {
+      console.error("Modeller yüklenemedi:", error);
+    }
+  };
+
+  const loadVariants = async (modelId: string) => {
+    try {
+      // Model ID'den slug'ı bul
+      const model = models.find((m) => m.id.toString() === modelId);
+      const brand = brands.find((b) => b.id.toString() === formData.brandId);
+
+      if (!model || !brand) {
+        console.error(
+          "Model veya Brand bulunamadı:",
+          modelId,
+          formData.brandId
+        );
+        return;
+      }
+
+      const response = await apiClient.get(
+        `/categories/minibus-midibus/brands/${brand.slug}/models/${model.slug}/variants`
+      );
+      const variantsData = response.data as Variant[];
+      setVariants(variantsData);
+
+      // İlk variant'ı otomatik seç (varsa)
+      if (variantsData.length > 0 && !formData.variantId) {
+        setFormData((prev) => ({
+          ...prev,
+          variantId: variantsData[0].id.toString(),
+        }));
+      }
+    } catch (error) {
+      console.error("Varyantlar yüklenemedi:", error);
+    }
+  };
+
+  // ✅ useEffect'ler
+
+  // URL parametrelerinden seçimleri yükle
+  useEffect(() => {
+    const loadSelectedItems = async () => {
+      try {
+        console.log("loadSelectedItems başlatılıyor...");
+
+        // Kategori yükle
+        if (selectedCategorySlug) {
+          console.log("Kategori yükleniyor:", selectedCategorySlug);
+          const categoryResponse = await apiClient.get(
+            `/categories/${selectedCategorySlug}`
+          );
+          const categoryData = categoryResponse.data as Category;
+          setSelectedCategory(categoryData);
+          setFormData((prev) => ({
+            ...prev,
+            categoryId: categoryData.id.toString(),
+          }));
+          console.log("Kategori yüklendi:", categoryData);
+        }
+
+        // Brand yükle
+        if (selectedBrandSlug) {
+          console.log("Brand yükleniyor:", selectedBrandSlug);
+          const brandResponse = await apiClient.get(
+            `/categories/${
+              selectedCategorySlug || "minibus-midibus"
+            }/brands/${selectedBrandSlug}`
+          );
+          const brandData = brandResponse.data as Brand;
+          setSelectedBrand(brandData);
+          setFormData((prev) => ({
+            ...prev,
+            brandId: brandData.id.toString(),
+          }));
+          console.log("Brand yüklendi:", brandData);
+        }
+
+        // Model yükle
+        if (selectedModelSlug && selectedBrandSlug) {
+          console.log("Model yükleniyor:", selectedModelSlug);
+          const modelResponse = await apiClient.get(
+            `/categories/${
+              selectedCategorySlug || "minibus-midibus"
+            }/brands/${selectedBrandSlug}/models/${selectedModelSlug}`
+          );
+          const modelData = modelResponse.data as Model;
+          setSelectedModel(modelData);
+          setFormData((prev) => ({
+            ...prev,
+            modelId: modelData.id.toString(),
+          }));
+          console.log("Model yüklendi:", modelData);
+        }
+
+        // Variant yükle
+        if (selectedVariantSlug && selectedModelSlug && selectedBrandSlug) {
+          console.log("Variant yükleniyor:", selectedVariantSlug);
+          const variantResponse = await apiClient.get(
+            `/categories/${
+              selectedCategorySlug || "minibus-midibus"
+            }/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`
+          );
+          const variantData = variantResponse.data as Variant;
+          setSelectedVariant(variantData);
+          setFormData((prev) => ({
+            ...prev,
+            variantId: variantData.id.toString(),
+          }));
+          console.log("Variant yüklendi:", variantData);
+        }
+      } catch (error) {
+        console.error("Seçili öğeler yüklenirken hata:", error);
+      }
+    };
+
+    if (
+      selectedCategorySlug ||
+      selectedBrandSlug ||
+      selectedModelSlug ||
+      selectedVariantSlug
+    ) {
+      console.log("useEffect tetiklendi, seçimler yükleniyor...");
+      loadSelectedItems();
+    }
+  }, [
+    selectedCategorySlug,
+    selectedBrandSlug,
+    selectedModelSlug,
+    selectedVariantSlug,
+  ]);
+
+  useEffect(() => {
+    const initializeForm = async () => {
+      await loadBrands("minibus-midibus"); // Minibüs kategorisi slug'ı
+    };
+    initializeForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (formData.brandId) {
+      const loadModelsData = async () => {
+        await loadModels(formData.brandId);
+      };
+      loadModelsData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.brandId]);
+
+  useEffect(() => {
+    if (formData.modelId) {
+      const loadVariantsData = async () => {
+        await loadVariants(formData.modelId);
+      };
+      loadVariantsData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.modelId]);
 
   // Şehirleri yükle
   useEffect(() => {
@@ -341,7 +601,13 @@ const CreateMinibusAdForm: React.FC = () => {
       });
 
       // Kategori bilgilerini ekle
-      submitData.append("categorySlug", categorySlug || "");
+      submitData.append("categoryId", formData.categoryId);
+      submitData.append("brandId", formData.brandId);
+      submitData.append("modelId", formData.modelId);
+      submitData.append("variantId", formData.variantId || "");
+
+      // Legacy support için slug'ları da ekle
+      submitData.append("categorySlug", categorySlug || "minibus-midibus");
       submitData.append("brandSlug", brandSlug || "");
       submitData.append("modelSlug", modelSlug || "");
       submitData.append("variantSlug", variantSlug || "");
@@ -424,6 +690,147 @@ const CreateMinibusAdForm: React.FC = () => {
                   >
                     İlan Detayları
                   </Typography>
+                </Box>
+
+                {/* ✅ Marka/Model/Variant Seçimi */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ mb: 2, fontWeight: 600, color: "primary.main" }}
+                  >
+                    Araç Bilgileri
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                      gap: 2,
+                      mb: 2,
+                    }}
+                  >
+                    {/* Kategori Seçimi */}
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Kategori *</InputLabel>
+                      <Select
+                        value={formData.categoryId}
+                        label="Kategori *"
+                        disabled={!!selectedCategory}
+                      >
+                        {selectedCategory ? (
+                          <MenuItem value={selectedCategory.id.toString()}>
+                            {selectedCategory.name} (Seçili)
+                          </MenuItem>
+                        ) : (
+                          <MenuItem value="1">Minibüs & Midibüs</MenuItem>
+                        )}
+                      </Select>
+                    </FormControl>
+
+                    {/* Marka Seçimi */}
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Marka *</InputLabel>
+                      <Select
+                        value={formData.brandId}
+                        label="Marka *"
+                        disabled={!!selectedBrand}
+                        onChange={(e) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            brandId: e.target.value,
+                            modelId: "",
+                            variantId: "",
+                          }));
+                        }}
+                      >
+                        {/* Seçili marka varsa onu göster */}
+                        {selectedBrand && (
+                          <MenuItem value={selectedBrand.id.toString()}>
+                            {selectedBrand.name} (Seçili)
+                          </MenuItem>
+                        )}
+                        {/* Diğer markalar */}
+                        {!selectedBrand &&
+                          brands.map((brand) => (
+                            <MenuItem
+                              key={brand.id}
+                              value={brand.id.toString()}
+                            >
+                              {brand.name}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+
+                    {/* Model Seçimi */}
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Model *</InputLabel>
+                      <Select
+                        value={formData.modelId}
+                        label="Model *"
+                        disabled={!!selectedModel || !formData.brandId}
+                        onChange={(e) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            modelId: e.target.value,
+                            variantId: "",
+                          }));
+                        }}
+                      >
+                        {/* Seçili model varsa onu göster */}
+                        {selectedModel && (
+                          <MenuItem value={selectedModel.id.toString()}>
+                            {selectedModel.name} (Seçili)
+                          </MenuItem>
+                        )}
+                        {/* Diğer modeller */}
+                        {!selectedModel &&
+                          models.map((model) => (
+                            <MenuItem
+                              key={model.id}
+                              value={model.id.toString()}
+                            >
+                              {model.name}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+
+                  {/* Variant Seçimi */}
+                  {(variants.length > 0 || selectedVariant) && (
+                    <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                      <InputLabel>Variant</InputLabel>
+                      <Select
+                        value={formData.variantId}
+                        label="Variant"
+                        disabled={!!selectedVariant}
+                        onChange={(e) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            variantId: e.target.value,
+                          }));
+                        }}
+                      >
+                        {/* Seçili variant varsa onu göster */}
+                        {selectedVariant && (
+                          <MenuItem value={selectedVariant.id.toString()}>
+                            {selectedVariant.name} (Seçili)
+                          </MenuItem>
+                        )}
+                        {/* Diğer variantlar */}
+                        {!selectedVariant &&
+                          variants.map((variant) => (
+                            <MenuItem
+                              key={variant.id}
+                              value={variant.id.toString()}
+                            >
+                              {variant.name}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+                  )}
                 </Box>
 
                 {/* İlan Başlığı */}

@@ -692,3 +692,131 @@ export const getCategoryFields = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Server error" });
   }
 };
+
+// Get single brand by slug
+export const getBrandBySlug = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { categorySlug, brandSlug } = req.params;
+
+    // Verify category exists
+    const category = await prisma.category.findUnique({
+      where: { slug: categorySlug },
+    });
+
+    if (!category) {
+      res.status(404).json({ error: "Category not found" });
+      return;
+    }
+
+    const brand = await prisma.brand.findUnique({
+      where: { slug: brandSlug },
+      include: {
+        _count: {
+          select: { models: true },
+        },
+      },
+    });
+
+    if (!brand) {
+      res.status(404).json({ error: "Brand not found" });
+      return;
+    }
+
+    res.json(brand);
+  } catch (error) {
+    console.error("Error fetching brand:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+// Get single model by slug
+export const getModelBySlug = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { categorySlug, brandSlug, modelSlug } = req.params;
+
+    const brand = await prisma.brand.findUnique({
+      where: { slug: brandSlug },
+    });
+
+    if (!brand) {
+      res.status(404).json({ error: "Brand not found" });
+      return;
+    }
+
+    const model = await prisma.model.findFirst({
+      where: {
+        slug: modelSlug,
+        brandId: brand.id,
+      },
+      include: {
+        _count: {
+          select: { variants: true },
+        },
+      },
+    });
+
+    if (!model) {
+      res.status(404).json({ error: "Model not found" });
+      return;
+    }
+
+    res.json(model);
+  } catch (error) {
+    console.error("Error fetching model:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+// Get single variant by slug
+export const getVariantBySlug = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { categorySlug, brandSlug, modelSlug, variantSlug } = req.params;
+
+    const brand = await prisma.brand.findUnique({
+      where: { slug: brandSlug },
+    });
+
+    if (!brand) {
+      res.status(404).json({ error: "Brand not found" });
+      return;
+    }
+
+    const model = await prisma.model.findFirst({
+      where: {
+        slug: modelSlug,
+        brandId: brand.id,
+      },
+    });
+
+    if (!model) {
+      res.status(404).json({ error: "Model not found" });
+      return;
+    }
+
+    const variant = await prisma.variant.findFirst({
+      where: {
+        slug: variantSlug,
+        modelId: model.id,
+      },
+    });
+
+    if (!variant) {
+      res.status(404).json({ error: "Variant not found" });
+      return;
+    }
+
+    res.json(variant);
+  } catch (error) {
+    console.error("Error fetching variant:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};

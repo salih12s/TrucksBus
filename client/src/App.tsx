@@ -507,7 +507,12 @@ function App() {
                           path="/categories/minibus-midibus/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
                           element={
                             <ProtectedRoute>
-                              <CreateMinibusAdForm />
+                              {(() => {
+                                console.log(
+                                  "CreateMinibusAdForm route matched!"
+                                );
+                                return <CreateMinibusAdForm />;
+                              })()}
                             </ProtectedRoute>
                           }
                         />
