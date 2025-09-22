@@ -92,6 +92,7 @@ interface Ad {
     lastName: string | null;
     phone: string | null;
     companyName?: string | null;
+    userType?: string;
   };
   category?: {
     name: string;
@@ -192,6 +193,9 @@ const MainLayout: React.FC = () => {
   const [bookmarkSearchQuery, setBookmarkSearchQuery] = useState("");
   const [bookmarkSortBy, setBookmarkSortBy] = useState("newest");
   const [bookmarkFilterBy, setBookmarkFilterBy] = useState("all");
+
+  // Seller type filter
+  const [selectedSellerType, setSelectedSellerType] = useState("all");
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -1129,6 +1133,31 @@ const MainLayout: React.FC = () => {
         );
       }
 
+      // Seller type filtresi
+      if (selectedSellerType !== "all") {
+        filtered = filtered.filter((ad) => {
+          const userType = ad.user?.userType || "individual";
+          switch (selectedSellerType) {
+            case "individual":
+              return userType === "individual";
+            case "trader":
+              // Esnaftan: trader veya corporate (kurumsal hesaplar her iki kategoride görünsün)
+              return userType === "trader" || userType === "corporate";
+            case "corporate":
+              // Kurumdan: corporate veya trader (kurumsal hesaplar her iki kategoride görünsün)
+              return userType === "corporate" || userType === "trader";
+            default:
+              return true;
+          }
+        });
+        console.log(
+          "After seller type filter:",
+          filtered.length,
+          "Type:",
+          selectedSellerType
+        );
+      }
+
       setFilteredAds(filtered);
       console.log("Final filtered ads:", filtered.length);
     }
@@ -1142,6 +1171,7 @@ const MainLayout: React.FC = () => {
     yearMin,
     yearMax,
     selectedCity,
+    selectedSellerType,
     categories,
     brands,
   ]);
@@ -1902,6 +1932,60 @@ const MainLayout: React.FC = () => {
                   </Box>
                 )}
               </Box>
+
+              {/* Seller Type Filter Tabs - Sadece kategori seçildiğinde göster */}
+              {selectedCategory && selectedCategory !== "Tüm İlanlar" && (
+                <Box sx={{ mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      borderBottom: "1px solid #e0e0e0",
+                      backgroundColor: "white",
+                      borderRadius: "8px 8px 0 0",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {[
+                      { key: "all", label: "Tümü" },
+                      { key: "individual", label: "Üyeden" },
+                      { key: "trader", label: "Esnaftan" },
+                      { key: "corporate", label: "Kurumdan" },
+                    ].map((option) => (
+                      <Button
+                        key={option.key}
+                        onClick={() => setSelectedSellerType(option.key)}
+                        sx={{
+                          flex: 1,
+                          py: 1.5,
+                          px: 2,
+                          borderRadius: 0,
+                          borderBottom:
+                            selectedSellerType === option.key
+                              ? "2px solid #D34237"
+                              : "2px solid transparent",
+                          backgroundColor:
+                            selectedSellerType === option.key
+                              ? "rgba(211, 66, 55, 0.05)"
+                              : "transparent",
+                          color:
+                            selectedSellerType === option.key
+                              ? "#D34237"
+                              : "#666",
+                          fontWeight:
+                            selectedSellerType === option.key ? 600 : 400,
+                          "&:hover": {
+                            backgroundColor: "rgba(211, 66, 55, 0.05)",
+                            color: "#D34237",
+                          },
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        {option.label}
+                      </Button>
+                    ))}
+                  </Box>
+                </Box>
+              )}
 
               {/* Conditional Rendering: Grid for "Tüm İlanlar", List for categories */}
               {!selectedCategory || selectedCategory === "Tüm İlanlar" ? (

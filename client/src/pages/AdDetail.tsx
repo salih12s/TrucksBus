@@ -9,6 +9,8 @@ import {
   Dialog,
   DialogContent,
   IconButton,
+  Card,
+  CircularProgress,
 } from "@mui/material";
 import {
   LocationOn,
@@ -17,6 +19,7 @@ import {
   ArrowForwardIos,
   FavoriteBorder,
   Favorite,
+  LocalShipping,
 } from "@mui/icons-material";
 import { API_BASE_URL } from "../api/client";
 import { useSelector } from "react-redux";
@@ -28,6 +31,7 @@ import {
   addToFavorites,
   removeFromFavorites,
 } from "../api/favorites";
+import apiClient from "../api/client";
 
 interface Ad {
   id: number;
@@ -82,6 +86,11 @@ interface Ad {
   dynamicFields?: { [key: string]: string | number | boolean };
 }
 
+interface ApiResponse {
+  ads?: Ad[];
+  data?: Ad[];
+}
+
 // CategoryField interface removed for performance
 
 const AdDetail: React.FC = () => {
@@ -93,6 +102,8 @@ const AdDetail: React.FC = () => {
   // Category fields removed for performance - not critical
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
+  const [similarAds, setSimilarAds] = useState<Ad[]>([]);
+  const [similarAdsLoading, setSimilarAdsLoading] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [showComplaintModal, setShowComplaintModal] = useState(false);
 
@@ -170,6 +181,38 @@ const AdDetail: React.FC = () => {
       fetchAd();
     }
   }, [id, currentUser, token]);
+
+  // Fetch similar ads
+  useEffect(() => {
+    const fetchSimilarAds = async () => {
+      if (!ad) return;
+
+      setSimilarAdsLoading(true);
+      try {
+        const response = await apiClient.get("/ads", {
+          params: {
+            limit: 8,
+            category: ad.category?.name,
+            brand: ad.brand?.name,
+            exclude: ad.id,
+          },
+        });
+
+        const apiResponse = response.data as ApiResponse;
+        if (apiResponse && Array.isArray(apiResponse.ads)) {
+          setSimilarAds(apiResponse.ads);
+        } else if (response.data && Array.isArray(response.data)) {
+          setSimilarAds(response.data as Ad[]);
+        }
+      } catch (error) {
+        console.error("Error fetching similar ads:", error);
+      } finally {
+        setSimilarAdsLoading(false);
+      }
+    };
+
+    fetchSimilarAds();
+  }, [ad]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("tr-TR").format(price) + " TL";
@@ -807,20 +850,21 @@ const AdDetail: React.FC = () => {
                     <Box
                       sx={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(5, 1fr)",
-                        gap: 1,
-                        maxHeight: 250,
+                        gridTemplateColumns:
+                          "repeat(auto-fill, minmax(60px, 1fr))",
+                        gap: 0.5,
+                        maxHeight: 200,
                         overflowY: "auto",
                         "&::-webkit-scrollbar": {
-                          width: 6,
+                          width: 4,
                         },
                         "&::-webkit-scrollbar-track": {
                           backgroundColor: "#f1f1f1",
-                          borderRadius: 3,
+                          borderRadius: 2,
                         },
                         "&::-webkit-scrollbar-thumb": {
                           backgroundColor: "#c1c1c1",
-                          borderRadius: 3,
+                          borderRadius: 2,
                         },
                       }}
                     >
@@ -858,8 +902,8 @@ const AdDetail: React.FC = () => {
                                 height: "100%",
                                 objectFit: "cover",
                               }}
-                              width="80"
-                              height="60"
+                              width="60"
+                              height="45"
                             />
                           </Box>
                         );
@@ -2207,6 +2251,239 @@ const AdDetail: React.FC = () => {
               </Box>
             )}
           </Box>
+        </Box>
+      </Container>
+
+      {/* Similar Ads Section */}
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Box sx={{ px: { xs: 1, sm: 2, md: 3 } }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: "bold",
+              color: "#333",
+              mb: 3,
+              fontSize: "20px",
+            }}
+          >
+            Benzer İlanlar
+          </Typography>
+
+          {similarAdsLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                position: "relative",
+                overflow: "hidden",
+                "&:hover .scroll-container": {
+                  animationPlayState: "paused",
+                },
+              }}
+            >
+              <Box
+                className="scroll-container"
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  width: "fit-content",
+                  animation: "scrollRight 30s linear infinite",
+                  // Tıklamayı engellemeyecek şekilde ayarlayalım
+                  pointerEvents: "auto",
+                  "@keyframes scrollRight": {
+                    "0%": {
+                      transform: "translateX(0)",
+                    },
+                    "100%": {
+                      transform: "translateX(-50%)",
+                    },
+                  },
+                }}
+              >
+                {/* İlanları iki kez göster (sonsuz döngü efekti için) */}
+                {[...similarAds, ...similarAds].map((similarAd, index) => (
+                  <Card
+                    key={`${similarAd.id}-${index}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log(
+                        "Benzer ilan tıklandı:",
+                        similarAd.id,
+                        "Mevcut ID:",
+                        id
+                      );
+                      // Aynı ilan ID'sine gitmemek için kontrol
+                      if (similarAd.id !== Number(id)) {
+                        console.log(
+                          "Navigate ediliyor:",
+                          `/ad/${similarAd.id}`
+                        );
+                        // React Router yerine direct navigation deneyelim
+                        window.location.href = `/ad/${similarAd.id}`;
+                      } else {
+                        console.log("Aynı ilan, navigate edilmiyor");
+                      }
+                    }}
+                    sx={{
+                      minWidth: 200,
+                      maxWidth: 200,
+                      borderRadius: 1,
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                      height: 235,
+                      "&:hover": {
+                        boxShadow: "0 4px 12px rgba(211, 66, 55, 0.15)",
+                        backgroundColor: "rgba(211, 66, 55, 0.02)",
+                        transform: "translateY(-2px)",
+                        borderColor: "rgba(211, 66, 55, 0.3)",
+                      },
+                      transition: "all 0.3s ease",
+                      cursor: "pointer",
+                      backgroundColor: "white",
+                      border: "1px solid #e0e0e0",
+                      // Tıklamayı garanti altına alalım
+                      pointerEvents: "auto",
+                      zIndex: 10,
+                      position: "relative",
+                    }}
+                  >
+                    {/* Vitrin Görseli */}
+                    <Box
+                      component="div"
+                      sx={{
+                        height: 120,
+                        backgroundColor: "#f8f9fa",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "relative",
+                        overflow: "hidden",
+                        padding: "8px",
+                      }}
+                    >
+                      {getImageUrl(similarAd.images) ? (
+                        <LazyImage
+                          src={getImageUrl(similarAd.images)!}
+                          alt={similarAd.title}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                          }}
+                          placeholder="/placeholder-image.jpg"
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            color: "#999",
+                          }}
+                        >
+                          <LocalShipping sx={{ fontSize: 24, mb: 0.5 }} />
+                          <Typography variant="caption" fontSize="10px">
+                            Görsel Yok
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+
+                    <Box
+                      sx={{
+                        p: 1.5,
+                        display: "flex",
+                        flexDirection: "column",
+                        position: "relative",
+                        height: "auto",
+                      }}
+                    >
+                      {/* İlan Başlığı */}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 500,
+                          fontSize: "13px",
+                          color: "#333",
+                          lineHeight: 1.3,
+                          mb: 1,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          minHeight: "32px",
+                        }}
+                      >
+                        {similarAd.title}
+                      </Typography>
+
+                      {/* Konum ve Model Yılı - Alt alta */}
+                      <Box sx={{ mb: 1 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: "12px",
+                            color: "#666",
+                            display: "block",
+                          }}
+                        >
+                          {similarAd.city?.name ||
+                            similarAd.district?.name ||
+                            "Belirtilmemiş"}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: "12px",
+                            color: "#666",
+                            display: "block",
+                          }}
+                        >
+                          {similarAd.year
+                            ? `Model Yılı: ${similarAd.year}`
+                            : similarAd.model?.name ||
+                              similarAd.brand?.name ||
+                              "Model"}
+                        </Typography>
+                      </Box>
+
+                      {/* Fiyat - Sağ Alt Köşe */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          bottom: 2,
+                          right: 14,
+                        }}
+                      >
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: "14px",
+                            color: "#dc3545",
+                          }}
+                        >
+                          {similarAd.price
+                            ? `${formatPrice(similarAd.price)} TL`
+                            : "Fiyat Yok"}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Card>
+                ))}
+              </Box>
+            </Box>
+          )}
+
+          {similarAds.length === 0 && !similarAdsLoading && (
+            <Box sx={{ textAlign: "center", py: 4 }}>
+              <Typography variant="body1" color="text.secondary">
+                Benzer ilan bulunamadı.
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Container>
 

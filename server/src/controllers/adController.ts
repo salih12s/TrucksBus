@@ -264,7 +264,6 @@ export const getAdById = async (req: Request, res: Response) => {
             FROM ad_images ai 
             WHERE ai.ad_id = a.id
             ORDER BY ai.is_primary DESC, ai.display_order ASC 
-            LIMIT 5
           ) ai
         ), '[]'::json) as images_json,
         (SELECT COUNT(*)::int FROM ads a2 WHERE a2.user_id = a.user_id AND a2.status = 'APPROVED') as user_total_ads
