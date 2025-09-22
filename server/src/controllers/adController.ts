@@ -246,7 +246,7 @@ export const getAdById = async (req: Request, res: Response) => {
         a.fuel_type, a.is_exchangeable, a.plate_number, a.plate_type, 
         a.roof_type, a.seat_count, a.transmission_type,
         u.id as user_id, u.first_name, u.last_name, u.company_name, 
-        u.phone, u.email, u.created_at as user_created_at, u.is_verified,
+        u.phone, u.email, u.user_type, u.created_at as user_created_at, u.is_verified,
         c.name as category_name, b.name as brand_name, m.name as model_name, 
         v.name as variant_name, city.name as city_name, dist.name as district_name,
         COALESCE((
@@ -345,6 +345,7 @@ export const getAdById = async (req: Request, res: Response) => {
         companyName: ad.company_name,
         phone: ad.phone,
         email: ad.email,
+        userType: ad.user_type,
         createdAt: ad.user_created_at,
         isVerified: ad.is_verified,
         name:
