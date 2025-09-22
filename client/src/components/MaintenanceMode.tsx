@@ -44,7 +44,7 @@ const MaintenanceMode: React.FC = () => {
               }}
             >
               <span style={{ color: "#333" }}>Alın Satın </span>
-              <span style={{ color: "#D34237" }}>Trucksbus.com</span>
+              <span style={{ color: "#D34237" }}>Trucksbus.com.tr</span>
               <span style={{ color: "#333" }}> ile Mutlu Kalın</span>
             </Typography>
           </Box>
@@ -171,7 +171,7 @@ const MaintenanceMode: React.FC = () => {
                 color: "#666",
               }}
             >
-              📧 info@trucksbus.com
+              📧 info@trucksbus.com.tr
               <br />
               📱 WhatsApp: +90 XXX XXX XX XX
             </Typography>

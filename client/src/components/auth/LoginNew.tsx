@@ -102,7 +102,7 @@ const Login: React.FC = () => {
               letterSpacing: "0.5px",
             }}
           >
-            TrucksBus.com
+            TrucksBus.com.tr
           </Box>
 
           {/* Login Title */}

@@ -1,5 +1,5 @@
-import { Component } from 'react';
-import type { ErrorInfo, ReactNode } from 'react';
+import { Component } from "react";
+import type { ErrorInfo, ReactNode } from "react";
 import {
   Box,
   Paper,
@@ -8,14 +8,9 @@ import {
   Alert,
   AlertTitle,
   Stack,
-  Divider
-} from '@mui/material';
-import {
-  ErrorOutline,
-  Refresh,
-  Home,
-  BugReport
-} from '@mui/icons-material';
+  Divider,
+} from "@mui/material";
+import { ErrorOutline, Refresh, Home, BugReport } from "@mui/icons-material";
 
 interface Props {
   children: ReactNode;
@@ -32,23 +27,23 @@ class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
-    errorInfo: null
+    errorInfo: null,
   };
 
   public static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
       error,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Log error to monitoring service (e.g., Sentry)
@@ -63,12 +58,12 @@ class ErrorBoundary extends Component<Props, State> {
       componentStack: errorInfo.componentStack,
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent,
-      url: window.location.href
+      url: window.location.href,
     };
 
     // Example: Send to monitoring service
     // Sentry.captureException(error, { extra: errorData });
-    console.error('Error logged:', errorData);
+    console.error("Error logged:", errorData);
   };
 
   private handleReload = () => {
@@ -76,14 +71,14 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   private handleReportBug = () => {
-    const subject = encodeURIComponent('TrucksBus Platform - Hata Raporu');
+    const subject = encodeURIComponent("TrucksBus Platform - Hata Raporu");
     const body = encodeURIComponent(`
 Hata Detayları:
-- Mesaj: ${this.state.error?.message || 'Bilinmeyen hata'}
+- Mesaj: ${this.state.error?.message || "Bilinmeyen hata"}
 - Zaman: ${new Date().toISOString()}
 - Sayfa: ${window.location.href}
 - Tarayıcı: ${navigator.userAgent}
@@ -96,8 +91,10 @@ Lütfen hatayı yeniden oluşturmak için gereken adımları açıklayın:
 Ek bilgiler:
 
     `);
-    
-    window.open(`mailto:support@trucksbus.com?subject=${subject}&body=${body}`);
+
+    window.open(
+      `mailto:support@trucksbus.com.tr?subject=${subject}&body=${body}`
+    );
   };
 
   public render() {
@@ -110,50 +107,56 @@ Ek bilgiler:
       return (
         <Box
           sx={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: 'grey.50',
-            p: 3
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            bgcolor: "grey.50",
+            p: 3,
           }}
         >
           <Paper
             elevation={3}
             sx={{
               maxWidth: 600,
-              width: '100%',
+              width: "100%",
               p: 4,
-              textAlign: 'center'
+              textAlign: "center",
             }}
           >
             <ErrorOutline
               sx={{
                 fontSize: 80,
-                color: 'error.main',
-                mb: 2
+                color: "error.main",
+                mb: 2,
               }}
             />
-            
+
             <Typography variant="h4" gutterBottom color="error">
               Bir Hata Oluştu
             </Typography>
-            
+
             <Typography variant="body1" color="text.secondary" paragraph>
-              Üzgünüz, beklenmeyen bir hata oluştu. Bu durum geliştiricilerimize otomatik olarak bildirildi.
+              Üzgünüz, beklenmeyen bir hata oluştu. Bu durum geliştiricilerimize
+              otomatik olarak bildirildi.
             </Typography>
 
-            <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>
+            <Alert severity="error" sx={{ mb: 3, textAlign: "left" }}>
               <AlertTitle>Hata Detayları</AlertTitle>
               <Typography variant="body2" component="div">
-                <strong>Mesaj:</strong> {this.state.error?.message || 'Bilinmeyen hata'}
+                <strong>Mesaj:</strong>{" "}
+                {this.state.error?.message || "Bilinmeyen hata"}
               </Typography>
               <Typography variant="body2" component="div" sx={{ mt: 1 }}>
-                <strong>Zaman:</strong> {new Date().toLocaleString('tr-TR')}
+                <strong>Zaman:</strong> {new Date().toLocaleString("tr-TR")}
               </Typography>
             </Alert>
 
-            <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }} justifyContent="center">
+            <Stack
+              spacing={2}
+              direction={{ xs: "column", sm: "row" }}
+              justifyContent="center"
+            >
               <Button
                 variant="contained"
                 startIcon={<Refresh />}
@@ -162,7 +165,7 @@ Ek bilgiler:
               >
                 Sayfayı Yenile
               </Button>
-              
+
               <Button
                 variant="outlined"
                 startIcon={<Home />}
@@ -186,8 +189,8 @@ Ek bilgiler:
             </Button>
 
             {/* Development mode: Show error details */}
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <Box sx={{ mt: 3, textAlign: 'left' }}>
+            {process.env.NODE_ENV === "development" && this.state.error && (
+              <Box sx={{ mt: 3, textAlign: "left" }}>
                 <Typography variant="h6" gutterBottom>
                   Geliştirici Bilgileri:
                 </Typography>
@@ -195,17 +198,17 @@ Ek bilgiler:
                   variant="outlined"
                   sx={{
                     p: 2,
-                    bgcolor: 'grey.100',
-                    fontFamily: 'monospace',
-                    fontSize: '0.875rem',
+                    bgcolor: "grey.100",
+                    fontFamily: "monospace",
+                    fontSize: "0.875rem",
                     maxHeight: 200,
-                    overflow: 'auto'
+                    overflow: "auto",
                   }}
                 >
                   <Typography variant="body2" component="pre">
                     {this.state.error.stack}
                   </Typography>
-                  
+
                   {this.state.errorInfo && (
                     <>
                       <Divider sx={{ my: 1 }} />

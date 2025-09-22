@@ -105,7 +105,7 @@ const HelpGuide: React.FC = () => {
         },
         {
           q: "Şüpheli bir ilan nasıl bildirerim?",
-          a: "İlan sayfasında 'Şikayet Et' butonunu kullanın veya support@trucksbus.com adresine yazın. Ekibimiz 24 saat içinde inceleme yapar.",
+          a: "İlan sayfasında 'Şikayet Et' butonunu kullanın veya support@trucksbus.com.tr adresine yazın. Ekibimiz 24 saat içinde inceleme yapar.",
         },
       ],
     },
@@ -140,7 +140,7 @@ const HelpGuide: React.FC = () => {
       icon: <Email sx={{ fontSize: 32, color: "#D34237" }} />,
       title: "E-posta Desteği",
       description: "Detaylı sorularınız için",
-      contact: "support@trucksbus.com",
+      contact: "support@trucksbus.com.tr",
       hours: "24 saat içinde yanıt",
     },
     {

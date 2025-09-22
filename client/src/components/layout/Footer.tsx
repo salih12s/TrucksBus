@@ -307,7 +307,7 @@ const Footer: React.FC = () => {
                     Yardım Merkezi
                   </Typography>
                   <Typography sx={{ color: "#333", fontSize: "12px" }}>
-                    yardim.trucksbus.com
+                    yardim.trucksbus.com.tr
                   </Typography>
                 </Box>
               </Box>
@@ -325,7 +325,7 @@ const Footer: React.FC = () => {
                 textAlign: "center",
               }}
             >
-              trucksbus.com'da yer alan tüm içerik kullanıcılara aittir.
+              trucksbus.com.tr'da yer alan tüm içerik kullanıcılara aittir.
             </Typography>
 
             <Box
@@ -339,7 +339,7 @@ const Footer: React.FC = () => {
               }}
             >
               <Typography sx={{ color: "#666", fontSize: "11px" }}>
-                Copyright © 2000-2025 trucksbus.com
+                Copyright © 2000-2025 trucksbus.com.tr
               </Typography>
               <Typography sx={{ color: "#666", fontSize: "11px" }}>
                 ETBİS Kayıtlıdır.

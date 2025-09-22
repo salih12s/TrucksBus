@@ -133,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
             }}
           >
             <span style={{ color: "#333" }}>Alın Satın </span>
-            <span style={{ color: "#D34237" }}>Trucksbus.com</span>
+            <span style={{ color: "#D34237" }}>Trucksbus.com.tr</span>
             <span style={{ color: "#333" }}> ile Mutlu Kalın</span>
           </Typography>
         </Box>

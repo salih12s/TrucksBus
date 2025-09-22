@@ -325,7 +325,7 @@ const ContractsAndRules: React.FC = () => {
             }}
           >
             <Typography variant="body1">
-              <strong>E-posta:</strong> rules@trucksbus.com
+              <strong>E-posta:</strong> rules@trucksbus.com.tr
             </Typography>
             <Typography variant="body1">
               <strong>Telefon:</strong> +90 (555) 123 45 67

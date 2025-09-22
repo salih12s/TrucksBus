@@ -164,10 +164,10 @@ const ContactPage: React.FC = () => {
               E-posta
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              info@trucksbus.com
+              info@trucksbus.com.tr
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              destek@trucksbus.com
+              destek@trucksbus.com.tr
             </Typography>
           </CardContent>
         </Card>
