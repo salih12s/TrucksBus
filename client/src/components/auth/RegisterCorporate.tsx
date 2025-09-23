@@ -309,11 +309,23 @@ const RegisterCorporate: React.FC = () => {
               borderRadius: 1,
               fontSize: "18px",
               fontWeight: "bold",
-              mb: 4,
+              mb: 2,
               letterSpacing: "0.5px",
             }}
           >
             TrucksBus.com.tr
+          </Box>
+
+          {/* Logo */}
+          <Box sx={{ mb: 2 }}>
+            <img
+              src="/Trucksbus.png"
+              alt="TrucksBus Logo"
+              style={{
+                height: "96px",
+                width: "auto",
+              }}
+            />
           </Box>
 
           {/* Corporate Register Title */}

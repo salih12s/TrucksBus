@@ -6,7 +6,6 @@ import {
   Typography,
   List,
   ListItem,
-  ListItemText,
   TextField,
   Button,
   useTheme,
@@ -207,6 +206,7 @@ const MainLayout: React.FC = () => {
 
   // Trade filter
   const [tradeFilter, setTradeFilter] = useState("all"); // "all", "trade-only", "no-trade"
+  const [dateFilter, setDateFilter] = useState("all"); // "all", "24h", "48h"
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -335,7 +335,8 @@ const MainLayout: React.FC = () => {
             .includes(bookmarkSearchQuery.toLowerCase()) ||
           fav.ad.model?.name
             ?.toLowerCase()
-            .includes(bookmarkSearchQuery.toLowerCase())
+            .includes(bookmarkSearchQuery.toLowerCase()) ||
+          fav.ad.id?.toString().includes(bookmarkSearchQuery)
       );
     }
 
@@ -430,7 +431,7 @@ const MainLayout: React.FC = () => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="İlan ara..."
+                placeholder="İlan ara (başlık, marka, model, ilan no)..."
                 value={bookmarkSearchQuery}
                 onChange={(e) => setBookmarkSearchQuery(e.target.value)}
                 InputProps={{
@@ -1095,6 +1096,9 @@ const MainLayout: React.FC = () => {
           const yearMatch = ad.year?.toString().includes(searchTerm);
           const mileageMatch = ad.mileage?.toString().includes(searchTerm);
 
+          // İlan numarası araması
+          const adIdMatch = ad.id?.toString().includes(searchTerm);
+
           // Seller bilgileri de aranabilir
           const sellerNameMatch =
             ad.user?.firstName?.toLowerCase().includes(searchLower) ||
@@ -1115,6 +1119,7 @@ const MainLayout: React.FC = () => {
             priceMatch ||
             yearMatch ||
             mileageMatch ||
+            adIdMatch ||
             sellerNameMatch ||
             sellerCompanyMatch
           );
@@ -1266,6 +1271,32 @@ const MainLayout: React.FC = () => {
         console.log("=== END TAKAS DEBUG ===");
       }
 
+      // Tarih filtresi
+      if (dateFilter !== "all") {
+        const now = new Date();
+        const cutoffTime = new Date();
+
+        if (dateFilter === "24h") {
+          cutoffTime.setHours(now.getHours() - 24);
+        } else if (dateFilter === "48h") {
+          cutoffTime.setHours(now.getHours() - 48);
+        }
+
+        filtered = filtered.filter((ad) => {
+          const adDate = new Date(ad.createdAt);
+          return adDate >= cutoffTime;
+        });
+
+        console.log(`After date filter (${dateFilter}):`, filtered.length);
+
+        // Tarih filtresi aktifse güncel tarih sıralaması yap
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
+          return dateB.getTime() - dateA.getTime(); // En yeni önce
+        });
+      }
+
       setFilteredAds(filtered);
       console.log("Final filtered ads:", filtered.length);
     }
@@ -1281,6 +1312,7 @@ const MainLayout: React.FC = () => {
     selectedCity,
     selectedSellerType,
     tradeFilter,
+    dateFilter,
     categories,
     brands,
   ]);
@@ -1434,9 +1466,12 @@ const MainLayout: React.FC = () => {
             variant="h6"
             sx={{
               color: "#333",
-              fontWeight: "500",
+              fontWeight: "600",
               fontSize: "16px",
-              mb: 1,
+              mb: 2,
+              textAlign: "center",
+              pb: 1,
+              borderBottom: "1px solid #e0e0e0",
             }}
           >
             Kategoriler
@@ -1449,29 +1484,49 @@ const MainLayout: React.FC = () => {
               onClick={() => handleCategoryClick(null)}
               sx={{
                 cursor: "pointer",
-                py: 0.2,
-                px: 0,
+                py: 0.5,
+                px: 1,
+                mb: 0.5,
+                borderBottom: "1px solid #f5f5f5",
                 "&:hover": {
-                  backgroundColor: "transparent",
+                  backgroundColor: "#f8f9fa",
                 },
+                transition: "background-color 0.2s ease",
               }}
             >
-              <ListItemText
-                primary="Tüm İlanlar"
-                secondary={getCategoryCount(null)}
+              <Box
                 sx={{
-                  "& .MuiListItemText-primary": {
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <Typography
+                  sx={{
                     color: "#333",
                     fontSize: "14px",
                     fontWeight: 400,
-                  },
-                  "& .MuiListItemText-secondary": {
+                  }}
+                >
+                  Tüm İlanlar
+                </Typography>
+                <Typography
+                  sx={{
                     color: "#666",
                     fontSize: "12px",
-                    fontWeight: 400,
-                  },
-                }}
-              />
+                    fontWeight: 500,
+                    backgroundColor: "#f0f0f0",
+                    px: 1,
+                    py: 0.2,
+                    borderRadius: "10px",
+                    minWidth: "20px",
+                    textAlign: "center",
+                  }}
+                >
+                  {getCategoryCount(null)}
+                </Typography>
+              </Box>
             </ListItem>
 
             {categories.map((category) => (
@@ -1480,29 +1535,49 @@ const MainLayout: React.FC = () => {
                 onClick={() => handleCategoryClick(category.slug)}
                 sx={{
                   cursor: "pointer",
-                  py: 0.2,
-                  px: 0,
+                  py: 0.5,
+                  px: 1,
+                  mb: 0.5,
+                  borderBottom: "1px solid #f5f5f5",
                   "&:hover": {
-                    backgroundColor: "transparent",
+                    backgroundColor: "#f8f9fa",
                   },
+                  transition: "background-color 0.2s ease",
                 }}
               >
-                <ListItemText
-                  primary={category.name}
-                  secondary={getCategoryCount(category.slug)}
+                <Box
                   sx={{
-                    "& .MuiListItemText-primary": {
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    width: "100%",
+                  }}
+                >
+                  <Typography
+                    sx={{
                       color: "#333",
                       fontSize: "14px",
                       fontWeight: 400,
-                    },
-                    "& .MuiListItemText-secondary": {
+                    }}
+                  >
+                    {category.name}
+                  </Typography>
+                  <Typography
+                    sx={{
                       color: "#666",
                       fontSize: "12px",
-                      fontWeight: 400,
-                    },
-                  }}
-                />
+                      fontWeight: 500,
+                      backgroundColor: "#f0f0f0",
+                      px: 1,
+                      py: 0.2,
+                      borderRadius: "10px",
+                      minWidth: "20px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {getCategoryCount(category.slug)}
+                  </Typography>
+                </Box>
               </ListItem>
             ))}
           </List>
@@ -1835,6 +1910,38 @@ const MainLayout: React.FC = () => {
             </FormControl>
           </Box>
 
+          {/* Tarih Filtresi */}
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ mb: 1, fontSize: "12px", color: "#666" }}
+            >
+              İlan Tarihi
+            </Typography>
+            <FormControl size="small" fullWidth>
+              <Select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                displayEmpty
+                sx={{
+                  backgroundColor: "white",
+                  fontSize: "12px",
+                  height: "32px",
+                }}
+              >
+                <MenuItem value="all" sx={{ fontSize: "12px" }}>
+                  Tümü
+                </MenuItem>
+                <MenuItem value="24h" sx={{ fontSize: "12px" }}>
+                  Son 24 Saat
+                </MenuItem>
+                <MenuItem value="48h" sx={{ fontSize: "12px" }}>
+                  Son 48 Saat
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
           {/* Filtreleri Temizle */}
           {(selectedBrand ||
             priceMin ||
@@ -1842,7 +1949,8 @@ const MainLayout: React.FC = () => {
             yearMin ||
             yearMax ||
             selectedCity ||
-            tradeFilter !== "all") && (
+            tradeFilter !== "all" ||
+            dateFilter !== "all") && (
             <Button
               variant="outlined"
               size="small"
@@ -1855,6 +1963,7 @@ const MainLayout: React.FC = () => {
                 setYearMax("");
                 setSelectedCity("");
                 setTradeFilter("all");
+                setDateFilter("all");
               }}
               sx={{
                 color: "#d32f2f",
@@ -2065,7 +2174,7 @@ const MainLayout: React.FC = () => {
                     <TextField
                       fullWidth
                       size="small"
-                      placeholder="Araç, marka, model, konum ara..."
+                      placeholder="Araç, marka, model, konum, ilan no ara..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       InputProps={{

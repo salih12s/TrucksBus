@@ -109,11 +109,23 @@ const Login: React.FC = () => {
               borderRadius: 1,
               fontSize: "18px",
               fontWeight: "bold",
-              mb: 6,
+              mb: 2,
               letterSpacing: "0.5px",
             }}
           >
             TrucksBus.com.tr
+          </Box>
+
+          {/* Logo */}
+          <Box sx={{ mb: 4 }}>
+            <img
+              src="/Trucksbus.png"
+              alt="TrucksBus Logo"
+              style={{
+                height: "96px",
+                width: "auto",
+              }}
+            />
           </Box>
 
           {/* Login Title */}
