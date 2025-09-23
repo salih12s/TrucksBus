@@ -144,6 +144,8 @@ model Ad {
   engineCapacity     String?           @map("engine_capacity")
   fuelType           FuelType?         @map("fuel_type")
   isExchangeable     Boolean?          @map("is_exchangeable")
+  hasAccidentRecord  Boolean?          @map("has_accident_record")
+  hasTramerRecord    Boolean?          @map("has_tramer_record")
   plateNumber        String?           @map("plate_number")
   plateType          PlateType?        @map("plate_type")
   roofType           RoofType?         @map("roof_type")

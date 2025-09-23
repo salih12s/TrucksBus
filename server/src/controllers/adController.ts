@@ -67,6 +67,8 @@ export const getAds = async (req: Request, res: Response) => {
           a.title,
           a.price,
           a.year,
+          a.is_exchangeable as "isExchangeable",
+          a.custom_fields as "customFields",
           a.created_at as "createdAt",
           c.name as city_name,
           d.name as district_name,
@@ -125,13 +127,24 @@ export const getAds = async (req: Request, res: Response) => {
     // ❗ Normal mode - detaylı veri
     const ads = await prisma.ad.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        year: true,
+        mileage: true,
+        location: true,
+        isExchangeable: true,
+        customFields: true,
+        createdAt: true,
         user: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
             companyName: true,
+            userType: true,
             city: true,
             phone: true,
           },
@@ -243,7 +256,8 @@ export const getAdById = async (req: Request, res: Response) => {
         a.is_promoted, a.promoted_until, a.custom_fields, 
         a.created_at, a.updated_at, a.chassis_type, a.color, 
         a.detail_features, a.drive_type, a.engine_capacity,
-        a.fuel_type, a.is_exchangeable, a.plate_number, a.plate_type, 
+        a.fuel_type, a.is_exchangeable, a.has_accident_record, a.has_tramer_record, 
+        a.plate_number, a.plate_type, 
         a.roof_type, a.seat_count, a.transmission_type,
         u.id as user_id, u.first_name, u.last_name, u.company_name, 
         u.phone, u.email, u.user_type, u.created_at as user_created_at, u.is_verified,
@@ -333,6 +347,8 @@ export const getAdById = async (req: Request, res: Response) => {
       engineCapacity: ad.engine_capacity,
       fuelType: ad.fuel_type,
       isExchangeable: ad.is_exchangeable,
+      hasAccidentRecord: ad.has_accident_record,
+      hasTramerRecord: ad.has_tramer_record,
       plateNumber: ad.plate_number,
       plateType: ad.plate_type,
       roofType: ad.roof_type,
@@ -453,6 +469,8 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       warranty,
       negotiable,
       exchange,
+      hasAccidentRecord,
+      hasTramerRecord,
       showcase_image_index,
       detailedInfo,
 
@@ -490,6 +508,10 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       title,
       description,
       status: "PENDING",
+      isExchangeable: exchange === "evet" || exchange === "true",
+      hasAccidentRecord:
+        hasAccidentRecord === "evet" || hasAccidentRecord === "true",
+      hasTramerRecord: hasTramerRecord === "evet" || hasTramerRecord === "true",
     };
 
     // Handle new format (tenteli forms and Kuruyük forms)
@@ -580,6 +602,10 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
         hasWarranty: warranty === "evet" || warranty === "true",
         isNegotiable: negotiable === "evet" || negotiable === "true",
         isExchangeable: exchange === "evet" || exchange === "true",
+        hasAccidentRecord:
+          hasAccidentRecord === "evet" || hasAccidentRecord === "true",
+        hasTramerRecord:
+          hasTramerRecord === "evet" || hasTramerRecord === "true",
         detailedInfo: detailedInfo,
 
         // Kuruyük specific fields
@@ -865,6 +891,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       mileage,
       condition,
       engineVolume,
+      motorPower,
       drivetrain,
       color,
       seatCount,
@@ -891,6 +918,17 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       // Detay bilgiler
       features,
     } = req.body;
+
+    // Motor gücü debug (Minibüs)
+    console.log("Minibüs Backend received motorPower:", motorPower);
+
+    // Form data debug
+    console.log("✅ Form Data (Minibüs):");
+    console.log("  - Title:", title);
+    console.log("  - Motor Power:", motorPower);
+    console.log("  - Engine Volume:", engineVolume);
+    console.log("  - Transmission:", transmission);
+    console.log("  - Fuel Type:", fuelType);
 
     // Enum değerlerini dönüştür
     const vehicleConditionMap: Record<string, string> = {
@@ -982,6 +1020,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
         customFields: {
           condition: condition || null,
           engineVolume: engineVolume || null,
+          motorPower: motorPower || null,
           drivetrain: drivetrain || null,
           color: color || null,
           seatCount: seatCount || null,
@@ -1549,6 +1588,9 @@ export const createKamyonAd = async (req: Request, res: Response) => {
         featuresJson = features;
       }
     }
+
+    // Motor gücü debug
+    console.log("Backend received motorPower:", motorPower);
 
     // Kamyon kategorisini bul
     const kamyonCategory = await prisma.category.findFirst({

@@ -106,6 +106,11 @@ interface Ad {
   };
   mileage?: number | null;
   location?: string;
+  isExchangeable?: boolean | null;
+  customFields?: {
+    isExchangeable?: string | boolean;
+    [key: string]: unknown;
+  };
 }
 
 interface ApiAdsResponse {
@@ -168,6 +173,8 @@ const MainLayout: React.FC = () => {
   const params = useParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [categoryBrands, setCategoryBrands] = useState<Brand[]>([]);
+  const [brandSearchQuery, setBrandSearchQuery] = useState("");
   const [ads, setAds] = useState<Ad[]>([]);
   const [filteredAds, setFilteredAds] = useState<Ad[]>([]);
   const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
@@ -196,6 +203,9 @@ const MainLayout: React.FC = () => {
 
   // Seller type filter
   const [selectedSellerType, setSelectedSellerType] = useState("all");
+
+  // Trade filter
+  const [tradeFilter, setTradeFilter] = useState("all"); // "all", "trade-only", "no-trade"
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -971,6 +981,31 @@ const MainLayout: React.FC = () => {
   // İlk yüklemede tüm markaları yükle, sonra kategoriye göre filtrele
   // useEffect kaldırıldı - artık category değiştiğinde API çağrısı yapmıyoruz
 
+  // Kategori değiştiğinde o kategoriye özel brandları yükle
+  useEffect(() => {
+    const loadCategoryBrands = async () => {
+      if (!selectedCategory) {
+        setCategoryBrands([]);
+        return;
+      }
+
+      try {
+        console.log("Loading brands for category:", selectedCategory);
+        const response = await apiClient.get(
+          `/categories/${selectedCategory}/brands`
+        );
+        const brandsData = Array.isArray(response.data) ? response.data : [];
+        console.log("Category brands loaded:", brandsData.length);
+        setCategoryBrands(brandsData);
+      } catch (error) {
+        console.error("Error loading category brands:", error);
+        setCategoryBrands([]);
+      }
+    };
+
+    loadCategoryBrands();
+  }, [selectedCategory]);
+
   // Gelişmiş filtreleme
   useEffect(() => {
     // ❗ Performance için filtering console'u kaldırdık
@@ -1162,6 +1197,74 @@ const MainLayout: React.FC = () => {
         );
       }
 
+      // Takas filtresi
+      if (tradeFilter !== "all") {
+        console.log("=== TAKAS FILTER DEBUG ===");
+        console.log("tradeFilter:", tradeFilter);
+        console.log("Total ads before filter:", filtered.length);
+
+        // İlk 5 ilan için isExchangeable değerlerini yazdır
+        filtered.slice(0, 5).forEach((ad, index) => {
+          console.log(`Ad ${index + 1}: ${ad.title}`);
+          console.log(
+            `  - isExchangeable:`,
+            ad.isExchangeable,
+            typeof ad.isExchangeable
+          );
+          console.log(
+            `  - customFields.isExchangeable:`,
+            ad.customFields?.isExchangeable,
+            typeof ad.customFields?.isExchangeable
+          );
+        });
+
+        filtered = filtered.filter((ad) => {
+          // İki farklı yerden takas bilgisini al
+          const directValue = ad.isExchangeable;
+          const customValue = ad.customFields?.isExchangeable;
+
+          // Takas durumunu belirle
+          let isTradeAllowed = false;
+
+          if (directValue === true) {
+            isTradeAllowed = true;
+          } else if (typeof customValue === "boolean") {
+            isTradeAllowed = customValue;
+          } else if (typeof customValue === "string") {
+            isTradeAllowed =
+              customValue.toLowerCase() === "evet" ||
+              customValue.toLowerCase() === "true";
+          }
+
+          let result = false;
+          switch (tradeFilter) {
+            case "trade-only":
+              // Sadece takaslı ilanları göster (Evet)
+              result = isTradeAllowed === true;
+              break;
+            case "no-trade":
+              // Sadece takasa kapalı ilanları göster (Hayır)
+              result = isTradeAllowed === false;
+              break;
+            default:
+              result = true;
+          }
+
+          if (tradeFilter === "trade-only" && result) {
+            console.log(`✓ Trade-only match: ${ad.title}`);
+            console.log(`  - Final isTradeAllowed:`, isTradeAllowed);
+            console.log(`  - directValue:`, directValue);
+            console.log(`  - customValue:`, customValue);
+          }
+
+          return result;
+        });
+
+        console.log("After trade filter:", filtered.length);
+        console.log("Filter:", tradeFilter);
+        console.log("=== END TAKAS DEBUG ===");
+      }
+
       setFilteredAds(filtered);
       console.log("Final filtered ads:", filtered.length);
     }
@@ -1176,6 +1279,7 @@ const MainLayout: React.FC = () => {
     yearMax,
     selectedCity,
     selectedSellerType,
+    tradeFilter,
     categories,
     brands,
   ]);
@@ -1260,54 +1364,62 @@ const MainLayout: React.FC = () => {
     return categoryAds.length.toLocaleString();
   };
 
-  // Get brands for selected category
+  // Get brands for selected category with search filter
   const getCategoryBrands = () => {
-    console.log("getCategoryBrands called - brands length:", brands.length);
+    console.log("=== getCategoryBrands DEBUG ===");
+    console.log("selectedCategory:", selectedCategory);
+    console.log("categoryBrands length:", categoryBrands.length);
+    console.log("brandSearchQuery:", brandSearchQuery);
 
-    if (!selectedCategory || brands.length === 0) {
-      console.log("No category selected or no brands loaded");
+    if (!selectedCategory || categoryBrands.length === 0) {
+      console.log(
+        "Early return: No category selected or no category brands loaded"
+      );
       return [];
     }
 
-    // Seçili kategoriye ait ilanları bul
-    const selectedCategoryName = categories.find(
-      (cat) => cat.slug === selectedCategory
-    )?.name;
-    console.log("Selected category name:", selectedCategoryName);
+    // Search filter uygula
+    const filteredBrands = brandSearchQuery.trim()
+      ? categoryBrands.filter((brand) =>
+          brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase())
+        )
+      : categoryBrands;
 
-    const categoryAds = ads.filter(
-      (ad) =>
-        ad.category?.name?.toLowerCase() === selectedCategoryName?.toLowerCase()
-    );
-
-    console.log("Ads in this category:", categoryAds.length);
-
-    // Bu kategorideki ilanlardan benzersiz marka isimlerini al
-    const brandNamesInCategory = [
-      ...new Set(categoryAds.map((ad) => ad.brand?.name).filter(Boolean)),
-    ];
-
-    console.log("Brand names found in category ads:", brandNamesInCategory);
-
-    // Bu marka isimlerine sahip brand objelerini bul
-    const categoryBrands = brands.filter((brand) =>
-      brandNamesInCategory.includes(brand.name)
-    );
-
+    console.log("Filtered brands:", filteredBrands.length);
     console.log(
-      "Final category brands:",
-      categoryBrands.length,
-      categoryBrands.map((b) => b.name)
+      "Brand names:",
+      filteredBrands.map((b) => b.name)
     );
+    console.log("=== END DEBUG ===");
 
-    return categoryBrands;
+    return filteredBrands;
   };
 
   // Get brand count for category
   const getBrandCount = (brandSlug: string) => {
-    // Şimdilik sabit sayı döndürelim, sonra gerçek count'u ekleriz
-    const count = Math.floor(Math.random() * 50);
-    console.log(`Brand count for ${brandSlug}:`, count);
+    if (!selectedCategory) return "0";
+
+    // Seçili kategorinin adını bul
+    const selectedCategoryName = categories.find(
+      (cat) => cat.slug === selectedCategory
+    )?.name;
+
+    if (!selectedCategoryName) return "0";
+
+    // Bu kategorideki bu markaya ait ilanları say
+    const count = ads.filter((ad) => {
+      const categoryMatch =
+        ad.category?.name?.toLowerCase() ===
+        selectedCategoryName?.toLowerCase();
+      const brandMatch =
+        ad.brand?.name === brands.find((b) => b.slug === brandSlug)?.name;
+      return categoryMatch && brandMatch;
+    }).length;
+
+    console.log(
+      `Brand count for ${brandSlug} in ${selectedCategoryName}:`,
+      count
+    );
     return count.toString();
   };
 
@@ -1438,43 +1550,6 @@ const MainLayout: React.FC = () => {
           </Typography>
         </Box>
 
-        {/* Tüm İlanlar için kategori */}
-        <List sx={{ p: 0, mb: 2 }}>
-          <ListItem
-            onClick={() => handleBrandClick(null)}
-            sx={{
-              cursor: "pointer",
-              py: 1,
-              px: 2,
-              backgroundColor:
-                selectedBrand === null ? "#f8f9fa" : "transparent",
-              borderLeft:
-                selectedBrand === null
-                  ? "3px solid #333"
-                  : "3px solid transparent",
-              "&:hover": {
-                backgroundColor: "#f8f9fa",
-              },
-            }}
-          >
-            <ListItemText
-              primary="Tüm Markalar"
-              secondary={getCategoryCount(selectedCategory)}
-              sx={{
-                "& .MuiListItemText-primary": {
-                  color: "#333",
-                  fontSize: "14px",
-                  fontWeight: selectedBrand === null ? 600 : 400,
-                },
-                "& .MuiListItemText-secondary": {
-                  color: "#666",
-                  fontSize: "12px",
-                },
-              }}
-            />
-          </ListItem>
-        </List>
-
         {/* Markalar Başlığı */}
         <Typography
           variant="subtitle2"
@@ -1488,45 +1563,111 @@ const MainLayout: React.FC = () => {
           Markalar
         </Typography>
 
-        {/* Markalar Listesi */}
-        <List sx={{ p: 0 }}>
+        {/* Marka Arama */}
+        <TextField
+          placeholder="Marka ara..."
+          variant="outlined"
+          size="small"
+          value={brandSearchQuery}
+          onChange={(e) => setBrandSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: "#666", fontSize: "18px" }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            mb: 1.5,
+            "& .MuiOutlinedInput-root": {
+              fontSize: "13px",
+              backgroundColor: "#fafafa",
+              "&:hover": {
+                backgroundColor: "#f5f5f5",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "#fff",
+              },
+            },
+            "& .MuiOutlinedInput-input": {
+              padding: "8px 12px",
+            },
+          }}
+        />
+
+        {/* Markalar Listesi - Grid Layout */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 0.5,
+            maxHeight: "300px",
+            overflowY: "auto",
+            pr: 1,
+            "&::-webkit-scrollbar": {
+              width: "4px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "#f1f1f1",
+              borderRadius: "2px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#c1c1c1",
+              borderRadius: "2px",
+            },
+          }}
+        >
           {categoryBrands.map((brand) => (
-            <ListItem
+            <Box
               key={brand.id}
               onClick={() => handleBrandClick(brand.slug)}
               sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 cursor: "pointer",
                 py: 0.8,
-                px: 2,
+                px: 1.5,
                 backgroundColor:
-                  selectedBrand === brand.slug ? "#f8f9fa" : "transparent",
+                  selectedBrand === brand.slug ? "#e3f2fd" : "transparent",
                 borderLeft:
                   selectedBrand === brand.slug
-                    ? "3px solid #333"
+                    ? "3px solid #1976d2"
                     : "3px solid transparent",
+                borderRadius: "4px",
                 "&:hover": {
-                  backgroundColor: "#f8f9fa",
+                  backgroundColor: "#f5f5f5",
                 },
+                transition: "all 0.2s ease",
               }}
             >
-              <ListItemText
-                primary={brand.name}
-                secondary={getBrandCount(brand.slug)}
+              <Typography
                 sx={{
-                  "& .MuiListItemText-primary": {
-                    color: "#333",
-                    fontSize: "13px",
-                    fontWeight: selectedBrand === brand.slug ? 600 : 400,
-                  },
-                  "& .MuiListItemText-secondary": {
-                    color: "#666",
-                    fontSize: "11px",
-                  },
+                  color: selectedBrand === brand.slug ? "#1976d2" : "#333",
+                  fontSize: "13px",
+                  fontWeight: selectedBrand === brand.slug ? 600 : 400,
+                  flex: 1,
                 }}
-              />
-            </ListItem>
+              >
+                {brand.name}
+              </Typography>
+              <Typography
+                sx={{
+                  color: "#666",
+                  fontSize: "11px",
+                  backgroundColor: "#f0f0f0",
+                  px: 1,
+                  py: 0.2,
+                  borderRadius: "10px",
+                  minWidth: "20px",
+                  textAlign: "center",
+                }}
+              >
+                {getBrandCount(brand.slug)}
+              </Typography>
+            </Box>
           ))}
-        </List>
+        </Box>
 
         {/* Filtreler Bölümü */}
         <Box sx={{ mt: 3 }}>
@@ -1661,13 +1802,46 @@ const MainLayout: React.FC = () => {
             </FormControl>
           </Box>
 
+          {/* Takas Filtresi */}
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ mb: 1, fontSize: "12px", color: "#666" }}
+            >
+              Takas Durumu
+            </Typography>
+            <FormControl size="small" fullWidth>
+              <Select
+                value={tradeFilter}
+                onChange={(e) => setTradeFilter(e.target.value)}
+                displayEmpty
+                sx={{
+                  backgroundColor: "white",
+                  fontSize: "12px",
+                  height: "32px",
+                }}
+              >
+                <MenuItem value="all" sx={{ fontSize: "12px" }}>
+                  Tümü
+                </MenuItem>
+                <MenuItem value="trade-only" sx={{ fontSize: "12px" }}>
+                  Evet
+                </MenuItem>
+                <MenuItem value="no-trade" sx={{ fontSize: "12px" }}>
+                  Hayır
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
           {/* Filtreleri Temizle */}
           {(selectedBrand ||
             priceMin ||
             priceMax ||
             yearMin ||
             yearMax ||
-            selectedCity) && (
+            selectedCity ||
+            tradeFilter !== "all") && (
             <Button
               variant="outlined"
               size="small"
@@ -1679,6 +1853,7 @@ const MainLayout: React.FC = () => {
                 setYearMin("");
                 setYearMax("");
                 setSelectedCity("");
+                setTradeFilter("all");
               }}
               sx={{
                 color: "#d32f2f",

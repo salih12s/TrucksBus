@@ -58,6 +58,8 @@ interface Ad {
   plateType?: string;
   plateNumber?: string;
   takas?: string;
+  hasAccidentRecord?: boolean | null;
+  hasTramerRecord?: boolean | null;
   viewCount?: number;
   platformLength?: string;
   platformWidth?: string;
@@ -1161,6 +1163,34 @@ const AdDetail: React.FC = () => {
                               ? "Evet"
                               : "Hayır"
                             : null,
+                        },
+                        {
+                          label: "Hasar Kaydı",
+                          value:
+                            ad.hasAccidentRecord !== null
+                              ? ad.hasAccidentRecord
+                                ? "Evet"
+                                : "Hayır"
+                              : ad.customFields?.hasAccidentRecord
+                              ? ad.customFields.hasAccidentRecord === "evet" ||
+                                ad.customFields.hasAccidentRecord === true
+                                ? "Evet"
+                                : "Hayır"
+                              : null,
+                        },
+                        {
+                          label: "Tramer Kaydı",
+                          value:
+                            ad.hasTramerRecord !== null
+                              ? ad.hasTramerRecord
+                                ? "Evet"
+                                : "Hayır"
+                              : ad.customFields?.hasTramerRecord
+                              ? ad.customFields.hasTramerRecord === "evet" ||
+                                ad.customFields.hasTramerRecord === true
+                                ? "Evet"
+                                : "Hayır"
+                              : null,
                         },
 
                         // Otobüs Özel Alanları

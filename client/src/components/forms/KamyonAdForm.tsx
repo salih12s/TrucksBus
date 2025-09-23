@@ -161,6 +161,8 @@ interface FormData {
   fuelType: string;
   superstructure: string; // Üst yapı
   exchange: string;
+  hasAccidentRecord: string; // Hasar kaydı
+  hasTramerRecord: string; // Tramer kaydı
   plateType: string;
   plateNumber: string;
   cityId: string;
@@ -255,6 +257,8 @@ const KamyonAdForm: React.FC = () => {
     photos: [],
     showcasePhoto: null,
     detailFeatures: {},
+    hasAccidentRecord: "",
+    hasTramerRecord: "",
   });
 
   // Şehirleri yükle
@@ -1056,6 +1060,76 @@ const KamyonAdForm: React.FC = () => {
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
                           <span>❌</span> Hayır
+                        </Box>
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                        "&:hover fieldset": { borderColor: "primary.main" },
+                      },
+                    }}
+                  >
+                    <InputLabel>Hasar Kaydı</InputLabel>
+                    <Select
+                      value={formData.hasAccidentRecord || ""}
+                      onChange={(e) =>
+                        handleInputChange("hasAccidentRecord", e.target.value)
+                      }
+                      label="Hasar Kaydı"
+                    >
+                      <MenuItem value="evet">
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <span>⚠️</span> Evet
+                        </Box>
+                      </MenuItem>
+                      <MenuItem value="hayir">
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <span>✅</span> Hayır
+                        </Box>
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                        "&:hover fieldset": { borderColor: "primary.main" },
+                      },
+                    }}
+                  >
+                    <InputLabel>Tramer Kaydı</InputLabel>
+                    <Select
+                      value={formData.hasTramerRecord || ""}
+                      onChange={(e) =>
+                        handleInputChange("hasTramerRecord", e.target.value)
+                      }
+                      label="Tramer Kaydı"
+                    >
+                      <MenuItem value="evet">
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <span>📋</span> Evet
+                        </Box>
+                      </MenuItem>
+                      <MenuItem value="hayir">
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <span>✅</span> Hayır
                         </Box>
                       </MenuItem>
                     </Select>

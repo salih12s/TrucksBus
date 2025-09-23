@@ -81,6 +81,7 @@ interface FormData {
   mileage: string;
   condition: string;
   engineVolume: string;
+  motorPower: string;
   drivetrain: string;
   color: string;
   seatCount: string;
@@ -89,6 +90,8 @@ interface FormData {
   transmission: string;
   fuelType: string;
   exchange: string;
+  hasAccidentRecord: string; // Hasar kaydı
+  hasTramerRecord: string; // Tramer kaydı
   plateType: string;
   plateNumber: string;
   cityId: string;
@@ -147,6 +150,28 @@ interface FormData {
   };
 }
 
+// Motor Gücü seçenekleri (Minibüs için)
+const motorPowerOptions = [
+  "100 hp'ye kadar",
+  "101 - 125 hp",
+  "126 - 150 hp",
+  "151 - 175 hp",
+  "176 - 200 hp",
+  "201 - 225 hp",
+  "226 - 250 hp",
+  "251 - 275 hp",
+  "276 - 300 hp",
+  "301 - 325 hp",
+  "326 - 350 hp",
+  "351 - 375 hp",
+  "376 - 400 hp",
+  "401 - 425 hp",
+  "426 - 450 hp",
+  "451 - 475 hp",
+  "476 - 500 hp",
+  "501 hp ve üzeri",
+];
+
 const CreateMinibusAdForm: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
@@ -196,6 +221,7 @@ const CreateMinibusAdForm: React.FC = () => {
     mileage: "",
     condition: "ikinci-el",
     engineVolume: "",
+    motorPower: "",
     drivetrain: "onden-cekis",
     color: "",
     seatCount: "",
@@ -204,6 +230,8 @@ const CreateMinibusAdForm: React.FC = () => {
     transmission: "manuel",
     fuelType: "dizel",
     exchange: "hayir",
+    hasAccidentRecord: "",
+    hasTramerRecord: "",
     plateType: "tr-plakali",
     plateNumber: "",
     cityId: "",
@@ -578,6 +606,9 @@ const CreateMinibusAdForm: React.FC = () => {
     setLoading(true);
 
     try {
+      // Motor gücü debug
+      console.log("Form Data motorPower:", formData.motorPower);
+
       const submitData = new FormData();
 
       // Temel bilgileri ekle (price ve mileage'ı parse ederek)
@@ -1092,7 +1123,17 @@ const CreateMinibusAdForm: React.FC = () => {
                       </MenuItem>
                     </Select>
                   </FormControl>
+                </Box>
 
+                {/* Motor Hacmi ve Motor Gücü */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: 3,
+                    mb: 3,
+                  }}
+                >
                   <FormControl
                     fullWidth
                     variant="outlined"
@@ -1153,6 +1194,40 @@ const CreateMinibusAdForm: React.FC = () => {
                           <span>💥</span> 3000+ cc
                         </Box>
                       </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                        "&:hover fieldset": { borderColor: "primary.main" },
+                      },
+                    }}
+                  >
+                    <InputLabel>Motor Gücü</InputLabel>
+                    <Select
+                      value={formData.motorPower}
+                      onChange={(e) =>
+                        handleInputChange("motorPower", e.target.value)
+                      }
+                      label="Motor Gücü"
+                    >
+                      {motorPowerOptions.map((option) => (
+                        <MenuItem key={option} value={option}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <span>💪</span> {option}
+                          </Box>
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Box>
@@ -1588,6 +1663,76 @@ const CreateMinibusAdForm: React.FC = () => {
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
                           <span>❌</span> Hayır
+                        </Box>
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                        "&:hover fieldset": { borderColor: "primary.main" },
+                      },
+                    }}
+                  >
+                    <InputLabel>Hasar Kaydı</InputLabel>
+                    <Select
+                      value={formData.hasAccidentRecord || ""}
+                      onChange={(e) =>
+                        handleInputChange("hasAccidentRecord", e.target.value)
+                      }
+                      label="Hasar Kaydı"
+                    >
+                      <MenuItem value="evet">
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <span>⚠️</span> Evet
+                        </Box>
+                      </MenuItem>
+                      <MenuItem value="hayir">
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <span>✅</span> Hayır
+                        </Box>
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl
+                    fullWidth
+                    variant="outlined"
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                        "&:hover fieldset": { borderColor: "primary.main" },
+                      },
+                    }}
+                  >
+                    <InputLabel>Tramer Kaydı</InputLabel>
+                    <Select
+                      value={formData.hasTramerRecord || ""}
+                      onChange={(e) =>
+                        handleInputChange("hasTramerRecord", e.target.value)
+                      }
+                      label="Tramer Kaydı"
+                    >
+                      <MenuItem value="evet">
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <span>📋</span> Evet
+                        </Box>
+                      </MenuItem>
+                      <MenuItem value="hayir">
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <span>✅</span> Hayır
                         </Box>
                       </MenuItem>
                     </Select>
