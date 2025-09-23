@@ -376,6 +376,17 @@ const KamyonAdForm: React.FC = () => {
     setLoading(true);
 
     try {
+      // Kamyon form debug
+      console.log(
+        "Kamyon Form Data hasAccidentRecord:",
+        formData.hasAccidentRecord
+      );
+      console.log(
+        "Kamyon Form Data hasTramerRecord:",
+        formData.hasTramerRecord
+      );
+      console.log("Kamyon Form Data motorPower:", formData.motorPower);
+
       const submitData = new FormData();
 
       // Temel bilgileri ekle (price ve mileage'ı parse ederek)

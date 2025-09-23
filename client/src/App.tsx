@@ -28,6 +28,10 @@ const isMaintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === "true";
 const MainLayout = React.lazy(() => import("./pages/MainLayout"));
 const LoginNew = React.lazy(() => import("./components/auth/LoginNew"));
 const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
+const MembershipSelection = React.lazy(
+  () => import("./pages/auth/MembershipSelection")
+);
+const LoginSelection = React.lazy(() => import("./pages/auth/LoginSelection"));
 
 // ❗ Secondary pages - Daha sonra yüklenebilir
 const Notifications = React.lazy(() => import("./pages/Notifications"));
@@ -414,6 +418,14 @@ function App() {
 
                         <Route path="/login" element={<LoginNew />} />
                         <Route path="/register" element={<RegisterNew />} />
+                        <Route
+                          path="/membership-selection"
+                          element={<MembershipSelection />}
+                        />
+                        <Route
+                          path="/login-selection"
+                          element={<LoginSelection />}
+                        />
                         <Route
                           path="/register-corporate"
                           element={<RegisterCorporate />}

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -19,7 +19,18 @@ import { registerUser, clearError } from "../../store/authSlice";
 const Register: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isLoading, error } = useAppSelector((state) => state.auth);
+
+  // Check if this is corporate registration
+  const isCorporateRegistration = searchParams.get("type") === "corporate";
+
+  useEffect(() => {
+    // If this is corporate registration, redirect to corporate registration page
+    if (isCorporateRegistration) {
+      navigate("/register-corporate");
+    }
+  }, [isCorporateRegistration, navigate]);
 
   const [formData, setFormData] = useState({
     firstName: "",

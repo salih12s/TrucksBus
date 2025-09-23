@@ -396,25 +396,44 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
               <Button
                 color="inherit"
                 component={RouterLink}
-                to="/login"
+                to="/login-selection"
                 sx={{
-                  color: "#333",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  padding: "4px 8px",
+                  color: "#000",
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  padding: "8px 16px",
                   textTransform: "none",
-                  "&:hover": {
-                    backgroundColor: "rgba(0,0,0,0.05)",
-                  },
+                  ml: 1,
                 }}
               >
-                Giriş Yap / Üye Ol
+                Giriş Yap
+              </Button>
+
+              <Button
+                color="inherit"
+                component={RouterLink}
+                to="/membership-selection"
+                sx={{
+                  color: "#000",
+                  fontSize: "14px",
+                  fontWeight: 400,
+                  padding: "8px 16px",
+                  textTransform: "none",
+                  ml: 1,
+                }}
+              >
+                Üye Ol
               </Button>
 
               <Button
                 variant="contained"
-                component={RouterLink}
-                to="/category-selection"
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate("/login");
+                  } else {
+                    navigate("/category-selection");
+                  }
+                }}
                 sx={{
                   backgroundColor: "#fdeaea",
                   color: "#dc3545",

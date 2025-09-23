@@ -900,6 +900,8 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       transmission,
       fuelType,
       exchange,
+      hasAccidentRecord,
+      hasTramerRecord,
       plateType,
       plateNumber,
       cityId,
@@ -929,6 +931,8 @@ export const createMinibusAd = async (req: Request, res: Response) => {
     console.log("  - Engine Volume:", engineVolume);
     console.log("  - Transmission:", transmission);
     console.log("  - Fuel Type:", fuelType);
+    console.log("  - Has Accident Record:", req.body.hasAccidentRecord);
+    console.log("  - Has Tramer Record:", req.body.hasTramerRecord);
 
     // Enum değerlerini dönüştür
     const vehicleConditionMap: Record<string, string> = {
@@ -1029,6 +1033,8 @@ export const createMinibusAd = async (req: Request, res: Response) => {
           transmission: transmission || null,
           fuelType: fuelType || null,
           exchange: exchange || null,
+          hasAccidentRecord: hasAccidentRecord || null,
+          hasTramerRecord: hasTramerRecord || null,
           plateType: plateType || null,
           plateNumber: plateNumber || null,
           address: address || null,
@@ -1564,6 +1570,8 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       tireCondition,
       superstructure,
       exchange,
+      hasAccidentRecord,
+      hasTramerRecord,
       plateType,
       plateNumber,
       cityId,
@@ -1591,6 +1599,15 @@ export const createKamyonAd = async (req: Request, res: Response) => {
 
     // Motor gücü debug
     console.log("Backend received motorPower:", motorPower);
+
+    // Kamyon Form data debug
+    console.log("✅ Form Data (Kamyon):");
+    console.log("  - Title:", title);
+    console.log("  - Motor Power:", motorPower);
+    console.log("  - Transmission:", transmission);
+    console.log("  - Fuel Type:", fuelType);
+    console.log("  - Has Accident Record:", hasAccidentRecord);
+    console.log("  - Has Tramer Record:", hasTramerRecord);
 
     // Kamyon kategorisini bul
     const kamyonCategory = await prisma.category.findFirst({
@@ -1628,6 +1645,8 @@ export const createKamyonAd = async (req: Request, res: Response) => {
           tireCondition: tireCondition || null,
           superstructure: superstructure || null,
           exchange: exchange || null,
+          hasAccidentRecord: hasAccidentRecord || null,
+          hasTramerRecord: hasTramerRecord || null,
           plateType: plateType || null,
           plateNumber: plateNumber || null,
           address: address || null,

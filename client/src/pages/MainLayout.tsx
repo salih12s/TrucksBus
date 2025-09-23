@@ -36,6 +36,7 @@ import { useAppSelector } from "../hooks/redux";
 import socketService from "../services/socketService";
 import AdDetail from "./AdDetail";
 import apiClient from "../api/client";
+import AdBanner from "../components/ads/AdBanner";
 import ComplaintModal from "../components/complaints/ComplaintModal";
 import ContactPage from "./ContactPage";
 import AboutPage from "./AboutPage";
@@ -1887,143 +1888,8 @@ const MainLayout: React.FC = () => {
     >
       <Header favoritesCount={favoritesCount} />
 
-      {/* Animated Advertisement Banner */}
-      <Box
-        sx={{
-          background:
-            "linear-gradient(135deg, #D34237 0%, #e85347 50%, #D34237 100%)",
-          borderBottom: "2px solid #b8342a",
-          py: 1.5,
-          overflow: "hidden",
-          position: "relative",
-          boxShadow: "0 2px 8px rgba(211, 66, 55, 0.2)",
-          "&:hover .ad-scroll-container": {
-            animationPlayState: "paused",
-          },
-          "&::before": {
-            content: '""',
-            position: "absolute",
-            top: 0,
-            left: "-100%",
-            width: "100%",
-            height: "100%",
-            background:
-              "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
-            animation: "shimmer 3s infinite",
-          },
-          "@keyframes shimmer": {
-            "0%": { left: "-100%" },
-            "100%": { left: "100%" },
-          },
-        }}
-      >
-        <Box
-          className="ad-scroll-container"
-          sx={{
-            display: "flex",
-            gap: 6,
-            width: "fit-content",
-            animation: "scrollAds 30s linear infinite",
-            alignItems: "center",
-            "@keyframes scrollAds": {
-              "0%": {
-                transform: "translateX(100%)",
-              },
-              "100%": {
-                transform: "translateX(-100%)",
-              },
-            },
-          }}
-        >
-          {/* Reklam İçerikleri */}
-          {[
-            {
-              icon: "🚛",
-              text: "Reklam alanı kiralık - trucksbus.com.tr'de yerinizi alın!",
-            },
-            {
-              icon: "📢",
-              text: "Buraya reklam verebilirsiniz - Geniş kitleye ulaşın!",
-            },
-            {
-              icon: "💼",
-              text: "İşletmenizi tanıtın - Binlerce potansiyel müşteri!",
-            },
-            {
-              icon: "⭐",
-              text: "Premium reklam alanları - info@trucksbus.com.tr",
-            },
-            {
-              icon: "🎯",
-              text: "Hedef kitlenize direkt ulaşın - Etkili reklam çözümleri!",
-            },
-            {
-              icon: "🚀",
-              text: "İşinizi büyütün - Profesyonel reklam hizmetleri!",
-            },
-          ].map((item, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1.5,
-                minWidth: "450px",
-                cursor: "pointer",
-                "&:hover": {
-                  transform: "scale(1.02)",
-                },
-                transition: "transform 0.3s ease",
-              }}
-            >
-              <Box
-                sx={{
-                  fontSize: "20px",
-                  animation: "bounce 2s infinite",
-                  "@keyframes bounce": {
-                    "0%, 20%, 50%, 80%, 100%": {
-                      transform: "translateY(0)",
-                    },
-                    "40%": {
-                      transform: "translateY(-4px)",
-                    },
-                    "60%": {
-                      transform: "translateY(-2px)",
-                    },
-                  },
-                }}
-              >
-                {item.icon}
-              </Box>
-              <Typography
-                sx={{
-                  fontSize: "15px",
-                  color: "#fff",
-                  fontWeight: 600,
-                  whiteSpace: "nowrap",
-                  textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
-                  letterSpacing: "0.3px",
-                }}
-              >
-                {item.text}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-
-        {/* Corner Accent */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: 0,
-            height: 0,
-            borderLeft: "20px solid transparent",
-            borderBottom: "20px solid rgba(255,255,255,0.1)",
-          }}
-        />
-      </Box>
+      {/* Animated Advertisement Banner - Hidden on AdDetail pages */}
+      {!isAdDetailPage && <AdBanner variant="horizontal" />}
 
       <Box
         sx={{
@@ -2111,11 +1977,33 @@ const MainLayout: React.FC = () => {
             p: isMobile ? 1 : isTablet ? 2 : 3,
             pl: isMobile ? 7 : undefined, // Extra left padding on mobile for hamburger menu
             width: "100%",
+            position: "relative",
           }}
         >
+          {/* Vertical Banner for AdDetail pages */}
+          {isAdDetailPage && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                right: "20px",
+                width: "100px",
+                height: "100%",
+                zIndex: 100,
+                display: { xs: "none", lg: "block" },
+              }}
+            >
+              <AdBanner variant="vertical" />
+            </Box>
+          )}
+
           {/* Conditional Content Based on URL */}
           {isAdDetailPage ? (
-            <AdDetail />
+            <Box sx={{ pr: { lg: "120px" } }}>
+              {" "}
+              {/* Right padding for banner space */}
+              <AdDetail />
+            </Box>
           ) : location.pathname === "/contact" ? (
             <ContactPage />
           ) : location.pathname === "/about" ? (

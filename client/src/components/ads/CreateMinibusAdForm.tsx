@@ -609,6 +609,10 @@ const CreateMinibusAdForm: React.FC = () => {
       // Motor gücü debug
       console.log("Form Data motorPower:", formData.motorPower);
 
+      // Hasar ve Tramer kaydı debug
+      console.log("Form Data hasAccidentRecord:", formData.hasAccidentRecord);
+      console.log("Form Data hasTramerRecord:", formData.hasTramerRecord);
+
       const submitData = new FormData();
 
       // Temel bilgileri ekle (price ve mileage'ı parse ederek)

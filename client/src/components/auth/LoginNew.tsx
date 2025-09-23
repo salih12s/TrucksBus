@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -19,6 +19,7 @@ import { loginUser, clearError } from "../../store/authSlice";
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
@@ -27,6 +28,16 @@ const Login: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  // Check if this is corporate login
+  const isCorporateLogin = searchParams.get("type") === "corporate";
+
+  useEffect(() => {
+    // If this is corporate login, redirect to corporate registration page
+    if (isCorporateLogin) {
+      navigate("/register-corporate");
+    }
+  }, [isCorporateLogin, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
