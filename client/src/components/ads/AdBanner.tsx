@@ -40,7 +40,7 @@ const AdBanner: React.FC<AdBannerProps> = ({ variant = "horizontal" }) => {
           background:
             "linear-gradient(180deg, #D34237 0%, #e85347 50%, #D34237 100%)",
           height: "100%",
-          width: "80px",
+          width: "95px",
           overflow: "hidden",
           position: "relative",
           boxShadow: "-2px 0 8px rgba(211, 66, 55, 0.2)",

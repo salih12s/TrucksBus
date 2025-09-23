@@ -1190,17 +1190,6 @@ const AdDetail: React.FC = () => {
                                 ? "Hayır"
                                 : null,
                           },
-                          {
-                            label: "Takas",
-                            value:
-                              ad.customFields?.exchangeable === "evet"
-                                ? "Evet"
-                                : ad.customFields?.exchangeable === "hayır"
-                                ? "Hayır"
-                                : ad.customFields?.exchangeable
-                                ? ad.customFields.exchangeable
-                                : null,
-                          },
 
                           // Çekici Özel Alanları
                           {
@@ -1214,10 +1203,6 @@ const AdDetail: React.FC = () => {
                           {
                             label: "Dorse Mevcut",
                             value: ad.customFields?.dorseAvailable || null,
-                          },
-                          {
-                            label: "Hasar Kaydı",
-                            value: ad.customFields?.damageRecord || null,
                           },
                           {
                             label: "Boyalı",
@@ -1288,13 +1273,6 @@ const AdDetail: React.FC = () => {
 
                           // Oto Kurtarıcı Tekli Araç Özel Alanları
                           {
-                            label: "İstiap Haddi",
-                            value:
-                              ad.customFields?.loadCapacity ||
-                              ad.loadCapacity ||
-                              null,
-                          },
-                          {
                             label: "Maksimum Güç",
                             value:
                               ad.customFields?.maxPower || ad.maxPower || null,
@@ -1305,11 +1283,6 @@ const AdDetail: React.FC = () => {
                               ad.customFields?.maxTorque ||
                               ad.maxTorque ||
                               null,
-                          },
-                          {
-                            label: "Yakıt Tipi",
-                            value:
-                              ad.customFields?.fuelType || ad.fuelType || null,
                           },
                           {
                             label: "Plaka Bilgileri",
@@ -1349,17 +1322,6 @@ const AdDetail: React.FC = () => {
                           },
 
                           {
-                            label: "Lastik Durumu",
-                            value:
-                              ad.customFields?.tireCondition ||
-                              ad.customFields?.lastikDurumu
-                                ? `${
-                                    ad.customFields?.tireCondition ||
-                                    ad.customFields?.lastikDurumu
-                                  }%`
-                                : null,
-                          },
-                          {
                             label: "Yük Kapasitesi",
                             value: ad.customFields?.loadCapacity || null,
                           },
@@ -1392,10 +1354,6 @@ const AdDetail: React.FC = () => {
                             value: ad.customFields?.istiapHaddi
                               ? `${ad.customFields.istiapHaddi} ton`
                               : null,
-                          },
-                          {
-                            label: "Dingil Sayısı",
-                            value: ad.customFields?.dingilSayisi || null,
                           },
                           {
                             label: "Uzatılabilir Profil",
@@ -1435,22 +1393,6 @@ const AdDetail: React.FC = () => {
                           },
 
                           // Damperli Dorse Özel Alanları
-                          {
-                            label: "Dorse Genişliği",
-                            value: ad.customFields?.genislik
-                              ? `${ad.customFields.genislik} m`
-                              : null,
-                          },
-                          {
-                            label: "Dorse Uzunluğu",
-                            value: ad.customFields?.uzunluk
-                              ? `${ad.customFields.uzunluk} m`
-                              : null,
-                          },
-                          {
-                            label: "Devrilme Yönü",
-                            value: ad.customFields?.devrilmeYonu || null,
-                          },
 
                           // Tenteli Dorse Özel Alanları
                           {
@@ -1477,12 +1419,6 @@ const AdDetail: React.FC = () => {
                           },
 
                           // Frigofirik Özel Alanları
-                          {
-                            label: "Frigofirik Uzunluk",
-                            value: ad.customFields?.uzunluk
-                              ? `${ad.customFields.uzunluk} m`
-                              : null,
-                          },
                           {
                             label: "Lastik Durumu",
                             value: ad.customFields?.lastikDurumu
@@ -1593,22 +1529,6 @@ const AdDetail: React.FC = () => {
                           },
 
                           // Şasi/Römork Genel Özellikleri
-                          {
-                            label: "Dingil Sayısı",
-                            value:
-                              ad.customFields?.axleCount ||
-                              ad.customFields?.dingilSayisi ||
-                              null,
-                          },
-                          {
-                            label: "Damperli",
-                            value:
-                              ad.customFields?.hasDamper === true
-                                ? "Evet"
-                                : ad.customFields?.hasDamper === false
-                                ? "Hayır"
-                                : null,
-                          },
 
                           // Kuruyük Özel Alanları
                           {
@@ -1636,24 +1556,8 @@ const AdDetail: React.FC = () => {
                               : null,
                           },
                           {
-                            label: "İstiap Haddi",
-                            value: ad.customFields?.istiapHaddi
-                              ? `${ad.customFields.istiapHaddi} ton`
-                              : null,
-                          },
-                          {
                             label: "Kriko Ayak",
                             value: ad.customFields?.krikoAyak || null,
-                          },
-                          {
-                            label: "Lastik Durumu",
-                            value: ad.customFields?.lastikDurumu
-                              ? `${ad.customFields.lastikDurumu}%`
-                              : null,
-                          },
-                          {
-                            label: "Takaslı",
-                            value: ad.customFields?.takasli || null,
                           },
                           {
                             label: "Kapak Sistemi",
@@ -1662,35 +1566,11 @@ const AdDetail: React.FC = () => {
 
                           // Silobas Özel Alanları
                           {
-                            label: "Hacim",
-                            value: ad.customFields?.hacim
-                              ? `${ad.customFields.hacim} m³`
-                              : null,
-                          },
-                          {
                             label: "Dingil Sayısı",
                             value: ad.customFields?.dingilSayisi || null,
                           },
-                          {
-                            label: "Lastik Durumu",
-                            value: ad.customFields?.lastikDurumu
-                              ? `${ad.customFields.lastikDurumu}%`
-                              : null,
-                          },
-                          {
-                            label: "Silobas Türü",
-                            value: ad.customFields?.silobasTuru || null,
-                          },
-                          {
-                            label: "Renk",
-                            value: ad.customFields?.renk || null,
-                          },
 
                           // Tekstil Özel Alanları
-                          {
-                            label: "Takaslı",
-                            value: ad.customFields?.takasli || null,
-                          },
                           {
                             label: "Tekstil Türü",
                             value: ad.customFields?.tekstilTuru || null,
