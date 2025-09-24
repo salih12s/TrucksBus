@@ -24,10 +24,6 @@ import {
 import {
   PhotoCamera,
   CheckCircle,
-  EditNote,
-  DirectionsBus,
-  Settings,
-  LocationOn,
   Close,
   ArrowBackIos,
   ArrowForwardIos,
@@ -156,7 +152,9 @@ interface FormData {
 
 // Motor Gücü seçenekleri (Minibüs için)
 const motorPowerOptions = [
-  "100 hp'ye kadar",
+  "50 hp'ye kadar",
+  "51 - 75 hp",
+  "76 - 100 hp",
   "101 - 125 hp",
   "126 - 150 hp",
   "151 - 175 hp",
@@ -812,6 +810,26 @@ const CreateMinibusAdForm: React.FC = () => {
         return;
       }
 
+      // Debug: Dosya sayıları
+      const totalFiles =
+        (formData.showcasePhoto ? 1 : 0) +
+        formData.photos.length +
+        formData.videos.length;
+      console.log("📊 Dosya Sayısı Debug:", {
+        showcasePhoto: formData.showcasePhoto ? 1 : 0,
+        photos: formData.photos.length,
+        videos: formData.videos.length,
+        totalFiles: totalFiles,
+        limit: "18 (server limit)",
+      });
+
+      if (totalFiles > 18) {
+        alert(
+          `❌ Çok fazla dosya! Toplam: ${totalFiles}, Limit: 18. Lütfen bazı fotoğraf/videoları kaldırın.`
+        );
+        return;
+      }
+
       console.log("📤 Starting upload...");
       const response = await videoUploadClient.post(
         "/ads/minibus",
@@ -826,9 +844,21 @@ const CreateMinibusAdForm: React.FC = () => {
 
       console.log("İlan başarıyla oluşturuldu:", response.data);
       setSubmitSuccess(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("İlan oluşturulurken hata:", error);
-      alert("İlan oluşturulurken bir hata oluştu");
+
+      // Server hata mesajını göster
+      const axiosError = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      if (axiosError?.response?.data?.message) {
+        alert(`❌ Hata: ${axiosError.response.data.message}`);
+      } else if (axiosError?.message) {
+        alert(`❌ Hata: ${axiosError.message}`);
+      } else {
+        alert("❌ İlan oluşturulurken bir hata oluştu");
+      }
     } finally {
       setLoading(false);
     }
@@ -860,31 +890,19 @@ const CreateMinibusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <EditNote sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    İlan Detayları
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    mb: 3,
+                  }}
+                >
+                  İlan Detayları
+                </Typography>
 
                 {/* ✅ Marka/Model/Variant Seçimi */}
                 <Box sx={{ mb: 3 }}>
@@ -1210,31 +1228,19 @@ const CreateMinibusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <DirectionsBus sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    Araç Detayları
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    mb: 3,
+                  }}
+                >
+                  Araç Detayları
+                </Typography>
 
                 {/* Araç Durumu ve Motor Hacmi */}
                 <Box
@@ -1263,27 +1269,11 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Araç Durumu"
                     >
-                      <MenuItem value="ikinci-el">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🔄</span> İkinci El
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="ikinci-el">İkinci El</MenuItem>
                       <MenuItem value="yurtdisindan-ithal">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🌍</span> Yurtdışından İthal
-                        </Box>
+                        Yurtdışından İthal
                       </MenuItem>
-                      <MenuItem value="sifir">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>✨</span> Sıfır
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="sifir">Sıfır</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
@@ -1315,48 +1305,12 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Motor Hacmi"
                     >
-                      <MenuItem value="1000-1400">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>⚡</span> 1000-1400 cc
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="1400-1600">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🔋</span> 1400-1600 cc
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="1600-2000">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🚀</span> 1600-2000 cc
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="2000-2500">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>💪</span> 2000-2500 cc
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="2500-3000">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🔥</span> 2500-3000 cc
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="3000+">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>💥</span> 3000+ cc
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="1000-1400">1000-1400 cc</MenuItem>
+                      <MenuItem value="1400-1600">1400-1600 cc</MenuItem>
+                      <MenuItem value="1600-2000">1600-2000 cc</MenuItem>
+                      <MenuItem value="2000-2500">2000-2500 cc</MenuItem>
+                      <MenuItem value="2500-3000">2500-3000 cc</MenuItem>
+                      <MenuItem value="3000+">3000+ cc</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -1422,33 +1376,11 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Çekiş"
                     >
-                      <MenuItem value="onden-cekis">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>⬆️</span> Önden Çekiş
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="arkadan-itis">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>⬇️</span> Arkadan İtiş
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="4wd-surekli">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🔄</span> 4WD Sürekli
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="onden-cekis">Önden Çekiş</MenuItem>
+                      <MenuItem value="arkadan-itis">Arkadan İtiş</MenuItem>
+                      <MenuItem value="4wd-surekli">4WD Sürekli</MenuItem>
                       <MenuItem value="arkadan-itis-elektronik">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>⚡</span> Arkadan İtiş Elektronik
-                        </Box>
+                        Arkadan İtiş Elektronik
                       </MenuItem>
                     </Select>
                   </FormControl>
@@ -1471,55 +1403,13 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Renk"
                     >
-                      <MenuItem value="beyaz">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>⚪</span> Beyaz
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="siyah">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>⚫</span> Siyah
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="gri">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🔘</span> Gri
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="mavi">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🔵</span> Mavi
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="kirmizi">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🔴</span> Kırmızı
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="yesil">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🟢</span> Yeşil
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="sari">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🟡</span> Sarı
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="beyaz">Beyaz</MenuItem>
+                      <MenuItem value="siyah">Siyah</MenuItem>
+                      <MenuItem value="gri">Gri</MenuItem>
+                      <MenuItem value="mavi">Mavi</MenuItem>
+                      <MenuItem value="kirmizi">Kırmızı</MenuItem>
+                      <MenuItem value="yesil">Yeşil</MenuItem>
+                      <MenuItem value="sari">Sarı</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
@@ -1538,7 +1428,7 @@ const CreateMinibusAdForm: React.FC = () => {
                       gap: 1,
                     }}
                   >
-                    🪑 Koltuk Sayısı Seçimi
+                    Koltuk Sayısı Seçimi
                   </Typography>
                   <Box
                     sx={{
@@ -1643,20 +1533,8 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Tavan Tipi"
                     >
-                      <MenuItem value="normal-tavan">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🏠</span> Normal Tavan
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="yuksek-tavan">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🏢</span> Yüksek Tavan
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="normal-tavan">Normal Tavan</MenuItem>
+                      <MenuItem value="yuksek-tavan">Yüksek Tavan</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -1678,34 +1556,10 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Şasi"
                     >
-                      <MenuItem value="kisa">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>📏</span> Kısa
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="orta">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>📐</span> Orta
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="uzun">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>📏</span> Uzun
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="ekstra-uzun">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>📋</span> Ekstra Uzun
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="kisa">Kısa</MenuItem>
+                      <MenuItem value="orta">Orta</MenuItem>
+                      <MenuItem value="uzun">Uzun</MenuItem>
+                      <MenuItem value="ekstra-uzun">Ekstra Uzun</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
@@ -1737,20 +1591,8 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Vites"
                     >
-                      <MenuItem value="manuel">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🦾</span> Manuel
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="otomatik">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🤖</span> Otomatik
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="manuel">Manuel</MenuItem>
+                      <MenuItem value="otomatik">Otomatik</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -1772,27 +1614,9 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Yakıt Tipi"
                     >
-                      <MenuItem value="benzinli">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>⛽</span> Benzinli
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="benzinli-lpg">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🔥</span> Benzinli + LPG
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="dizel">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🛢️</span> Dizel
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="benzinli">Benzinli</MenuItem>
+                      <MenuItem value="benzinli-lpg">Benzinli + LPG</MenuItem>
+                      <MenuItem value="dizel">Dizel</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -1849,20 +1673,8 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Hasar Kaydı"
                     >
-                      <MenuItem value="evet">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>⚠️</span> Evet
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="hayir">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>✅</span> Hayır
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="evet">Evet</MenuItem>
+                      <MenuItem value="hayir">Hayır</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -1884,20 +1696,8 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Tramer Kaydı"
                     >
-                      <MenuItem value="evet">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>📋</span> Evet
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="hayir">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>✅</span> Hayır
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="evet">Evet</MenuItem>
+                      <MenuItem value="hayir">Hayır</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
@@ -1929,20 +1729,8 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Plaka / Uyruk"
                     >
-                      <MenuItem value="tr-plakali">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🇹🇷</span> Türkiye TR Plakalı
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="mavi-plakali">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <span>🔵</span> Mavi MA Plakalı
-                        </Box>
-                      </MenuItem>
+                      <MenuItem value="tr-plakali">Türkiye TR Plakalı</MenuItem>
+                      <MenuItem value="mavi-plakali">Mavi MA Plakalı</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -1981,31 +1769,19 @@ const CreateMinibusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <LocationOn sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    Konum Bilgileri
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    mb: 3,
+                  }}
+                >
+                  Konum Bilgileri
+                </Typography>
 
                 {/* İl ve İlçe */}
                 <Box
@@ -2130,31 +1906,19 @@ const CreateMinibusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <Settings sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    Araç Özellikleri
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    mb: 3,
+                  }}
+                >
+                  Araç Özellikleri
+                </Typography>
 
                 <Typography
                   variant="body2"
@@ -2195,7 +1959,7 @@ const CreateMinibusAdForm: React.FC = () => {
                         paddingBottom: 2,
                       }}
                     >
-                      🛡️ Güvenlik Özellikleri
+                      Güvenlik Özellikleri
                     </Typography>
                     <Box
                       sx={{
@@ -2806,7 +2570,7 @@ const CreateMinibusAdForm: React.FC = () => {
                         paddingBottom: 2,
                       }}
                     >
-                      📱 Multimedya & Teknoloji
+                      Multimedya & Teknoloji
                     </Typography>
                     <Box
                       sx={{
@@ -3278,31 +3042,19 @@ const CreateMinibusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <PhotoCamera sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    Fotoğraflar
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    background:
+                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    mb: 3,
+                  }}
+                >
+                  Fotoğraflar
+                </Typography>
 
                 <Typography
                   variant="body2"
@@ -3655,52 +3407,26 @@ const CreateMinibusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
-                >
-                  <Box
-                    sx={{
-                      width: 50,
-                      height: 50,
-                      borderRadius: "50%",
-                      background:
-                        "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0 4px 15px rgba(255, 107, 53, 0.3)",
-                    }}
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{ color: "#1e293b", mb: 1 }}
                   >
-                    <Typography
-                      sx={{
-                        fontSize: "1.5rem",
-                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
-                      }}
-                    >
-                      🎬
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="h5"
-                      fontWeight="bold"
-                      sx={{ color: "#1e293b" }}
-                    >
-                      Videolar
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Aracınızın video tanıtımını ekleyerek daha fazla ilgi
-                      çekin (Opsiyonel - Max 3 video, 100MB/video)
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ fontSize: "12px", mt: 0.5, display: "block" }}
-                    >
-                      💡 İpucu: Yüklenen videoları hemen izleyerek kontrol
-                      edebilirsiniz
-                    </Typography>
-                  </Box>
+                    Videolar
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Aracınızın video tanıtımını ekleyerek daha fazla ilgi çekin
+                    (Opsiyonel - Max 3 video, 100MB/video)
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: "12px", mt: 0.5, display: "block" }}
+                  >
+                    İpucu: Yüklenen videoları hemen izleyerek kontrol
+                    edebilirsiniz
+                  </Typography>
                 </Box>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -3733,7 +3459,7 @@ const CreateMinibusAdForm: React.FC = () => {
                         color="text.secondary"
                         sx={{ mb: 2 }}
                       >
-                        🎬 Videolarınızı buraya sürükleyip bırakın veya seçin
+                        Videolarınızı buraya sürükleyip bırakın veya seçin
                       </Typography>
                       <label htmlFor="video-upload">
                         <Button

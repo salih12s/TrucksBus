@@ -467,19 +467,3 @@ enum FeedbackStatus {
   APPROVED
   REJECTED
 }
-
-model AdVideo {
-  id           Int      @id @default(autoincrement())
-  adId         Int      @map("ad_id")
-  videoUrl     String   @map("video_url")
-  thumbnailUrl String?  @map("thumbnail_url")
-  duration     Int?
-  fileSize     Int?     @map("file_size")
-  mimeType     String?  @map("mime_type")
-  displayOrder Int      @default(1) @map("display_order")
-  description  String?
-  createdAt    DateTime @default(now()) @map("created_at")
-  ad           Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
-
-  @@map("ad_videos")
-}

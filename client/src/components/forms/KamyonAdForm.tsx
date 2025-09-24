@@ -24,14 +24,6 @@ import {
 } from "@mui/material";
 import {
   CheckCircle,
-  PhotoCamera,
-  EditNote,
-  LocalShipping,
-  LocationOn,
-  Settings,
-  Security,
-  Build,
-  Style,
   Close,
   ArrowBackIos,
   ArrowForwardIos,
@@ -93,6 +85,9 @@ const colorOptions = [
 
 // Motor Gücü seçenekleri
 const motorPowerOptions = [
+  "75-100 HP",
+  "100-150 HP",
+  "150-200 HP",
   "200-250 HP",
   "250-300 HP",
   "300-350 HP",
@@ -805,6 +800,26 @@ const KamyonAdForm: React.FC = () => {
         return;
       }
 
+      // Debug: Dosya sayıları
+      const totalFiles =
+        (formData.showcasePhoto ? 1 : 0) +
+        formData.photos.length +
+        formData.videos.length;
+      console.log("📊 Dosya Sayısı Debug:", {
+        showcasePhoto: formData.showcasePhoto ? 1 : 0,
+        photos: formData.photos.length,
+        videos: formData.videos.length,
+        totalFiles: totalFiles,
+        limit: "25 (server limit)",
+      });
+
+      if (totalFiles > 25) {
+        alert(
+          `❌ Çok fazla dosya! Toplam: ${totalFiles}, Limit: 25. Lütfen bazı fotoğraf/videoları kaldırın.`
+        );
+        return;
+      }
+
       console.log("📤 Starting upload...");
       const response = await videoUploadClient.post("/ads/kamyon", submitData, {
         headers: {
@@ -815,9 +830,21 @@ const KamyonAdForm: React.FC = () => {
 
       console.log("İlan başarıyla oluşturuldu:", response.data);
       setSubmitSuccess(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("İlan oluşturulurken hata:", error);
-      alert("İlan oluşturulurken bir hata oluştu");
+
+      // Server hata mesajını göster
+      const axiosError = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      if (axiosError?.response?.data?.message) {
+        alert(`❌ Hata: ${axiosError.response.data.message}`);
+      } else if (axiosError?.message) {
+        alert(`❌ Hata: ${axiosError.message}`);
+      } else {
+        alert("❌ İlan oluşturulurken bir hata oluştu");
+      }
     } finally {
       setLoading(false);
     }
@@ -834,7 +861,7 @@ const KamyonAdForm: React.FC = () => {
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         <form onSubmit={handleSubmit}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 4, mt: 3 }}>
-            {/* 📝 Temel Bilgiler */}
+            {/* Temel Bilgiler */}
             <Card
               elevation={6}
               sx={{
@@ -850,17 +877,6 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <EditNote sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
                   <Typography
                     variant="h5"
                     sx={{
@@ -921,7 +937,7 @@ const KamyonAdForm: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* 🚛 Araç Detayları */}
+            {/* Araç Detayları */}
             <Card
               elevation={6}
               sx={{
@@ -937,17 +953,6 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <LocalShipping sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
                   <Typography
                     variant="h5"
                     sx={{
@@ -1183,15 +1188,6 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>
-                              {option === "Sıfır"
-                                ? "✨"
-                                : option === "Sıfır Ayarında"
-                                ? "🌟"
-                                : option === "İkinci El"
-                                ? "🔄"
-                                : "⚠️"}
-                            </span>
                             {option}
                           </Box>
                         </MenuItem>
@@ -1226,7 +1222,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>⚖️</span> {option} kg
+                            {option} kg
                           </Box>
                         </MenuItem>
                       ))}
@@ -1270,7 +1266,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>💪</span> {option}
+                            {option}
                           </Box>
                         </MenuItem>
                       ))}
@@ -1304,7 +1300,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>🔧</span> {option}
+                            {option}
                           </Box>
                         </MenuItem>
                       ))}
@@ -1348,7 +1344,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>🎨</span> {option}
+                            {option}
                           </Box>
                         </MenuItem>
                       ))}
@@ -1382,7 +1378,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>🚗</span> {option}
+                            {option}
                           </Box>
                         </MenuItem>
                       ))}
@@ -1444,7 +1440,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>⚙️</span> {option}
+                            {option}
                           </Box>
                         </MenuItem>
                       ))}
@@ -1478,7 +1474,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>🏗️</span> {option}
+                            {option}
                           </Box>
                         </MenuItem>
                       ))}
@@ -1522,7 +1518,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>⛽</span> {option}
+                            {option}
                           </Box>
                         </MenuItem>
                       ))}
@@ -1551,14 +1547,14 @@ const KamyonAdForm: React.FC = () => {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <span>✅</span> Evet
+                          Evet
                         </Box>
                       </MenuItem>
                       <MenuItem value="hayir">
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <span>❌</span> Hayır
+                          Hayır
                         </Box>
                       </MenuItem>
                     </Select>
@@ -1586,14 +1582,14 @@ const KamyonAdForm: React.FC = () => {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <span>⚠️</span> Evet
+                          Evet
                         </Box>
                       </MenuItem>
                       <MenuItem value="hayir">
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <span>✅</span> Hayır
+                          Hayır
                         </Box>
                       </MenuItem>
                     </Select>
@@ -1621,14 +1617,14 @@ const KamyonAdForm: React.FC = () => {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <span>📋</span> Evet
+                          Evet
                         </Box>
                       </MenuItem>
                       <MenuItem value="hayir">
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <span>✅</span> Hayır
+                          Hayır
                         </Box>
                       </MenuItem>
                     </Select>
@@ -1673,7 +1669,7 @@ const KamyonAdForm: React.FC = () => {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <span>🌍</span> Yabancı Plakalı
+                          Yabancı Plakalı
                         </Box>
                       </MenuItem>
                     </Select>
@@ -1699,7 +1695,7 @@ const KamyonAdForm: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* 📍 Konum Bilgileri */}
+            {/* Konum Bilgileri */}
             <Card
               elevation={6}
               sx={{
@@ -1715,17 +1711,6 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <LocationOn sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
                   <Typography
                     variant="h5"
                     sx={{
@@ -1777,7 +1762,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>🏙️</span> {city.plateCode} - {city.name}
+                            {city.plateCode} - {city.name}
                           </Box>
                         </MenuItem>
                       ))}
@@ -1816,7 +1801,7 @@ const KamyonAdForm: React.FC = () => {
                               gap: 1,
                             }}
                           >
-                            <span>🏘️</span> {district.name}
+                            {district.name}
                           </Box>
                         </MenuItem>
                       ))}
@@ -1848,7 +1833,7 @@ const KamyonAdForm: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* ⚙️ Araç Özellikleri */}
+            {/* Araç Özellikleri */}
             <Card
               elevation={6}
               sx={{
@@ -1864,17 +1849,6 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <Settings sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
                   <Typography
                     variant="h5"
                     sx={{
@@ -1898,7 +1872,7 @@ const KamyonAdForm: React.FC = () => {
                   çekici hale getirin
                 </Typography>
 
-                {/* 🛡️ Güvenlik Özellikleri */}
+                {/* Güvenlik Özellikleri */}
                 <Box sx={{ mb: 4 }}>
                   <Typography
                     variant="h6"
@@ -1911,7 +1885,6 @@ const KamyonAdForm: React.FC = () => {
                       gap: 1,
                     }}
                   >
-                    <Security sx={{ color: "#d32f2f" }} />
                     Güvenlik Özellikleri
                   </Typography>
                   <Box
@@ -1975,7 +1948,7 @@ const KamyonAdForm: React.FC = () => {
                   </Box>
                 </Box>
 
-                {/* 🏠 İç Donanım */}
+                {/* İç Donanım */}
                 <Box sx={{ mb: 4 }}>
                   <Typography
                     variant="h6"
@@ -1988,7 +1961,6 @@ const KamyonAdForm: React.FC = () => {
                       gap: 1,
                     }}
                   >
-                    <Build sx={{ color: "#1976d2" }} />
                     İç Donanım
                   </Typography>
                   <Box
@@ -2050,7 +2022,7 @@ const KamyonAdForm: React.FC = () => {
                   </Box>
                 </Box>
 
-                {/* 🎨 Dış Donanım */}
+                {/* Dış Donanım */}
                 <Box sx={{ mb: 4 }}>
                   <Typography
                     variant="h6"
@@ -2063,7 +2035,6 @@ const KamyonAdForm: React.FC = () => {
                       gap: 1,
                     }}
                   >
-                    <Style sx={{ color: "#388e3c" }} />
                     Dış Donanım
                   </Typography>
                   <Box
@@ -2122,7 +2093,7 @@ const KamyonAdForm: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* 📸 Fotoğraflar */}
+            {/* Fotoğraflar */}
             <Card
               elevation={6}
               sx={{
@@ -2138,17 +2109,6 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <PhotoCamera sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
                   <Typography
                     variant="h5"
                     sx={{
@@ -2210,7 +2170,7 @@ const KamyonAdForm: React.FC = () => {
                         gap: 1,
                       }}
                     >
-                      🖼️ Vitrin Fotoğrafı
+                      Vitrin Fotoğrafı
                       <Chip label="Zorunlu" color="error" size="small" />
                     </Typography>
                     <Typography
@@ -2232,7 +2192,6 @@ const KamyonAdForm: React.FC = () => {
                       <Button
                         variant="contained"
                         component="span"
-                        startIcon={<PhotoCamera />}
                         sx={{
                           borderRadius: 3,
                           py: 1.5,
@@ -2348,7 +2307,7 @@ const KamyonAdForm: React.FC = () => {
                         gap: 1,
                       }}
                     >
-                      📷 Diğer Fotoğraflar
+                      Diğer Fotoğraflar
                       <Chip label="İsteğe Bağlı" color="info" size="small" />
                     </Typography>
                     <Typography
@@ -2371,7 +2330,6 @@ const KamyonAdForm: React.FC = () => {
                       <Button
                         variant="outlined"
                         component="span"
-                        startIcon={<PhotoCamera />}
                         disabled={formData.photos.length >= 15}
                       >
                         Fotoğraf Ekle ({formData.photos.length}/15)
@@ -2499,7 +2457,7 @@ const KamyonAdForm: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* 🎬 Videolar */}
+            {/* Videolar */}
             <Card
               elevation={6}
               sx={{
@@ -2536,7 +2494,7 @@ const KamyonAdForm: React.FC = () => {
                         filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
                       }}
                     >
-                      🎬
+                      Videolar
                     </Typography>
                   </Box>
                   <Box>
@@ -2584,13 +2542,12 @@ const KamyonAdForm: React.FC = () => {
                         color="text.secondary"
                         sx={{ mb: 2 }}
                       >
-                        🎬 Videolarınızı buraya sürükleyip bırakın veya seçin
+                        Videolarınızı buraya sürükleyip bırakın veya seçin
                       </Typography>
                       <label htmlFor="video-upload">
                         <Button
                           variant="contained"
                           component="span"
-                          startIcon={<PhotoCamera />}
                           disabled={formData.videos.length >= 3}
                           sx={{
                             borderRadius: 2,
@@ -2791,7 +2748,7 @@ const KamyonAdForm: React.FC = () => {
                   },
                 }}
               >
-                {loading ? "İlan Yayınlanıyor..." : "🚛 İlanı Yayınla"}
+                {loading ? "İlan Yayınlanıyor..." : "İlanı Yayınla"}
               </Button>
             </Box>
           </Box>

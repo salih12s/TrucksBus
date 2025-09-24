@@ -1620,12 +1620,21 @@ export const getPendingAds = async (req: Request, res: Response) => {
             imageUrl: true,
             isPrimary: true,
             displayOrder: true,
-          },
-          where: {
-            isPrimary: true, // Sadece ana resimleri getir
+            altText: true,
           },
           orderBy: { displayOrder: "asc" },
-          take: 1, // Sadece ana resim
+        },
+        videos: {
+          select: {
+            id: true,
+            videoUrl: true,
+            thumbnailUrl: true,
+            description: true,
+            displayOrder: true,
+            duration: true,
+            mimeType: true,
+          },
+          orderBy: { displayOrder: "asc" },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -1641,6 +1650,29 @@ export const getPendingAds = async (req: Request, res: Response) => {
         status: pendingAds[0].status,
         userId: pendingAds[0].userId,
         createdAt: pendingAds[0].createdAt,
+        imagesCount: pendingAds[0].images?.length || 0,
+        videosCount: pendingAds[0].videos?.length || 0,
+      });
+
+      // Her ilan için detaylı log
+      pendingAds.forEach((ad, index) => {
+        console.log(`📷 İlan ${index + 1} (ID: ${ad.id}):`, {
+          title: ad.title,
+          images: ad.images?.length || 0,
+          videos: ad.videos?.length || 0,
+          imageDetails:
+            ad.images?.map((img) => ({
+              id: img.id,
+              isPrimary: img.isPrimary,
+              hasUrl: !!img.imageUrl,
+            })) || [],
+          videoDetails:
+            ad.videos?.map((vid) => ({
+              id: vid.id,
+              hasUrl: !!vid.videoUrl,
+              hasThumbnail: !!vid.thumbnailUrl,
+            })) || [],
+        });
       });
     } else {
       console.log("❌ PENDING durumunda hiç ilan bulunamadı!");
@@ -1939,6 +1971,9 @@ export const createKamyonAd = async (req: Request, res: Response) => {
           },
         },
         images: {
+          orderBy: { displayOrder: "asc" },
+        },
+        videos: {
           orderBy: { displayOrder: "asc" },
         },
       },
