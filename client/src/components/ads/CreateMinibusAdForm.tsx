@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Container,
@@ -19,6 +19,7 @@ import {
   DialogContent,
   DialogActions,
   Checkbox,
+  IconButton,
 } from "@mui/material";
 import {
   PhotoCamera,
@@ -28,6 +29,9 @@ import {
   Settings,
   LocationOn,
   Description,
+  Close,
+  ArrowBackIos,
+  ArrowForwardIos,
 } from "@mui/icons-material";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Header from "../layout/Header";
@@ -100,6 +104,7 @@ interface FormData {
   detailedInfo: string;
   photos: File[];
   showcasePhoto: File | null;
+  videos: File[];
   // Detay Bilgisi alanları
   detailFeatures: {
     abs?: boolean;
@@ -200,6 +205,9 @@ const CreateMinibusAdForm: React.FC = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
 
   // Seçili olan kategori, brand, model ve variant bilgileri
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
@@ -240,6 +248,7 @@ const CreateMinibusAdForm: React.FC = () => {
     detailedInfo: "",
     photos: [],
     showcasePhoto: null,
+    videos: [],
     detailFeatures: {
       abs: false,
       alarm: false,
@@ -601,6 +610,134 @@ const CreateMinibusAdForm: React.FC = () => {
     setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const currentVideos = formData.videos;
+      const newVideos = Array.from(files);
+      const totalVideos = currentVideos.length + newVideos.length;
+
+      // En fazla 3 video
+      if (totalVideos <= 3) {
+        // Video dosya boyutu kontrolü (100MB limit)
+        const oversizedFiles = newVideos.filter(
+          (file) => file.size > 100 * 1024 * 1024
+        );
+        if (oversizedFiles.length > 0) {
+          console.error("Video dosyası çok büyük:", oversizedFiles);
+          alert(
+            `⚠️ Video dosyası 100MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
+              .map((f) => f.name)
+              .join(", ")}`
+          );
+          return;
+        }
+
+        // Video format kontrolü
+        const invalidFiles = newVideos.filter(
+          (file) => !file.type.startsWith("video/")
+        );
+        if (invalidFiles.length > 0) {
+          console.error("Geçersiz video formatı:", invalidFiles);
+          alert(
+            `⚠️ Sadece video dosyaları yükleyebilirsiniz. Geçersiz dosyalar: ${invalidFiles
+              .map((f) => f.name)
+              .join(", ")}`
+          );
+          return;
+        }
+
+        console.log(
+          `✅ ${newVideos.length} video başarıyla yüklendi:`,
+          newVideos.map((f) => f.name)
+        );
+
+        setFormData((prev) => ({
+          ...prev,
+          videos: [...currentVideos, ...newVideos],
+        }));
+
+        // Video önizlemeleri oluştur
+        const newPreviews: string[] = [];
+        Array.from(files).forEach((file) => {
+          const url = URL.createObjectURL(file);
+          newPreviews.push(url);
+          if (newPreviews.length === files.length) {
+            setVideoPreviews((prev) => [...prev, ...newPreviews]);
+          }
+        });
+      } else {
+        alert("En fazla 3 video yükleyebilirsiniz");
+      }
+    }
+  };
+
+  const removeVideo = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index),
+    }));
+    // Önizlemeyi de kaldır ve URL'yi temizle
+    setVideoPreviews((prev) => {
+      if (prev[index]) {
+        URL.revokeObjectURL(prev[index]);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const openVideoModal = (index: number) => {
+    setSelectedVideoIndex(index);
+    setVideoModalOpen(true);
+  };
+
+  const closeVideoModal = () => {
+    setVideoModalOpen(false);
+  };
+
+  const navigateVideo = useCallback(
+    (direction: "prev" | "next") => {
+      if (direction === "prev" && selectedVideoIndex > 0) {
+        setSelectedVideoIndex(selectedVideoIndex - 1);
+      } else if (
+        direction === "next" &&
+        selectedVideoIndex < formData.videos.length - 1
+      ) {
+        setSelectedVideoIndex(selectedVideoIndex + 1);
+      }
+    },
+    [selectedVideoIndex, formData.videos.length]
+  );
+
+  // Klavye navigation
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (videoModalOpen) {
+        switch (event.key) {
+          case "Escape":
+            closeVideoModal();
+            break;
+          case "ArrowLeft":
+            navigateVideo("prev");
+            break;
+          case "ArrowRight":
+            navigateVideo("next");
+            break;
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [
+    videoModalOpen,
+    selectedVideoIndex,
+    formData.videos.length,
+    navigateVideo,
+  ]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -657,6 +794,11 @@ const CreateMinibusAdForm: React.FC = () => {
 
       formData.photos.forEach((photo, index) => {
         submitData.append(`photo_${index}`, photo);
+      });
+
+      // Videoları ekle
+      formData.videos.forEach((video, index) => {
+        submitData.append(`video_${index}`, video);
       });
 
       const response = await apiClient.post("/ads/minibus", submitData, {
@@ -3539,6 +3681,300 @@ const CreateMinibusAdForm: React.FC = () => {
               </CardContent>
             </Card>
 
+            {/* 🎬 Videolar */}
+            <Card
+              elevation={6}
+              sx={{
+                borderRadius: 3,
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+                border: "1px solid #e2e8f0",
+                transition: "all 0.3s ease-in-out",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                },
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+                >
+                  <Box
+                    sx={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: "50%",
+                      background:
+                        "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 4px 15px rgba(255, 107, 53, 0.3)",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "1.5rem",
+                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+                      }}
+                    >
+                      🎬
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="h5"
+                      fontWeight="bold"
+                      sx={{ color: "#1e293b" }}
+                    >
+                      Videolar
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Aracınızın video tanıtımını ekleyerek daha fazla ilgi
+                      çekin (Opsiyonel - Max 3 video, 100MB/video)
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ fontSize: "12px", mt: 0.5, display: "block" }}
+                    >
+                      💡 İpucu: Yüklenen videoları hemen izleyerek kontrol
+                      edebilirsiniz
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  {/* Video Yükleme */}
+                  <Box>
+                    <input
+                      accept="video/*"
+                      style={{ display: "none" }}
+                      id="video-upload"
+                      type="file"
+                      multiple
+                      onChange={handleVideoUpload}
+                    />
+                    <Box
+                      sx={{
+                        border: "2px dashed #e0e0e0",
+                        borderRadius: 2,
+                        p: 3,
+                        textAlign: "center",
+                        backgroundColor: "#fafafa",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          borderColor: "#ff6b35",
+                          backgroundColor: "#fff8f6",
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 2 }}
+                      >
+                        🎬 Videolarınızı buraya sürükleyip bırakın veya seçin
+                      </Typography>
+                      <label htmlFor="video-upload">
+                        <Button
+                          variant="contained"
+                          component="span"
+                          startIcon={<PhotoCamera />}
+                          disabled={formData.videos.length >= 3}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: "none",
+                            fontSize: "1rem",
+                            py: 1.5,
+                            px: 3,
+                            background:
+                              "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
+                            "&:hover": {
+                              background:
+                                "linear-gradient(45deg, #e55a2e 30%, #de831a 90%)",
+                            },
+                            "&:disabled": {
+                              background: "#e0e0e0",
+                            },
+                          }}
+                        >
+                          Video Ekle ({formData.videos.length}/3)
+                        </Button>
+                      </label>
+                    </Box>
+                  </Box>
+
+                  {/* Yüklenen Videolar */}
+                  {formData.videos.length > 0 && (
+                    <Box>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        sx={{ mb: 2, color: "#374151" }}
+                      >
+                        Yüklenen Videolar ({formData.videos.length}/3)
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: {
+                            xs: "1fr",
+                            sm: "repeat(auto-fill, minmax(300px, 1fr))",
+                          },
+                          gap: 3,
+                        }}
+                      >
+                        {videoPreviews.map((preview, index) => (
+                          <Box
+                            key={index}
+                            onClick={() => openVideoModal(index)}
+                            sx={{
+                              position: "relative",
+                              borderRadius: 2,
+                              overflow: "hidden",
+                              border: "1px solid #e2e8f0",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease-in-out",
+                              "&:hover": {
+                                transform: "scale(1.02)",
+                                boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                              },
+                            }}
+                          >
+                            <video
+                              src={preview}
+                              style={{
+                                width: "100%",
+                                height: "180px",
+                                objectFit: "cover",
+                                pointerEvents: "none",
+                              }}
+                              controls={false}
+                              muted
+                              preload="metadata"
+                              poster=""
+                            />
+                            {/* Play Overlay */}
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                transform: "translate(-50%, -50%)",
+                                background: "rgba(0,0,0,0.7)",
+                                borderRadius: "50%",
+                                width: 60,
+                                height: 60,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "white",
+                                fontSize: "24px",
+                                pointerEvents: "none",
+                                transition: "all 0.3s ease",
+                                "&:hover": {
+                                  background: "rgba(0,0,0,0.8)",
+                                  transform: "translate(-50%, -50%) scale(1.1)",
+                                },
+                              }}
+                            >
+                              ▶
+                            </Box>
+
+                            {/* Fullscreen Hint */}
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 8,
+                                left: 8,
+                                background: "rgba(0,0,0,0.7)",
+                                color: "white",
+                                fontSize: "12px",
+                                px: 1,
+                                py: 0.5,
+                                borderRadius: 1,
+                                pointerEvents: "none",
+                              }}
+                            >
+                              🔍 Büyüt
+                            </Box>
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 4,
+                                right: 4,
+                                background: "rgba(255,0,0,0.8)",
+                                borderRadius: "50%",
+                                width: 24,
+                                height: 24,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                "&:hover": { background: "rgba(255,0,0,1)" },
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeVideo(index);
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  color: "white",
+                                  fontSize: "12px",
+                                  lineHeight: 1,
+                                }}
+                              >
+                                ✕
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                background: "rgba(0,0,0,0.8)",
+                                color: "white",
+                                textAlign: "center",
+                                py: 1,
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: "11px",
+                                  display: "block",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {formData.videos[index]?.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: "10px",
+                                  opacity: 0.9,
+                                  display: "block",
+                                }}
+                              >
+                                {(
+                                  formData.videos[index]?.size /
+                                  (1024 * 1024)
+                                ).toFixed(1)}{" "}
+                                MB
+                              </Typography>
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+
             {/* 🚀 İlan Yayınlama */}
             <Card
               elevation={6}
@@ -3588,6 +4024,99 @@ const CreateMinibusAdForm: React.FC = () => {
           </Box>
         </form>
       </Container>
+
+      {/* Video Modal */}
+      <Dialog
+        open={videoModalOpen}
+        onClose={closeVideoModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: "#000",
+            borderRadius: 2,
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "#1a1a1a",
+            color: "white",
+            py: 1,
+          }}
+        >
+          <Typography variant="h6">
+            Video Önizleme ({selectedVideoIndex + 1}/{formData.videos.length})
+          </Typography>
+          <IconButton
+            onClick={closeVideoModal}
+            sx={{ color: "white" }}
+            size="small"
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, backgroundColor: "#000" }}>
+          {videoPreviews[selectedVideoIndex] && (
+            <video
+              src={videoPreviews[selectedVideoIndex]}
+              style={{
+                width: "100%",
+                height: "auto",
+                maxHeight: "70vh",
+                display: "block",
+              }}
+              controls={true}
+              autoPlay
+              muted
+            />
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            backgroundColor: "#1a1a1a",
+            justifyContent: "space-between",
+            px: 2,
+            py: 1,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button
+              onClick={() => navigateVideo("prev")}
+              disabled={selectedVideoIndex === 0}
+              sx={{ color: "white" }}
+              startIcon={<ArrowBackIos />}
+            >
+              Önceki
+            </Button>
+            <Button
+              onClick={() => navigateVideo("next")}
+              disabled={selectedVideoIndex >= formData.videos.length - 1}
+              sx={{ color: "white" }}
+              endIcon={<ArrowForwardIos />}
+            >
+              Sonraki
+            </Button>
+          </Box>
+          <Box sx={{ textAlign: "right" }}>
+            <Typography sx={{ color: "white", fontSize: "14px" }}>
+              {formData.videos[selectedVideoIndex]?.name} -{" "}
+              {(
+                formData.videos[selectedVideoIndex]?.size /
+                (1024 * 1024)
+              ).toFixed(1)}{" "}
+              MB
+            </Typography>
+            <Typography sx={{ color: "#ccc", fontSize: "12px" }}>
+              ESC: Kapat • ←→: Gezin
+            </Typography>
+          </Box>
+        </DialogActions>
+      </Dialog>
 
       {/* Success Modal */}
       <Dialog open={submitSuccess} onClose={handleSuccessClose}>

@@ -76,6 +76,16 @@ interface Ad {
     displayOrder: number;
     altText?: string;
   }[];
+  videos?: {
+    id: number;
+    videoUrl: string;
+    thumbnailUrl?: string;
+    duration?: number;
+    fileSize?: number;
+    mimeType?: string;
+    displayOrder: number;
+    description?: string;
+  }[];
   user?: {
     id: number;
     firstName: string;
@@ -118,21 +128,51 @@ const AdDetail: React.FC = () => {
       const startTime = performance.now();
       try {
         console.log("⚡ LIGHTNING ad detail fetch...");
+        console.log(
+          "🔍 Request URL:",
+          `${apiClient.defaults.baseURL}/ads/${id}`
+        );
+        console.log("🔍 apiClient config:", {
+          baseURL: apiClient.defaults.baseURL,
+          withCredentials: apiClient.defaults.withCredentials,
+          timeout: apiClient.defaults.timeout,
+        });
 
-        // ❗ SIMPLE, FAST fetch without abort (causing issues)
-        const adResponse = await fetch(`${API_BASE_URL}/ads/${id}`, {
+        // 🔥 NATIVE FETCH - Using Vite proxy
+        console.log("🚀 Using native fetch API with Vite proxy...");
+        console.log(`🔗 Fetching URL: /api/ads/${id}`);
+
+        const response = await fetch(`/api/ads/${id}`, {
+          method: "GET",
           headers: {
-            Accept: "application/json",
-            "Cache-Control": "public, max-age=3600",
-            Connection: "keep-alive",
+            "Content-Type": "application/json",
           },
         });
 
-        if (!adResponse.ok) {
-          throw new Error(`HTTP ${adResponse.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const data = await adResponse.json();
+        const adData = await response.json();
+        const adResponse = {
+          data: adData,
+          status: response.status,
+          statusText: response.statusText,
+        };
+
+        console.log(
+          "✅ Response received:",
+          adResponse.status,
+          adResponse.statusText
+        );
+        const data = adResponse.data as Ad;
+
+        console.log("🔍 API Response data:", data);
+        console.log("🔍 Data type:", typeof data);
+        console.log(
+          "🔍 Data keys:",
+          data ? Object.keys(data) : "null/undefined"
+        );
 
         // ❗ FIX: Parse customFields if it's a string
         if (typeof data.customFields === "string") {
@@ -173,8 +213,37 @@ const AdDetail: React.FC = () => {
         });
 
         // ❗ Loading already set to false above for instant display
-      } catch (error) {
-        console.error("Error fetching ad:", error);
+      } catch (error: unknown) {
+        console.error("❌ Error fetching ad:", error);
+
+        if (error && typeof error === "object") {
+          const err = error as Record<string, unknown>;
+          console.error("❌ Error name:", err.name);
+          console.error("❌ Error message:", err.message);
+          console.error("❌ Error code:", err.code);
+          console.error("❌ Error stack:", err.stack);
+
+          if (err.response) {
+            console.error(
+              "❌ Response status:",
+              (err.response as Record<string, unknown>).status
+            );
+            console.error(
+              "❌ Response headers:",
+              (err.response as Record<string, unknown>).headers
+            );
+            console.error(
+              "❌ Response data:",
+              (err.response as Record<string, unknown>).data
+            );
+          } else if (err.request) {
+            console.error("❌ Request made but no response received");
+            console.error("❌ Request details:", err.request);
+          } else {
+            console.error("❌ Error in setting up request:", err.message);
+          }
+        }
+
         setLoading(false);
       }
     };
@@ -2206,6 +2275,89 @@ const AdDetail: React.FC = () => {
                               {formatFeatureName(key)}
                             </Box>
                           ))}
+                    </Box>
+                  </Box>
+                </Box>
+              )}
+
+              {/* Video Section - If videos exist */}
+              {ad.videos && ad.videos.length > 0 && (
+                <Box
+                  sx={{
+                    backgroundColor: "white",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 1,
+                    mt: 2,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      backgroundColor: "#f8f9fa",
+                      px: 1.5,
+                      py: 1,
+                      borderBottom: "1px solid #e0e0e0",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "13px",
+                        fontWeight: "bold",
+                        color: "#333",
+                      }}
+                    >
+                      🎬 Videolar ({ad.videos.length})
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ p: 1.5 }}>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                          xs: "1fr",
+                          sm: "repeat(auto-fit, minmax(300px, 1fr))",
+                        },
+                        gap: 2,
+                      }}
+                    >
+                      {ad.videos.map((video) => (
+                        <Box
+                          key={video.id}
+                          sx={{
+                            position: "relative",
+                            borderRadius: 1,
+                            overflow: "hidden",
+                            border: "1px solid #e0e0e0",
+                            backgroundColor: "#f8f9fa",
+                          }}
+                        >
+                          <video
+                            controls
+                            style={{
+                              width: "100%",
+                              height: "200px",
+                              objectFit: "cover",
+                            }}
+                            poster={video.thumbnailUrl}
+                          >
+                            <source
+                              src={video.videoUrl}
+                              type={video.mimeType || "video/mp4"}
+                            />
+                            Tarayıcınız bu video formatını desteklemiyor.
+                          </video>
+                          {video.description && (
+                            <Box sx={{ p: 1 }}>
+                              <Typography
+                                variant="caption"
+                                sx={{ color: "#666", fontSize: "11px" }}
+                              >
+                                {video.description}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      ))}
                     </Box>
                   </Box>
                 </Box>

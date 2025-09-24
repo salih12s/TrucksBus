@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -20,6 +20,7 @@ import {
   DialogActions,
   Alert,
   Chip,
+  IconButton,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -31,9 +32,31 @@ import {
   Security,
   Build,
   Style,
+  Close,
+  ArrowBackIos,
+  ArrowForwardIos,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
 import Header from "../layout/Header";
+
+// Type definitions
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+}
 
 interface City {
   id: number;
@@ -145,6 +168,12 @@ const superstructureOptions = [
 ];
 
 interface FormData {
+  // Category/Brand/Model/Variant IDs
+  categoryId: string;
+  brandId: string;
+  modelId: string;
+  variantId: string;
+
   title: string;
   description: string;
   year: string;
@@ -170,6 +199,7 @@ interface FormData {
   address: string;
   detailedInfo: string;
   photos: File[];
+  videos: File[];
   showcasePhoto: File | null;
   // Detay özellikleri (3 kategoriye ayrıldı)
   detailFeatures: {
@@ -223,15 +253,46 @@ interface FormData {
 const KamyonAdForm: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
+  const [searchParams] = useSearchParams();
+
+  // URL'den gelen seçimler
+  const selectedBrandSlug = brandSlug || searchParams.get("brand");
+  const selectedModelSlug = modelSlug || searchParams.get("model");
+  const selectedVariantSlug = variantSlug || searchParams.get("variant");
+  const selectedCategorySlug = categorySlug || "kamyon-kamyonet";
+
+  console.log("URL Parametreleri:", {
+    categorySlug: selectedCategorySlug,
+    brandSlug: selectedBrandSlug,
+    modelSlug: selectedModelSlug,
+    variantSlug: selectedVariantSlug,
+  });
 
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
+
+  // Seçili olan brand, model ve variant bilgileri
+  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
+    // Category/Brand/Model/Variant IDs
+    categoryId: "2", // Kamyon & Kamyonet kategorisi
+    brandId: "",
+    modelId: "",
+    variantId: "",
+
     title: "",
     description: "",
     year: "",
@@ -255,6 +316,7 @@ const KamyonAdForm: React.FC = () => {
     address: "",
     detailedInfo: "",
     photos: [],
+    videos: [],
     showcasePhoto: null,
     detailFeatures: {},
     hasAccidentRecord: "",
@@ -295,6 +357,99 @@ const KamyonAdForm: React.FC = () => {
     }
   }, [formData.cityId]);
 
+  // URL parametrelerinden seçili öğeleri yükle
+  useEffect(() => {
+    const loadSelectedItems = async () => {
+      try {
+        // Brand yükle
+        if (selectedBrandSlug) {
+          console.log("Brand yükleniyor:", selectedBrandSlug);
+          const brandResponse = await apiClient.get(
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}`
+          );
+          const brandData = brandResponse.data as Brand;
+          setSelectedBrand(brandData);
+          setFormData((prev) => ({
+            ...prev,
+            brandId: brandData.id.toString(),
+          }));
+          console.log("Brand yüklendi:", brandData);
+        }
+
+        // Model yükle
+        if (selectedModelSlug && selectedBrandSlug) {
+          console.log("Model yükleniyor:", selectedModelSlug);
+          const modelResponse = await apiClient.get(
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}`
+          );
+          const modelData = modelResponse.data as Model;
+          setSelectedModel(modelData);
+          setFormData((prev) => ({
+            ...prev,
+            modelId: modelData.id.toString(),
+          }));
+          console.log("Model yüklendi:", modelData);
+        }
+
+        // Variant yükle
+        if (selectedVariantSlug && selectedModelSlug && selectedBrandSlug) {
+          console.log("Variant yükleniyor:", selectedVariantSlug);
+          const variantResponse = await apiClient.get(
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`
+          );
+          const variantData = variantResponse.data as Variant;
+          setSelectedVariant(variantData);
+          setFormData((prev) => ({
+            ...prev,
+            variantId: variantData.id.toString(),
+          }));
+          console.log("Variant yüklendi:", variantData);
+        }
+      } catch (error) {
+        console.error("Seçili öğeler yüklenirken hata:", error);
+      }
+    };
+
+    if (selectedBrandSlug || selectedModelSlug || selectedVariantSlug) {
+      console.log("useEffect tetiklendi, seçimler yükleniyor...");
+      loadSelectedItems();
+    }
+  }, [
+    selectedBrandSlug,
+    selectedModelSlug,
+    selectedVariantSlug,
+    selectedCategorySlug,
+  ]);
+
+  // Brand/Model useEffect'leri
+  useEffect(() => {
+    const initializeForm = async () => {
+      await loadBrands("kamyon-kamyonet"); // Kamyon kategorisi slug'ı
+    };
+    initializeForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (formData.brandId) {
+      const loadModelsData = async () => {
+        await loadModels(formData.brandId);
+      };
+      loadModelsData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.brandId]);
+
+  useEffect(() => {
+    if (formData.modelId) {
+      const loadVariantsData = async () => {
+        await loadVariants(formData.modelId);
+      };
+      loadVariantsData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.modelId]);
+
   // Sayı formatlama fonksiyonları
   const formatNumber = (value: string): string => {
     // Sadece rakamları al
@@ -308,6 +463,87 @@ const KamyonAdForm: React.FC = () => {
   const parseFormattedNumber = (value: string): string => {
     // Formatlı sayıdan sadece rakamları döndür
     return value.replace(/\D/g, "");
+  };
+
+  // Brand/Model/Variant yükleme fonksiyonları
+  const loadBrands = async (categorySlug: string) => {
+    try {
+      const response = await apiClient.get(
+        `/categories/${categorySlug}/brands`
+      );
+      const brandsData = response.data as Brand[];
+      setBrands(brandsData);
+
+      // İlk brand'ı otomatik seç (eğer seçili değilse)
+      if (brandsData.length > 0 && !formData.brandId) {
+        setFormData((prev) => ({
+          ...prev,
+          brandId: brandsData[0].id.toString(),
+        }));
+      }
+    } catch (error) {
+      console.error("Markalar yüklenemedi:", error);
+    }
+  };
+
+  const loadModels = async (brandId: string) => {
+    try {
+      // Brand ID'den slug'ı bul
+      const brand = brands.find((b) => b.id.toString() === brandId);
+      if (!brand) {
+        console.error("Brand bulunamadı:", brandId);
+        return;
+      }
+
+      const response = await apiClient.get(
+        `/categories/kamyon-kamyonet/brands/${brand.slug}/models`
+      );
+      const modelsData = response.data as Model[];
+      setModels(modelsData);
+
+      // İlk model'i otomatik seç (eğer seçili değilse)
+      if (modelsData.length > 0 && !formData.modelId) {
+        setFormData((prev) => ({
+          ...prev,
+          modelId: modelsData[0].id.toString(),
+        }));
+      }
+    } catch (error) {
+      console.error("Modeller yüklenemedi:", error);
+    }
+  };
+
+  const loadVariants = async (modelId: string) => {
+    try {
+      // Model ID'den slug'ı bul
+      const model = models.find((m) => m.id.toString() === modelId);
+      const brand = brands.find((b) => b.id.toString() === formData.brandId);
+
+      if (!model || !brand) {
+        console.error(
+          "Model veya Brand bulunamadı:",
+          modelId,
+          formData.brandId
+        );
+        return;
+      }
+
+      const response = await apiClient.get(
+        `/categories/kamyon-kamyonet/brands/${brand.slug}/models/${model.slug}/variants`
+      );
+      const variantsData = response.data as Variant[];
+      setVariants(variantsData);
+
+      // İlk variant'ı otomatik seç (eğer seçili değilse)
+      if (variantsData.length > 0 && !formData.variantId) {
+        setFormData((prev) => ({
+          ...prev,
+          variantId: variantsData[0].id.toString(),
+        }));
+      }
+    } catch (error) {
+      console.error("Varyantlar yüklenemedi:", error);
+    }
   };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -371,6 +607,129 @@ const KamyonAdForm: React.FC = () => {
     setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const currentVideos = formData.videos;
+      const newVideos = Array.from(files);
+      const totalVideos = currentVideos.length + newVideos.length;
+
+      // En fazla 3 video
+      if (totalVideos <= 3) {
+        // Video dosya boyutu kontrolü (100MB limit)
+        const oversizedFiles = newVideos.filter(
+          (file) => file.size > 100 * 1024 * 1024
+        );
+        if (oversizedFiles.length > 0) {
+          console.error("Video dosyası çok büyük:", oversizedFiles);
+          alert(
+            `⚠️ Video dosyası 100MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
+              .map((f) => f.name)
+              .join(", ")}`
+          );
+          return;
+        }
+
+        // Video format kontrolü
+        const invalidFiles = newVideos.filter(
+          (file) => !file.type.startsWith("video/")
+        );
+        if (invalidFiles.length > 0) {
+          console.error("Geçersiz video formatı:", invalidFiles);
+          alert(
+            `⚠️ Sadece video dosyaları yükleyebilirsiniz. Geçersiz dosyalar: ${invalidFiles
+              .map((f) => f.name)
+              .join(", ")}`
+          );
+          return;
+        }
+
+        console.log(
+          `✅ ${newVideos.length} video başarıyla yüklendi:`,
+          newVideos.map((f) => f.name)
+        );
+
+        setFormData((prev) => ({
+          ...prev,
+          videos: [...currentVideos, ...newVideos],
+        }));
+
+        // Video önizlemeleri oluştur
+        const newPreviews: string[] = [];
+        Array.from(files).forEach((file) => {
+          const url = URL.createObjectURL(file);
+          newPreviews.push(url);
+          if (newPreviews.length === files.length) {
+            setVideoPreviews((prev) => [...prev, ...newPreviews]);
+          }
+        });
+      } else {
+        alert("En fazla 3 video yükleyebilirsiniz");
+      }
+    }
+  };
+
+  const removeVideo = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index),
+    }));
+    // Önizlemeyi de kaldır ve URL'yi temizle
+    setVideoPreviews((prev) => {
+      if (prev[index]) {
+        URL.revokeObjectURL(prev[index]);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const openVideoModal = (index: number) => {
+    setSelectedVideoIndex(index);
+    setVideoModalOpen(true);
+  };
+
+  const closeVideoModal = () => {
+    setVideoModalOpen(false);
+  };
+
+  const navigateVideo = useCallback(
+    (direction: "prev" | "next") => {
+      if (direction === "prev" && selectedVideoIndex > 0) {
+        setSelectedVideoIndex(selectedVideoIndex - 1);
+      } else if (
+        direction === "next" &&
+        selectedVideoIndex < formData.videos.length - 1
+      ) {
+        setSelectedVideoIndex(selectedVideoIndex + 1);
+      }
+    },
+    [selectedVideoIndex, formData.videos.length]
+  );
+
+  // Klavye navigation
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (videoModalOpen) {
+        switch (event.key) {
+          case "Escape":
+            closeVideoModal();
+            break;
+          case "ArrowLeft":
+            navigateVideo("prev");
+            break;
+          case "ArrowRight":
+            navigateVideo("next");
+            break;
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [videoModalOpen, navigateVideo]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -393,6 +752,7 @@ const KamyonAdForm: React.FC = () => {
       Object.entries(formData).forEach(([key, value]) => {
         if (
           key !== "photos" &&
+          key !== "videos" &&
           key !== "showcasePhoto" &&
           key !== "detailFeatures" &&
           value
@@ -409,7 +769,13 @@ const KamyonAdForm: React.FC = () => {
         }
       });
 
-      // Kategori bilgilerini ekle
+      // Category/Brand/Model/Variant ID'lerini ekle
+      submitData.append("categoryId", formData.categoryId);
+      submitData.append("brandId", formData.brandId);
+      submitData.append("modelId", formData.modelId);
+      submitData.append("variantId", formData.variantId || "");
+
+      // Legacy support için slug'ları da ekle
       submitData.append("categorySlug", categorySlug || "");
       submitData.append("brandSlug", brandSlug || "");
       submitData.append("modelSlug", modelSlug || "");
@@ -425,6 +791,11 @@ const KamyonAdForm: React.FC = () => {
 
       formData.photos.forEach((photo, index) => {
         submitData.append(`photo_${index}`, photo);
+      });
+
+      // Videoları ekle
+      formData.videos.forEach((video, index) => {
+        submitData.append(`video_${index}`, video);
       });
 
       const response = await apiClient.post("/ads/kamyon", submitData, {
@@ -581,6 +952,114 @@ const KamyonAdForm: React.FC = () => {
                     Araç Detayları
                   </Typography>
                 </Box>
+
+                {/* Marka ve Model Seçimi */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: 3,
+                    mb: 3,
+                  }}
+                >
+                  {/* Marka Seçimi */}
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Marka *</InputLabel>
+                    <Select
+                      value={formData.brandId}
+                      label="Marka *"
+                      disabled={!!selectedBrand}
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          brandId: e.target.value,
+                          modelId: "",
+                          variantId: "",
+                        }));
+                      }}
+                    >
+                      {/* Seçili marka varsa onu göster */}
+                      {selectedBrand && (
+                        <MenuItem value={selectedBrand.id.toString()}>
+                          {selectedBrand.name} (Seçili)
+                        </MenuItem>
+                      )}
+                      {/* Diğer markalar */}
+                      {!selectedBrand &&
+                        brands.map((brand) => (
+                          <MenuItem key={brand.id} value={brand.id.toString()}>
+                            {brand.name}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Model Seçimi */}
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Model *</InputLabel>
+                    <Select
+                      value={formData.modelId}
+                      label="Model *"
+                      disabled={!!selectedModel || !formData.brandId}
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          modelId: e.target.value,
+                          variantId: "",
+                        }));
+                      }}
+                    >
+                      {/* Seçili model varsa onu göster */}
+                      {selectedModel && (
+                        <MenuItem value={selectedModel.id.toString()}>
+                          {selectedModel.name} (Seçili)
+                        </MenuItem>
+                      )}
+                      {/* Diğer modeller */}
+                      {!selectedModel &&
+                        models.map((model) => (
+                          <MenuItem key={model.id} value={model.id.toString()}>
+                            {model.name}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                {/* Variant Seçimi */}
+                {(variants.length > 0 || selectedVariant) && (
+                  <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                    <InputLabel>Variant</InputLabel>
+                    <Select
+                      value={formData.variantId}
+                      label="Variant"
+                      disabled={!!selectedVariant}
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          variantId: e.target.value,
+                        }));
+                      }}
+                    >
+                      {/* Seçili variant varsa onu göster */}
+                      {selectedVariant && (
+                        <MenuItem value={selectedVariant.id.toString()}>
+                          {selectedVariant.name} (Seçili)
+                        </MenuItem>
+                      )}
+                      {/* Diğer variantlar */}
+                      {!selectedVariant &&
+                        variants.map((variant) => (
+                          <MenuItem
+                            key={variant.id}
+                            value={variant.id.toString()}
+                          >
+                            {variant.name}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                )}
 
                 {/* Yıl, Fiyat, KM */}
                 <Box
@@ -2033,6 +2512,270 @@ const KamyonAdForm: React.FC = () => {
               </CardContent>
             </Card>
 
+            {/* 🎬 Videolar */}
+            <Card
+              elevation={6}
+              sx={{
+                borderRadius: 3,
+                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
+                border: "1px solid #e2e8f0",
+                transition: "all 0.3s ease-in-out",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                },
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+                >
+                  <Box
+                    sx={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: "50%",
+                      background:
+                        "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 4px 15px rgba(255, 107, 53, 0.3)",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "1.5rem",
+                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+                      }}
+                    >
+                      🎬
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="h5"
+                      fontWeight="bold"
+                      sx={{ color: "#1e293b" }}
+                    >
+                      Videolar
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Aracınızın video tanıtımını ekleyerek daha fazla ilgi
+                      çekin (Opsiyonel - Max 3 video, 100MB/video)
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  {/* Video Yükleme */}
+                  <Box>
+                    <input
+                      accept="video/*"
+                      style={{ display: "none" }}
+                      id="video-upload"
+                      type="file"
+                      multiple
+                      onChange={handleVideoUpload}
+                    />
+                    <Box
+                      sx={{
+                        border: "2px dashed #e0e0e0",
+                        borderRadius: 2,
+                        p: 3,
+                        textAlign: "center",
+                        backgroundColor: "#fafafa",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          borderColor: "#ff6b35",
+                          backgroundColor: "#fff8f6",
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 2 }}
+                      >
+                        🎬 Videolarınızı buraya sürükleyip bırakın veya seçin
+                      </Typography>
+                      <label htmlFor="video-upload">
+                        <Button
+                          variant="contained"
+                          component="span"
+                          startIcon={<PhotoCamera />}
+                          disabled={formData.videos.length >= 3}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: "none",
+                            fontSize: "1rem",
+                            py: 1.5,
+                            px: 3,
+                            background:
+                              "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
+                            "&:hover": {
+                              background:
+                                "linear-gradient(45deg, #e55a2e 30%, #de831a 90%)",
+                            },
+                            "&:disabled": {
+                              background: "#e0e0e0",
+                            },
+                          }}
+                        >
+                          Video Ekle ({formData.videos.length}/3)
+                        </Button>
+                      </label>
+                    </Box>
+                  </Box>
+
+                  {/* Yüklenen Videolar */}
+                  {formData.videos.length > 0 && (
+                    <Box>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight="bold"
+                        sx={{ mb: 2, color: "#374151" }}
+                      >
+                        Yüklenen Videolar ({formData.videos.length}/3)
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: {
+                            xs: "1fr",
+                            sm: "repeat(auto-fill, minmax(300px, 1fr))",
+                          },
+                          gap: 3,
+                        }}
+                      >
+                        {videoPreviews.map((preview, index) => (
+                          <Box
+                            key={index}
+                            onClick={() => openVideoModal(index)}
+                            sx={{
+                              position: "relative",
+                              borderRadius: 2,
+                              overflow: "hidden",
+                              border: "1px solid #e2e8f0",
+                              cursor: "pointer",
+                              transition: "all 0.3s ease-in-out",
+                              "&:hover": {
+                                transform: "scale(1.02)",
+                                boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                              },
+                            }}
+                          >
+                            <video
+                              src={preview}
+                              style={{
+                                width: "100%",
+                                height: "180px",
+                                objectFit: "cover",
+                                pointerEvents: "none",
+                              }}
+                              controls={false}
+                              muted
+                              preload="metadata"
+                            />
+                            {/* Play Overlay */}
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                transform: "translate(-50%, -50%)",
+                                background: "rgba(0,0,0,0.7)",
+                                borderRadius: "50%",
+                                width: 60,
+                                height: 60,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "white",
+                                fontSize: "24px",
+                                pointerEvents: "none",
+                              }}
+                            >
+                              ▶
+                            </Box>
+                            {/* Remove Button */}
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 4,
+                                right: 4,
+                                background: "rgba(255,0,0,0.8)",
+                                borderRadius: "50%",
+                                width: 24,
+                                height: 24,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "pointer",
+                                "&:hover": { background: "rgba(255,0,0,1)" },
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeVideo(index);
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  color: "white",
+                                  fontSize: "12px",
+                                  lineHeight: 1,
+                                }}
+                              >
+                                ✕
+                              </Typography>
+                            </Box>
+                            {/* Video Info */}
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                background: "rgba(0,0,0,0.8)",
+                                color: "white",
+                                textAlign: "center",
+                                py: 1,
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: "11px",
+                                  display: "block",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {formData.videos[index]?.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: "10px",
+                                  opacity: 0.9,
+                                  display: "block",
+                                }}
+                              >
+                                {(
+                                  formData.videos[index]?.size /
+                                  (1024 * 1024)
+                                ).toFixed(1)}{" "}
+                                MB
+                              </Typography>
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+
             {/* Submit Button */}
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
               <Button
@@ -2084,6 +2827,89 @@ const KamyonAdForm: React.FC = () => {
         <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
           <Button onClick={handleSuccessClose} variant="contained" size="large">
             İlanlarım Sayfasına Git
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Video Modal */}
+      <Dialog
+        open={videoModalOpen}
+        onClose={closeVideoModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: "#000",
+            borderRadius: 2,
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "#1a1a1a",
+            color: "white",
+            py: 1,
+          }}
+        >
+          <Typography variant="h6">
+            Video Önizleme ({selectedVideoIndex + 1}/{formData.videos.length})
+          </Typography>
+          <IconButton
+            onClick={closeVideoModal}
+            sx={{ color: "white" }}
+            size="small"
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, backgroundColor: "#000" }}>
+          {videoPreviews[selectedVideoIndex] && (
+            <video
+              src={videoPreviews[selectedVideoIndex]}
+              style={{
+                width: "100%",
+                height: "auto",
+                maxHeight: "70vh",
+                display: "block",
+              }}
+              controls={true}
+              autoPlay
+              muted
+            />
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            backgroundColor: "#1a1a1a",
+            justifyContent: "space-between",
+            px: 2,
+            py: 1,
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button
+              onClick={() => navigateVideo("prev")}
+              disabled={selectedVideoIndex === 0}
+              sx={{ color: "white" }}
+              startIcon={<ArrowBackIos />}
+            >
+              Önceki
+            </Button>
+            <Button
+              onClick={() => navigateVideo("next")}
+              disabled={selectedVideoIndex >= formData.videos.length - 1}
+              sx={{ color: "white" }}
+              endIcon={<ArrowForwardIos />}
+            >
+              Sonraki
+            </Button>
+          </Box>
+          <Button onClick={closeVideoModal} sx={{ color: "white" }}>
+            Kapat
           </Button>
         </DialogActions>
       </Dialog>

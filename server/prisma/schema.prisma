@@ -162,6 +162,7 @@ model Ad {
   platformLength     String?           @map("platform_length")
   platformWidth      String?           @map("platform_width")
   images             AdImage[]
+  videos             AdVideo[]
   brand              Brand?            @relation(fields: [brandId], references: [id])
   category           Category          @relation(fields: [categoryId], references: [id])
   city               City?             @relation(fields: [cityId], references: [id])
@@ -198,6 +199,23 @@ model AdImage {
   // ❗ Performans için index'ler  
   @@index([adId, isPrimary])
   @@map("ad_images")
+}
+
+model AdVideo {
+  id           Int      @id @default(autoincrement())
+  adId         Int      @map("ad_id")
+  videoUrl     String   @map("video_url")
+  thumbnailUrl String?  @map("thumbnail_url")
+  duration     Int?     @map("duration") // Video süresi (saniye)
+  fileSize     Int?     @map("file_size") // Dosya boyutu (byte)
+  mimeType     String?  @map("mime_type") // video/mp4, video/avi vb.
+  displayOrder Int      @default(1) @map("display_order")
+  description  String?  // Video açıklaması
+  createdAt    DateTime @default(now()) @map("created_at")
+  ad           Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId])
+  @@map("ad_videos")
 }
 
 model AdFormField {
@@ -448,4 +466,20 @@ enum FeedbackStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+model AdVideo {
+  id           Int      @id @default(autoincrement())
+  adId         Int      @map("ad_id")
+  videoUrl     String   @map("video_url")
+  thumbnailUrl String?  @map("thumbnail_url")
+  duration     Int?
+  fileSize     Int?     @map("file_size")
+  mimeType     String?  @map("mime_type")
+  displayOrder Int      @default(1) @map("display_order")
+  description  String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  ad           Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@map("ad_videos")
 }

@@ -1,33 +1,68 @@
 import axios from "axios";
-import { getTokenFromStorage } from "../utils/tokenUtils";
+// import { getTokenFromStorage } from "../utils/tokenUtils"; // ❌ DISABLED - No interceptors
 
-export const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://trucksbus-production.up.railway.app/api";
+// 🔧 Güvenilir API URL belirleme
+const getApiBaseUrl = () => {
+  // Development environment check
+  if (import.meta.env.DEV || window.location.hostname === "localhost") {
+    return import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  }
 
-// Create axios instance
+  // Production fallback
+  return (
+    import.meta.env.VITE_API_URL ||
+    "https://trucksbus-production.up.railway.app/api"
+  );
+};
+
+export const API_BASE_URL = getApiBaseUrl();
+
+console.log("🔧 API Client Config:", {
+  baseURL: API_BASE_URL,
+  env: import.meta.env.VITE_API_URL,
+  isDev: import.meta.env.DEV,
+  hostname: window.location.hostname,
+});
+
+// Create axios instance with optimized config
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: false, // ✅ FIXED - Keep false for stability
+  timeout: 30000, // 30 saniye normal timeout
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request interceptor to add auth token
+// ❌ INTERCEPTORS DISABLED FOR STABILITY
+// Interceptor'lar network sorunlarına neden oluyor
+// Token gerektiğinde manuel olarak eklenecek
+
+/*
 apiClient.interceptors.request.use(
   (config) => {
-    const token = getTokenFromStorage(); // Expired token'ları otomatik temizler
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = getTokenFromStorage();
+      if (token && config.headers && !config.url?.includes('/public/')) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.warn('Token interceptor error:', error);
     }
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
+*/
 
-// Response interceptor to handle token refresh
+// ❌ RESPONSE INTERCEPTOR DISABLED FOR STABILITY
+// Token refresh sorunları network hatalarına sebep oluyor
+// Auth gerektiğinde manuel olarak handle edilecek
+
+/*
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -49,14 +84,12 @@ apiClient.interceptors.response.use(
           const { accessToken } = response.data;
           localStorage.setItem("accessToken", accessToken);
 
-          // Retry original request with new token
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           }
           return apiClient(originalRequest);
         }
       } catch {
-        // Refresh failed, redirect to login
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         window.location.href = "/login";
@@ -66,5 +99,16 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+*/
+
+// ✅ Simple video upload client - NO INTERCEPTORS
+export const videoUploadClient = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: false,
+  timeout: 300000, // 5 dakika - Video upload için
+  // Content-Type header'ı FormData için otomatik set edilecek
+});
+
+// ❌ NO INTERCEPTORS FOR VIDEO CLIENT - Manual token handling
 
 export default apiClient;

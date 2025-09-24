@@ -9,7 +9,10 @@ const router = Router();
 // Multer configuration for handling multipart/form-data
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB limit for videos
+    files: 20, // Max 20 files (15 photos + 3 videos + 1 showcase + 1 extra)
+  },
 });
 
 // İl ve İlçe routes (specific routes must come before generic /:id route)
@@ -19,10 +22,31 @@ router.get("/cities/:cityId/districts", adController.getDistricts);
 // İlan CRUD routes
 router.get("/", adController.getAds);
 router.get("/:id/similar", adController.getSimilarAds);
-router.get("/:id", adController.getAdById);
+router.get(
+  "/:id",
+  (req, res, next) => {
+    console.log("🎯 ADS Route /:id yakalandı - ID:", req.params.id);
+    next();
+  },
+  adController.getAdById
+);
 router.post("/", authenticateToken, upload.any(), adController.createAd);
 router.put("/:id", authenticateToken, adController.updateAd);
 router.delete("/:id", authenticateToken, adController.deleteAd);
+
+// Video routes
+router.post(
+  "/:id/videos",
+  authenticateToken,
+  upload.single("video"),
+  adController.uploadVideo
+);
+router.get("/:id/videos", adController.getAdVideos);
+router.delete(
+  "/:id/videos/:videoId",
+  authenticateToken,
+  adController.deleteVideo
+);
 
 // Minibüs ilan oluşturma (multipart/form-data desteği ile)
 router.post(

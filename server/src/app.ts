@@ -12,7 +12,6 @@ import routes from "./routes";
 import {
   generalLimiter,
   sanitizeData,
-  mongoSanitizeMiddleware,
   securityHeaders,
   requestSizeLimit,
 } from "./middleware/security";
@@ -27,40 +26,69 @@ if (process.env.NODE_ENV === "development") {
 }
 
 const app = express();
-const server = createServer(app);
 
-// Socket.IO CORS ayarları
-let socketOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
+// 🔐 Helmet: static dosya CORS'una karışmasın
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false, // Video upload için devre dışı
+  })
+);
+
+// ✅ KESIN CORS ÇÖZÜMÜ - Frontend 5174 + Production
+const allowedOrigins = [
+  "http://localhost:5175", // Yeni port
+  "http://localhost:5174",
+  "http://localhost:5173",
+  "http://localhost:3000",
   "https://trucksbus.com.tr",
-  "http://trucksbus.com.tr",
   "https://www.trucksbus.com.tr",
-  "http://www.trucksbus.com.tr",
 ];
 
-// Development modunda localhost'a izin ver
-if (process.env.NODE_ENV === "development") {
-  socketOrigins = [
-    ...socketOrigins,
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://localhost:5174",
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5174",
-  ];
-}
+app.use(
+  cors({
+    origin: function (origin, cb) {
+      console.log(
+        `🔍 CORS Check: "${origin}" -> ${
+          allowedOrigins.includes(origin || "") ? "✅ ALLOWED" : "❌ BLOCKED"
+        }`
+      );
 
+      // Postman/cURL gibi origin'siz istekler için izin ver
+      if (!origin) return cb(null, true);
+
+      // İzin verilen originler
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+
+      return cb(new Error("Not allowed by CORS"));
+    },
+    credentials: true, // withCredentials için şart
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "X-XSRF-TOKEN",
+    ],
+    exposedHeaders: ["Content-Disposition"],
+  })
+);
+
+const server = createServer(app);
+
+// Socket.IO setup
 const io = new SocketIOServer(server, {
   cors: {
-    origin: socketOrigins,
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
+
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
-// Trust proxy for accurate IP addresses (important for rate limiting)
+// Trust proxy for accurate IP addresses
 app.set("trust proxy", 1);
 
 // Logging middleware
@@ -70,168 +98,25 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("combined"));
 }
 
-// Security middleware (order matters!)
-app.use(securityHeaders);
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https:"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'"],
-        fontSrc: ["'self'", "https:"],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
-        frameSrc: ["'none'"],
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-  })
-);
 app.use(compression());
 
 // Apply data sanitization middleware
 app.use(sanitizeData);
-// app.use(mongoSanitizeMiddleware); // Temporarily disabled due to compatibility issues
 
-// Request size limiting
-app.use(requestSizeLimit("10mb"));
+// Request size limiting - Video için 100MB
+app.use(requestSizeLimit("100mb"));
 
 // Global rate limiting
 app.use(generalLimiter);
 
-// CORS configuration
-const corsOptions = {
-  origin: function (origin: string | undefined, callback: Function) {
-    let allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
-      "https://trucksbus.com.tr",
-      "http://trucksbus.com.tr",
-      "https://www.trucksbus.com.tr",
-      "http://www.trucksbus.com.tr",
-      // ❗ Development için her zaman localhost'a izin ver
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:5174",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:3000",
-      "http://127.0.0.1:5174",
-    ];
-
-    // Railway production URLs
-    if (process.env.RAILWAY_ENVIRONMENT_NAME) {
-      allowedOrigins = [
-        ...allowedOrigins,
-        "https://trucksbus-production.up.railway.app",
-      ];
-    }
-
-    console.log("🔍 CORS Check:");
-    console.log("  Request Origin:", origin);
-    console.log("  Allowed Origins:", allowedOrigins);
-
-    // Allow requests with no origin (like mobile apps, curl requests, API testing tools)
-    if (!origin) {
-      console.log("  ✅ No origin - allowing (API tools, mobile apps, etc.)");
-      return callback(null, true);
-    }
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log("  ✅ Origin allowed");
-      callback(null, true);
-    } else {
-      console.log("  ❌ Origin not allowed");
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With",
-    "Origin",
-    "Accept",
-    "Cache-Control", // ❗ Cache-Control header allow et
-  ],
-  exposedHeaders: ["Content-Length", "X-Foo", "X-Bar"],
-  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
-  preflightContinue: false,
-};
-
-app.use(cors(corsOptions));
-
-// Additional CORS headers for stubborn browsers
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  let allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
-    "https://trucksbus.com.tr",
-    "http://trucksbus.com.tr",
-    "https://www.trucksbus.com.tr",
-    "http://www.trucksbus.com.tr",
-  ];
-
-  // Development modunda localhost'a izin ver
-  if (process.env.NODE_ENV === "development") {
-    allowedOrigins = [
-      ...allowedOrigins,
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:5174",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:3000",
-      "http://127.0.0.1:5174",
-    ];
-  }
-
-  if (allowedOrigins.includes(origin || "") || !origin) {
-    res.header("Access-Control-Allow-Origin", origin || "*");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header(
-      "Access-Control-Allow-Methods",
-      "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
-    );
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-    );
-    res.header("Access-Control-Expose-Headers", "Content-Length, X-JSON");
-  }
-
-  if (req.method === "OPTIONS") {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
-
-// Body parsing middleware
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+// Body parsing middleware - JSON + URL-encoded (Video için 100MB)
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 
 // Serve static files from uploads directory with CORS headers
 app.use(
   "/uploads",
   (req, res, next) => {
-    // CORS headers for static files
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
-      "https://trucksbus.com.tr",
-      "http://trucksbus.com.tr",
-      "https://www.trucksbus.com.tr",
-      "http://www.trucksbus.com.tr",
-    ];
-
-    const origin = req.headers.origin;
-    if (allowedOrigins.indexOf(origin || "") !== -1 || !origin) {
-      res.header("Access-Control-Allow-Origin", origin || "*");
-    }
-
-    res.header("Access-Control-Allow-Methods", "GET");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept"
-    );
     res.header("Cross-Origin-Resource-Policy", "cross-origin");
     next();
   },
@@ -246,10 +131,29 @@ app.get("/health", (req, res) => {
     uptime: process.uptime(),
     memory: process.memoryUsage(),
     env: process.env.NODE_ENV,
+    corsTest: "CORS working if you can see this",
   });
 });
 
-// API routes
+// Test endpoint for debugging
+app.get("/test", (req, res) => {
+  console.log("🧪 TEST endpoint çağrıldı");
+  res.json({ message: "Test başarılı!", time: new Date().toISOString() });
+});
+
+// Request logging middleware
+app.use("/api", (req, res, next) => {
+  console.log(
+    `📡 ${req.method} ${req.originalUrl} - IP: ${req.ip} - Headers:`,
+    {
+      origin: req.headers.origin,
+      "user-agent": req.headers["user-agent"]?.substring(0, 50) + "...",
+    }
+  );
+  next();
+});
+
+// API routes - ROUTES EN SON!
 app.use("/api", routes);
 
 // Serve static files from client build (production)
@@ -257,20 +161,18 @@ if (process.env.NODE_ENV === "production") {
   const clientBuildPath = path.join(__dirname, "../../client/dist");
   app.use(express.static(clientBuildPath));
 
-  // SPA fallback - catch all non-API routes and serve index.html
+  // SPA fallback
   app.use((req, res, next) => {
-    // Skip API routes and static files
     if (req.path.startsWith("/api") || req.path.includes(".")) {
       return next();
     }
-
-    // For all other routes, serve the React app
     res.sendFile(path.join(clientBuildPath, "index.html"));
   });
 }
 
-// 404 handler - this must be after all other routes
+// 404 handler
 app.use((req, res, next) => {
+  console.log(`❌ 404: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
     message: "Endpoint not found",
@@ -288,7 +190,6 @@ app.use(
   ) => {
     console.error("Global error handler:", err);
 
-    // Don't leak error details in production
     const message =
       process.env.NODE_ENV === "production"
         ? "An internal server error occurred"
@@ -321,13 +222,11 @@ process.on("SIGINT", async () => {
 io.on("connection", (socket) => {
   console.log("🔌 User connected:", socket.id);
 
-  // Join user to their personal room for notifications
   socket.on("join_user_room", (userId) => {
     socket.join(`user_${userId}`);
     console.log(`👤 User ${userId} joined their room (socket: ${socket.id})`);
   });
 
-  // Handle disconnect
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
   });
@@ -335,11 +234,9 @@ io.on("connection", (socket) => {
 
 server.listen(PORT, () => {
   console.log(`🚛 TrucksBus server running on port ${PORT}`);
-  console.log(
-    `🔒 Security features: Rate limiting, CORS, Helmet, Input validation`
-  );
+  console.log(`🔒 Security: CORS, Helmet, Rate limiting`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🔧 CORS Cache-Control header enabled`); // ❗ Restart trigger
+  console.log(`✅ CORS allowed origins:`, allowedOrigins);
 });
 
 export { io };

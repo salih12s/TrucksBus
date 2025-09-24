@@ -75,6 +75,16 @@ interface Ad {
     displayOrder: number;
     altText: string;
   }[];
+  videos?: {
+    id: number;
+    videoUrl: string;
+    thumbnailUrl?: string;
+    duration?: number;
+    fileSize?: number;
+    mimeType?: string;
+    displayOrder: number;
+    description?: string;
+  }[];
   customFields: {
     condition?: string;
     engineVolume?: string;
@@ -567,6 +577,88 @@ const PendingAds: React.FC = () => {
                       <Typography variant="body2" color="text.secondary">
                         Bu ilan için resim yüklenmemiş
                       </Typography>
+                    </Paper>
+                  )}
+
+                  {/* Videolar */}
+                  {ad.videos && ad.videos.length > 0 && (
+                    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mb: 2,
+                        }}
+                      >
+                        <Typography sx={{ fontSize: 20 }}>🎬</Typography>
+                        <Typography variant="subtitle2">
+                          İlan Videoları ({ad.videos.length})
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns:
+                            "repeat(auto-fit, minmax(200px, 1fr))",
+                          gap: 2,
+                        }}
+                      >
+                        {ad.videos.map((video) => (
+                          <Box
+                            key={video.id}
+                            sx={{
+                              position: "relative",
+                              borderRadius: 1,
+                              overflow: "hidden",
+                              border: "1px solid #e0e0e0",
+                            }}
+                          >
+                            <video
+                              controls
+                              style={{
+                                width: "100%",
+                                height: "150px",
+                                objectFit: "cover",
+                              }}
+                              poster={video.thumbnailUrl}
+                            >
+                              <source
+                                src={video.videoUrl}
+                                type={video.mimeType || "video/mp4"}
+                              />
+                              Tarayıcınız bu video formatını desteklemiyor.
+                            </video>
+                            {video.description && (
+                              <Box sx={{ p: 1, backgroundColor: "#f5f5f5" }}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ fontSize: "11px", color: "#666" }}
+                                >
+                                  {video.description}
+                                </Typography>
+                              </Box>
+                            )}
+                            {video.fileSize && (
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  top: 4,
+                                  left: 4,
+                                  backgroundColor: "rgba(0,0,0,0.7)",
+                                  color: "white",
+                                  fontSize: "10px",
+                                  px: 0.5,
+                                  py: 0.25,
+                                  borderRadius: 0.5,
+                                }}
+                              >
+                                {(video.fileSize / (1024 * 1024)).toFixed(1)} MB
+                              </Box>
+                            )}
+                          </Box>
+                        ))}
+                      </Box>
                     </Paper>
                   )}
 

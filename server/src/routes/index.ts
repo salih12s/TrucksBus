@@ -31,6 +31,12 @@ router.use("/complaints", complaintRoutes);
 router.use("/messages", messagingRoutes);
 router.use("/cities", citiesRoutes);
 
+// Test endpoint for debugging
+router.get("/test", (req, res) => {
+  console.log("🧪 API TEST endpoint çağrıldı");
+  res.json({ message: "API Test başarılı!", time: new Date().toISOString() });
+});
+
 // API info endpoint
 router.get("/", (req, res) => {
   res.json({

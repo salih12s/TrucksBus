@@ -218,6 +218,7 @@ setInterval(cleanExpiredCache, 5 * 60 * 1000);
 
 // Get ad by ID - LIGHTNING FAST VERSION 3.0 ⚡ (SAFE)
 export const getAdById = async (req: Request, res: Response) => {
+  console.log("🔍 getAdById çağrıldı, ID:", req.params.id);
   const startTime = performance.now();
   const { id } = req.params;
   const adId = parseInt(id);
@@ -280,6 +281,27 @@ export const getAdById = async (req: Request, res: Response) => {
             ORDER BY ai.is_primary DESC, ai.display_order ASC 
           ) ai
         ), '[]'::json) as images_json,
+        COALESCE((
+          SELECT json_agg(
+            json_build_object(
+              'id', av.id,
+              'videoUrl', av.video_url,
+              'thumbnailUrl', av.thumbnail_url,
+              'duration', av.duration,
+              'fileSize', av.file_size,
+              'mimeType', av.mime_type,
+              'displayOrder', av.display_order,
+              'description', av.description
+            )
+          )
+          FROM (
+            SELECT av.id, av.video_url, av.thumbnail_url, av.duration, av.file_size, 
+                   av.mime_type, av.display_order, av.description
+            FROM ad_videos av 
+            WHERE av.ad_id = a.id
+            ORDER BY av.display_order ASC 
+          ) av
+        ), '[]'::json) as videos_json,
         (SELECT COUNT(*)::int FROM ads a2 WHERE a2.user_id = a.user_id AND a2.status = 'APPROVED') as user_total_ads
       FROM ads a
       LEFT JOIN users u ON a.user_id = u.id
@@ -377,6 +399,7 @@ export const getAdById = async (req: Request, res: Response) => {
       city: ad.city_name ? { name: ad.city_name } : null,
       district: ad.district_name ? { name: ad.district_name } : null,
       images: ad.images_json || [],
+      videos: ad.videos_json || [],
       _debug: {
         responseTime: responseTime.toFixed(2) + "ms",
         queryType: "SAFE_SINGLE_QUERY_WITH_SELECTIVE_CACHE",
@@ -407,6 +430,10 @@ export const getAdById = async (req: Request, res: Response) => {
       "X-Ad-Status": ad.status,
       Vary: "Accept-Encoding",
     });
+
+    console.log("📤 Gönderilen Response Data Keys:", Object.keys(responseData));
+    console.log("📤 Response Data ID:", responseData.id);
+    console.log("📤 Response Data Title:", responseData.title);
 
     return res.json(responseData);
   } catch (error) {
@@ -1128,9 +1155,56 @@ export const createMinibusAd = async (req: Request, res: Response) => {
           `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
         );
       }
+
+      // Video yükleme işlemi (Base64 formatında)
+      const videoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("video_")
+      );
+      if (videoFiles.length > 0) {
+        console.log(
+          "🎬 Videolar base64 formatında kaydediliyor:",
+          videoFiles.map((f: any) => f.fieldname)
+        );
+
+        const videoPromises = [];
+        let videoDisplayOrder = 1;
+
+        for (const file of videoFiles) {
+          // Base64 formatına çevir
+          const base64Video = `data:${
+            file.mimetype
+          };base64,${file.buffer.toString("base64")}`;
+
+          console.log(
+            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
+          );
+
+          videoPromises.push(
+            prisma.adVideo.create({
+              data: {
+                adId: ad.id,
+                videoUrl: base64Video,
+                mimeType: file.mimetype,
+                fileSize: file.size,
+                displayOrder: videoDisplayOrder,
+                description: `${title} - Video ${videoDisplayOrder}`,
+              },
+            })
+          );
+          videoDisplayOrder++;
+        }
+
+        // Tüm videoları veritabanına kaydet
+        if (videoPromises.length > 0) {
+          await Promise.all(videoPromises);
+          console.log(
+            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+          );
+        }
+      }
     }
 
-    // Oluşturulan ilanı resimlerle birlikte getir
+    // Oluşturulan ilanı resimler ve videolarla birlikte getir
     const createdAd = await prisma.ad.findUnique({
       where: { id: ad.id },
       include: {
@@ -1145,6 +1219,9 @@ export const createMinibusAd = async (req: Request, res: Response) => {
           },
         },
         images: {
+          orderBy: { displayOrder: "asc" },
+        },
+        videos: {
           orderBy: { displayOrder: "asc" },
         },
       },
@@ -1349,10 +1426,57 @@ export const createCekiciAd = async (req: Request, res: Response) => {
         console.log(
           `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
         );
+        // Video yükleme işlemleri
+        const videoFiles = files.filter((f: any) =>
+          f.fieldname.startsWith("video_")
+        );
+
+        if (videoFiles && videoFiles.length > 0) {
+          console.log(
+            "🎬 Videolar base64 formatında kaydediliyor:",
+            videoFiles.map((f: any) => f.fieldname)
+          );
+
+          const videoPromises: any[] = [];
+          let videoDisplayOrder = 1;
+
+          for (const file of videoFiles) {
+            // Base64 formatına çevir
+            const base64Video = `data:${
+              file.mimetype
+            };base64,${file.buffer.toString("base64")}`;
+
+            console.log(
+              `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
+            );
+
+            videoPromises.push(
+              prisma.adVideo.create({
+                data: {
+                  adId: ad.id,
+                  videoUrl: base64Video,
+                  mimeType: file.mimetype,
+                  fileSize: file.size,
+                  displayOrder: videoDisplayOrder,
+                  description: `${title} - Video ${videoDisplayOrder}`,
+                },
+              })
+            );
+            videoDisplayOrder++;
+          }
+
+          // Tüm videoları veritabanına kaydet
+          if (videoPromises.length > 0) {
+            await Promise.all(videoPromises);
+            console.log(
+              `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+            );
+          }
+        }
       }
     }
 
-    // Oluşturulan ilanı resimlerle birlikte getir
+    // Oluşturulan ilanı resimler ve videolarla birlikte getir
     const createdAd = await prisma.ad.findUnique({
       where: { id: ad.id },
       include: {
@@ -1367,6 +1491,9 @@ export const createCekiciAd = async (req: Request, res: Response) => {
           },
         },
         images: {
+          orderBy: { displayOrder: "asc" },
+        },
+        videos: {
           orderBy: { displayOrder: "asc" },
         },
       },
@@ -1458,6 +1585,9 @@ export const getPendingAds = async (req: Request, res: Response) => {
           },
         },
         images: {
+          orderBy: { displayOrder: "asc" },
+        },
+        videos: {
           orderBy: { displayOrder: "asc" },
         },
       },
@@ -1973,6 +2103,45 @@ export const createOtobusAd = async (req: Request, res: Response) => {
           `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
         );
       }
+
+      // Video işleme
+      const videoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("video_")
+      );
+      const videoPromises: any[] = [];
+
+      for (let i = 0; i < videoFiles.length; i++) {
+        const videoFile = videoFiles[i];
+
+        // Base64 formatına çevir
+        const base64Video = `data:${
+          videoFile.mimetype
+        };base64,${videoFile.buffer.toString("base64")}`;
+
+        console.log(`🎬 Video ${i + 1} base64 formatında kaydediliyor`);
+
+        videoPromises.push(
+          prisma.adVideo.create({
+            data: {
+              adId: ad.id,
+              videoUrl: base64Video,
+              description: `Otobüs ilanı videosu ${i + 1}`,
+              duration: null, // Frontend'den gönderilirse kullanılabilir
+              fileSize: videoFile.size,
+              mimeType: videoFile.mimetype,
+              displayOrder: i + 1,
+            },
+          })
+        );
+      }
+
+      // Tüm videoları veritabanına kaydet
+      if (videoPromises.length > 0) {
+        await Promise.all(videoPromises);
+        console.log(
+          `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+        );
+      }
     }
 
     // Oluşturulan ilanı resimlerle birlikte getir
@@ -1990,6 +2159,9 @@ export const createOtobusAd = async (req: Request, res: Response) => {
           },
         },
         images: {
+          orderBy: { displayOrder: "asc" },
+        },
+        videos: {
           orderBy: { displayOrder: "asc" },
         },
       },
@@ -3014,6 +3186,9 @@ export const getAllAdsForAdmin = async (req: Request, res: Response) => {
         images: {
           orderBy: { displayOrder: "asc" },
         },
+        videos: {
+          orderBy: { displayOrder: "asc" },
+        },
       },
       orderBy: {
         [sortBy as string]: sortOrder as "asc" | "desc",
@@ -3604,6 +3779,113 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
     res.status(500).json({
       error: "İlan oluşturulurken hata oluştu",
       details: error instanceof Error ? error.message : "Bilinmeyen hata",
+    });
+  }
+};
+
+// Video upload
+export const uploadVideo = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user?.id;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: "Video dosyası gerekli" });
+    }
+
+    // İlan sahibi kontrolü
+    const ad = await prisma.ad.findUnique({
+      where: { id: parseInt(id) },
+      select: { userId: true },
+    });
+
+    if (!ad || ad.userId !== userId) {
+      return res.status(403).json({ error: "Bu ilana video ekleyemezsiniz" });
+    }
+
+    // Video dosyasını kaydet (şimdilik base64 olarak, ileride file upload service kullanılabilir)
+    const videoBase64 = `data:${file.mimetype};base64,${file.buffer.toString(
+      "base64"
+    )}`;
+
+    const video = await prisma.adVideo.create({
+      data: {
+        adId: parseInt(id),
+        videoUrl: videoBase64,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        displayOrder: 1,
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: "Video başarıyla yüklendi",
+      video,
+    });
+  } catch (error) {
+    console.error("Video yüklenirken hata:", error);
+    return res.status(500).json({
+      error: "Video yüklenirken hata oluştu",
+      details: error instanceof Error ? error.message : "Bilinmeyen hata",
+    });
+  }
+};
+
+// Get ad videos
+export const getAdVideos = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const videos = await prisma.adVideo.findMany({
+      where: { adId: parseInt(id) },
+      orderBy: { displayOrder: "asc" },
+    });
+
+    return res.json({
+      success: true,
+      videos,
+    });
+  } catch (error) {
+    console.error("Videolar alınırken hata:", error);
+    return res.status(500).json({
+      error: "Videolar alınırken hata oluştu",
+    });
+  }
+};
+
+// Delete video
+export const deleteVideo = async (req: Request, res: Response) => {
+  try {
+    const { id, videoId } = req.params;
+    const userId = (req as any).user?.id;
+
+    // İlan sahibi kontrolü
+    const ad = await prisma.ad.findUnique({
+      where: { id: parseInt(id) },
+      select: { userId: true },
+    });
+
+    if (!ad || ad.userId !== userId) {
+      return res.status(403).json({ error: "Bu videoyu silemezsiniz" });
+    }
+
+    await prisma.adVideo.delete({
+      where: {
+        id: parseInt(videoId),
+        adId: parseInt(id),
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: "Video başarıyla silindi",
+    });
+  } catch (error) {
+    console.error("Video silinirken hata:", error);
+    return res.status(500).json({
+      error: "Video silinirken hata oluştu",
     });
   }
 };
