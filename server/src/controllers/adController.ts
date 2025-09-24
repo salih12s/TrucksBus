@@ -1555,6 +1555,12 @@ export const getDistricts = async (req: Request, res: Response) => {
 // Admin: Onay bekleyen ilanları getir
 export const getPendingAds = async (req: Request, res: Response) => {
   try {
+    console.log("🔍 getPendingAds çağrıldı");
+    console.log(
+      "📋 Request headers:",
+      req.headers.authorization ? "Auth header var" : "Auth header YOK"
+    );
+
     const pendingAds = await prisma.ad.findMany({
       where: { status: "PENDING" },
       include: {
@@ -1568,10 +1574,34 @@ export const getPendingAds = async (req: Request, res: Response) => {
             companyName: true,
           },
         },
-        category: true,
-        brand: true,
-        model: true,
-        variant: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        brand: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        model: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        variant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
         city: {
           select: {
             id: true,
@@ -1585,18 +1615,43 @@ export const getPendingAds = async (req: Request, res: Response) => {
           },
         },
         images: {
+          select: {
+            id: true,
+            imageUrl: true,
+            isPrimary: true,
+            displayOrder: true,
+          },
+          where: {
+            isPrimary: true, // Sadece ana resimleri getir
+          },
           orderBy: { displayOrder: "asc" },
-        },
-        videos: {
-          orderBy: { displayOrder: "asc" },
+          take: 1, // Sadece ana resim
         },
       },
       orderBy: { createdAt: "desc" },
+      take: 50, // En fazla 50 ilan getir
     });
 
-    console.log("Pending ads fetched:", pendingAds.length);
+    console.log("📊 Pending ads fetched:", pendingAds.length);
     if (pendingAds.length > 0) {
-      console.log("Sample ad fields:", Object.keys(pendingAds[0]));
+      console.log("📝 Sample ad fields:", Object.keys(pendingAds[0]));
+      console.log("🎯 İlk ilan örneği:", {
+        id: pendingAds[0].id,
+        title: pendingAds[0].title,
+        status: pendingAds[0].status,
+        userId: pendingAds[0].userId,
+        createdAt: pendingAds[0].createdAt,
+      });
+    } else {
+      console.log("❌ PENDING durumunda hiç ilan bulunamadı!");
+
+      // Tüm ilanları kontrol et
+      const allAds = await prisma.ad.findMany({
+        select: { id: true, title: true, status: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      });
+      console.log("🔍 Son 10 ilan durumu:", allAds);
     }
 
     res.json(pendingAds);

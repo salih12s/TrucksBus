@@ -34,6 +34,7 @@ import {
   FilterList as FilterIcon,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
+import { getTokenFromStorage } from "../../utils/tokenUtils";
 
 interface Ad {
   id: number;
@@ -89,6 +90,16 @@ const AllAds: React.FC = () => {
   const fetchAds = useCallback(async () => {
     try {
       setLoading(true);
+      const token = getTokenFromStorage();
+      if (!token) {
+        console.error("Authentication required");
+        setAlert({
+          type: "error",
+          message: "Oturumunuz sona ermiş. Lütfen yeniden giriş yapın.",
+        });
+        return;
+      }
+
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (categoryFilter !== "all") params.append("categoryId", categoryFilter);
@@ -96,7 +107,11 @@ const AllAds: React.FC = () => {
       params.append("page", page.toString());
       params.append("limit", "20");
 
-      const response = await apiClient.get(`/ads/admin/all?${params}`);
+      const response = await apiClient.get(`/ads/admin/all?${params}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = response.data as {
         ads: Ad[];
         pagination: { pages: number };
@@ -119,7 +134,21 @@ const AllAds: React.FC = () => {
     if (!selectedAdId) return;
 
     try {
-      await apiClient.delete(`/ads/admin/${selectedAdId}/force-delete`);
+      const token = getTokenFromStorage();
+      if (!token) {
+        console.error("Authentication required");
+        setAlert({
+          type: "error",
+          message: "Oturumunuz sona ermiş. Lütfen yeniden giriş yapın.",
+        });
+        return;
+      }
+
+      await apiClient.delete(`/ads/admin/${selectedAdId}/force-delete`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setAlert({ type: "success", message: "İlan başarıyla silindi" });
       setDeleteDialogOpen(false);
       setSelectedAdId(null);

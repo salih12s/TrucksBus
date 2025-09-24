@@ -36,8 +36,9 @@ import {
   ArrowBackIos,
   ArrowForwardIos,
 } from "@mui/icons-material";
-import apiClient from "../../api/client";
+import apiClient, { videoUploadClient } from "../../api/client";
 import Header from "../layout/Header";
+import { getTokenFromStorage } from "../../utils/tokenUtils";
 
 // Type definitions
 interface Brand {
@@ -197,7 +198,6 @@ interface FormData {
   cityId: string;
   districtId: string;
   address: string;
-  detailedInfo: string;
   photos: File[];
   videos: File[];
   showcasePhoto: File | null;
@@ -314,7 +314,6 @@ const KamyonAdForm: React.FC = () => {
     cityId: "",
     districtId: "",
     address: "",
-    detailedInfo: "",
     photos: [],
     videos: [],
     showcasePhoto: null,
@@ -616,14 +615,14 @@ const KamyonAdForm: React.FC = () => {
 
       // En fazla 3 video
       if (totalVideos <= 3) {
-        // Video dosya boyutu kontrolü (100MB limit)
+        // Video dosya boyutu kontrolü (50MB limit)
         const oversizedFiles = newVideos.filter(
-          (file) => file.size > 100 * 1024 * 1024
+          (file) => file.size > 50 * 1024 * 1024
         );
         if (oversizedFiles.length > 0) {
           console.error("Video dosyası çok büyük:", oversizedFiles);
           alert(
-            `⚠️ Video dosyası 100MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
+            `⚠️ Video dosyası 50MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
               .map((f) => f.name)
               .join(", ")}`
           );
@@ -798,9 +797,19 @@ const KamyonAdForm: React.FC = () => {
         submitData.append(`video_${index}`, video);
       });
 
-      const response = await apiClient.post("/ads/kamyon", submitData, {
+      // Authentication token'ı al
+      const token = getTokenFromStorage();
+      if (!token) {
+        alert("Oturumunuz sona ermiş. Lütfen yeniden giriş yapın.");
+        navigate("/login");
+        return;
+      }
+
+      console.log("📤 Starting upload...");
+      const response = await videoUploadClient.post("/ads/kamyon", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -1678,28 +1687,6 @@ const KamyonAdForm: React.FC = () => {
                       handleInputChange("plateNumber", e.target.value)
                     }
                     placeholder="34 ABC 1234"
-                    variant="outlined"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 3,
-                        "&:hover fieldset": { borderColor: "primary.main" },
-                      },
-                    }}
-                  />
-                </Box>
-
-                {/* Detaylı Bilgi */}
-                <Box sx={{ mb: 3 }}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={6}
-                    label="Detaylı Bilgi"
-                    value={formData.detailedInfo}
-                    onChange={(e) =>
-                      handleInputChange("detailedInfo", e.target.value)
-                    }
-                    placeholder="Kamyonunuz hakkında detaylı bilgi verebilirsiniz..."
                     variant="outlined"
                     sx={{
                       "& .MuiOutlinedInput-root": {

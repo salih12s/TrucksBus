@@ -42,6 +42,7 @@ import {
   Search as SearchIcon,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
+import { getTokenFromStorage } from "../../utils/tokenUtils";
 
 interface DashboardStats {
   totalStats: {
@@ -122,12 +123,25 @@ const AdminDashboard: React.FC = () => {
   const fetchAllAds = useCallback(async () => {
     try {
       setAdsLoading(true);
+      const token = getTokenFromStorage();
+      if (!token) {
+        setAlert({
+          type: "error",
+          message: "Oturumunuz sona ermiş. Lütfen yeniden giriş yapın.",
+        });
+        return;
+      }
+
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.append("status", statusFilter);
       if (searchTerm) params.append("search", searchTerm);
       params.append("limit", "50");
 
-      const response = await apiClient.get(`/ads/admin/all?${params}`);
+      const response = await apiClient.get(`/ads/admin/all?${params}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setAllAds((response.data as { ads: Ad[] }).ads);
     } catch (error) {
       console.error("İlanlar yüklenirken hata:", error);
@@ -150,7 +164,20 @@ const AdminDashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get("/ads/admin/stats");
+      const token = getTokenFromStorage();
+      if (!token) {
+        setAlert({
+          type: "error",
+          message: "Oturumunuz sona ermiş. Lütfen yeniden giriş yapın.",
+        });
+        return;
+      }
+
+      const response = await apiClient.get("/ads/admin/stats", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setStats(response.data as DashboardStats);
     } catch (error) {
       console.error("Dashboard verileri yüklenirken hata:", error);
@@ -167,7 +194,20 @@ const AdminDashboard: React.FC = () => {
     if (!selectedAdId) return;
 
     try {
-      await apiClient.delete(`/ads/admin/${selectedAdId}/force-delete`);
+      const token = getTokenFromStorage();
+      if (!token) {
+        setAlert({
+          type: "error",
+          message: "Oturumunuz sona ermiş. Lütfen yeniden giriş yapın.",
+        });
+        return;
+      }
+
+      await apiClient.delete(`/ads/admin/${selectedAdId}/force-delete`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setAlert({ type: "success", message: "İlan başarıyla silindi" });
       fetchAllAds();
       fetchDashboardData(); // Refresh stats

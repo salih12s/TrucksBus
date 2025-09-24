@@ -39,6 +39,7 @@ import {
   ArrowForward,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
+import { getTokenFromStorage } from "../../utils/tokenUtils";
 
 interface Ad {
   id: number;
@@ -137,7 +138,18 @@ const PendingAds: React.FC = () => {
 
   const fetchPendingAds = async () => {
     try {
-      const response = await apiClient.get("/ads/admin/pending");
+      const token = getTokenFromStorage();
+      if (!token) {
+        console.error("Authentication required");
+        return;
+      }
+
+      const response = await apiClient.get("/ads/admin/pending", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        timeout: 60000, // 60 saniye timeout
+      });
       const adsData = response.data as Ad[];
 
       // Debug: İlan verilerini kontrol et
@@ -168,7 +180,21 @@ const PendingAds: React.FC = () => {
   // İlanı onayla
   const handleApprove = async (adId: number) => {
     try {
-      await apiClient.put(`/ads/admin/${adId}/approve`);
+      const token = getTokenFromStorage();
+      if (!token) {
+        console.error("Authentication required");
+        return;
+      }
+
+      await apiClient.put(
+        `/ads/admin/${adId}/approve`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       // İlanı listeden kaldır
       setAds((prev) => prev.filter((ad) => ad.id !== adId));
 
@@ -206,9 +232,23 @@ const PendingAds: React.FC = () => {
     }
 
     try {
-      await apiClient.put(`/ads/admin/${selectedAd.id}/reject`, {
-        reason: rejectReason,
-      });
+      const token = getTokenFromStorage();
+      if (!token) {
+        console.error("Authentication required");
+        return;
+      }
+
+      await apiClient.put(
+        `/ads/admin/${selectedAd.id}/reject`,
+        {
+          reason: rejectReason,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       // İlanı listeden kaldır
       setAds((prev) => prev.filter((ad) => ad.id !== selectedAd.id));
       setRejectDialogOpen(false);

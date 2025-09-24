@@ -24,7 +24,8 @@ import {
 import { PhotoCamera, CheckCircle } from "@mui/icons-material";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Header from "../layout/Header";
-import apiClient from "../../api/client";
+import apiClient, { videoUploadClient } from "../../api/client";
+import { getTokenFromStorage } from "../../utils/tokenUtils";
 
 // Type definitions
 interface Brand {
@@ -76,7 +77,6 @@ interface FormData {
   color: string;
   fuelCapacity: string;
   tireCondition: string;
-  detailedInfo: string;
 
   // Özellikler
   features: string[];
@@ -133,7 +133,6 @@ const OtobusAdForm: React.FC = () => {
     color: "",
     fuelCapacity: "",
     tireCondition: "",
-    detailedInfo: "",
     features: [],
     photos: [],
     showcasePhoto: null,
@@ -446,9 +445,9 @@ const OtobusAdForm: React.FC = () => {
         alert(`${file.name} bir video dosyası değil`);
         return false;
       }
-      if (file.size > 100 * 1024 * 1024) {
-        // 100MB limit
-        alert(`${file.name} dosyası 100MB'dan büyük`);
+      if (file.size > 50 * 1024 * 1024) {
+        // 50MB limit
+        alert(`${file.name} dosyası 50MB'dan büyük`);
         return false;
       }
       return true;
@@ -700,10 +699,6 @@ const OtobusAdForm: React.FC = () => {
         submitData.append("tireCondition", formData.tireCondition);
       }
 
-      if (formData.detailedInfo && formData.detailedInfo.trim() !== "") {
-        submitData.append("detailedInfo", formData.detailedInfo);
-      }
-
       // Özellikler - JSON olarak gönder
       if (formData.features.length > 0) {
         // Features array'ini object'e çevir
@@ -741,9 +736,19 @@ const OtobusAdForm: React.FC = () => {
         submitData.append(`video_${index}`, video);
       });
 
-      const response = await apiClient.post("/ads/otobus", submitData, {
+      // Authentication token'ı al
+      const token = getTokenFromStorage();
+      if (!token) {
+        alert("Oturumunuz sona ermiş. Lütfen yeniden giriş yapın.");
+        navigate("/login");
+        return;
+      }
+
+      console.log("📤 Starting upload...");
+      const response = await videoUploadClient.post("/ads/otobus", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -1349,28 +1354,6 @@ const OtobusAdForm: React.FC = () => {
                         max: 100,
                       },
                     }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 3,
-                        "&:hover fieldset": {
-                          borderColor: "primary.main",
-                        },
-                      },
-                    }}
-                  />
-                </Box>
-
-                <Box>
-                  <TextField
-                    fullWidth
-                    label="Detaylı Bilgi"
-                    multiline
-                    rows={4}
-                    value={formData.detailedInfo}
-                    onChange={(e) =>
-                      handleInputChange("detailedInfo", e.target.value)
-                    }
-                    placeholder="Otobüs hakkında detaylı açıklama yazın..."
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,

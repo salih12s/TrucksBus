@@ -1,4 +1,5 @@
 import apiClient from "./client";
+import { getTokenFromStorage } from "../utils/tokenUtils";
 
 export interface Notification {
   id: string;
@@ -21,21 +22,54 @@ export interface NotificationResponse {
 export const notificationAPI = {
   // Kullanıcının bildirimlerini getir
   getNotifications: async (): Promise<NotificationResponse> => {
-    const response = await apiClient.get("/notifications");
+    const token = getTokenFromStorage();
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await apiClient.get("/notifications", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data as NotificationResponse;
   },
 
   // Bildirimi okundu olarak işaretle
   markAsRead: async (notificationId: string): Promise<{ success: boolean }> => {
+    const token = getTokenFromStorage();
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
     const response = await apiClient.put(
-      `/notifications/${notificationId}/read`
+      `/notifications/${notificationId}/read`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
     return response.data as { success: boolean };
   },
 
   // Tüm bildirimleri okundu olarak işaretle
   markAllAsRead: async (): Promise<{ success: boolean }> => {
-    const response = await apiClient.put("/notifications/mark-all-read");
+    const token = getTokenFromStorage();
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await apiClient.put(
+      "/notifications/mark-all-read",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     return response.data as { success: boolean };
   },
 
@@ -43,7 +77,19 @@ export const notificationAPI = {
   deleteNotification: async (
     notificationId: string
   ): Promise<{ success: boolean }> => {
-    const response = await apiClient.delete(`/notifications/${notificationId}`);
+    const token = getTokenFromStorage();
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await apiClient.delete(
+      `/notifications/${notificationId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     return response.data as { success: boolean };
   },
 };

@@ -10,8 +10,11 @@ const router = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit for videos
-    files: 20, // Max 20 files (15 photos + 3 videos + 1 showcase + 1 extra)
+    fileSize: 50 * 1024 * 1024, // 50MB limit for videos (optimize for better performance)
+    files: 18, // Reduced file limit: 15 photos + 3 videos
+    fieldSize: 5 * 1024 * 1024, // Reduced to 5MB for form fields
+    fieldNameSize: 100, // Field name size limit
+    fields: 50, // Max number of form fields
   },
 });
 

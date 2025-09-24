@@ -28,14 +28,14 @@ import {
   DirectionsBus,
   Settings,
   LocationOn,
-  Description,
   Close,
   ArrowBackIos,
   ArrowForwardIos,
 } from "@mui/icons-material";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Header from "../layout/Header";
-import apiClient from "@/api/client";
+import apiClient, { videoUploadClient } from "@/api/client";
+import { getTokenFromStorage } from "@/utils/tokenUtils";
 
 interface Category {
   id: number;
@@ -101,7 +101,6 @@ interface FormData {
   cityId: string;
   districtId: string;
   address: string;
-  detailedInfo: string;
   photos: File[];
   showcasePhoto: File | null;
   videos: File[];
@@ -245,7 +244,6 @@ const CreateMinibusAdForm: React.FC = () => {
     cityId: "",
     districtId: "",
     address: "",
-    detailedInfo: "",
     photos: [],
     showcasePhoto: null,
     videos: [],
@@ -361,9 +359,14 @@ const CreateMinibusAdForm: React.FC = () => {
         return;
       }
 
-      const response = await apiClient.get(
-        `/categories/minibus-midibus/brands/${brand.slug}/models/${model.slug}/variants`
-      );
+      console.log("🔍 Variant URL oluşturuluyor:");
+      console.log("  - brand.slug:", brand.slug);
+      console.log("  - model.slug:", model.slug);
+
+      const variantUrl = `/categories/minibus-midibus/brands/${brand.slug}/models/${model.slug}/variants`;
+      console.log("  - Full URL:", variantUrl);
+
+      const response = await apiClient.get(variantUrl);
       const variantsData = response.data as Variant[];
       setVariants(variantsData);
 
@@ -619,14 +622,14 @@ const CreateMinibusAdForm: React.FC = () => {
 
       // En fazla 3 video
       if (totalVideos <= 3) {
-        // Video dosya boyutu kontrolü (100MB limit)
+        // Video dosya boyutu kontrolü (50MB limit)
         const oversizedFiles = newVideos.filter(
-          (file) => file.size > 100 * 1024 * 1024
+          (file) => file.size > 50 * 1024 * 1024
         );
         if (oversizedFiles.length > 0) {
           console.error("Video dosyası çok büyük:", oversizedFiles);
           alert(
-            `⚠️ Video dosyası 100MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
+            `⚠️ Video dosyası 50MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
               .map((f) => f.name)
               .join(", ")}`
           );
@@ -801,11 +804,25 @@ const CreateMinibusAdForm: React.FC = () => {
         submitData.append(`video_${index}`, video);
       });
 
-      const response = await apiClient.post("/ads/minibus", submitData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      // Authentication token'ı al
+      const token = getTokenFromStorage();
+      if (!token) {
+        alert("Oturumunuz sona ermiş. Lütfen yeniden giriş yapın.");
+        navigate("/login");
+        return;
+      }
+
+      console.log("📤 Starting upload...");
+      const response = await videoUploadClient.post(
+        "/ads/minibus",
+        submitData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       console.log("İlan başarıyla oluşturuldu:", response.data);
       setSubmitSuccess(true);
@@ -2093,64 +2110,6 @@ const CreateMinibusAdForm: React.FC = () => {
                         "&:hover fieldset": { borderColor: "primary.main" },
                       },
                     }}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-
-            {/* 📝 Detaylı Bilgi */}
-            <Card
-              elevation={6}
-              sx={{
-                borderRadius: 3,
-                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-                border: "1px solid #e2e8f0",
-                transition: "all 0.3s ease-in-out",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-                },
-              }}
-            >
-              <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <Description sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    Detaylı Bilgi
-                  </Typography>
-                </Box>
-
-                {/* Detaylı Bilgi */}
-                <Box>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={6}
-                    label="Detaylı Bilgi"
-                    value={formData.detailedInfo}
-                    onChange={(e) =>
-                      handleInputChange("detailedInfo", e.target.value)
-                    }
-                    placeholder="Aracınız hakkında detaylı bilgi verebilirsiniz..."
                   />
                 </Box>
               </CardContent>

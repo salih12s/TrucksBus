@@ -34,8 +34,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "@mui/icons-material";
-import apiClient from "../../api/client";
+import apiClient, { videoUploadClient } from "../../api/client";
 import Header from "../layout/Header";
+import { getTokenFromStorage } from "../../utils/tokenUtils";
 
 // Type definitions
 interface Brand {
@@ -162,9 +163,6 @@ interface FormData {
   cityId: string;
   districtId: string;
 
-  // Detaylı bilgi
-  detailedInfo: string;
-
   // Fotoğraflar
   showcasePhoto: File | null;
   photos: File[];
@@ -290,9 +288,6 @@ const CekiciAdForm: React.FC = () => {
     // Konum
     cityId: "",
     districtId: "",
-
-    // Detaylı bilgi
-    detailedInfo: "",
 
     // Fotoğraflar
     showcasePhoto: null,
@@ -619,13 +614,13 @@ const CekiciAdForm: React.FC = () => {
 
       // En fazla 3 video
       if (totalVideos <= 3) {
-        // Video dosya boyutu kontrolü (100MB limit)
+        // Video dosya boyutu kontrolü (50MB limit)
         const oversizedFiles = newVideos.filter(
-          (file) => file.size > 100 * 1024 * 1024
+          (file) => file.size > 50 * 1024 * 1024
         );
         if (oversizedFiles.length > 0) {
           alert(
-            `⚠️ Video dosyası 100MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
+            `⚠️ Video dosyası 50MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
               .map((f) => f.name)
               .join(", ")}`
           );
@@ -783,9 +778,19 @@ const CekiciAdForm: React.FC = () => {
         submitData.append(`video_${index}`, video);
       });
 
-      const response = await apiClient.post("/ads/cekici", submitData, {
+      // Authentication token'ı al
+      const token = getTokenFromStorage();
+      if (!token) {
+        alert("Oturumunuz sona ermiş. Lütfen yeniden giriş yapın.");
+        navigate("/login");
+        return;
+      }
+
+      console.log("📤 Starting upload...");
+      const response = await videoUploadClient.post("/ads/cekici", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -2516,26 +2521,6 @@ const CekiciAdForm: React.FC = () => {
                   }}
                 />
               </Box>
-
-              {/* Detaylı Bilgi */}
-              <TextField
-                fullWidth
-                multiline
-                rows={6}
-                label="Detaylı Bilgi"
-                value={formData.detailedInfo}
-                onChange={(e) =>
-                  handleInputChange("detailedInfo", e.target.value)
-                }
-                placeholder="Aracınız hakkında detaylı bilgi verebilirsiniz..."
-                sx={{
-                  mt: 3,
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 3,
-                    "&:hover fieldset": { borderColor: "primary.main" },
-                  },
-                }}
-              />
             </CardContent>
           </Card>
 
