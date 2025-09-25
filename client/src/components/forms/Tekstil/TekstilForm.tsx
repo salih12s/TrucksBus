@@ -25,6 +25,10 @@ import {
   Autocomplete,
   CircularProgress,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   ArrowForward,
@@ -50,6 +54,12 @@ interface TekstilFormData {
   // Tekstil Özel Bilgiler
   takasli: string; // "Evet" veya "Hayır"
 
+  // Brand/Model/Variant
+  categoryId: string;
+  brandId: string;
+  modelId: string;
+  variantId: string;
+
   // Konum
   cityId: string;
   districtId: string;
@@ -58,6 +68,9 @@ interface TekstilFormData {
   warranty: boolean;
   negotiable: boolean;
   exchange: boolean;
+
+  // Video
+  videos: File[];
 }
 
 interface City {
@@ -72,6 +85,24 @@ interface District {
   cityId: number;
 }
 
+interface Brand {
+  id: number;
+  name: string;
+  categoryId?: number;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  brandId: number;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  modelId: number;
+}
+
 const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
 
 const TekstilForm: React.FC = () => {
@@ -84,12 +115,23 @@ const TekstilForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
   const [loadingCities, setLoadingCities] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [loadingVariants, setLoadingVariants] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [showcaseImageIndex, setShowcaseImageIndex] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdAdId, setCreatedAdId] = useState<string | null>(null);
+
+  // Video states
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
   const [formData, setFormData] = useState<TekstilFormData>({
     title: "",
@@ -97,11 +139,16 @@ const TekstilForm: React.FC = () => {
     price: "",
     year: new Date().getFullYear(),
     takasli: "Hayır",
+    categoryId: "",
+    brandId: "",
+    modelId: "",
+    variantId: variantId || "",
     cityId: "",
     districtId: "",
     warranty: false,
     negotiable: false,
     exchange: false,
+    videos: [],
   });
 
   // Kullanıcı bilgilerini yükle
@@ -152,6 +199,131 @@ const TekstilForm: React.FC = () => {
       setError("İlçeler yüklenirken hata oluştu");
     } finally {
       setLoadingDistricts(false);
+    }
+  };
+
+  // Auto-load brand/model/variant from URL parameter
+  useEffect(() => {
+    const loadVariantDetails = async () => {
+      if (variantId) {
+        try {
+          setLoadingVariants(true);
+
+          // Variant detayını çek
+          const variantResponse = await apiClient.get(`/variants/${variantId}`);
+          const variant = variantResponse.data as Variant;
+
+          if (variant) {
+            // Model detayını çek
+            setLoadingModels(true);
+            const modelResponse = await apiClient.get(
+              `/models/${variant.modelId}`
+            );
+            const model = modelResponse.data as Model;
+
+            if (model) {
+              // Brand detayını çek
+              setLoadingBrands(true);
+              const brandResponse = await apiClient.get(
+                `/brands/${model.brandId}`
+              );
+              const brand = brandResponse.data as Brand;
+
+              if (brand) {
+                // Tüm ilgili listeleri yükle
+                const brandsResponse = await apiClient.get(
+                  "/brands?category=Dorse"
+                );
+                setBrands(brandsResponse.data as Brand[]);
+
+                const modelsResponse = await apiClient.get(
+                  `/brands/${brand.id}/models`
+                );
+                setModels(modelsResponse.data as Model[]);
+
+                const variantsResponse = await apiClient.get(
+                  `/models/${model.id}/variants`
+                );
+                setVariants(variantsResponse.data as Variant[]);
+
+                // Form data'yı güncelle
+                setFormData((prev) => ({
+                  ...prev,
+                  categoryId: brand.categoryId?.toString() || "",
+                  brandId: brand.id.toString(),
+                  modelId: model.id.toString(),
+                  variantId: variant.id.toString(),
+                }));
+              }
+            }
+          }
+        } catch (err) {
+          console.error("Variant detayları yüklenirken hata:", err);
+          // Hata durumunda normal brand yükleme işlemini yap
+          loadDefaultBrands();
+        } finally {
+          setLoadingBrands(false);
+          setLoadingModels(false);
+          setLoadingVariants(false);
+        }
+      } else {
+        // variantId yoksa normal brand yükleme işlemini yap
+        loadDefaultBrands();
+      }
+    };
+
+    const loadDefaultBrands = async () => {
+      setLoadingBrands(true);
+      try {
+        const response = await apiClient.get("/brands?category=Dorse");
+        setBrands(response.data as Brand[]);
+      } catch (err) {
+        console.error("Markalar yüklenirken hata:", err);
+        setError("Markalar yüklenirken hata oluştu");
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+
+    loadVariantDetails();
+  }, [variantId]);
+
+  // Load models when brand changes
+  const handleBrandChange = async (brandId: string) => {
+    setFormData((prev) => ({ ...prev, brandId, modelId: "", variantId: "" }));
+    setModels([]);
+    setVariants([]);
+
+    if (brandId) {
+      setLoadingModels(true);
+      try {
+        const response = await apiClient.get(`/brands/${brandId}/models`);
+        setModels(response.data as Model[]);
+      } catch (err) {
+        console.error("Modeller yüklenirken hata:", err);
+        setError("Modeller yüklenirken hata oluştu");
+      } finally {
+        setLoadingModels(false);
+      }
+    }
+  };
+
+  // Load variants when model changes
+  const handleModelChange = async (modelId: string) => {
+    setFormData((prev) => ({ ...prev, modelId, variantId: "" }));
+    setVariants([]);
+
+    if (modelId) {
+      setLoadingVariants(true);
+      try {
+        const response = await apiClient.get(`/models/${modelId}/variants`);
+        setVariants(response.data as Variant[]);
+      } catch (err) {
+        console.error("Varyantlar yüklenirken hata:", err);
+        setError("Varyantlar yüklenirken hata oluştu");
+      } finally {
+        setLoadingVariants(false);
+      }
     }
   };
 
@@ -247,6 +419,58 @@ const TekstilForm: React.FC = () => {
     setActiveStep((prev) => prev - 1);
   };
 
+  // Video upload handler
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    const validVideos: File[] = [];
+    const maxSize = 50 * 1024 * 1024; // 50MB
+
+    Array.from(files).forEach((file) => {
+      if (file.size > maxSize) {
+        setError(`Video boyutu 50MB'dan küçük olmalıdır: ${file.name}`);
+        return;
+      }
+
+      if (!file.type.startsWith("video/")) {
+        setError(`Geçersiz dosya formatı: ${file.name}`);
+        return;
+      }
+
+      validVideos.push(file);
+    });
+
+    if (validVideos.length > 0) {
+      const newVideos = [...formData.videos, ...validVideos].slice(0, 3);
+      setFormData((prev) => ({ ...prev, videos: newVideos }));
+
+      // Create preview URLs
+      const newPreviews = validVideos.map((video) =>
+        URL.createObjectURL(video)
+      );
+      setVideoPreviews((prev) => [...prev, ...newPreviews].slice(0, 3));
+
+      setError(null);
+    }
+
+    // Reset input
+    event.target.value = "";
+  };
+
+  // Remove video
+  const removeVideo = (index: number) => {
+    const newVideos = formData.videos.filter((_, i) => i !== index);
+    setFormData((prev) => ({ ...prev, videos: newVideos }));
+
+    // Clean up preview URL
+    if (videoPreviews[index]) {
+      URL.revokeObjectURL(videoPreviews[index]);
+    }
+    const newPreviews = videoPreviews.filter((_, i) => i !== index);
+    setVideoPreviews(newPreviews);
+  };
+
   const handleSubmit = async () => {
     if (!validateStep(2)) return;
 
@@ -262,6 +486,12 @@ const TekstilForm: React.FC = () => {
       formDataToSend.append("category", "Dorse");
       formDataToSend.append("subcategory", "Tekstil");
       formDataToSend.append("variant_id", variantId || "");
+
+      // Brand/Model/Variant IDs
+      formDataToSend.append("categoryId", formData.categoryId || "1"); // Dorse category ID
+      formDataToSend.append("brandId", formData.brandId);
+      formDataToSend.append("modelId", formData.modelId);
+      formDataToSend.append("variantId", formData.variantId);
 
       // Teknik özellikler
       formDataToSend.append("takasli", formData.takasli);
@@ -293,6 +523,11 @@ const TekstilForm: React.FC = () => {
         if (index === showcaseImageIndex) {
           formDataToSend.append("showcase_image_index", index.toString());
         }
+      });
+
+      // Videolar
+      formData.videos.forEach((video, index) => {
+        formDataToSend.append(`video_${index}`, video);
       });
 
       const response = await apiClient.post("/listings", formDataToSend, {
@@ -360,6 +595,146 @@ const TekstilForm: React.FC = () => {
               <LocalLaundryService color="primary" />
               Tekstil Bilgileri
             </Typography>
+
+            {/* Brand/Model/Variant Selection */}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: 2,
+              }}
+            >
+              <Autocomplete
+                options={brands}
+                getOptionLabel={(option) => option.name}
+                value={
+                  brands.find((b) => b.id.toString() === formData.brandId) ||
+                  null
+                }
+                onChange={(_, newValue) => {
+                  if (!variantId) {
+                    // Sadece URL'den variant gelmiyorsa değiştirilebilir
+                    const brandId = newValue?.id.toString() || "";
+                    setFormData((prev) => ({
+                      ...prev,
+                      brandId,
+                      categoryId: newValue?.categoryId?.toString() || "",
+                    }));
+                    handleBrandChange(brandId);
+                  }
+                }}
+                disabled={!!variantId} // URL'den variant geliyorsa disable
+                loading={loadingBrands}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Marka"
+                    required
+                    helperText={
+                      variantId
+                        ? "Form önceden seçilmiş variant ile dolduruldu"
+                        : ""
+                    }
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingBrands ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                options={models}
+                getOptionLabel={(option) => option.name}
+                value={
+                  models.find((m) => m.id.toString() === formData.modelId) ||
+                  null
+                }
+                onChange={(_, newValue) => {
+                  if (!variantId) {
+                    // Sadece URL'den variant gelmiyorsa değiştirilebilir
+                    const modelId = newValue?.id.toString() || "";
+                    handleModelChange(modelId);
+                  }
+                }}
+                loading={loadingModels}
+                disabled={!!variantId || !formData.brandId} // URL'den variant geliyorsa veya brand seçilmemişse disable
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Model"
+                    required
+                    helperText={
+                      variantId
+                        ? "Form önceden seçilmiş variant ile dolduruldu"
+                        : ""
+                    }
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingModels ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                options={variants}
+                getOptionLabel={(option) => option.name}
+                value={
+                  variants.find(
+                    (v) => v.id.toString() === formData.variantId
+                  ) || null
+                }
+                onChange={(_, newValue) => {
+                  if (!variantId) {
+                    // Sadece URL'den variant gelmiyorsa değiştirilebilir
+                    handleInputChange(
+                      "variantId",
+                      newValue?.id.toString() || ""
+                    );
+                  }
+                }}
+                loading={loadingVariants}
+                disabled={!!variantId || !formData.modelId} // URL'den variant geliyorsa veya model seçilmemişse disable
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Varyant"
+                    required
+                    helperText={
+                      variantId
+                        ? "Form önceden seçilmiş variant ile dolduruldu"
+                        : ""
+                    }
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingVariants ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+            </Box>
 
             <TextField
               fullWidth
@@ -543,6 +918,95 @@ const TekstilForm: React.FC = () => {
                 </Box>
               </Box>
             )}
+
+            {/* Video Upload Section */}
+            <Box sx={{ mt: 4 }}>
+              <Typography
+                variant="h6"
+                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+              >
+                <CloudUpload color="primary" />
+                Tekstil Videoları (Opsiyonel)
+              </Typography>
+
+              <Box sx={{ mb: 2 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<CloudUpload />}
+                  disabled={formData.videos.length >= 3}
+                  fullWidth
+                  sx={{ mb: 1 }}
+                >
+                  Video Yükle (Maksimum 3 adet, 50MB)
+                  <input
+                    type="file"
+                    hidden
+                    multiple
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                  />
+                </Button>
+                <Typography variant="caption" color="textSecondary">
+                  Desteklenen formatlar: MP4, AVI, MOV, WMV. Maksimum dosya
+                  boyutu: 50MB
+                </Typography>
+              </Box>
+
+              {formData.videos.length > 0 && (
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                    Yüklenen Videolar ({formData.videos.length}/3)
+                  </Typography>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                  >
+                    {formData.videos.map((video, index) => (
+                      <Card key={index} sx={{ p: 2 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Box>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: "medium" }}
+                            >
+                              {video.name}
+                            </Typography>
+                            <Typography variant="caption" color="textSecondary">
+                              {(video.size / (1024 * 1024)).toFixed(1)} MB
+                            </Typography>
+                          </Box>
+                          <Box sx={{ display: "flex", gap: 1 }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => {
+                                setCurrentVideoIndex(index);
+                                setVideoModalOpen(true);
+                              }}
+                            >
+                              Önizle
+                            </Button>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => removeVideo(index)}
+                            >
+                              <Close />
+                            </IconButton>
+                          </Box>
+                        </Box>
+                      </Card>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+            </Box>
           </Box>
         );
 
@@ -789,6 +1253,28 @@ const TekstilForm: React.FC = () => {
           )}
         </Box>
       </Paper>
+
+      {/* Video Preview Modal */}
+      <Dialog
+        open={videoModalOpen}
+        onClose={() => setVideoModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Video Önizleme</DialogTitle>
+        <DialogContent>
+          {formData.videos[currentVideoIndex] && (
+            <video
+              controls
+              style={{ width: "100%", maxHeight: "400px" }}
+              src={URL.createObjectURL(formData.videos[currentVideoIndex])}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setVideoModalOpen(false)}>Kapat</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Success Modal */}
       <SuccessModal

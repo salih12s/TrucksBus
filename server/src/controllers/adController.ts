@@ -2149,6 +2149,11 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       drivetrain,
       gearType,
       gearCount,
+      // Brand/Model/Variant ID'leri
+      categoryId,
+      brandId,
+      modelId,
+      variantId,
     } = req.body;
 
     // Debug için form verilerini log'la
@@ -2164,6 +2169,14 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       fuelCapacity,
     });
 
+    // Debug ID'leri kontrol et
+    console.log("🔍 ID Validation - Otobüs:", {
+      categoryId,
+      brandId,
+      modelId,
+      variantId,
+    });
+
     // Özellikleri JSON olarak hazırla
     let featuresJson = null;
     if (features) {
@@ -2176,21 +2189,69 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       }
     }
 
-    // Otobüs kategorisini bul
-    const otobusCategory = await prisma.category.findFirst({
-      where: {
-        OR: [{ slug: "otobus" }, { name: { contains: "Otobüs" } }],
-      },
-    });
-
-    if (!otobusCategory) {
-      return res.status(400).json({ error: "Otobüs kategorisi bulunamadı" });
+    // CategoryId validasyonu - önce frontend'den gelen ID'yi kontrol et
+    let validCategoryId = null;
+    if (categoryId && categoryId !== "" && categoryId !== "undefined") {
+      const categoryExists = await prisma.category.findUnique({
+        where: { id: parseInt(categoryId) },
+      });
+      if (categoryExists) {
+        validCategoryId = parseInt(categoryId);
+        console.log("✅ Frontend categoryId geçerli:", validCategoryId);
+      } else {
+        console.log(
+          "❌ Frontend categoryId geçersiz, otomatik arayacağım:",
+          categoryId
+        );
+      }
     }
+
+    // Eğer geçerli categoryId yoksa, otomatik bul veya oluştur
+    if (!validCategoryId) {
+      console.log("🔍 Otobüs kategorisini arıyorum...");
+      let otobusCategory = await prisma.category.findFirst({
+        where: {
+          OR: [{ slug: "otobus" }, { name: { contains: "Otobüs" } }],
+        },
+      });
+
+      if (!otobusCategory) {
+        console.log("⚠️ Otobüs kategorisi bulunamadı, oluşturuyorum...");
+        otobusCategory = await prisma.category.create({
+          data: {
+            name: "Otobüs",
+            slug: "otobus",
+            isActive: true,
+            displayOrder: 0,
+          },
+        });
+        console.log("✅ Otobüs kategorisi oluşturuldu:", otobusCategory.id);
+      }
+
+      validCategoryId = otobusCategory.id;
+      console.log("✅ Kullanılacak categoryId:", validCategoryId);
+    }
+
+    // Brand/Model/Variant ID'lerini integer'a çevir ve validate et
+    const parsedBrandId = brandId && brandId !== "" ? parseInt(brandId) : null;
+    const parsedModelId = modelId && modelId !== "" ? parseInt(modelId) : null;
+    const parsedVariantId =
+      variantId && variantId !== "" ? parseInt(variantId) : null;
+
+    console.log("🔧 Parsed IDs:", {
+      categoryId: validCategoryId,
+      brandId: parsedBrandId,
+      modelId: parsedModelId,
+      variantId: parsedVariantId,
+    });
 
     const ad = await prisma.ad.create({
       data: {
         userId,
-        categoryId: otobusCategory.id,
+        categoryId: validCategoryId,
+        brandId: parsedBrandId,
+        modelId: parsedModelId,
+        variantId: parsedVariantId,
         title,
         description,
         year: year ? parseInt(year) : null,
@@ -2383,16 +2444,37 @@ export const createOtobusAd = async (req: Request, res: Response) => {
     console.log(`🎥 Saved videos count: ${createdAd?.videos?.length || 0}`);
 
     return res.status(201).json({
-      message: "Kamyon ilanı başarıyla oluşturuldu ve onay bekliyor",
+      message: "Otobüs ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad: createdAd,
     });
   } catch (error: any) {
-    console.error("Otobüs ilanı oluşturma hatası detayı:", {
+    console.error("🚌 Otobüs ilanı oluşturma hatası detayı:", {
       message: error.message,
       stack: error.stack,
       name: error.name,
+      code: error.code,
+      meta: error.meta,
       requestBody: req.body,
     });
+
+    // Prisma foreign key constraint hatalarını yakala
+    if (error.code === "P2003") {
+      console.error("❌ Foreign key constraint violation:", error.meta);
+      return res.status(400).json({
+        error: "Veritabanı bağımlılık hatası",
+        details: "Geçersiz kategori, marka, model veya varyant ID'si",
+      });
+    }
+
+    // Prisma unique constraint hatalarını yakala
+    if (error.code === "P2002") {
+      console.error("❌ Unique constraint violation:", error.meta);
+      return res.status(400).json({
+        error: "Benzersiz alan hatası",
+        details: "Bu değerle daha önce kayıt oluşturulmuş",
+      });
+    }
+
     return res.status(500).json({
       error: "İlan oluşturulurken hata oluştu",
       details: error.message,
@@ -2448,25 +2530,73 @@ export const createDorseAd = async (req: Request, res: Response) => {
       detailedInfo,
     } = req.body;
 
-    // Dorse kategorisini bul
-    const dorseCategory = await prisma.category.findFirst({
-      where: {
-        OR: [
-          { slug: "dorse" },
-          { slug: "damperli-dorse" },
-          { name: { contains: "Dorse" } },
-        ],
-      },
-    });
+    // Category validation and auto-creation
+    let categoryId = req.body.categoryId;
+    console.log("📋 Provided categoryId:", categoryId);
 
-    if (!dorseCategory) {
-      return res.status(400).json({ error: "Dorse kategorisi bulunamadı" });
+    if (categoryId) {
+      // Validate provided categoryId
+      const categoryExists = await prisma.category.findUnique({
+        where: { id: parseInt(categoryId) },
+      });
+
+      if (!categoryExists) {
+        console.log(
+          "⚠️ Provided categoryId not found, falling back to auto-detection"
+        );
+        categoryId = null;
+      } else {
+        console.log(
+          "✅ CategoryId validation successful:",
+          categoryExists.name
+        );
+      }
     }
+
+    if (!categoryId) {
+      // Auto-detect or create category
+      let dorseCategory = await prisma.category.findFirst({
+        where: {
+          OR: [
+            { slug: "dorse" },
+            { slug: "damperli-dorse" },
+            { name: { contains: "Dorse" } },
+          ],
+        },
+      });
+
+      if (!dorseCategory) {
+        console.log("📁 Dorse category not found, creating new category");
+        dorseCategory = await prisma.category.create({
+          data: {
+            name: "Dorse",
+            slug: "dorse",
+            description: "Dorse kategorisi otomatik oluşturuldu",
+            displayOrder: 999,
+          },
+        });
+        console.log("✅ New Dorse category created:", dorseCategory.id);
+      }
+
+      categoryId = dorseCategory.id;
+    }
+
+    console.log("🎯 Final categoryId for Dorse:", categoryId);
+
+    // Brand, Model, Variant ID validation
+    const brandId = req.body.brandId ? parseInt(req.body.brandId) : null;
+    const modelId = req.body.modelId ? parseInt(req.body.modelId) : null;
+    const variantId = req.body.variantId ? parseInt(req.body.variantId) : null;
+
+    console.log("🏷️ Brand/Model/Variant IDs:", { brandId, modelId, variantId });
 
     const ad = await prisma.ad.create({
       data: {
         userId,
-        categoryId: dorseCategory.id,
+        categoryId: parseInt(categoryId),
+        brandId,
+        modelId,
+        variantId,
         title,
         description,
         detailedInfo,
@@ -2582,6 +2712,35 @@ export const createDorseAd = async (req: Request, res: Response) => {
       }
     }
 
+    // Video processing (Base64)
+    const videoFiles = files
+      ? files.filter((f: any) => f.fieldname.startsWith("video_"))
+      : [];
+    if (videoFiles.length > 0) {
+      console.log(`🎥 Processing ${videoFiles.length} videos for Dorse ad`);
+
+      const videoPromises = videoFiles.map((videoFile: any, index: number) => {
+        const base64Video = `data:${
+          videoFile.mimetype
+        };base64,${videoFile.buffer.toString("base64")}`;
+
+        console.log(`🎥 Saving Dorse video ${index + 1} as base64`);
+
+        return prisma.adVideo.create({
+          data: {
+            adId: ad.id,
+            videoUrl: base64Video,
+            displayOrder: index,
+          },
+        });
+      });
+
+      await Promise.all(videoPromises);
+      console.log(
+        `✅ ${videoFiles.length} videos saved successfully for Dorse ad`
+      );
+    }
+
     return res.status(201).json({
       message: "Dorse ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad,
@@ -2593,6 +2752,25 @@ export const createDorseAd = async (req: Request, res: Response) => {
       name: error.name,
       requestBody: req.body,
     });
+
+    // Enhanced error handling for Prisma errors
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        error: "Duplicate entry detected",
+        details: error.message,
+      });
+    } else if (error.code === "P2003") {
+      return res.status(400).json({
+        error: "Foreign key constraint violation",
+        details: error.message,
+      });
+    } else if (error.code === "P2025") {
+      return res.status(404).json({
+        error: "Record not found",
+        details: error.message,
+      });
+    }
+
     return res.status(500).json({
       error: "İlan oluşturulurken hata oluştu",
       details: error.message,
