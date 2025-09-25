@@ -1282,6 +1282,12 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       cityId,
       districtId,
       detailedInfo,
+      // Category/Brand/Model/Variant IDs
+      categoryId,
+      brandId,
+      modelId,
+      variantId,
+      // Legacy slug support
       categorySlug,
       brandSlug,
       modelSlug,
@@ -1301,21 +1307,69 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       }
     }
 
-    // Çekici kategorisini bul
-    const cekiciCategory = await prisma.category.findFirst({
+    // Çekici kategorisini bul veya oluştur
+    let cekiciCategory = await prisma.category.findFirst({
       where: {
         OR: [{ slug: "cekici" }, { name: { contains: "Çekici" } }],
       },
     });
 
+    // Eğer kategori yoksa oluştur
     if (!cekiciCategory) {
-      return res.status(400).json({ error: "Çekici kategorisi bulunamadı" });
+      console.log("🏗️ Çekici kategorisi bulunamadı, oluşturuluyor...");
+      cekiciCategory = await prisma.category.create({
+        data: {
+          name: "Çekici",
+          slug: "cekici",
+          displayOrder: 2,
+          isActive: true,
+          description: "Çekici araçlar kategorisi",
+        },
+      });
+      console.log("✅ Çekici kategorisi oluşturuldu:", cekiciCategory.id);
     }
+
+    // CategoryId doğrulama - eğer geçersizse fallback kullan
+    let finalCategoryId = cekiciCategory.id;
+    if (categoryId) {
+      const parsedCategoryId = parseInt(categoryId);
+      if (!isNaN(parsedCategoryId)) {
+        // Gelen categoryId'nin database'de olup olmadığını kontrol et
+        const categoryExists = await prisma.category.findUnique({
+          where: { id: parsedCategoryId },
+        });
+        if (categoryExists) {
+          finalCategoryId = parsedCategoryId;
+          console.log("✅ Frontend categoryId kullanılıyor:", finalCategoryId);
+        } else {
+          console.log(
+            "⚠️ Geçersiz categoryId, fallback kullanılıyor:",
+            finalCategoryId
+          );
+        }
+      }
+    }
+
+    console.log("🔧 ID değerleri debug:", {
+      categoryId,
+      brandId,
+      modelId,
+      variantId,
+      finalCategoryId,
+      parsedBrandId: brandId ? parseInt(brandId) : null,
+      parsedModelId: modelId ? parseInt(modelId) : null,
+      parsedVariantId: variantId ? parseInt(variantId) : null,
+    });
 
     const ad = await prisma.ad.create({
       data: {
         userId,
-        categoryId: cekiciCategory.id,
+        // Doğrulanmış categoryId'yi kullan
+        categoryId: finalCategoryId,
+        // Brand, Model ve Variant ID'lerini kaydet
+        brandId: brandId ? parseInt(brandId) : null,
+        modelId: modelId ? parseInt(modelId) : null,
+        variantId: variantId ? parseInt(variantId) : null,
         title,
         description,
         year: year ? parseInt(year) : null,
@@ -1429,8 +1483,14 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       }
 
       // Video yükleme işlemleri (resimsiz olsa bile video olabilir)
+      console.log("🎬 Video dosyaları filtreleniyor...");
       const videoFiles = files.filter((f: any) =>
         f.fieldname.startsWith("video_")
+      );
+      console.log(`🎬 Bulunan video dosya sayısı: ${videoFiles.length}`);
+      console.log(
+        "🎬 Video dosya isimleri:",
+        videoFiles.map((f: any) => f.fieldname)
       );
 
       if (videoFiles && videoFiles.length > 0) {
@@ -1505,15 +1565,28 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       ad: createdAd,
     });
   } catch (error: any) {
-    console.error("Çekici ilanı oluşturma hatası detayı:", {
+    console.error("🚨 Çekici ilanı oluşturma hatası detayı:", {
       message: error.message,
       stack: error.stack,
       name: error.name,
-      requestBody: req.body,
+      code: error.code,
+      requestBody: Object.keys(req.body),
+      files: req.files ? (req.files as any[]).length : 0,
     });
+
+    // Prisma hatalarını özel olarak handle et
+    if (error.code && error.code.startsWith("P")) {
+      console.error("🔴 Prisma Database Error:", {
+        code: error.code,
+        meta: error.meta,
+        clientVersion: error.clientVersion,
+      });
+    }
+
     return res.status(500).json({
       error: "İlan oluşturulurken hata oluştu",
       details: error.message,
+      errorCode: error.code || "UNKNOWN_ERROR",
     });
   }
 };

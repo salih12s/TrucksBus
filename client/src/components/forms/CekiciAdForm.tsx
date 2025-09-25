@@ -665,6 +665,7 @@ const CekiciAdForm: React.FC = () => {
       ...prev,
       videos: prev.videos.filter((_, i) => i !== index),
     }));
+
     // Önizlemeyi de kaldır ve URL'yi temizle
     setVideoPreviews((prev) => {
       if (prev[index]) {
@@ -774,9 +775,17 @@ const CekiciAdForm: React.FC = () => {
       });
 
       // Videoları ekle
+      console.log("🎥 Video sayısı:", formData.videos.length);
       formData.videos.forEach((video, index) => {
+        console.log(
+          `🎥 Video ${index} ekleniyor:`,
+          video.name,
+          video.size,
+          "bytes"
+        );
         submitData.append(`video_${index}`, video);
       });
+      console.log("🎥 Tüm videolar FormData'ya eklendi");
 
       // Authentication token'ı al
       const token = getTokenFromStorage();

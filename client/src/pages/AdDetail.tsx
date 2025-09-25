@@ -138,11 +138,14 @@ const AdDetail: React.FC = () => {
           timeout: apiClient.defaults.timeout,
         });
 
-        // 🔥 NATIVE FETCH - Using Vite proxy
-        console.log("🚀 Using native fetch API with Vite proxy...");
-        console.log(`🔗 Fetching URL: /api/ads/${id}`);
+        // 🔥 PRODUCTION SAFE FETCH - Always use full API URL
+        const apiUrl = `${API_BASE_URL}/ads/${id}`;
 
-        const response = await fetch(`/api/ads/${id}`, {
+        console.log("🚀 Production safe fetch");
+        console.log(`🔗 Base URL: ${API_BASE_URL}`);
+        console.log(`🔗 Full URL: ${apiUrl}`);
+
+        const response = await fetch(apiUrl, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

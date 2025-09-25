@@ -159,7 +159,7 @@ const UzayabilirSasiForm: React.FC = () => {
   // API Functions
   const fetchCities = async () => {
     try {
-      const response = await apiClient.get("/api/location/cities");
+      const response = await apiClient.get("/location/cities");
       setCities(response.data as City[]);
     } catch (error) {
       console.error("Error fetching cities:", error);
@@ -168,7 +168,7 @@ const UzayabilirSasiForm: React.FC = () => {
 
   const fetchDistricts = async (cityId: number) => {
     try {
-      const response = await apiClient.get(`/api/location/districts/${cityId}`);
+      const response = await apiClient.get(`/location/districts/${cityId}`);
       setDistricts(response.data as District[]);
     } catch (error) {
       console.error("Error fetching districts:", error);
@@ -365,7 +365,7 @@ const UzayabilirSasiForm: React.FC = () => {
         submitData.append(`photos`, file);
       });
 
-      await apiClient.post("/api/ads/uzayabilir-sasi", submitData, {
+      await apiClient.post("/ads/uzayabilir-sasi", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
