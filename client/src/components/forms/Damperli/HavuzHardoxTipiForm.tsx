@@ -21,8 +21,18 @@ import {
   Chip,
   IconButton,
 } from "@mui/material";
-import { CheckCircle, PhotoCamera, Close } from "@mui/icons-material";
+import {
+  CheckCircle,
+  PhotoCamera,
+  Close,
+  Delete as DeleteIcon,
+  PlayArrow,
+  VideoLibrary as VideoLibraryIcon,
+  CloudUpload as CloudUploadIcon,
+} from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../store";
 import Header from "../../layout/Header";
 import apiClient from "../../../api/client";
 
@@ -38,30 +48,67 @@ interface District {
   cityId: number;
 }
 
-interface FormData {
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  slug: string;
+  brandId: number;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+  modelId: number;
+}
+
+interface HavuzHardoxFormData {
   title: string;
   description: string;
-  year: string;
+  year: number;
+  productionYear: number;
   price: string;
 
-  // Dorse Teknik Özellikler
+  // Brand/Model/Variant IDs
+  categoryId: string;
+  brandId: string;
+  modelId: string;
+  variantId: string;
+
+  // Havuz Hardox Dorse Teknik Özellikler
   genislik: string; // metre
   uzunluk: string; // metre
-  lastikDurumu: string; // yüzde
+  lastikDurumu: number; // yüzde
   devrilmeYonu: string;
 
   // Konum
   cityId: string;
   districtId: string;
+  city: string;
+  district: string;
 
   // Fotoğraflar
   photos: File[];
   showcasePhoto: File | null;
 
+  // Videolar
+  videos: File[];
+
+  // Seller bilgileri
+  sellerName: string;
+  sellerPhone: string;
+  sellerEmail: string;
+
   // Ekstra
-  warranty: string;
-  negotiable: string;
-  exchange: string;
+  warranty: boolean;
+  negotiable: boolean;
+  exchange: boolean;
 
   detailedInfo: string;
 }
@@ -72,6 +119,7 @@ const DEVRILME_YONLERI = ["Arkaya", "Sağa", "Sola"];
 const HavuzHardoxTipiForm: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -79,33 +127,64 @@ const HavuzHardoxTipiForm: React.FC = () => {
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
+  // Video states
+  const [videos, setVideos] = useState<File[]>([]);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [currentVideo, setCurrentVideo] = useState<File | null>(null);
+
+  // Brand/Model/Variant states
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+
   // Success modal states
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const [formData, setFormData] = useState<FormData>({
+  // Auto-load category ID - Dorse category ID (integer)
+  const [formData, setFormData] = useState<HavuzHardoxFormData>({
     title: "",
     description: "",
-    year: "",
+    year: new Date().getFullYear(),
+    productionYear: new Date().getFullYear(),
     price: "",
 
-    // Dorse Teknik Özellikler
+    // Brand/Model/Variant IDs
+    categoryId: "6", // Dorse category ID
+    brandId: "",
+    modelId: "",
+    variantId: "",
+
+    // Hafriyat Dorse Teknik Özellikler
     genislik: "",
     uzunluk: "",
-    lastikDurumu: "100",
+    lastikDurumu: 100,
     devrilmeYonu: "",
 
     // Konum
     cityId: "",
     districtId: "",
+    city: "",
+    district: "",
 
     // Fotoğraflar
     photos: [],
     showcasePhoto: null,
 
+    // Videolar
+    videos: [],
+
+    // Seller bilgileri (auto-filled from user)
+    sellerName: user?.email || "",
+    sellerPhone: user?.phone || "",
+    sellerEmail: user?.email || "",
+
     // Ekstra
-    warranty: "hayir",
-    negotiable: "hayir",
-    exchange: "hayir",
+    warranty: false,
+    negotiable: false,
+    exchange: false,
 
     detailedInfo: "",
   });
@@ -132,6 +211,17 @@ const HavuzHardoxTipiForm: React.FC = () => {
             `/ads/cities/${formData.cityId}/districts`
           );
           setDistricts(response.data as District[]);
+
+          // Update district name when districts load
+          const selectedDistrict = (response.data as District[]).find(
+            (d: District) => d.id.toString() === formData.districtId
+          );
+          if (selectedDistrict) {
+            setFormData((prev) => ({
+              ...prev,
+              district: selectedDistrict.name,
+            }));
+          }
         } catch (error) {
           console.error("İlçeler yüklenirken hata:", error);
         }
@@ -141,13 +231,189 @@ const HavuzHardoxTipiForm: React.FC = () => {
       setDistricts([]);
       setFormData((prev) => ({ ...prev, districtId: "" }));
     }
-  }, [formData.cityId]);
+  }, [formData.cityId, formData.districtId]);
 
-  const handleInputChange = (field: string, value: string | File[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  // Auto-load brands
+  useEffect(() => {
+    const loadBrands = async () => {
+      try {
+        setLoadingBrands(true);
+        const response = await apiClient.get("/brands?categoryId=6"); // Dorse category ID
+        setBrands((response.data as Brand[]) || []);
+      } catch (error) {
+        console.error("Error loading brands:", error);
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+
+    loadBrands();
+  }, []);
+
+  // Load brand by slug from URL params
+  useEffect(() => {
+    if (brandSlug && brands.length > 0) {
+      const selectedBrand = brands.find((b) => b.slug === brandSlug);
+      if (selectedBrand) {
+        setFormData((prev) => ({
+          ...prev,
+          brandId: selectedBrand.id.toString(),
+          modelId: "", // Reset model when brand changes
+          variantId: "", // Reset variant when brand changes
+        }));
+      }
+    }
+  }, [brandSlug, brands]);
+
+  // Load models when brand changes
+  useEffect(() => {
+    if (formData.brandId) {
+      const loadModels = async () => {
+        try {
+          setLoadingModels(true);
+          const response = await apiClient.get(
+            `/brands/${formData.brandId}/models`
+          );
+          setModels((response.data as Model[]) || []);
+        } catch (error) {
+          console.error("Error loading models:", error);
+        } finally {
+          setLoadingModels(false);
+        }
+      };
+
+      loadModels();
+    } else {
+      setModels([]);
+      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
+    }
+  }, [formData.brandId]);
+
+  // Load model by slug from URL params
+  useEffect(() => {
+    if (modelSlug && models.length > 0) {
+      const selectedModel = models.find((m) => m.slug === modelSlug);
+      if (selectedModel) {
+        setFormData((prev) => ({
+          ...prev,
+          modelId: selectedModel.id.toString(),
+          variantId: "", // Reset variant when model changes
+        }));
+      }
+    }
+  }, [modelSlug, models]);
+
+  // Load variants when model changes
+  useEffect(() => {
+    if (formData.modelId) {
+      const loadVariants = async () => {
+        try {
+          setLoadingVariants(true);
+          const response = await apiClient.get(
+            `/models/${formData.modelId}/variants`
+          );
+          setVariants((response.data as Variant[]) || []);
+        } catch (error) {
+          console.error("Error loading variants:", error);
+        } finally {
+          setLoadingVariants(false);
+        }
+      };
+
+      loadVariants();
+    } else {
+      setVariants([]);
+      setFormData((prev) => ({ ...prev, variantId: "" }));
+    }
+  }, [formData.modelId]);
+
+  // Load variant by slug from URL params
+  useEffect(() => {
+    if (variantSlug && variants.length > 0) {
+      const selectedVariant = variants.find((v) => v.slug === variantSlug);
+      if (selectedVariant) {
+        setFormData((prev) => ({
+          ...prev,
+          variantId: selectedVariant.id.toString(),
+        }));
+      }
+    }
+  }, [variantSlug, variants]);
+
+  const handleInputChange = (
+    field: keyof HavuzHardoxFormData,
+    value: string | number | File[] | File | null | boolean
+  ) => {
+    if (
+      field === "year" ||
+      field === "productionYear" ||
+      field === "lastikDurumu"
+    ) {
+      const numValue =
+        field === "year" ||
+        field === "productionYear" ||
+        field === "lastikDurumu"
+          ? parseInt(value as string) || 0
+          : value;
+      setFormData((prev) => ({
+        ...prev,
+        [field]: numValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
+  };
+
+  // Video upload handling
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const videoFiles = Array.from(files);
+
+      // Check file size (50MB limit per video)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      const oversizedFiles = videoFiles.filter((file) => file.size > maxSize);
+
+      if (oversizedFiles.length > 0) {
+        alert(
+          `Şu dosyalar çok büyük (max 50MB): ${oversizedFiles
+            .map((f) => f.name)
+            .join(", ")}`
+        );
+        return;
+      }
+
+      // Check total video count (max 3)
+      if (videos.length + videoFiles.length > 3) {
+        alert("En fazla 3 video yükleyebilirsiniz.");
+        return;
+      }
+
+      videoFiles.forEach((file) => {
+        setVideos((prev) => [...prev, file]);
+      });
+    }
+  };
+
+  const removeVideo = (index: number) => {
+    setVideos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const openVideoModal = (video: File) => {
+    setCurrentVideo(video);
+    setVideoModalOpen(true);
+  };
+
+  const closeVideoModal = () => {
+    setVideoModalOpen(false);
+  };
+
+  // Parse formatted number for submission
+  const parseFormattedNumber = (formatted: string) => {
+    return formatted.replace(/[^\d]/g, "");
   };
 
   const handlePhotoUpload = (
@@ -215,38 +481,93 @@ const HavuzHardoxTipiForm: React.FC = () => {
     return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
   };
 
-  const parseFormattedNumber = (value: string): string => {
-    // Formatlı sayıdan sadece rakamları döndür
-    return value.replace(/\D/g, "");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    console.log("🚀 HavuzHardoxTipiForm handleSubmit başladı");
+    console.log("📝 Form Data:", formData);
     setLoading(true);
-
     try {
       const submitData = new FormData();
 
-      // Temel bilgileri ekle (price'ı parse ederek)
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "photos" && key !== "showcasePhoto" && value) {
-          // Price değerini parse et
-          if (key === "price") {
-            const parsedValue = parseFormattedNumber(value.toString());
-            if (parsedValue) {
-              submitData.append(key, parsedValue);
-            }
-          } else {
-            submitData.append(key, value.toString());
-          }
-        }
-      });
+      // Temel bilgiler
+      submitData.append("title", formData.title);
+      submitData.append("description", formData.description);
+      submitData.append("productionYear", formData.year.toString());
 
-      // Kategori bilgilerini ekle
-      submitData.append("categorySlug", categorySlug || "");
-      submitData.append("brandSlug", brandSlug || "");
-      submitData.append("modelSlug", modelSlug || "");
-      submitData.append("variantSlug", variantSlug || "");
+      // Brand/Model/Variant bilgileri
+      if (formData.categoryId) {
+        submitData.append("categoryId", formData.categoryId);
+        console.log("✅ CategoryId added:", formData.categoryId);
+      }
+      if (formData.brandId) {
+        submitData.append("brandId", formData.brandId);
+        console.log("✅ BrandId added:", formData.brandId);
+      }
+      if (formData.modelId) {
+        submitData.append("modelId", formData.modelId);
+        console.log("✅ ModelId added:", formData.modelId);
+      }
+      if (formData.variantId) {
+        submitData.append("variantId", formData.variantId);
+        console.log("✅ VariantId added:", formData.variantId);
+      }
+
+      // Fiyatı parse ederek ekle
+      const parsedPrice = parseFormattedNumber(formData.price);
+      if (parsedPrice) {
+        submitData.append("price", parsedPrice);
+      }
+
+      submitData.append("category", "dorse");
+      submitData.append("subcategory", "damperli-havuz-hardox");
+
+      // Hafriyat dorse özel bilgileri
+      submitData.append("genislik", formData.genislik);
+      submitData.append("uzunluk", formData.uzunluk);
+      submitData.append("lastikDurumu", formData.lastikDurumu.toString());
+      submitData.append("devrilmeYonu", formData.devrilmeYonu);
+
+      // Konum
+      submitData.append("cityId", formData.cityId);
+      submitData.append("districtId", formData.districtId);
+      submitData.append("city", formData.city || "");
+      submitData.append("district", formData.district || "");
+
+      // Seller bilgileri
+      if (formData.sellerName)
+        submitData.append("seller_name", formData.sellerName);
+      if (formData.sellerPhone)
+        submitData.append("seller_phone", formData.sellerPhone);
+      if (formData.sellerEmail)
+        submitData.append("seller_email", formData.sellerEmail);
+
+      // Ekstra
+      submitData.append("warranty", formData.warranty ? "evet" : "hayir");
+      submitData.append("negotiable", formData.negotiable ? "evet" : "hayir");
+      submitData.append("exchange", formData.exchange ? "evet" : "hayir");
+
+      // Detaylı bilgiyi teknik özelliklerle birleştir
+      let detailedDescription = formData.detailedInfo;
+
+      // Hafriyat dorse teknik özellikler eklentisi
+      const technicalSpecs = [];
+      if (formData.genislik)
+        technicalSpecs.push(`Dorse Genişliği: ${formData.genislik}m`);
+      if (formData.uzunluk)
+        technicalSpecs.push(`Dorse Uzunluğu: ${formData.uzunluk}m`);
+      if (formData.lastikDurumu)
+        technicalSpecs.push(`Lastik Durumu: ${formData.lastikDurumu}%`);
+      if (formData.devrilmeYonu)
+        technicalSpecs.push(`Devrilme Yönü: ${formData.devrilmeYonu}`);
+
+      if (technicalSpecs.length > 0) {
+        const techSpecsText =
+          "\n\n--- Teknik Özellikler ---\n" + technicalSpecs.join("\n");
+        detailedDescription = detailedDescription
+          ? detailedDescription + techSpecsText
+          : techSpecsText;
+      }
+
+      submitData.append("detailedInfo", detailedDescription);
 
       // Fotoğrafları ekle
       if (formData.showcasePhoto) {
@@ -257,7 +578,24 @@ const HavuzHardoxTipiForm: React.FC = () => {
         submitData.append(`photo_${index}`, photo);
       });
 
-      const response = await apiClient.post("/ads/dorse", submitData, {
+      // Video dosyalarını ekle
+      if (formData.videos && formData.videos.length > 0) {
+        console.log(
+          `🎥 Adding ${formData.videos.length} videos to submit data`
+        );
+        formData.videos.forEach((video, index) => {
+          submitData.append(`video_${index}`, video);
+          console.log(`✅ Video ${index + 1} added:`, {
+            name: video.name,
+            size: video.size,
+            type: video.type,
+          });
+        });
+      } else {
+        console.log("ℹ️ No videos to add");
+      }
+
+      const response = await apiClient.post("/listings", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -267,18 +605,24 @@ const HavuzHardoxTipiForm: React.FC = () => {
         "Havuz Hardox Tipi Dorse ilanı başarıyla oluşturuldu:",
         response.data
       );
+
+      // Başarı modal'ını göster
       setShowSuccessModal(true);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("İlan oluşturulurken hata:", error);
-      alert("İlan oluşturulurken bir hata oluştu");
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      console.error("❌ İlan gönderme hatası:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Modal handler fonksiyonları
   const handleCloseSuccessModal = () => {
     setShowSuccessModal(false);
-    navigate("/");
   };
 
   return (
@@ -312,13 +656,81 @@ const HavuzHardoxTipiForm: React.FC = () => {
         </Box>
 
         <Paper elevation={3} sx={{ p: 4 }}>
-          <form onSubmit={handleSubmit}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
             {/* Temel Bilgiler */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
               📋 Temel Bilgiler
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
+              {/* Brand/Model/Variant Selection */}
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 2,
+                }}
+              >
+                <FormControl fullWidth required>
+                  <InputLabel>Marka</InputLabel>
+                  <Select
+                    value={formData.brandId}
+                    label="Marka"
+                    onChange={(e) =>
+                      handleInputChange("brandId", e.target.value)
+                    }
+                    disabled={loadingBrands || !!brandSlug}
+                  >
+                    {brands.map((brand) => (
+                      <MenuItem key={brand.id} value={brand.id.toString()}>
+                        {brand.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl fullWidth required disabled={!formData.brandId}>
+                  <InputLabel>Model</InputLabel>
+                  <Select
+                    value={formData.modelId}
+                    label="Model"
+                    onChange={(e) =>
+                      handleInputChange("modelId", e.target.value)
+                    }
+                    disabled={loadingModels || !!modelSlug}
+                  >
+                    {models.map((model) => (
+                      <MenuItem key={model.id} value={model.id.toString()}>
+                        {model.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl fullWidth disabled={!formData.modelId}>
+                  <InputLabel>Variant</InputLabel>
+                  <Select
+                    value={formData.variantId}
+                    label="Variant"
+                    onChange={(e) =>
+                      handleInputChange("variantId", e.target.value)
+                    }
+                    disabled={loadingVariants || !!variantSlug}
+                  >
+                    {variants.map((variant) => (
+                      <MenuItem key={variant.id} value={variant.id.toString()}>
+                        {variant.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+
               <TextField
                 fullWidth
                 label="İlan Başlığı *"
@@ -340,6 +752,90 @@ const HavuzHardoxTipiForm: React.FC = () => {
                 placeholder="Dorsenizin detaylı açıklamasını yazın..."
                 required
               />
+
+              {/* Video Upload Section */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  <VideoLibraryIcon sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Video Ekle
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ mb: 2, color: "text.secondary" }}
+                >
+                  Aracınızın videolarını ekleyerek potansiyel alıcıların daha
+                  iyi karar vermesine yardımcı olun. (Maksimum 3 video, her
+                  video için 50MB limit)
+                </Typography>
+
+                {videos.length < 3 && (
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<CloudUploadIcon />}
+                    sx={{ mb: 2 }}
+                  >
+                    Video Yükle
+                    <input
+                      type="file"
+                      hidden
+                      accept="video/*"
+                      onChange={handleVideoUpload}
+                    />
+                  </Button>
+                )}
+
+                {videos.length > 0 && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1,
+                      mt: 1,
+                    }}
+                  >
+                    {videos.map((video, index) => (
+                      <Card key={index}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Box sx={{ display: "flex", alignItems: "center" }}>
+                              <VideoLibraryIcon sx={{ mr: 1 }} />
+                              <Typography variant="body2" noWrap>
+                                Video {index + 1}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <IconButton
+                                size="small"
+                                onClick={() => openVideoModal(video)}
+                                sx={{ mr: 1 }}
+                              >
+                                <PlayArrow />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={() => removeVideo(index)}
+                                color="error"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Box>
+                          </Box>
+                          <Typography variant="caption" color="text.secondary">
+                            {(video.size / (1024 * 1024)).toFixed(2)} MB
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Box>
+                )}
+              </Box>
 
               <Box
                 sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
@@ -753,10 +1249,10 @@ const HavuzHardoxTipiForm: React.FC = () => {
                 type="button"
                 variant="outlined"
                 size="large"
-                onClick={() => navigate("/")}
+                onClick={() => navigate(-1)}
                 sx={{ px: 4 }}
               >
-                Anasayfaya Dön
+                Geri Dön
               </Button>
               <Button
                 type="submit"
@@ -787,8 +1283,8 @@ const HavuzHardoxTipiForm: React.FC = () => {
           </DialogTitle>
           <DialogContent>
             <Typography variant="body1" sx={{ textAlign: "center" }}>
-              Havuz Hardox Tipi Damperli Dorse ilanınız başarıyla oluşturuldu.
-              Admin onayından sonra yayınlanacaktır.
+              Havuz Hardox Tipi Damperli Dorse ilanınız başarıyla oluşturuldu. Admin
+              onayından sonra yayınlanacaktır.
             </Typography>
           </DialogContent>
           <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
@@ -802,6 +1298,28 @@ const HavuzHardoxTipiForm: React.FC = () => {
             >
               Tamam
             </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Video Preview Modal */}
+        <Dialog
+          open={videoModalOpen}
+          onClose={closeVideoModal}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Video Önizleme</DialogTitle>
+          <DialogContent>
+            {currentVideo && (
+              <video
+                controls
+                style={{ width: "100%", height: "auto" }}
+                src={URL.createObjectURL(currentVideo)}
+              />
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={closeVideoModal}>Kapat</Button>
           </DialogActions>
         </Dialog>
       </Container>
