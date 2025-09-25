@@ -467,7 +467,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
     console.log("🚛 createAd API called");
     console.log("📦 Request body:", req.body);
     console.log("📁 Request files:", req.files?.length || 0);
-    
+
     const userId = (req as any).user?.id || (req as any).userId;
     if (!userId) {
       res
@@ -547,9 +547,18 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
 
     // Handle new format (tenteli forms and Kuruyük forms)
     if (category && subcategory) {
-      console.log("🎯 Using NEW FORMAT branch - category:", category, "subcategory:", subcategory);
-      console.log("🏷️ Brand/Model/Variant IDs:", { brandId, modelId, variantId });
-      
+      console.log(
+        "🎯 Using NEW FORMAT branch - category:",
+        category,
+        "subcategory:",
+        subcategory
+      );
+      console.log("🏷️ Brand/Model/Variant IDs:", {
+        brandId,
+        modelId,
+        variantId,
+      });
+
       // Find category by name or slug
       const categoryRecord = await prisma.category.findFirst({
         where: {
@@ -570,7 +579,11 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       adData.categoryId = categoryRecord.id;
       adData.brandId = brandId ? parseInt(brandId) : null;
       adData.modelId = modelId ? parseInt(modelId) : null;
-      adData.variantId = variantId ? parseInt(variantId) : variant_id ? parseInt(variant_id) : null;
+      adData.variantId = variantId
+        ? parseInt(variantId)
+        : variant_id
+        ? parseInt(variant_id)
+        : null;
       adData.price = price ? parseFloat(price) : null;
       adData.year = year
         ? parseInt(year)
@@ -613,8 +626,12 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
     // Handle legacy format and direct Kuruyük submissions
     else {
       console.log("🎯 Using LEGACY FORMAT branch");
-      console.log("🏷️ Legacy Brand/Model/Variant IDs:", { brandId, modelId, variantId });
-      
+      console.log("🏷️ Legacy Brand/Model/Variant IDs:", {
+        brandId,
+        modelId,
+        variantId,
+      });
+
       adData.categoryId = categoryId ? parseInt(categoryId) : null;
       adData.brandId = brandId ? parseInt(brandId) : null;
       adData.modelId = modelId ? parseInt(modelId) : null;
@@ -662,7 +679,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
     }
 
     console.log("💾 Final adData before save:", adData);
-    
+
     const ad = await prisma.ad.create({
       data: adData,
       include: {
@@ -689,23 +706,23 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
     if (ad.brandId) {
       const brandVerify = await prisma.brand.findUnique({
         where: { id: ad.brandId },
-        select: { id: true, name: true, slug: true }
+        select: { id: true, name: true, slug: true },
       });
       console.log("🔍 Brand verification:", brandVerify);
     }
-    
+
     if (ad.modelId) {
       const modelVerify = await prisma.model.findUnique({
         where: { id: ad.modelId },
-        select: { id: true, name: true, slug: true, brandId: true }
+        select: { id: true, name: true, slug: true, brandId: true },
       });
       console.log("🔍 Model verification:", modelVerify);
     }
-    
+
     if (ad.variantId) {
       const variantVerify = await prisma.variant.findUnique({
         where: { id: ad.variantId },
-        select: { id: true, name: true, slug: true, modelId: true }
+        select: { id: true, name: true, slug: true, modelId: true },
       });
       console.log("🔍 Variant verification:", variantVerify);
     }
@@ -736,10 +753,12 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Handle videos if provided
-    const videoFiles = files ? files.filter(f => f.fieldname.startsWith("video_")) : [];
+    const videoFiles = files
+      ? files.filter((f) => f.fieldname.startsWith("video_"))
+      : [];
     console.log(`🎥 Total files received: ${files?.length || 0}`);
     console.log(`🎥 Video files found: ${videoFiles.length}`);
-    
+
     if (videoFiles.length > 0) {
       console.log(`🎥 Processing ${videoFiles.length} videos for ad ${ad.id}`);
       videoFiles.forEach((file, index) => {
@@ -747,20 +766,25 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
           fieldname: file.fieldname,
           originalname: file.originalname,
           mimetype: file.mimetype,
-          size: file.size
+          size: file.size,
         });
       });
-      
+
       const videoPromises = videoFiles.map((videoFile, index) => {
-        const base64Video = `data:${videoFile.mimetype};base64,${videoFile.buffer.toString("base64")}`;
-        
-        console.log(`💾 Saving video ${index + 1} to database for ad ${ad.id}`, {
-          fieldname: videoFile.fieldname,
-          mimetype: videoFile.mimetype,
-          size: videoFile.size,
-          base64Length: base64Video.length
-        });
-        
+        const base64Video = `data:${
+          videoFile.mimetype
+        };base64,${videoFile.buffer.toString("base64")}`;
+
+        console.log(
+          `💾 Saving video ${index + 1} to database for ad ${ad.id}`,
+          {
+            fieldname: videoFile.fieldname,
+            mimetype: videoFile.mimetype,
+            size: videoFile.size,
+            base64Length: base64Video.length,
+          }
+        );
+
         return prisma.adVideo.create({
           data: {
             adId: ad.id,
@@ -771,14 +795,18 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       });
 
       await Promise.all(videoPromises);
-      console.log(`✅ ${videoFiles.length} videos saved successfully to database for ad ${ad.id}`);
-      
+      console.log(
+        `✅ ${videoFiles.length} videos saved successfully to database for ad ${ad.id}`
+      );
+
       // Verify videos were saved
       const savedVideos = await prisma.adVideo.findMany({
         where: { adId: ad.id },
-        select: { id: true, displayOrder: true, adId: true }
+        select: { id: true, displayOrder: true, adId: true },
       });
-      console.log(`🔍 Verification: ${savedVideos.length} videos found in database for ad ${ad.id}`);
+      console.log(
+        `🔍 Verification: ${savedVideos.length} videos found in database for ad ${ad.id}`
+      );
     } else {
       console.log("ℹ️ No video files to process");
     }

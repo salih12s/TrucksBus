@@ -44,6 +44,11 @@ interface FormData {
   year: string;
   price: string;
 
+  // Brand/Model/Variant
+  brandId: string;
+  modelId: string;
+  variantId: string;
+
   // Dorse Teknik Özellikler
   genislik: string; // metre
   uzunluk: string; // metre
@@ -85,6 +90,11 @@ const KayaTipiForm: React.FC = () => {
     description: "",
     year: "",
     price: "",
+
+    // Brand/Model/Variant
+    brandId: "",
+    modelId: "",
+    variantId: "",
 
     // Dorse Teknik Özellikler
     genislik: "",

@@ -143,7 +143,7 @@ const PilotForm: React.FC = () => {
     modelSlug: string;
     variantSlug: string;
   }>();
-  // Get user from Redux store  
+  // Get user from Redux store
   const user = useSelector((state: RootState) => state.auth?.user) || null;
 
   const [activeStep, setActiveStep] = useState(0);
@@ -162,7 +162,7 @@ const PilotForm: React.FC = () => {
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  
+
   // Brand/Model/Variant states
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
@@ -203,8 +203,8 @@ const PilotForm: React.FC = () => {
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const videoFiles = Array.from(files).filter(
-        (file) => file.type.startsWith("video/")
+      const videoFiles = Array.from(files).filter((file) =>
+        file.type.startsWith("video/")
       );
 
       if (videoFiles.length > 0) {
@@ -223,10 +223,10 @@ const PilotForm: React.FC = () => {
           const reader = new FileReader();
           reader.onload = (e) => {
             const videoUrl = e.target?.result as string;
-            
+
             setFormData((prev) => ({
               ...prev,
-              videos: [...prev.videos, file]
+              videos: [...prev.videos, file],
             }));
 
             setVideoPreviews((prev) => [...prev, videoUrl]);
@@ -240,7 +240,7 @@ const PilotForm: React.FC = () => {
   const removeVideo = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      videos: prev.videos.filter((_, i) => i !== index)
+      videos: prev.videos.filter((_, i) => i !== index),
     }));
     setVideoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
@@ -252,16 +252,20 @@ const PilotForm: React.FC = () => {
 
   // Auto-load category ID - Dorse category ID (integer)
   useEffect(() => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      categoryId: "6" // Dorse category ID
+      categoryId: "6", // Dorse category ID
     }));
   }, []);
 
   // Auto-load brand/model/variant from URL slugs
   useEffect(() => {
     const loadFromSlugs = async () => {
-      console.log("🔄 PilotForm Loading from URL slugs:", { brandSlug, modelSlug, variantSlug });
+      console.log("🔄 PilotForm Loading from URL slugs:", {
+        brandSlug,
+        modelSlug,
+        variantSlug,
+      });
       try {
         if (brandSlug) {
           console.log(`🔍 Looking for brand: ${brandSlug}`);
@@ -269,43 +273,59 @@ const PilotForm: React.FC = () => {
           const response = await apiClient.get("/brands");
           const allBrands = response.data as Brand[];
           setBrands(allBrands);
-          
-          const selectedBrand = allBrands.find((b: Brand) => b.slug === brandSlug);
+
+          const selectedBrand = allBrands.find(
+            (b: Brand) => b.slug === brandSlug
+          );
           if (selectedBrand) {
-            console.log(`✅ Brand found: ${selectedBrand.name} (ID: ${selectedBrand.id})`);
-            setFormData(prev => ({
+            console.log(
+              `✅ Brand found: ${selectedBrand.name} (ID: ${selectedBrand.id})`
+            );
+            setFormData((prev) => ({
               ...prev,
-              brandId: selectedBrand.id.toString()
+              brandId: selectedBrand.id.toString(),
             }));
 
             if (modelSlug) {
               console.log(`🔍 Looking for model: ${modelSlug}`);
               setLoadingModels(true);
-              const modelResponse = await apiClient.get(`/brands/${selectedBrand.id}/models`);
+              const modelResponse = await apiClient.get(
+                `/brands/${selectedBrand.id}/models`
+              );
               const brandModels = modelResponse.data as Model[];
               setModels(brandModels);
 
-              const selectedModel = brandModels.find((m: Model) => m.slug === modelSlug);
+              const selectedModel = brandModels.find(
+                (m: Model) => m.slug === modelSlug
+              );
               if (selectedModel) {
-                console.log(`✅ Model found: ${selectedModel.name} (ID: ${selectedModel.id})`);
-                setFormData(prev => ({
+                console.log(
+                  `✅ Model found: ${selectedModel.name} (ID: ${selectedModel.id})`
+                );
+                setFormData((prev) => ({
                   ...prev,
-                  modelId: selectedModel.id.toString()
+                  modelId: selectedModel.id.toString(),
                 }));
 
                 if (variantSlug) {
                   console.log(`🔍 Looking for variant: ${variantSlug}`);
                   setLoadingVariants(true);
-                  const variantResponse = await apiClient.get(`/models/${selectedModel.id}/variants`);
+                  const variantResponse = await apiClient.get(
+                    `/models/${selectedModel.id}/variants`
+                  );
                   const modelVariants = variantResponse.data as Variant[];
                   setVariants(modelVariants);
 
-                  const selectedVariant = modelVariants.find((v: Variant) => v.slug === variantSlug);
+                  const selectedVariant = modelVariants.find(
+                    (v: Variant) => v.slug === variantSlug
+                  );
                   if (selectedVariant) {
-                    console.log(`✅ Variant found: ${selectedVariant.name} (ID: ${selectedVariant.id})`);
-                    setFormData(prev => ({
+                    console.log(
+                      `✅ Variant found: ${selectedVariant.name} (ID: ${selectedVariant.id})`
+                    );
+                    setFormData((prev) => ({
                       ...prev,
-                      variantId: selectedVariant.id.toString()
+                      variantId: selectedVariant.id.toString(),
                     }));
                   } else {
                     console.log(`❌ Variant not found: ${variantSlug}`);
@@ -348,7 +368,10 @@ const PilotForm: React.FC = () => {
         const response = await apiClient.get("/brands");
         const brandsData = response.data as Brand[];
         setBrands(brandsData);
-        console.log(`✅ ${brandsData.length} marka yüklendi:`, brandsData.map(b => b.name));
+        console.log(
+          `✅ ${brandsData.length} marka yüklendi:`,
+          brandsData.map((b) => b.name)
+        );
       } catch (error) {
         console.error("❌ Brands loading error:", error);
       } finally {
@@ -567,9 +590,12 @@ const PilotForm: React.FC = () => {
       submitData.append("district", formData.district || "");
 
       // İletişim bilgileri
-      if (formData.sellerName) submitData.append("seller_name", formData.sellerName);
-      if (formData.sellerPhone) submitData.append("seller_phone", formData.sellerPhone);
-      if (formData.sellerEmail) submitData.append("seller_email", formData.sellerEmail);
+      if (formData.sellerName)
+        submitData.append("seller_name", formData.sellerName);
+      if (formData.sellerPhone)
+        submitData.append("seller_phone", formData.sellerPhone);
+      if (formData.sellerEmail)
+        submitData.append("seller_email", formData.sellerEmail);
 
       // Ekstra özellikler
       submitData.append("warranty", formData.warranty ? "evet" : "hayir");
@@ -609,13 +635,15 @@ const PilotForm: React.FC = () => {
 
       // Video dosyalarını ekle
       if (formData.videos && formData.videos.length > 0) {
-        console.log(`🎥 Adding ${formData.videos.length} videos to submit data`);
+        console.log(
+          `🎥 Adding ${formData.videos.length} videos to submit data`
+        );
         formData.videos.forEach((video, index) => {
           submitData.append(`video_${index}`, video);
           console.log(`✅ Video ${index + 1} added:`, {
             name: video.name,
             size: video.size,
-            type: video.type
+            type: video.type,
           });
         });
       } else {
@@ -694,12 +722,19 @@ const PilotForm: React.FC = () => {
             </Typography>
 
             {/* Brand/Model/Variant Selection */}
-            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: 2,
+              }}
+            >
               <Autocomplete
                 options={brands}
                 getOptionLabel={(option) => option.name}
                 value={
-                  brands.find((b) => b.id.toString() === formData.brandId) || null
+                  brands.find((b) => b.id.toString() === formData.brandId) ||
+                  null
                 }
                 onChange={(_, newValue) => {
                   if (!variantSlug) {
@@ -716,14 +751,18 @@ const PilotForm: React.FC = () => {
                       setLoadingModels(true);
                       setModels([]);
                       setVariants([]);
-                      apiClient.get(`/brands/${brandId}/models`)
-                        .then(res => {
+                      apiClient
+                        .get(`/brands/${brandId}/models`)
+                        .then((res) => {
                           const modelData = res.data as Model[];
                           setModels(modelData);
                           setLoadingModels(false);
-                          console.log(`✅ ${modelData.length} model yüklendi:`, modelData.map(m => m.name));
+                          console.log(
+                            `✅ ${modelData.length} model yüklendi:`,
+                            modelData.map((m) => m.name)
+                          );
                         })
-                        .catch(err => {
+                        .catch((err) => {
                           console.error("❌ Model yükleme hatası:", err);
                           setLoadingModels(false);
                         });
@@ -779,14 +818,18 @@ const PilotForm: React.FC = () => {
                     if (modelId) {
                       setLoadingVariants(true);
                       setVariants([]);
-                      apiClient.get(`/models/${modelId}/variants`)
-                        .then(res => {
+                      apiClient
+                        .get(`/models/${modelId}/variants`)
+                        .then((res) => {
                           const variantData = res.data as Variant[];
                           setVariants(variantData);
                           setLoadingVariants(false);
-                          console.log(`✅ ${variantData.length} variant yüklendi:`, variantData.map(v => v.name));
+                          console.log(
+                            `✅ ${variantData.length} variant yüklendi:`,
+                            variantData.map((v) => v.name)
+                          );
                         })
-                        .catch(err => {
+                        .catch((err) => {
                           console.error("❌ Variant yükleme hatası:", err);
                           setLoadingVariants(false);
                         });
@@ -1113,7 +1156,8 @@ const PilotForm: React.FC = () => {
                     color="text.secondary"
                     sx={{ mb: 2 }}
                   >
-                    En fazla 5 video yükleyebilirsiniz. Video boyutu maksimum 50MB olmalıdır.
+                    En fazla 5 video yükleyebilirsiniz. Video boyutu maksimum
+                    50MB olmalıdır.
                   </Typography>
                   <input
                     type="file"
@@ -1145,7 +1189,8 @@ const PilotForm: React.FC = () => {
                 <Box
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(200px, 1fr))",
                     gap: 2,
                   }}
                 >

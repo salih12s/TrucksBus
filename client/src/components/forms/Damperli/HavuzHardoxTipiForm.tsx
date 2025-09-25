@@ -76,9 +76,11 @@ const HavuzHardoxTipiForm: React.FC = () => {
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+
+  // Success modal states
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -265,7 +267,7 @@ const HavuzHardoxTipiForm: React.FC = () => {
         "Havuz Hardox Tipi Dorse ilanı başarıyla oluşturuldu:",
         response.data
       );
-      setSubmitSuccess(true);
+      setShowSuccessModal(true);
     } catch (error) {
       console.error("İlan oluşturulurken hata:", error);
       alert("İlan oluşturulurken bir hata oluştu");
@@ -274,8 +276,8 @@ const HavuzHardoxTipiForm: React.FC = () => {
     }
   };
 
-  const handleSuccessClose = () => {
-    setSubmitSuccess(false);
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
     navigate("/");
   };
 
@@ -778,7 +780,7 @@ const HavuzHardoxTipiForm: React.FC = () => {
         </Paper>
 
         {/* Success Dialog */}
-        <Dialog open={submitSuccess} onClose={handleSuccessClose}>
+        <Dialog open={showSuccessModal} onClose={handleCloseSuccessModal}>
           <DialogTitle sx={{ textAlign: "center" }}>
             <CheckCircle sx={{ fontSize: 60, color: "green", mb: 2 }} />
             <Typography variant="h4">Başarılı!</Typography>
@@ -791,7 +793,7 @@ const HavuzHardoxTipiForm: React.FC = () => {
           </DialogContent>
           <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
             <Button
-              onClick={handleSuccessClose}
+              onClick={handleCloseSuccessModal}
               variant="contained"
               size="large"
               sx={{

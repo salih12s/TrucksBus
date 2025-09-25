@@ -106,8 +106,8 @@ const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
 
 const TekstilForm: React.FC = () => {
   const navigate = useNavigate();
-  const { variantSlug, modelSlug, brandSlug } = useParams<{ 
-    variantSlug?: string; 
+  const { variantSlug, modelSlug, brandSlug } = useParams<{
+    variantSlug?: string;
     modelSlug?: string;
     brandSlug?: string;
   }>();
@@ -213,7 +213,11 @@ const TekstilForm: React.FC = () => {
       console.log("🔍 TekstilForm modelSlug from URL:", modelSlug);
 
       if (variantSlug && brandSlug && modelSlug) {
-        console.log("✅ Loading variant details for slugs:", { brandSlug, modelSlug, variantSlug });
+        console.log("✅ Loading variant details for slugs:", {
+          brandSlug,
+          modelSlug,
+          variantSlug,
+        });
         try {
           setLoadingVariants(true);
 
