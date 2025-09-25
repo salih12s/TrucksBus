@@ -20,6 +20,10 @@ import {
   Autocomplete,
   CircularProgress,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   ArrowForward,
@@ -32,8 +36,10 @@ import {
   Umbrella,
   DateRange,
   Straighten,
+  VideoLibrary,
+  PlayArrow,
 } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import apiClient from "../../../api/client";
 import SuccessModal from "../../common/SuccessModal";
 
@@ -58,12 +64,38 @@ interface District {
   cityId: number;
 }
 
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  slug: string;
+  brandId: number;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+  modelId: number;
+}
+
 interface MidilliFormData {
   // Genel Bilgiler
   title: string;
   description: string;
   year: number;
   price: string;
+
+  // Brand/Model/Variant
+  categoryId: string;
+  brandId: string;
+  modelId: string;
+  variantId: string;
 
   // Teknik Özellikler
   uzunluk: number;
@@ -77,6 +109,9 @@ interface MidilliFormData {
   // Fotoğraflar
   photos: File[];
   showcasePhoto: File | null;
+
+  // Video
+  videos: File[];
 
   // Ekstra
   warranty: boolean;
@@ -97,6 +132,11 @@ const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
 
 const MidilliForm: React.FC = () => {
   const navigate = useNavigate();
+  const { brandSlug, modelSlug, variantSlug } = useParams<{
+    brandSlug: string;
+    modelSlug: string;
+    variantSlug: string;
+  }>();
 
   const [activeStep, setActiveStep] = useState(0);
   const [cities, setCities] = useState<City[]>([]);
@@ -109,11 +149,207 @@ const MidilliForm: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdAdId, setCreatedAdId] = useState<string | null>(null);
 
+  // Video states
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  
+  // Brand/Model/Variant states
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+
+  // Video handling functions
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const videoFiles = Array.from(files).filter(
+        (file) => file.type.startsWith("video/")
+      );
+
+      if (videoFiles.length > 0) {
+        const totalVideos = formData.videos.length + videoFiles.length;
+        if (totalVideos > 5) {
+          alert("En fazla 5 video yükleyebilirsiniz.");
+          return;
+        }
+
+        videoFiles.forEach((file) => {
+          if (file.size > 50 * 1024 * 1024) {
+            alert(`${file.name} dosyası 50MB'dan büyük olamaz.`);
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const videoUrl = e.target?.result as string;
+            
+            setFormData((prev) => ({
+              ...prev,
+              videos: [...prev.videos, file]
+            }));
+
+            setVideoPreviews((prev) => [...prev, videoUrl]);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+  };
+
+  const removeVideo = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index)
+    }));
+    setVideoPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const openVideoModal = (index: number) => {
+    setCurrentVideoIndex(index);
+    setVideoModalOpen(true);
+  };
+
+
+
+  // Auto-load category ID - Dorse category ID (integer)
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      categoryId: "6" // Dorse category ID
+    }));
+  }, []);
+
+  // Auto-load brand/model/variant from URL slugs
+  useEffect(() => {
+    const loadFromSlugs = async () => {
+      console.log("🔄 Loading from URL slugs:", { brandSlug, modelSlug, variantSlug });
+      try {
+        if (brandSlug) {
+          console.log(`🔍 Looking for brand: ${brandSlug}`);
+          setLoadingBrands(true);
+          const response = await apiClient.get("/brands");
+          const allBrands = response.data as Brand[];
+          setBrands(allBrands);
+          
+          const selectedBrand = allBrands.find((b: Brand) => b.slug === brandSlug);
+          if (selectedBrand) {
+            console.log(`✅ Brand found: ${selectedBrand.name} (ID: ${selectedBrand.id})`);
+            setFormData(prev => ({
+              ...prev,
+              brandId: selectedBrand.id.toString()
+            }));
+
+            if (modelSlug) {
+              console.log(`🔍 Looking for model: ${modelSlug}`);
+              setLoadingModels(true);
+              const modelResponse = await apiClient.get(`/brands/${selectedBrand.id}/models`);
+              const brandModels = modelResponse.data as Model[];
+              setModels(brandModels);
+
+              const selectedModel = brandModels.find((m: Model) => m.slug === modelSlug);
+              if (selectedModel) {
+                console.log(`✅ Model found: ${selectedModel.name} (ID: ${selectedModel.id})`);
+                setFormData(prev => ({
+                  ...prev,
+                  modelId: selectedModel.id.toString()
+                }));
+
+                if (variantSlug) {
+                  console.log(`🔍 Looking for variant: ${variantSlug}`);
+                  setLoadingVariants(true);
+                  const variantResponse = await apiClient.get(`/models/${selectedModel.id}/variants`);
+                  const modelVariants = variantResponse.data as Variant[];
+                  setVariants(modelVariants);
+
+                  const selectedVariant = modelVariants.find((v: Variant) => v.slug === variantSlug);
+                  if (selectedVariant) {
+                    console.log(`✅ Variant found: ${selectedVariant.name} (ID: ${selectedVariant.id})`);
+                    setFormData(prev => ({
+                      ...prev,
+                      variantId: selectedVariant.id.toString()
+                    }));
+                  } else {
+                    console.log(`❌ Variant not found: ${variantSlug}`);
+                  }
+                  setLoadingVariants(false);
+                } else {
+                  console.log("ℹ️ No variantSlug provided");
+                }
+              } else {
+                console.log(`❌ Model not found: ${modelSlug}`);
+              }
+              setLoadingModels(false);
+            } else {
+              console.log("ℹ️ No modelSlug provided");
+            }
+          } else {
+            console.log(`❌ Brand not found: ${brandSlug}`);
+          }
+          setLoadingBrands(false);
+        } else {
+          console.log("ℹ️ No brandSlug provided - normal form mode");
+        }
+      } catch (error) {
+        console.error("❌ Error loading brand/model/variant data:", error);
+        setLoadingBrands(false);
+        setLoadingModels(false);
+        setLoadingVariants(false);
+      }
+    };
+
+    loadFromSlugs();
+  }, [brandSlug, modelSlug, variantSlug]);
+
+  // Load brands on component mount
+  useEffect(() => {
+    const loadBrands = async () => {
+      console.log("🔄 Loading brands...");
+      setLoadingBrands(true);
+      try {
+        const response = await apiClient.get("/brands");
+        const brandsData = response.data as Brand[];
+        setBrands(brandsData);
+        console.log(`✅ ${brandsData.length} marka yüklendi:`, brandsData.map(b => b.name));
+      } catch (error) {
+        console.error("❌ Brands loading error:", error);
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+
+    loadBrands();
+  }, []);
+
+  // Load cities on component mount  
+  useEffect(() => {
+    const loadCities = async () => {
+      setLoadingCities(true);
+      try {
+        const response = await apiClient.get("/cities");
+        setCities(response.data as City[]);
+      } catch (error) {
+        console.error("Cities loading error:", error);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+
+    loadCities();
+  }, []);
+
   const [formData, setFormData] = useState<MidilliFormData>({
     title: "",
     description: "",
     year: 0,
     price: "",
+    categoryId: "",
+    brandId: "",
+    modelId: "",
+    variantId: variantSlug || "",
     uzunluk: 0,
     lastikDurumu: 100,
     catiPerdeSistemi: "",
@@ -121,6 +357,7 @@ const MidilliForm: React.FC = () => {
     districtId: "",
     photos: [],
     showcasePhoto: null,
+    videos: [],
     warranty: false,
     negotiable: false,
     exchange: false,
@@ -303,6 +540,8 @@ const MidilliForm: React.FC = () => {
 
   // Form gönderimi
   const handleSubmit = async () => {
+    console.log("🚀 MidilliForm handleSubmit başladı");
+    console.log("📝 Form Data:", formData);
     setLoading(true);
     try {
       const submitData = new FormData();
@@ -312,6 +551,24 @@ const MidilliForm: React.FC = () => {
       submitData.append("description", formData.description);
       submitData.append("productionYear", formData.year.toString());
 
+      // Brand/Model/Variant bilgileri
+      if (formData.categoryId) {
+        submitData.append("categoryId", formData.categoryId);
+        console.log("✅ CategoryId added:", formData.categoryId);
+      }
+      if (formData.brandId) {
+        submitData.append("brandId", formData.brandId);
+        console.log("✅ BrandId added:", formData.brandId);
+      }
+      if (formData.modelId) {
+        submitData.append("modelId", formData.modelId);
+        console.log("✅ ModelId added:", formData.modelId);
+      }
+      if (formData.variantId) {
+        submitData.append("variantId", formData.variantId);
+        console.log("✅ VariantId added:", formData.variantId);
+      }
+
       // Fiyatı parse ederek ekle
       const parsedPrice = parseFormattedNumber(formData.price);
       if (parsedPrice) {
@@ -319,7 +576,7 @@ const MidilliForm: React.FC = () => {
       }
 
       submitData.append("category", "dorse");
-      submitData.append("variant", "midilli");
+      submitData.append("subcategory", "tenteli-midilli");
 
       // Tenteli midilli özel bilgileri
       submitData.append("uzunluk", formData.uzunluk.toString());
@@ -329,6 +586,13 @@ const MidilliForm: React.FC = () => {
       // Konum
       submitData.append("cityId", formData.cityId);
       submitData.append("districtId", formData.districtId);
+      submitData.append("city", formData.city || "");
+      submitData.append("district", formData.district || "");
+
+      // Seller bilgileri
+      if (formData.sellerName) submitData.append("seller_name", formData.sellerName);
+      if (formData.sellerPhone) submitData.append("seller_phone", formData.sellerPhone);
+      if (formData.sellerEmail) submitData.append("seller_email", formData.sellerEmail);
 
       // Ekstra
       submitData.append("warranty", formData.warranty ? "evet" : "hayir");
@@ -365,6 +629,21 @@ const MidilliForm: React.FC = () => {
       formData.photos.forEach((photo, index) => {
         submitData.append(`photo_${index}`, photo);
       });
+
+      // Video dosyalarını ekle
+      if (formData.videos && formData.videos.length > 0) {
+        console.log(`🎥 Adding ${formData.videos.length} videos to submit data`);
+        formData.videos.forEach((video, index) => {
+          submitData.append(`video_${index}`, video);
+          console.log(`✅ Video ${index + 1} added:`, {
+            name: video.name,
+            size: video.size,
+            type: video.type
+          });
+        });
+      } else {
+        console.log("ℹ️ No videos to add");
+      }
 
       const response = await apiClient.post("/listings", submitData, {
         headers: {
@@ -432,6 +711,179 @@ const MidilliForm: React.FC = () => {
               <Umbrella color="primary" />
               Midilli Tenteli Bilgileri
             </Typography>
+
+            {/* Brand/Model/Variant Selection */}
+            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
+              <Autocomplete
+                options={brands}
+                getOptionLabel={(option) => option.name}
+                value={
+                  brands.find((b) => b.id.toString() === formData.brandId) || null
+                }
+                onChange={(_, newValue) => {
+                  if (!variantSlug) {
+                    // Sadece URL'den variant gelmiyorsa değiştirilebilir
+                    const brandId = newValue?.id.toString() || "";
+                    setFormData((prev) => ({
+                      ...prev,
+                      brandId,
+                      modelId: "",
+                      variantId: "",
+                    }));
+                    // Handle brand change - load models
+                    if (brandId) {
+                      setLoadingModels(true);
+                      setModels([]);
+                      setVariants([]);
+                      apiClient.get(`/brands/${brandId}/models`)
+                        .then(res => {
+                          const modelData = res.data as Model[];
+                          setModels(modelData);
+                          setLoadingModels(false);
+                          console.log(`✅ ${modelData.length} model yüklendi:`, modelData.map(m => m.name));
+                        })
+                        .catch(err => {
+                          console.error("❌ Model yükleme hatası:", err);
+                          setLoadingModels(false);
+                        });
+                    } else {
+                      setModels([]);
+                      setVariants([]);
+                    }
+                  }
+                }}
+                disabled={!!variantSlug} // URL'den variant geliyorsa disable
+                loading={loadingBrands}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Marka"
+                    required
+                    helperText={
+                      variantSlug
+                        ? "Form önceden seçilmiş variant ile dolduruldu"
+                        : ""
+                    }
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingBrands ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                options={models}
+                getOptionLabel={(option) => option.name}
+                value={
+                  models.find((m) => m.id.toString() === formData.modelId) ||
+                  null
+                }
+                onChange={(_, newValue) => {
+                  if (!variantSlug) {
+                    const modelId = newValue?.id.toString() || "";
+                    setFormData((prev) => ({
+                      ...prev,
+                      modelId,
+                      variantId: "",
+                    }));
+                    // Handle model change - load variants
+                    if (modelId) {
+                      setLoadingVariants(true);
+                      setVariants([]);
+                      apiClient.get(`/models/${modelId}/variants`)
+                        .then(res => {
+                          const variantData = res.data as Variant[];
+                          setVariants(variantData);
+                          setLoadingVariants(false);
+                          console.log(`✅ ${variantData.length} variant yüklendi:`, variantData.map(v => v.name));
+                        })
+                        .catch(err => {
+                          console.error("❌ Variant yükleme hatası:", err);
+                          setLoadingVariants(false);
+                        });
+                    } else {
+                      setVariants([]);
+                    }
+                  }
+                }}
+                loading={loadingModels}
+                disabled={!!variantSlug || !formData.brandId}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Model"
+                    required
+                    helperText={
+                      variantSlug
+                        ? "Form önceden seçilmiş variant ile dolduruldu"
+                        : ""
+                    }
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingModels ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                options={variants}
+                getOptionLabel={(option) => option.name}
+                value={
+                  variants.find(
+                    (v) => v.id.toString() === formData.variantId
+                  ) || null
+                }
+                onChange={(_, newValue) => {
+                  if (!variantSlug) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      variantId: newValue?.id.toString() || "",
+                    }));
+                  }
+                }}
+                loading={loadingVariants}
+                disabled={!!variantSlug || !formData.modelId}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Varyant"
+                    required
+                    helperText={
+                      variantSlug
+                        ? "Form önceden seçilmiş variant ile dolduruldu"
+                        : ""
+                    }
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingVariants ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+            </Box>
 
             <TextField
               fullWidth
@@ -660,6 +1112,104 @@ const MidilliForm: React.FC = () => {
                 </Box>
               </Box>
             )}
+
+            {/* Video Upload Section */}
+            <Card variant="outlined">
+              <CardContent>
+                <Box sx={{ textAlign: "center", py: 3 }}>
+                  <VideoLibrary
+                    sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                  />
+                  <Typography variant="h6" gutterBottom>
+                    Video Yükleyin (Opsiyonel)
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
+                    En fazla 5 video yükleyebilirsiniz. Video boyutu maksimum 50MB olmalıdır.
+                  </Typography>
+                  <input
+                    type="file"
+                    multiple
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    style={{ display: "none" }}
+                    id="video-upload"
+                  />
+                  <label htmlFor="video-upload">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      startIcon={<VideoLibrary />}
+                      disabled={formData.videos.length >= 5}
+                    >
+                      Video Seç
+                    </Button>
+                  </label>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {formData.videos.length > 0 && (
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                  Yüklenen Videolar ({formData.videos.length}/5)
+                </Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                    gap: 2,
+                  }}
+                >
+                  {videoPreviews.map((videoUrl, index) => (
+                    <Card key={index} sx={{ position: "relative" }}>
+                      <video
+                        src={videoUrl}
+                        style={{
+                          width: "100%",
+                          height: 120,
+                          objectFit: "cover",
+                        }}
+                        onClick={() => openVideoModal(index)}
+                      />
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          top: 4,
+                          right: 4,
+                          bgcolor: "rgba(255, 255, 255, 0.8)",
+                          "&:hover": { bgcolor: "rgba(255, 255, 255, 0.9)" },
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeVideo(index);
+                        }}
+                      >
+                        <Close fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          bottom: 4,
+                          right: 4,
+                          bgcolor: "rgba(0, 0, 0, 0.6)",
+                          color: "white",
+                          "&:hover": { bgcolor: "rgba(0, 0, 0, 0.8)" },
+                        }}
+                        onClick={() => openVideoModal(index)}
+                      >
+                        <PlayArrow fontSize="small" />
+                      </IconButton>
+                    </Card>
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Box>
         );
 
@@ -869,6 +1419,28 @@ const MidilliForm: React.FC = () => {
           )}
         </Box>
       </Paper>
+
+      {/* Video Preview Modal */}
+      <Dialog
+        open={videoModalOpen}
+        onClose={() => setVideoModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Video Önizleme</DialogTitle>
+        <DialogContent>
+          {videoPreviews[currentVideoIndex] && (
+            <video
+              src={videoPreviews[currentVideoIndex]}
+              controls
+              style={{ width: "100%", height: "auto" }}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setVideoModalOpen(false)}>Kapat</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Success Modal */}
       <SuccessModal

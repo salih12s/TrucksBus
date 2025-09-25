@@ -88,7 +88,6 @@ interface District {
 interface Brand {
   id: number;
   name: string;
-  categoryId?: number;
 }
 
 interface Model {
@@ -107,7 +106,11 @@ const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
 
 const TekstilForm: React.FC = () => {
   const navigate = useNavigate();
-  const { variantId } = useParams<{ variantId: string }>();
+  const { variantSlug, modelSlug, brandSlug } = useParams<{ 
+    variantSlug?: string; 
+    modelSlug?: string;
+    brandSlug?: string;
+  }>();
   const user = useSelector((state: RootState) => state.auth.user);
 
   const [activeStep, setActiveStep] = useState(0);
@@ -142,7 +145,7 @@ const TekstilForm: React.FC = () => {
     categoryId: "",
     brandId: "",
     modelId: "",
-    variantId: variantId || "",
+    variantId: "",
     cityId: "",
     districtId: "",
     warranty: false,
@@ -205,12 +208,19 @@ const TekstilForm: React.FC = () => {
   // Auto-load brand/model/variant from URL parameter
   useEffect(() => {
     const loadVariantDetails = async () => {
-      if (variantId) {
+      console.log("🔍 TekstilForm variantSlug from URL:", variantSlug);
+      console.log("🔍 TekstilForm brandSlug from URL:", brandSlug);
+      console.log("🔍 TekstilForm modelSlug from URL:", modelSlug);
+
+      if (variantSlug && brandSlug && modelSlug) {
+        console.log("✅ Loading variant details for slugs:", { brandSlug, modelSlug, variantSlug });
         try {
           setLoadingVariants(true);
 
-          // Variant detayını çek
-          const variantResponse = await apiClient.get(`/variants/${variantId}`);
+          // Slug-based API kullanarak variant detayını çek
+          const variantResponse = await apiClient.get(
+            `/categories/dorse/brands/${brandSlug}/models/${modelSlug}/variants/${variantSlug}`
+          );
           const variant = variantResponse.data as Variant;
 
           if (variant) {
@@ -225,7 +235,7 @@ const TekstilForm: React.FC = () => {
               // Brand detayını çek
               setLoadingBrands(true);
               const brandResponse = await apiClient.get(
-                `/brands/${model.brandId}`
+                `/brands/id/${model.brandId}`
               );
               const brand = brandResponse.data as Brand;
 
@@ -246,10 +256,10 @@ const TekstilForm: React.FC = () => {
                 );
                 setVariants(variantsResponse.data as Variant[]);
 
-                // Form data'yı güncelle
+                // Form data'yı güncelle - Dorse categoryId'si için sabit değer
                 setFormData((prev) => ({
                   ...prev,
-                  categoryId: brand.categoryId?.toString() || "",
+                  categoryId: "1", // Dorse category ID (database'den kontrol edilecek)
                   brandId: brand.id.toString(),
                   modelId: model.id.toString(),
                   variantId: variant.id.toString(),
@@ -258,7 +268,7 @@ const TekstilForm: React.FC = () => {
             }
           }
         } catch (err) {
-          console.error("Variant detayları yüklenirken hata:", err);
+          console.error("❌ Variant detayları yüklenirken hata:", err);
           // Hata durumunda normal brand yükleme işlemini yap
           loadDefaultBrands();
         } finally {
@@ -267,18 +277,22 @@ const TekstilForm: React.FC = () => {
           setLoadingVariants(false);
         }
       } else {
+        console.log("⚠️ No variantId provided, loading default brands");
         // variantId yoksa normal brand yükleme işlemini yap
         loadDefaultBrands();
       }
     };
 
     const loadDefaultBrands = async () => {
+      console.log("🏷️ Loading default brands for Dorse category");
       setLoadingBrands(true);
       try {
         const response = await apiClient.get("/brands?category=Dorse");
-        setBrands(response.data as Brand[]);
+        const brandsData = response.data as Brand[];
+        console.log("✅ Brands loaded:", brandsData.length, "brands");
+        setBrands(brandsData);
       } catch (err) {
-        console.error("Markalar yüklenirken hata:", err);
+        console.error("❌ Markalar yüklenirken hata:", err);
         setError("Markalar yüklenirken hata oluştu");
       } finally {
         setLoadingBrands(false);
@@ -286,7 +300,7 @@ const TekstilForm: React.FC = () => {
     };
 
     loadVariantDetails();
-  }, [variantId]);
+  }, [variantSlug, brandSlug, modelSlug]);
 
   // Load models when brand changes
   const handleBrandChange = async (brandId: string) => {
@@ -485,7 +499,7 @@ const TekstilForm: React.FC = () => {
       formDataToSend.append("year", formData.year.toString());
       formDataToSend.append("category", "Dorse");
       formDataToSend.append("subcategory", "Tekstil");
-      formDataToSend.append("variant_id", variantId || "");
+      formDataToSend.append("variant_slug", variantSlug || "");
 
       // Brand/Model/Variant IDs
       formDataToSend.append("categoryId", formData.categoryId || "1"); // Dorse category ID
@@ -612,18 +626,18 @@ const TekstilForm: React.FC = () => {
                   null
                 }
                 onChange={(_, newValue) => {
-                  if (!variantId) {
+                  if (!variantSlug) {
                     // Sadece URL'den variant gelmiyorsa değiştirilebilir
                     const brandId = newValue?.id.toString() || "";
                     setFormData((prev) => ({
                       ...prev,
                       brandId,
-                      categoryId: newValue?.categoryId?.toString() || "",
+                      categoryId: "1", // Dorse category ID
                     }));
                     handleBrandChange(brandId);
                   }
                 }}
-                disabled={!!variantId} // URL'den variant geliyorsa disable
+                disabled={!!variantSlug} // URL'den variant geliyorsa disable
                 loading={loadingBrands}
                 renderInput={(params) => (
                   <TextField
@@ -631,7 +645,7 @@ const TekstilForm: React.FC = () => {
                     label="Marka"
                     required
                     helperText={
-                      variantId
+                      variantSlug
                         ? "Form önceden seçilmiş variant ile dolduruldu"
                         : ""
                     }
@@ -658,21 +672,21 @@ const TekstilForm: React.FC = () => {
                   null
                 }
                 onChange={(_, newValue) => {
-                  if (!variantId) {
+                  if (!variantSlug) {
                     // Sadece URL'den variant gelmiyorsa değiştirilebilir
                     const modelId = newValue?.id.toString() || "";
                     handleModelChange(modelId);
                   }
                 }}
                 loading={loadingModels}
-                disabled={!!variantId || !formData.brandId} // URL'den variant geliyorsa veya brand seçilmemişse disable
+                disabled={!!variantSlug || !formData.brandId} // URL'den variant geliyorsa veya brand seçilmemişse disable
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Model"
                     required
                     helperText={
-                      variantId
+                      variantSlug
                         ? "Form önceden seçilmiş variant ile dolduruldu"
                         : ""
                     }
@@ -700,7 +714,7 @@ const TekstilForm: React.FC = () => {
                   ) || null
                 }
                 onChange={(_, newValue) => {
-                  if (!variantId) {
+                  if (!variantSlug) {
                     // Sadece URL'den variant gelmiyorsa değiştirilebilir
                     handleInputChange(
                       "variantId",
@@ -709,14 +723,14 @@ const TekstilForm: React.FC = () => {
                   }
                 }}
                 loading={loadingVariants}
-                disabled={!!variantId || !formData.modelId} // URL'den variant geliyorsa veya model seçilmemişse disable
+                disabled={!!variantSlug || !formData.modelId} // URL'den variant geliyorsa veya model seçilmemişse disable
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Varyant"
                     required
                     helperText={
-                      variantId
+                      variantSlug
                         ? "Form önceden seçilmiş variant ile dolduruldu"
                         : ""
                     }

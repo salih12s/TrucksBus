@@ -25,6 +25,10 @@ import {
   Autocomplete,
   CircularProgress,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   ArrowForward,
@@ -32,11 +36,15 @@ import {
   CloudUpload,
   Close,
   Person,
+  Phone,
+  Email,
   LocationOn,
   AttachMoney,
   LocalShipping,
   DateRange,
   Straighten,
+  VideoLibrary,
+  PlayArrow,
 } from "@mui/icons-material";
 import apiClient from "../../../api/client";
 import SuccessModal from "../../common/SuccessModal";
@@ -50,6 +58,26 @@ const CATI_PERDE_SISTEMLERI = [
   "Tavana Sabit Yana Kayar Perde",
 ];
 
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  slug: string;
+  brandId: number;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+  modelId: number;
+}
+
 interface YariMidilliFormData {
   // Genel Bilgiler
   title: string;
@@ -57,43 +85,67 @@ interface YariMidilliFormData {
   year: number;
   price: string;
 
+  // Brand/Model/Variant
+  categoryId: string;
+  brandId: string;
+  modelId: string;
+  variantId: string;
+
   // Teknik Özellikler
   uzunluk: number;
   lastikDurumu: number;
   catiPerdeSistemi: string;
 
   // Konum
-  city: string;
-  district: string;
+  cityId: string;
+  districtId: string;
 
-  // İletişim Bilgileri
-  sellerName: string;
-  sellerPhone: string;
-  sellerEmail: string;
+  // Fotoğraflar
+  photos: File[];
+  showcasePhoto: File | null;
+
+  // Video
+  videos: File[];
 
   // Ekstra
   warranty: boolean;
   negotiable: boolean;
   exchange: boolean;
+
+  detailedInfo: string;
+
+  // İletişim bilgileri
+  sellerName?: string;
+  sellerPhone?: string;
+  sellerEmail?: string;
+  city?: string;
+  district?: string;
 }
 
 interface City {
-  id: string;
+  id: number;
   name: string;
+  plateCode: string;
 }
 
 interface District {
-  id: string;
+  id: number;
   name: string;
-  city_id: string;
+  cityId: number;
 }
 
 const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
 
 const YariMidilliForm: React.FC = () => {
   const navigate = useNavigate();
-  const { variantId } = useParams<{ variantId: string }>();
-  const user = useSelector((state: RootState) => state.auth.user);
+  const { brandSlug, modelSlug, variantSlug } = useParams<{
+    brandSlug: string;
+    modelSlug: string;
+    variantSlug: string;
+  }>();
+  
+  // Get user from Redux store  
+  const user = useSelector((state: RootState) => state.auth?.user) || null;
 
   const [activeStep, setActiveStep] = useState(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -107,23 +159,206 @@ const YariMidilliForm: React.FC = () => {
   const [images, setImages] = useState<File[]>([]);
   const [showcaseImageIndex, setShowcaseImageIndex] = useState(0);
 
+  // Video states
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  
+  // Brand/Model/Variant states
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+
   const [formData, setFormData] = useState<YariMidilliFormData>({
     title: "",
     description: "",
     year: new Date().getFullYear(),
     price: "",
+    categoryId: "6", // Dorse category ID
+    brandId: "",
+    modelId: "",
+    variantId: variantSlug || "",
     uzunluk: 0,
     lastikDurumu: 100,
     catiPerdeSistemi: "",
-    city: "",
-    district: "",
-    sellerName: "",
-    sellerPhone: "",
-    sellerEmail: "",
+    cityId: "",
+    districtId: "",
+    photos: [],
+    showcasePhoto: null,
+    videos: [],
     warranty: false,
     negotiable: false,
     exchange: false,
+    detailedInfo: "",
+    sellerName: "",
+    sellerPhone: "",
+    sellerEmail: "",
+    city: "",
+    district: "",
   });
+
+  // Video upload handler
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const videoFiles = Array.from(files).filter(
+        (file) => file.type.startsWith("video/")
+      );
+
+      if (videoFiles.length > 0) {
+        const totalVideos = formData.videos.length + videoFiles.length;
+        if (totalVideos > 5) {
+          alert("En fazla 5 video yükleyebilirsiniz.");
+          return;
+        }
+
+        videoFiles.forEach((file) => {
+          if (file.size > 50 * 1024 * 1024) {
+            alert(`${file.name} dosyası 50MB'dan büyük olamaz.`);
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const videoUrl = e.target?.result as string;
+            
+            setFormData((prev) => ({
+              ...prev,
+              videos: [...prev.videos, file]
+            }));
+
+            setVideoPreviews((prev) => [...prev, videoUrl]);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+  };
+
+  const removeVideo = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index)
+    }));
+    setVideoPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const openVideoModal = (index: number) => {
+    setCurrentVideoIndex(index);
+    setVideoModalOpen(true);
+  };
+
+  // Auto-load category ID - Dorse category ID (integer)
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      categoryId: "6" // Dorse category ID
+    }));
+  }, []);
+
+  // Auto-load brand/model/variant from URL slugs
+  useEffect(() => {
+    const loadFromSlugs = async () => {
+      console.log("🔄 YariMidilliForm Loading from URL slugs:", { brandSlug, modelSlug, variantSlug });
+      try {
+        if (brandSlug) {
+          console.log(`🔍 Looking for brand: ${brandSlug}`);
+          setLoadingBrands(true);
+          const response = await apiClient.get("/brands");
+          const allBrands = response.data as Brand[];
+          setBrands(allBrands);
+          
+          const selectedBrand = allBrands.find((b: Brand) => b.slug === brandSlug);
+          if (selectedBrand) {
+            console.log(`✅ Brand found: ${selectedBrand.name} (ID: ${selectedBrand.id})`);
+            setFormData(prev => ({
+              ...prev,
+              brandId: selectedBrand.id.toString()
+            }));
+
+            if (modelSlug) {
+              console.log(`🔍 Looking for model: ${modelSlug}`);
+              setLoadingModels(true);
+              const modelResponse = await apiClient.get(`/brands/${selectedBrand.id}/models`);
+              const brandModels = modelResponse.data as Model[];
+              setModels(brandModels);
+
+              const selectedModel = brandModels.find((m: Model) => m.slug === modelSlug);
+              if (selectedModel) {
+                console.log(`✅ Model found: ${selectedModel.name} (ID: ${selectedModel.id})`);
+                setFormData(prev => ({
+                  ...prev,
+                  modelId: selectedModel.id.toString()
+                }));
+
+                if (variantSlug) {
+                  console.log(`🔍 Looking for variant: ${variantSlug}`);
+                  setLoadingVariants(true);
+                  const variantResponse = await apiClient.get(`/models/${selectedModel.id}/variants`);
+                  const modelVariants = variantResponse.data as Variant[];
+                  setVariants(modelVariants);
+
+                  const selectedVariant = modelVariants.find((v: Variant) => v.slug === variantSlug);
+                  if (selectedVariant) {
+                    console.log(`✅ Variant found: ${selectedVariant.name} (ID: ${selectedVariant.id})`);
+                    setFormData(prev => ({
+                      ...prev,
+                      variantId: selectedVariant.id.toString()
+                    }));
+                  } else {
+                    console.log(`❌ Variant not found: ${variantSlug}`);
+                  }
+                  setLoadingVariants(false);
+                } else {
+                  console.log("ℹ️ No variantSlug provided");
+                }
+              } else {
+                console.log(`❌ Model not found: ${modelSlug}`);
+              }
+              setLoadingModels(false);
+            } else {
+              console.log("ℹ️ No modelSlug provided");
+            }
+          } else {
+            console.log(`❌ Brand not found: ${brandSlug}`);
+          }
+          setLoadingBrands(false);
+        } else {
+          console.log("ℹ️ No brandSlug provided - normal form mode");
+        }
+      } catch (error) {
+        console.error("❌ Error loading brand/model/variant data:", error);
+        setLoadingBrands(false);
+        setLoadingModels(false);
+        setLoadingVariants(false);
+      }
+    };
+
+    loadFromSlugs();
+  }, [brandSlug, modelSlug, variantSlug]);
+
+  // Load brands on component mount
+  useEffect(() => {
+    const loadBrands = async () => {
+      console.log("🔄 YariMidilliForm Loading brands...");
+      setLoadingBrands(true);
+      try {
+        const response = await apiClient.get("/brands");
+        const brandsData = response.data as Brand[];
+        setBrands(brandsData);
+        console.log(`✅ ${brandsData.length} marka yüklendi:`, brandsData.map(b => b.name));
+      } catch (error) {
+        console.error("❌ Brands loading error:", error);
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+
+    loadBrands();
+  }, []);
 
   // Kullanıcı bilgilerini yükle
   useEffect(() => {
@@ -155,6 +390,21 @@ const YariMidilliForm: React.FC = () => {
     };
     loadCities();
   }, []);
+
+  const formatPhoneNumber = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (numbers.length <= 11) {
+      return numbers
+        .replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4")
+        .trim();
+    }
+    return value;
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const formattedPhone = formatPhoneNumber(value);
+    setFormData((prev) => ({ ...prev, sellerPhone: formattedPhone }));
+  };
 
   const handleCityChange = async (cityName: string) => {
     setFormData((prev) => ({ ...prev, city: cityName, district: "" }));
@@ -260,7 +510,7 @@ const YariMidilliForm: React.FC = () => {
         }
         break;
       case 2: // İletişim & Fiyat
-        if (!formData.sellerPhone.trim()) {
+        if (!formData.sellerPhone?.trim()) {
           setError("Telefon numarası gereklidir");
           return false;
         }
@@ -297,71 +547,128 @@ const YariMidilliForm: React.FC = () => {
 
     setLoading(true);
     try {
-      const formDataToSend = new FormData();
+      console.log("🚀 YariMidilliForm submission started", formData);
+      const submitData = new FormData();
 
-      // Yarı Midilli bilgileri
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("description", formData.description);
-      formDataToSend.append("price", formData.price);
-      formDataToSend.append("year", formData.year.toString());
-      formDataToSend.append("category", "Dorse");
-      formDataToSend.append("subcategory", "Tenteli");
-      formDataToSend.append("variant_id", variantId || "");
+      // Temel bilgiler
+      submitData.append("title", formData.title);
+      submitData.append("description", formData.description);
+      submitData.append("productionYear", formData.year.toString());
 
-      // Teknik özellikler
-      formDataToSend.append("uzunluk", formData.uzunluk.toString());
-      formDataToSend.append("lastikDurumu", formData.lastikDurumu.toString());
-      formDataToSend.append("catiPerdeSistemi", formData.catiPerdeSistemi);
-      formDataToSend.append("tenteliType", "Yarı Midilli");
+      // Brand/Model/Variant bilgileri
+      if (formData.categoryId) {
+        submitData.append("categoryId", formData.categoryId);
+        console.log("✅ CategoryId added:", formData.categoryId);
+      }
+      if (formData.brandId) {
+        submitData.append("brandId", formData.brandId);
+        console.log("✅ BrandId added:", formData.brandId);
+      }
+      if (formData.modelId) {
+        submitData.append("modelId", formData.modelId);
+        console.log("✅ ModelId added:", formData.modelId);
+      }
+      if (formData.variantId) {
+        submitData.append("variantId", formData.variantId);
+        console.log("✅ VariantId added:", formData.variantId);
+      }
 
-      // Konum bilgileri
-      formDataToSend.append("city", formData.city);
-      formDataToSend.append("district", formData.district);
+      submitData.append("price", formData.price);
+      submitData.append("category", "dorse");
+      submitData.append("subcategory", "tenteli-yari-midilli");
+
+      // Yari Midilli özel bilgileri
+      submitData.append("uzunluk", formData.uzunluk.toString());
+      submitData.append("lastikDurumu", formData.lastikDurumu.toString());
+      submitData.append("catiPerdeSistemi", formData.catiPerdeSistemi);
+
+      // Konum
+      submitData.append("cityId", formData.cityId || "");
+      submitData.append("districtId", formData.districtId || "");
+      submitData.append("city", formData.city || "");
+      submitData.append("district", formData.district || "");
 
       // İletişim bilgileri
-      formDataToSend.append("seller_name", formData.sellerName);
-      formDataToSend.append(
-        "seller_phone",
-        formData.sellerPhone.replace(/\s/g, "")
-      );
-      formDataToSend.append("seller_email", formData.sellerEmail);
+      if (formData.sellerName) submitData.append("seller_name", formData.sellerName);
+      if (formData.sellerPhone) submitData.append("seller_phone", formData.sellerPhone);
+      if (formData.sellerEmail) submitData.append("seller_email", formData.sellerEmail);
 
       // Ekstra özellikler
-      formDataToSend.append("warranty", formData.warranty ? "true" : "false");
-      formDataToSend.append(
-        "negotiable",
-        formData.negotiable ? "true" : "false"
-      );
-      formDataToSend.append("exchange", formData.exchange ? "true" : "false");
+      submitData.append("warranty", formData.warranty ? "evet" : "hayir");
+      submitData.append("negotiable", formData.negotiable ? "evet" : "hayir");
+      submitData.append("exchange", formData.exchange ? "evet" : "hayir");
+
+      // Detaylı bilgiyi teknik özelliklerle birleştir
+      let detailedDescription = formData.detailedInfo;
+
+      // Yari Midilli teknik özellikler eklentisi
+      const technicalSpecs = [];
+      if (formData.uzunluk)
+        technicalSpecs.push(`Uzunluk: ${formData.uzunluk}m`);
+      if (formData.lastikDurumu)
+        technicalSpecs.push(`Lastik Durumu: ${formData.lastikDurumu}%`);
+      if (formData.catiPerdeSistemi)
+        technicalSpecs.push(`Çatı Perde Sistemi: ${formData.catiPerdeSistemi}`);
+
+      if (technicalSpecs.length > 0) {
+        const techSpecsText =
+          "\n\n--- Teknik Özellikler ---\n" + technicalSpecs.join("\n");
+        detailedDescription = detailedDescription
+          ? detailedDescription + techSpecsText
+          : techSpecsText;
+      }
+
+      submitData.append("detailedInfo", detailedDescription);
 
       // Fotoğraflar
+      if (images[showcaseImageIndex]) {
+        submitData.append("showcasePhoto", images[showcaseImageIndex]);
+      }
+
       images.forEach((image, index) => {
-        formDataToSend.append("images", image);
-        if (index === showcaseImageIndex) {
-          formDataToSend.append("showcase_image_index", index.toString());
-        }
+        submitData.append(`photo_${index}`, image);
       });
 
-      const response = await apiClient.post("/listings", formDataToSend, {
+      // Video dosyalarını ekle
+      if (formData.videos && formData.videos.length > 0) {
+        console.log(`🎥 Adding ${formData.videos.length} videos to submit data`);
+        formData.videos.forEach((video, index) => {
+          submitData.append(`video_${index}`, video);
+          console.log(`✅ Video ${index + 1} added:`, {
+            name: video.name,
+            size: video.size,
+            type: video.type
+          });
+        });
+      } else {
+        console.log("ℹ️ No videos to add");
+      }
+
+      const response = await apiClient.post("/listings", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
+      console.log("📤 YariMidilliForm API Response:", response.data);
+
       const responseData = response.data as {
-        success: boolean;
+        success?: boolean;
+        adId?: string;
         message?: string;
-        listing?: { id: string };
       };
 
-      if (responseData.success) {
-        setCreatedAdId(responseData.listing?.id || null);
+      if (responseData?.success) {
+        console.log("✅ YariMidilliForm submission successful!");
+        if (responseData.adId) {
+          setCreatedAdId(responseData.adId);
+        }
         setShowSuccessModal(true);
       } else {
-        throw new Error(responseData.message || "İlan oluşturulamadı");
+        throw new Error(responseData?.message || "İlan oluşturulamadı");
       }
     } catch (err: unknown) {
-      console.error("Yarı Midilli ilanı oluşturma hatası:", err);
+      console.error("❌ YariMidilliForm submission error:", err);
       const error = err as {
         response?: { data?: { message?: string } };
         message?: string;
@@ -388,6 +695,179 @@ const YariMidilliForm: React.FC = () => {
               <LocalShipping color="primary" />
               Yarı Midilli Tenteli Bilgileri
             </Typography>
+
+            {/* Brand/Model/Variant Selection */}
+            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
+              <Autocomplete
+                options={brands}
+                getOptionLabel={(option) => option.name}
+                value={
+                  brands.find((b) => b.id.toString() === formData.brandId) || null
+                }
+                onChange={(_, newValue) => {
+                  if (!variantSlug) {
+                    // Sadece URL'den variant gelmiyorsa değiştirilebilir
+                    const brandId = newValue?.id.toString() || "";
+                    setFormData((prev) => ({
+                      ...prev,
+                      brandId,
+                      modelId: "",
+                      variantId: "",
+                    }));
+                    // Handle brand change - load models
+                    if (brandId) {
+                      setLoadingModels(true);
+                      setModels([]);
+                      setVariants([]);
+                      apiClient.get(`/brands/${brandId}/models`)
+                        .then(res => {
+                          const modelData = res.data as Model[];
+                          setModels(modelData);
+                          setLoadingModels(false);
+                          console.log(`✅ ${modelData.length} model yüklendi:`, modelData.map(m => m.name));
+                        })
+                        .catch(err => {
+                          console.error("❌ Model yükleme hatası:", err);
+                          setLoadingModels(false);
+                        });
+                    } else {
+                      setModels([]);
+                      setVariants([]);
+                    }
+                  }
+                }}
+                disabled={!!variantSlug} // URL'den variant geliyorsa disable
+                loading={loadingBrands}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Marka"
+                    required
+                    helperText={
+                      variantSlug
+                        ? "Form önceden seçilmiş variant ile dolduruldu"
+                        : ""
+                    }
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingBrands ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                options={models}
+                getOptionLabel={(option) => option.name}
+                value={
+                  models.find((m) => m.id.toString() === formData.modelId) ||
+                  null
+                }
+                onChange={(_, newValue) => {
+                  if (!variantSlug) {
+                    const modelId = newValue?.id.toString() || "";
+                    setFormData((prev) => ({
+                      ...prev,
+                      modelId,
+                      variantId: "",
+                    }));
+                    // Handle model change - load variants
+                    if (modelId) {
+                      setLoadingVariants(true);
+                      setVariants([]);
+                      apiClient.get(`/models/${modelId}/variants`)
+                        .then(res => {
+                          const variantData = res.data as Variant[];
+                          setVariants(variantData);
+                          setLoadingVariants(false);
+                          console.log(`✅ ${variantData.length} variant yüklendi:`, variantData.map(v => v.name));
+                        })
+                        .catch(err => {
+                          console.error("❌ Variant yükleme hatası:", err);
+                          setLoadingVariants(false);
+                        });
+                    } else {
+                      setVariants([]);
+                    }
+                  }
+                }}
+                loading={loadingModels}
+                disabled={!!variantSlug || !formData.brandId}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Model"
+                    required
+                    helperText={
+                      variantSlug
+                        ? "Form önceden seçilmiş variant ile dolduruldu"
+                        : ""
+                    }
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingModels ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+
+              <Autocomplete
+                options={variants}
+                getOptionLabel={(option) => option.name}
+                value={
+                  variants.find(
+                    (v) => v.id.toString() === formData.variantId
+                  ) || null
+                }
+                onChange={(_, newValue) => {
+                  if (!variantSlug) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      variantId: newValue?.id.toString() || "",
+                    }));
+                  }
+                }}
+                loading={loadingVariants}
+                disabled={!!variantSlug || !formData.modelId}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Varyant"
+                    required
+                    helperText={
+                      variantSlug
+                        ? "Form önceden seçilmiş variant ile dolduruldu"
+                        : ""
+                    }
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingVariants ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+            </Box>
 
             <TextField
               fullWidth
@@ -620,6 +1100,104 @@ const YariMidilliForm: React.FC = () => {
                 </Box>
               </Box>
             )}
+
+            {/* Video Upload Section */}
+            <Card variant="outlined">
+              <CardContent>
+                <Box sx={{ textAlign: "center", py: 3 }}>
+                  <VideoLibrary
+                    sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+                  />
+                  <Typography variant="h6" gutterBottom>
+                    Video Yükleyin (Opsiyonel)
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
+                    En fazla 5 video yükleyebilirsiniz. Video boyutu maksimum 50MB olmalıdır.
+                  </Typography>
+                  <input
+                    type="file"
+                    multiple
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    style={{ display: "none" }}
+                    id="video-upload"
+                  />
+                  <label htmlFor="video-upload">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      startIcon={<VideoLibrary />}
+                      disabled={formData.videos.length >= 5}
+                    >
+                      Video Seç
+                    </Button>
+                  </label>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {formData.videos.length > 0 && (
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                  Yüklenen Videolar ({formData.videos.length}/5)
+                </Typography>
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                    gap: 2,
+                  }}
+                >
+                  {videoPreviews.map((videoUrl, index) => (
+                    <Card key={index} sx={{ position: "relative" }}>
+                      <video
+                        src={videoUrl}
+                        style={{
+                          width: "100%",
+                          height: 120,
+                          objectFit: "cover",
+                        }}
+                        onClick={() => openVideoModal(index)}
+                      />
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          top: 4,
+                          right: 4,
+                          bgcolor: "rgba(255, 255, 255, 0.8)",
+                          "&:hover": { bgcolor: "rgba(255, 255, 255, 0.9)" },
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeVideo(index);
+                        }}
+                      >
+                        <Close fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        sx={{
+                          position: "absolute",
+                          bottom: 4,
+                          right: 4,
+                          bgcolor: "rgba(0, 0, 0, 0.6)",
+                          color: "white",
+                          "&:hover": { bgcolor: "rgba(0, 0, 0, 0.8)" },
+                        }}
+                        onClick={() => openVideoModal(index)}
+                      >
+                        <PlayArrow fontSize="small" />
+                      </IconButton>
+                    </Card>
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Box>
         );
 
@@ -633,6 +1211,59 @@ const YariMidilliForm: React.FC = () => {
               <Person color="primary" />
               İletişim & Fiyat Bilgileri
             </Typography>
+
+            <TextField
+              fullWidth
+              label="Ad Soyad"
+              value={formData.sellerName}
+              onChange={(e) => handleInputChange("sellerName", e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Person />
+                  </InputAdornment>
+                ),
+              }}
+              required
+            />
+
+            <Box
+              sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
+            >
+              <TextField
+                fullWidth
+                label="Telefon"
+                value={formData.sellerPhone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                placeholder="0xxx xxx xx xx"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Phone />
+                    </InputAdornment>
+                  ),
+                }}
+                required
+              />
+
+              <TextField
+                fullWidth
+                label="E-posta"
+                type="email"
+                value={formData.sellerEmail}
+                onChange={(e) =>
+                  handleInputChange("sellerEmail", e.target.value)
+                }
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Email />
+                    </InputAdornment>
+                  ),
+                }}
+                required
+              />
+            </Box>
 
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
@@ -865,11 +1496,33 @@ const YariMidilliForm: React.FC = () => {
         </Box>
       </Paper>
 
+      {/* Video Preview Modal */}
+      <Dialog
+        open={videoModalOpen}
+        onClose={() => setVideoModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Video Önizleme</DialogTitle>
+        <DialogContent>
+          {videoPreviews[currentVideoIndex] && (
+            <video
+              src={videoPreviews[currentVideoIndex]}
+              controls
+              style={{ width: "100%", height: "auto" }}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setVideoModalOpen(false)}>Kapat</Button>
+        </DialogActions>
+      </Dialog>
+
       <SuccessModal
         open={showSuccessModal}
         onClose={handleSuccessModalClose}
-        title="İlan Başarıyla Oluşturuldu!"
-        message="Yarı Midilli Tenteli dorse ilanınız başarıyla yayınlandı. İlanınız incelendikten sonra görünür hale gelecek."
+        title="🚛 İlan Başarıyla Yayınlandı!"
+        message="Yarı Midilli Tenteli dorse ilanınız başarıyla oluşturuldu ve yayına alındı."
         adId={createdAdId || undefined}
         onViewAd={createdAdId ? handleViewAd : undefined}
         onGoHome={handleGoHome}

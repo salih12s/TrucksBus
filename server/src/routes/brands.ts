@@ -67,6 +67,62 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get brand by ID
+router.get("/id/:brandId", async (req, res) => {
+  try {
+    const { brandId } = req.params;
+
+    const brand = await prisma.brand.findUnique({
+      where: { id: parseInt(brandId) },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logoUrl: true,
+        isActive: true,
+      },
+    });
+
+    if (!brand) {
+      return res.status(404).json({ error: "Brand not found" });
+    }
+
+    return res.json(brand);
+  } catch (error) {
+    console.error("Error fetching brand by ID:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get models by brand ID
+router.get("/:brandId/models", async (req, res) => {
+  try {
+    const { brandId } = req.params;
+
+    const models = await prisma.model.findMany({
+      where: {
+        brandId: parseInt(brandId),
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        brandId: true,
+        isActive: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return res.json(models);
+  } catch (error) {
+    console.error("Error fetching models by brand ID:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Get single brand by slug
 router.get("/:brandSlug", async (req, res) => {
   try {

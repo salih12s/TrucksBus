@@ -752,8 +752,17 @@ function App() {
                           }
                         />
 
+                        {/* Tekstil Form Routes - hem variantId ile hem de direct */}
                         <Route
-                          path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/tekstil/create-ad"
+                          path="/categories/dorse/brands/:brandSlug/models/:modelSlug/variants/:variantId/tekstil/create-ad"
+                          element={
+                            <ProtectedRoute>
+                              <TekstilForm />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/tekstil-form/:variantId?"
                           element={
                             <ProtectedRoute>
                               <TekstilForm />

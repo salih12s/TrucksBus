@@ -2,6 +2,8 @@ import { Router } from "express";
 import authRoutes from "./auth";
 import categoryRoutes from "./categories";
 import brandRoutes from "./brands";
+import modelRoutes from "./models";
+import variantRoutes from "./variants";
 import adRoutes from "./ads";
 import adminLogRoutes from "./adminLogs";
 import feedbackRoutes from "./feedback";
@@ -20,6 +22,8 @@ router.use("/debug", debugRoutes);
 router.use("/auth", authRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/brands", brandRoutes);
+router.use("/models", modelRoutes);
+router.use("/variants", variantRoutes);
 router.use("/ads", adRoutes);
 router.use("/listings", adRoutes); // Alias for ads
 router.use("/admin/logs", adminLogRoutes);
