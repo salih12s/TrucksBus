@@ -283,7 +283,7 @@ const KamyonAdForm: React.FC = () => {
 
   const [formData, setFormData] = useState<FormData>({
     // Category/Brand/Model/Variant IDs
-    categoryId: "2", // Kamyon & Kamyonet kategorisi
+    categoryId: "", // URL'den dinamik olarak yüklenecek
     brandId: "",
     modelId: "",
     variantId: "",
@@ -316,6 +316,33 @@ const KamyonAdForm: React.FC = () => {
     hasAccidentRecord: "",
     hasTramerRecord: "",
   });
+
+  // Kategoriyi yükle ve categoryId'yi set et
+  useEffect(() => {
+    const fetchCategory = async () => {
+      try {
+        const response = await apiClient.get(
+          `/categories/${selectedCategorySlug}`
+        );
+        const categoryData = response.data as {
+          id: number;
+          name: string;
+          slug: string;
+        };
+        setFormData((prev) => ({
+          ...prev,
+          categoryId: categoryData.id.toString(),
+        }));
+        console.log("Kategori yüklendi:", categoryData);
+      } catch (error) {
+        console.error("Kategori yüklenirken hata:", error);
+      }
+    };
+
+    if (selectedCategorySlug) {
+      fetchCategory();
+    }
+  }, [selectedCategorySlug]);
 
   // Şehirleri yükle
   useEffect(() => {
@@ -488,6 +515,13 @@ const KamyonAdForm: React.FC = () => {
         console.error("Brand bulunamadı:", brandId);
         return;
       }
+
+      console.log("🔍 Model API çağrısı:", {
+        categorySlug: "kamyon-kamyonet",
+        brandSlug: brand.slug,
+        brandId: brandId,
+        brand: brand,
+      });
 
       const response = await apiClient.get(
         `/categories/kamyon-kamyonet/brands/${brand.slug}/models`
@@ -729,6 +763,10 @@ const KamyonAdForm: React.FC = () => {
     setLoading(true);
 
     try {
+      console.log("🚀 KAMYONAdForm SUBMIT BAŞLADI!");
+      console.log("📋 Form Data:", formData);
+      console.log("🔑 Token:", getTokenFromStorage());
+
       // Kamyon form debug
       console.log(
         "Kamyon Form Data hasAccidentRecord:",
@@ -788,9 +826,16 @@ const KamyonAdForm: React.FC = () => {
       });
 
       // Videoları ekle
+      console.log("🎥 Video append işlemi başlıyor:", formData.videos.length);
       formData.videos.forEach((video, index) => {
+        console.log(
+          `🎥 Video ${index} append ediliyor:`,
+          video.name,
+          video.size
+        );
         submitData.append(`video_${index}`, video);
       });
+      console.log("🎥 Video append işlemi tamamlandı");
 
       // Authentication token'ı al
       const token = getTokenFromStorage();
@@ -821,6 +866,16 @@ const KamyonAdForm: React.FC = () => {
       }
 
       console.log("📤 Starting upload...");
+      console.log("🔗 API URL: /ads/kamyon");
+      console.log("📦 Submit Data keys:");
+      for (const [key, value] of submitData.entries()) {
+        console.log(
+          `  - ${key}:`,
+          typeof value === "object" ? "File object" : value
+        );
+      }
+      console.log("🎯 About to call API...");
+
       const response = await videoUploadClient.post("/ads/kamyon", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -2757,7 +2812,9 @@ const KamyonAdForm: React.FC = () => {
       <Dialog open={submitSuccess} onClose={handleSuccessClose}>
         <DialogTitle sx={{ textAlign: "center" }}>
           <CheckCircle color="success" sx={{ fontSize: 48, mb: 2 }} />
-          <Typography variant="h5">İlan Başarıyla Gönderildi!</Typography>
+          <Typography variant="h6" component="span">
+            İlan Başarıyla Gönderildi!
+          </Typography>
         </DialogTitle>
         <DialogContent>
           <Alert severity="info" sx={{ mb: 2 }}>

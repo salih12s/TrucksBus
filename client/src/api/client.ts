@@ -1,5 +1,5 @@
 import axios from "axios";
-// import { getTokenFromStorage } from "../utils/tokenUtils"; // ❌ DISABLED - No interceptors
+import { getTokenFromStorage } from "../utils/tokenUtils";
 
 // 🔧 Güvenilir API URL belirleme
 const getApiBaseUrl = () => {
@@ -34,74 +34,41 @@ const apiClient = axios.create({
   },
 });
 
-// ❌ INTERCEPTORS DISABLED FOR STABILITY
-// Interceptor'lar network sorunlarına neden oluyor
-// Token gerektiğinde manuel olarak eklenecek
-
-/*
+// ✅ REQUEST INTERCEPTOR - Add token to protected requests
 apiClient.interceptors.request.use(
   (config) => {
     try {
       const token = getTokenFromStorage();
-      if (token && config.headers && !config.url?.includes('/public/')) {
+      if (token && config.headers && !config.url?.includes("/public/")) {
         config.headers.Authorization = `Bearer ${token}`;
+        console.log("🔑 Token added to request:", config.url);
       }
     } catch (error) {
-      console.warn('Token interceptor error:', error);
+      console.warn("Token interceptor error:", error);
     }
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
+    console.error("Request interceptor error:", error);
     return Promise.reject(error);
   }
 );
-*/
 
-// ❌ RESPONSE INTERCEPTOR DISABLED FOR STABILITY
-// Token refresh sorunları network hatalarına sebep oluyor
-// Auth gerektiğinde manuel olarak handle edilecek
-
-/*
+// ✅ RESPONSE INTERCEPTOR - Handle 401 errors
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (refreshToken) {
-          const response = await axios.post<{ accessToken: string }>(
-            `${API_BASE_URL}/auth/refresh`,
-            {
-              refreshToken,
-            }
-          );
-
-          const { accessToken } = response.data;
-          localStorage.setItem("accessToken", accessToken);
-
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-          }
-          return apiClient(originalRequest);
-        }
-      } catch {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
-      }
+    if (error.response?.status === 401) {
+      console.warn("🚫 401 Unauthorized - Redirecting to login");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      window.location.href = "/login";
     }
-
     return Promise.reject(error);
   }
 );
-*/
 
-// ✅ Simple video upload client - NO INTERCEPTORS
+// ✅ Video upload client with token support
 export const videoUploadClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: false,
@@ -109,6 +76,37 @@ export const videoUploadClient = axios.create({
   // Content-Type header'ı FormData için otomatik set edilecek
 });
 
-// ❌ NO INTERCEPTORS FOR VIDEO CLIENT - Manual token handling
+// ✅ Add token to video upload requests
+videoUploadClient.interceptors.request.use(
+  (config) => {
+    try {
+      const token = getTokenFromStorage();
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log("🔑 Token added to video upload request:", config.url);
+      }
+    } catch (error) {
+      console.warn("Video upload token interceptor error:", error);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Handle video upload 401 errors
+videoUploadClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      console.warn(
+        "🚫 401 Unauthorized in video upload - Redirecting to login"
+      );
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default apiClient;

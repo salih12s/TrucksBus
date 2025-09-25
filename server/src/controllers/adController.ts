@@ -1426,52 +1426,53 @@ export const createCekiciAd = async (req: Request, res: Response) => {
         console.log(
           `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
         );
-        // Video yükleme işlemleri
-        const videoFiles = files.filter((f: any) =>
-          f.fieldname.startsWith("video_")
+      }
+
+      // Video yükleme işlemleri (resimsiz olsa bile video olabilir)
+      const videoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("video_")
+      );
+
+      if (videoFiles && videoFiles.length > 0) {
+        console.log(
+          "🎬 Videolar base64 formatında kaydediliyor:",
+          videoFiles.map((f: any) => f.fieldname)
         );
 
-        if (videoFiles && videoFiles.length > 0) {
+        const videoPromises: any[] = [];
+        let videoDisplayOrder = 1;
+
+        for (const file of videoFiles) {
+          // Base64 formatına çevir
+          const base64Video = `data:${
+            file.mimetype
+          };base64,${file.buffer.toString("base64")}`;
+
           console.log(
-            "🎬 Videolar base64 formatında kaydediliyor:",
-            videoFiles.map((f: any) => f.fieldname)
+            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
           );
 
-          const videoPromises: any[] = [];
-          let videoDisplayOrder = 1;
+          videoPromises.push(
+            prisma.adVideo.create({
+              data: {
+                adId: ad.id,
+                videoUrl: base64Video,
+                mimeType: file.mimetype,
+                fileSize: file.size,
+                displayOrder: videoDisplayOrder,
+                description: `${title} - Video ${videoDisplayOrder}`,
+              },
+            })
+          );
+          videoDisplayOrder++;
+        }
 
-          for (const file of videoFiles) {
-            // Base64 formatına çevir
-            const base64Video = `data:${
-              file.mimetype
-            };base64,${file.buffer.toString("base64")}`;
-
-            console.log(
-              `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
-            );
-
-            videoPromises.push(
-              prisma.adVideo.create({
-                data: {
-                  adId: ad.id,
-                  videoUrl: base64Video,
-                  mimeType: file.mimetype,
-                  fileSize: file.size,
-                  displayOrder: videoDisplayOrder,
-                  description: `${title} - Video ${videoDisplayOrder}`,
-                },
-              })
-            );
-            videoDisplayOrder++;
-          }
-
-          // Tüm videoları veritabanına kaydet
-          if (videoPromises.length > 0) {
-            await Promise.all(videoPromises);
-            console.log(
-              `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
-            );
-          }
+        // Tüm videoları veritabanına kaydet
+        if (videoPromises.length > 0) {
+          await Promise.all(videoPromises);
+          console.log(
+            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+          );
         }
       }
     }
@@ -1760,9 +1761,38 @@ export const rejectAd = async (req: Request, res: Response) => {
 // İlan oluştur (Kamyon)
 export const createKamyonAd = async (req: Request, res: Response) => {
   try {
+    console.log("===========================================");
+    console.log("🚛 KAMYON AD API CALLED - DEBUG");
+    console.log("===========================================");
     console.log("🚛 Kamyon İlanı API'ye istek geldi");
     console.log("📦 Request body:", req.body);
+    console.log("🆔 ID Değerleri:");
+    console.log("  - categoryId:", req.body.categoryId);
+    console.log("  - brandId:", req.body.brandId);
+    console.log("  - modelId:", req.body.modelId);
+    console.log("  - variantId:", req.body.variantId);
     console.log("📦 Content-Type:", req.headers["content-type"]);
+
+    // FILES DEBUG - ÖNCE BURAYA BAK
+    let files = req.files as any;
+    console.log("🔍 FILES CONTROL:");
+    console.log("  - Files var mı?", !!files);
+    console.log("  - Files type:", typeof files);
+    console.log(
+      "  - Files length:",
+      files ? files.length : "files null/undefined"
+    );
+    console.log("  - Files content:", files);
+    if (files && files.length > 0) {
+      console.log(
+        "  - File names:",
+        files.map((f: any) => f.fieldname)
+      );
+      console.log(
+        "  - Video files:",
+        files.filter((f: any) => f.fieldname.startsWith("video_"))
+      );
+    }
 
     const userId = (req as any).user?.id;
 
@@ -1799,6 +1829,11 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       brandSlug,
       modelSlug,
       variantSlug,
+      // ID'ler - Frontend'den gelen asıl ID değerleri
+      categoryId,
+      brandId,
+      modelId,
+      variantId,
       features,
     } = req.body;
 
@@ -1840,7 +1875,12 @@ export const createKamyonAd = async (req: Request, res: Response) => {
     const ad = await prisma.ad.create({
       data: {
         userId,
-        categoryId: kamyonCategory.id,
+        // Frontend'den gelen categoryId'yi kullan, yoksa fallback olarak kamyonCategory.id
+        categoryId: categoryId ? parseInt(categoryId) : kamyonCategory.id,
+        // Brand, Model ve Variant ID'lerini kaydet
+        brandId: brandId ? parseInt(brandId) : null,
+        modelId: modelId ? parseInt(modelId) : null,
+        variantId: variantId ? parseInt(variantId) : null,
         title,
         description,
         year: year ? parseInt(year) : null,
@@ -1883,7 +1923,6 @@ export const createKamyonAd = async (req: Request, res: Response) => {
     console.log("✅ Kamyon ilanı oluşturuldu, ID:", ad.id);
 
     // Resim yükleme işlemleri
-    const files = req.files as any;
     console.log("📂 Yüklenen dosyalar:", files);
 
     if (files && files.length > 0) {
@@ -2194,43 +2233,51 @@ export const createOtobusAd = async (req: Request, res: Response) => {
         );
       }
 
-      // Video işleme
+      // Video yükleme işlemi (Base64 formatında) - MinibüsAd'daki gibi files blok içinde
       const videoFiles = files.filter((f: any) =>
         f.fieldname.startsWith("video_")
       );
-      const videoPromises: any[] = [];
-
-      for (let i = 0; i < videoFiles.length; i++) {
-        const videoFile = videoFiles[i];
-
-        // Base64 formatına çevir
-        const base64Video = `data:${
-          videoFile.mimetype
-        };base64,${videoFile.buffer.toString("base64")}`;
-
-        console.log(`🎬 Video ${i + 1} base64 formatında kaydediliyor`);
-
-        videoPromises.push(
-          prisma.adVideo.create({
-            data: {
-              adId: ad.id,
-              videoUrl: base64Video,
-              description: `Otobüs ilanı videosu ${i + 1}`,
-              duration: null, // Frontend'den gönderilirse kullanılabilir
-              fileSize: videoFile.size,
-              mimeType: videoFile.mimetype,
-              displayOrder: i + 1,
-            },
-          })
-        );
-      }
-
-      // Tüm videoları veritabanına kaydet
-      if (videoPromises.length > 0) {
-        await Promise.all(videoPromises);
+      if (videoFiles.length > 0) {
         console.log(
-          `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+          "🎬 Videolar base64 formatında kaydediliyor:",
+          videoFiles.map((f: any) => f.fieldname)
         );
+
+        const videoPromises = [];
+        let videoDisplayOrder = 1;
+
+        for (const file of videoFiles) {
+          // Base64 formatına çevir
+          const base64Video = `data:${
+            file.mimetype
+          };base64,${file.buffer.toString("base64")}`;
+
+          console.log(
+            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
+          );
+
+          videoPromises.push(
+            prisma.adVideo.create({
+              data: {
+                adId: ad.id,
+                videoUrl: base64Video,
+                mimeType: file.mimetype,
+                fileSize: file.size,
+                displayOrder: videoDisplayOrder,
+                description: `${title} - Video ${videoDisplayOrder}`,
+              },
+            })
+          );
+          videoDisplayOrder++;
+        }
+
+        // Tüm videoları veritabanına kaydet
+        if (videoPromises.length > 0) {
+          await Promise.all(videoPromises);
+          console.log(
+            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+          );
+        }
       }
     }
 
@@ -2257,8 +2304,13 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       },
     });
 
+    // Final video kontrol
+    console.log(`🎯 FINAL CHECK - KamyonAd ID: ${ad.id}`);
+    console.log(`📸 Saved images count: ${createdAd?.images?.length || 0}`);
+    console.log(`🎥 Saved videos count: ${createdAd?.videos?.length || 0}`);
+
     return res.status(201).json({
-      message: "Otobüs ilanı başarıyla oluşturuldu ve onay bekliyor",
+      message: "Kamyon ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad: createdAd,
     });
   } catch (error: any) {
