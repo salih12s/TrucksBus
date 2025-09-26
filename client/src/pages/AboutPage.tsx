@@ -58,13 +58,12 @@ const AboutPage: React.FC = () => {
               fontSize: { xs: "0.9rem", md: "1rem" },
             }}
           >
-            TrucksBus; kamyon, çekici, otobüs, minibüs–midibüs, dorse ve benzeri
-            ağır ticari araçların alım–satımını kolaylaştıran modern bir
-            pazaryeridir. Amacımız; alıcıyla satıcıyı aynı masaya hızla, şeffaf
-            bilgilerle ve net adımlarla getirip işlemleri güven içinde
-            tamamlamanızı sağlamak.
+            TrucksBus.com.tr; kamyon, çekici, otobüs, minibüs-midibüs, dorse ve
+            benzeri ticari araçların alım-satımını kolaylaştıran modern bir
+            pazaryeridir.Amacımız; alıcıyla satıcıyı aynı platformda hızla,
+            şeffaf bilgilerle ve net adımlarla bir araya getirip işlemleri güven
+            içinde tamamlamalarını sağlamaktır..
           </Typography>
-
           <Typography
             variant="body1"
             paragraph
@@ -77,9 +76,8 @@ const AboutPage: React.FC = () => {
             Deneyimli ekibimiz ve güncel teknoloji yığınımızla; detaylı ilan
             yapısı, akıllı filtreleme, güçlü arama, mesajlaşma ve destek
             süreçleriyle hem bireysel kullanıcılar hem de kurumsal müşteriler
-            için verimli bir deneyim tasarlıyoruz.
+            için verimli bir deneyim oluşturuyoruz.
           </Typography>
-
           <Typography
             variant={isMobile ? "h6" : "h5"}
             gutterBottom
@@ -100,11 +98,10 @@ const AboutPage: React.FC = () => {
               fontSize: { xs: "0.9rem", md: "1rem" },
             }}
           >
-            Ağır ticari araç pazarında, güvenilir bilgiyi standart hâline
-            getirip, karar alma süresini kısaltan, pazarlık ve iletişimi
-            sadeleştiren bir platform sunmak.
+            Ticari araç pazarında, güvenilir bilgiyi standart hâline getirip,
+            karar alma süresini kısaltan, pazarlık ve iletişimi sadeleştiren bir
+            platform sunmak.
           </Typography>
-
           <Typography
             variant={isMobile ? "h6" : "h5"}
             gutterBottom
@@ -125,11 +122,10 @@ const AboutPage: React.FC = () => {
               fontSize: { xs: "0.9rem", md: "1rem" },
             }}
           >
-            Türkiye'de ticari araç ekosisteminin buluşma noktası olmak; araç
+            Türkiye'de ticari araç sisteminin buluşma noktası olmak; araç
             keşfinden ilana, vitrinden satış sonrası süreçlere kadar uçtan uca
             değeri artırmak.
           </Typography>
-
           <Typography
             variant={isMobile ? "h6" : "h5"}
             gutterBottom
@@ -139,9 +135,8 @@ const AboutPage: React.FC = () => {
               fontSize: { xs: "1.25rem", md: "1.5rem" },
             }}
           >
-            Neden TruckBus?
-          </Typography>
-
+            Neden TruckBus.com.tr?
+          </Typography>{" "}
           <Box sx={{ mt: 2 }}>
             <Typography
               variant="body1"
@@ -201,8 +196,9 @@ const AboutPage: React.FC = () => {
             >
               <span style={{ color: "#4caf50", fontWeight: "bold" }}>✅</span>
               <span>
-                <strong>Kurumsal vitrin:</strong> Galeri ve filo sahipleri için
-                düzenli profil, ilan yönetimi ve görünürlük avantajları.
+                <strong>Kurumsal vitrin:</strong> Bayiler,Galeriler ve filo
+                sahipleri için düzenli profil, ilan yönetimi ve görünürlük
+                avantajları.
               </span>
             </Typography>
 
@@ -218,7 +214,6 @@ const AboutPage: React.FC = () => {
               </span>
             </Typography>
           </Box>
-
           <Typography
             variant="h5"
             gutterBottom
@@ -226,7 +221,6 @@ const AboutPage: React.FC = () => {
           >
             Nasıl Çalışır?
           </Typography>
-
           <Box sx={{ mt: 2 }}>
             <Typography variant="body1" paragraph>
               <strong>Keşfet & filtrele:</strong> İhtiyacına göre kategorileri
@@ -243,7 +237,6 @@ const AboutPage: React.FC = () => {
               süreci başlat.
             </Typography>
           </Box>
-
           <Typography
             variant="h5"
             gutterBottom
@@ -251,7 +244,6 @@ const AboutPage: React.FC = () => {
           >
             Kime Hitap Ediyoruz?
           </Typography>
-
           <Box sx={{ mt: 2 }}>
             <Typography variant="body1" paragraph>
               <strong>Bireysel kullanıcılar:</strong> Doğru aracı kolayca
@@ -273,7 +265,6 @@ const AboutPage: React.FC = () => {
               için doğru kitle.
             </Typography>
           </Box>
-
           <Typography
             variant="h5"
             gutterBottom
@@ -281,7 +272,6 @@ const AboutPage: React.FC = () => {
           >
             Güvenlik ve KVKK
           </Typography>
-
           <Typography
             variant="body1"
             paragraph
@@ -291,9 +281,10 @@ const AboutPage: React.FC = () => {
             mevzuatına uygun süreçler ve makul güvenlik önlemleriyle kişisel
             verilerin işlenmesi, saklanması ve paylaşılması konusunda titiz
             davranıyoruz. Platform ilkelerimiz; saygı, dürüstlük ve sorumlu
-            kullanım üzerine kurulu.
+            kullanım üzerine kuruludur.İlan verenler ilan içerikleri ile alıcı
+            ve satıcı arasındaki görüşme ve yazışmalar da ilgilileri bağlar
+            .Platformumuz sorumlu değildir.
           </Typography>
-
           <Typography
             variant="h5"
             gutterBottom
@@ -301,7 +292,6 @@ const AboutPage: React.FC = () => {
           >
             Yol Haritamız
           </Typography>
-
           <Box sx={{ mt: 2 }}>
             <Typography variant="body1" paragraph>
               <strong>Gelişmiş arama & sıralama:</strong> Daha isabetli sonuçlar

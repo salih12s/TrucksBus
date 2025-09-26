@@ -831,34 +831,34 @@ const MainLayout: React.FC = () => {
         console.error("Initial data fetch error:", error);
         // Fallback data sadece kategoriler için
         setCategories([
-          { id: "1", name: "Çekici", slug: "cekici", displayOrder: 1 },
-          { id: "2", name: "Dorse", slug: "dorse", displayOrder: 2 },
           {
-            id: "3",
-            name: "Kamyon & Kamyonet",
-            slug: "kamyon-kamyonet",
-            displayOrder: 3,
-          },
-          {
-            id: "4",
-            name: "Karoser & Üst Yapı",
-            slug: "karoser-ust-yapi",
-            displayOrder: 4,
-          },
-          {
-            id: "5",
+            id: "1",
             name: "Minibüs & Midibüs",
             slug: "minibus-midibus",
+            displayOrder: 1,
+          },
+          {
+            id: "2",
+            name: "Kamyon & Kamyonet",
+            slug: "kamyon-kamyonet",
+            displayOrder: 2,
+          },
+          { id: "3", name: "Dorse", slug: "dorse", displayOrder: 3 },
+          { id: "4", name: "Çekici", slug: "cekici", displayOrder: 4 },
+          {
+            id: "5",
+            name: "Karoser & Üst Yapı",
+            slug: "karoser-ust-yapi",
             displayOrder: 5,
           },
           { id: "6", name: "Otobüs", slug: "otobus", displayOrder: 6 },
+          { id: "7", name: "Römork", slug: "romork", displayOrder: 7 },
           {
-            id: "7",
+            id: "8",
             name: "Oto Kurtarıcı & Taşıyıcı",
             slug: "oto-kurtarici-tasiyici",
-            displayOrder: 7,
+            displayOrder: 8,
           },
-          { id: "8", name: "Römork", slug: "romork", displayOrder: 8 },
         ]);
 
         // İlanlar için boş array
@@ -1997,8 +1997,8 @@ const MainLayout: React.FC = () => {
     >
       <Header favoritesCount={favoritesCount} />
 
-      {/* Animated Advertisement Banner - Hidden on AdDetail pages */}
-      {!isAdDetailPage && <AdBanner variant="horizontal" />}
+      {/* Animated Advertisement Banner - Only shown on AdDetail pages */}
+      {isAdDetailPage && <AdBanner variant="horizontal" />}
 
       <Box
         sx={{
@@ -2166,7 +2166,9 @@ const MainLayout: React.FC = () => {
                       }}
                     >
                       {selectedCategory && selectedCategory !== "Tüm İlanlar"
-                        ? selectedCategory
+                        ? categories.find(
+                            (cat) => cat.slug === selectedCategory
+                          )?.name || selectedCategory
                         : "Vitrin"}
                     </Typography>
 
