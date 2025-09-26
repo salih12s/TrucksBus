@@ -118,6 +118,18 @@ const AdDetail: React.FC = () => {
   const [similarAdsLoading, setSimilarAdsLoading] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [showComplaintModal, setShowComplaintModal] = useState(false);
+  const [adVideos, setAdVideos] = useState<{
+    id: number;
+    videoUrl: string;
+    thumbnailUrl?: string;
+    duration?: number;
+    fileSize?: number;
+    mimeType?: string;
+    displayOrder: number;
+    description?: string;
+  }[]>([]);
+  const [videosLoading, setVideosLoading] = useState(false);
+  const [videosLoaded, setVideosLoaded] = useState(false);
 
   // Get current user from Redux store
   const currentUser = useSelector((state: RootState) => state.auth.user);
@@ -287,6 +299,26 @@ const AdDetail: React.FC = () => {
 
     fetchSimilarAds();
   }, [ad]);
+
+  // Fetch videos separately for performance
+  const fetchVideos = async () => {
+    if (!id || videosLoaded || videosLoading) return;
+    
+    setVideosLoading(true);
+    try {
+      console.log("🎥 Loading videos for ad:", id);
+      const response = await apiClient.get(`/ads/${id}/videos`);
+      const data = response.data as { videos: typeof adVideos };
+      setAdVideos(data.videos || []);
+      setVideosLoaded(true);
+      console.log("🎥 Videos loaded:", data.videos?.length || 0);
+    } catch (error) {
+      console.error("Error loading videos:", error);
+      setAdVideos([]);
+    } finally {
+      setVideosLoading(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("tr-TR").format(price) + " TL";
@@ -2283,8 +2315,8 @@ const AdDetail: React.FC = () => {
                 </Box>
               )}
 
-              {/* Video Section - If videos exist */}
-              {ad.videos && ad.videos.length > 0 && (
+              {/* Video Section - Lazy loaded */}
+              {((ad.videos && ad.videos.length > 0) || (adVideos && adVideos.length > 0)) && (
                 <Box
                   sx={{
                     backgroundColor: "white",
@@ -2308,7 +2340,7 @@ const AdDetail: React.FC = () => {
                         color: "#333",
                       }}
                     >
-                      🎬 Videolar ({ad.videos.length})
+                      🎬 Videolar ({(adVideos.length > 0 ? adVideos.length : ad.videos?.length) || 0})
                     </Typography>
                   </Box>
 
@@ -2323,7 +2355,23 @@ const AdDetail: React.FC = () => {
                         gap: 2,
                       }}
                     >
-                      {ad.videos.map((video) => (
+                      {!videosLoaded && !videosLoading && (
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                          <Button 
+                            onClick={fetchVideos}
+                            variant="outlined" 
+                            sx={{ color: '#dc3545', borderColor: '#dc3545' }}
+                          >
+                            📹 Videoları Yükle
+                          </Button>
+                        </Box>
+                      )}
+                      {videosLoading && (
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                          <Typography>🎬 Videolar yükleniyor...</Typography>
+                        </Box>
+                      )}
+                      {(adVideos.length > 0 ? adVideos : ad.videos || []).map((video) => (
                         <Box
                           key={video.id}
                           sx={{

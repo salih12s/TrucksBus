@@ -287,17 +287,16 @@ export const getAdById = async (req: Request, res: Response) => {
           SELECT json_agg(
             json_build_object(
               'id', av.id,
-              'videoUrl', av.video_url,
               'thumbnailUrl', av.thumbnail_url,
               'duration', av.duration,
-              'fileSize', av.file_size,
               'mimeType', av.mime_type,
               'displayOrder', av.display_order,
-              'description', av.description
+              'description', av.description,
+              'hasVideo', true
             )
           )
           FROM (
-            SELECT av.id, av.video_url, av.thumbnail_url, av.duration, av.file_size, 
+            SELECT av.id, av.thumbnail_url, av.duration, 
                    av.mime_type, av.display_order, av.description
             FROM ad_videos av 
             WHERE av.ad_id = a.id
@@ -460,6 +459,63 @@ export const getAdById = async (req: Request, res: Response) => {
         adId: adId,
       },
     });
+  }
+};
+
+// Get ad videos - Lazy loaded separately for performance
+export const getAdVideos = async (req: Request, res: Response) => {
+  console.log("🎥 getAdVideos called for ad:", req.params.id);
+  const startTime = performance.now();
+  
+  try {
+    const { id } = req.params;
+    const adId = parseInt(id);
+
+    if (!adId || adId <= 0) {
+      return res.status(400).json({ error: "Invalid ad ID" });
+    }
+
+    // Quick cache check for videos
+    const videoCacheKey = `videos_${id}`;
+    const cachedVideos = adCache.get(videoCacheKey);
+    
+    if (cachedVideos && Date.now() - cachedVideos.timestamp < 3600000) { // 1 hour cache
+      console.log(`⚡ VIDEO CACHE HIT for ad ${id}`);
+      return res.json({ videos: cachedVideos.data });
+    }
+
+    // Fetch videos with videoUrl included
+    const videos = await prisma.adVideo.findMany({
+      where: { adId: adId },
+      select: {
+        id: true,
+        videoUrl: true,
+        thumbnailUrl: true,
+        duration: true,
+        fileSize: true,
+        mimeType: true,
+        displayOrder: true,
+        description: true,
+      },
+      orderBy: { displayOrder: 'asc' }
+    });
+
+    // Cache the result
+    adCache.set(videoCacheKey, {
+      data: videos,
+      timestamp: Date.now(),
+      ttl: 3600000, // 1 hour
+    });
+
+    const responseTime = performance.now() - startTime;
+    console.log(`🎥 Videos loaded in: ${responseTime.toFixed(2)}ms`);
+
+    res.set('Cache-Control', 'public, max-age=3600'); // 1 hour cache
+    return res.json({ videos });
+
+  } catch (error) {
+    console.error("❌ Error fetching ad videos:", error);
+    return res.status(500).json({ error: "Server error" });
   }
 };
 
@@ -4351,28 +4407,6 @@ export const uploadVideo = async (req: Request, res: Response) => {
     return res.status(500).json({
       error: "Video yüklenirken hata oluştu",
       details: error instanceof Error ? error.message : "Bilinmeyen hata",
-    });
-  }
-};
-
-// Get ad videos
-export const getAdVideos = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    const videos = await prisma.adVideo.findMany({
-      where: { adId: parseInt(id) },
-      orderBy: { displayOrder: "asc" },
-    });
-
-    return res.json({
-      success: true,
-      videos,
-    });
-  } catch (error) {
-    console.error("Videolar alınırken hata:", error);
-    return res.status(500).json({
-      error: "Videolar alınırken hata oluştu",
     });
   }
 };
