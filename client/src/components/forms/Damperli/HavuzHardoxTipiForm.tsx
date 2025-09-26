@@ -106,9 +106,9 @@ interface HavuzHardoxFormData {
   sellerEmail: string;
 
   // Ekstra
-  warranty: boolean;
-  negotiable: boolean;
-  exchange: boolean;
+  warranty: string;
+  negotiable: string;
+  exchange: string;
 
   detailedInfo: string;
 }
@@ -182,9 +182,9 @@ const HavuzHardoxTipiForm: React.FC = () => {
     sellerEmail: user?.email || "",
 
     // Ekstra
-    warranty: false,
-    negotiable: false,
-    exchange: false,
+    warranty: "hayir",
+    negotiable: "hayir",
+    exchange: "hayir",
 
     detailedInfo: "",
   });
@@ -233,15 +233,16 @@ const HavuzHardoxTipiForm: React.FC = () => {
     }
   }, [formData.cityId, formData.districtId]);
 
-  // Auto-load brands
+  // Load brands on component mount
   useEffect(() => {
     const loadBrands = async () => {
+      setLoadingBrands(true);
       try {
-        setLoadingBrands(true);
-        const response = await apiClient.get("/brands?categoryId=6"); // Dorse category ID
+        const response = await apiClient.get("/brands");
         setBrands((response.data as Brand[]) || []);
+        console.log("✅ Brands loaded:", (response.data as Brand[]).length);
       } catch (error) {
-        console.error("Error loading brands:", error);
+        console.error("❌ Brand loading error:", error);
       } finally {
         setLoadingBrands(false);
       }
@@ -250,100 +251,139 @@ const HavuzHardoxTipiForm: React.FC = () => {
     loadBrands();
   }, []);
 
-  // Load brand by slug from URL params
+  // Auto-load brand/model/variant from URL parameters
   useEffect(() => {
-    if (brandSlug && brands.length > 0) {
-      const selectedBrand = brands.find((b) => b.slug === brandSlug);
-      if (selectedBrand) {
-        setFormData((prev) => ({
-          ...prev,
-          brandId: selectedBrand.id.toString(),
-          modelId: "", // Reset model when brand changes
-          variantId: "", // Reset variant when brand changes
-        }));
-      }
-    }
-  }, [brandSlug, brands]);
+    const loadVariantDetails = async () => {
+      console.log("🔍 HavuzHardox variantSlug from URL:", variantSlug);
+      console.log("🔍 HavuzHardox brandSlug from URL:", brandSlug);
+      console.log("🔍 HavuzHardox modelSlug from URL:", modelSlug);
 
-  // Load models when brand changes
-  useEffect(() => {
-    if (formData.brandId) {
-      const loadModels = async () => {
+      if (variantSlug && brandSlug && modelSlug && brands.length > 0) {
+        console.log("✅ Loading variant details for slugs:", {
+          brandSlug,
+          modelSlug,
+          variantSlug,
+        });
+
         try {
-          setLoadingModels(true);
-          const response = await apiClient.get(
-            `/brands/${formData.brandId}/models`
-          );
-          setModels((response.data as Model[]) || []);
+          // Find brand by slug
+          const brand = brands.find((b) => b.slug === brandSlug);
+          if (brand) {
+            console.log("✅ Brand found:", brand);
+
+            // Load models for this brand
+            const modelsResponse = await apiClient.get(
+              `/brands/${brand.id}/models`
+            );
+            const modelsList = modelsResponse.data as Model[];
+            setModels(modelsList);
+            console.log("✅ Models loaded:", modelsList.length);
+
+            // Find model by slug
+            const model = modelsList.find((m) => m.slug === modelSlug);
+            if (model) {
+              console.log("✅ Model found:", model);
+
+              // Load variants for this model
+              const variantsResponse = await apiClient.get(
+                `/models/${model.id}/variants`
+              );
+              const variantsList = variantsResponse.data as Variant[];
+              setVariants(variantsList);
+              console.log("✅ Variants loaded:", variantsList.length);
+
+              // Find variant by slug
+              const variant = variantsList.find((v) => v.slug === variantSlug);
+              if (variant) {
+                console.log("✅ Variant found:", variant);
+
+                // Set form data
+                setFormData((prev) => ({
+                  ...prev,
+                  brandId: brand.id.toString(),
+                  modelId: model.id.toString(),
+                  variantId: variant.id.toString(),
+                }));
+              }
+            }
+          }
         } catch (error) {
-          console.error("Error loading models:", error);
-        } finally {
-          setLoadingModels(false);
+          console.error("❌ Error loading variant details:", error);
         }
-      };
+      }
+    };
 
-      loadModels();
-    } else {
-      setModels([]);
-      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
-    }
-  }, [formData.brandId]);
+    loadVariantDetails();
+  }, [variantSlug, brandSlug, modelSlug, brands]);
 
-  // Load model by slug from URL params
-  useEffect(() => {
-    if (modelSlug && models.length > 0) {
-      const selectedModel = models.find((m) => m.slug === modelSlug);
-      if (selectedModel) {
-        setFormData((prev) => ({
-          ...prev,
-          modelId: selectedModel.id.toString(),
-          variantId: "", // Reset variant when model changes
-        }));
+  // Load models when brand changes - using brand ID like TekstilForm
+  const handleBrandChange = async (brandId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      brandId,
+      modelId: "",
+      variantId: "",
+    }));
+    setModels([]);
+    setVariants([]);
+
+    if (brandId) {
+      setLoadingModels(true);
+      try {
+        console.log("� Loading models for brandId:", brandId);
+        const response = await apiClient.get(`/brands/${brandId}/models`);
+        setModels(response.data as Model[]);
+        console.log("✅ Models loaded:", (response.data as Model[]).length);
+      } catch (error) {
+        console.error("❌ Model loading error:", error);
+        setModels([]);
+      } finally {
+        setLoadingModels(false);
       }
     }
-  }, [modelSlug, models]);
+  };
 
-  // Load variants when model changes
-  useEffect(() => {
-    if (formData.modelId) {
-      const loadVariants = async () => {
-        try {
-          setLoadingVariants(true);
-          const response = await apiClient.get(
-            `/models/${formData.modelId}/variants`
-          );
-          setVariants((response.data as Variant[]) || []);
-        } catch (error) {
-          console.error("Error loading variants:", error);
-        } finally {
-          setLoadingVariants(false);
-        }
-      };
+  // Load variants when model changes - using model ID like TekstilForm
+  const handleModelChange = async (modelId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      modelId,
+      variantId: "",
+    }));
+    setVariants([]);
 
-      loadVariants();
-    } else {
-      setVariants([]);
-      setFormData((prev) => ({ ...prev, variantId: "" }));
-    }
-  }, [formData.modelId]);
-
-  // Load variant by slug from URL params
-  useEffect(() => {
-    if (variantSlug && variants.length > 0) {
-      const selectedVariant = variants.find((v) => v.slug === variantSlug);
-      if (selectedVariant) {
-        setFormData((prev) => ({
-          ...prev,
-          variantId: selectedVariant.id.toString(),
-        }));
+    if (modelId) {
+      setLoadingVariants(true);
+      try {
+        console.log("� Loading variants for modelId:", modelId);
+        const response = await apiClient.get(`/models/${modelId}/variants`);
+        setVariants(response.data as Variant[]);
+        console.log("✅ Variants loaded:", (response.data as Variant[]).length);
+      } catch (error) {
+        console.error("❌ Variant loading error:", error);
+        setVariants([]);
+      } finally {
+        setLoadingVariants(false);
       }
     }
-  }, [variantSlug, variants]);
+  };
 
   const handleInputChange = (
     field: keyof HavuzHardoxFormData,
     value: string | number | File[] | File | null | boolean
   ) => {
+    // Handle brand change - call handleBrandChange function
+    if (field === "brandId") {
+      handleBrandChange(value as string);
+      return;
+    }
+
+    // Handle model change - call handleModelChange function
+    if (field === "modelId") {
+      handleModelChange(value as string);
+      return;
+    }
+
     if (
       field === "year" ||
       field === "productionYear" ||
@@ -1283,8 +1323,8 @@ const HavuzHardoxTipiForm: React.FC = () => {
           </DialogTitle>
           <DialogContent>
             <Typography variant="body1" sx={{ textAlign: "center" }}>
-              Havuz Hardox Tipi Damperli Dorse ilanınız başarıyla oluşturuldu. Admin
-              onayından sonra yayınlanacaktır.
+              Havuz Hardox Tipi Damperli Dorse ilanınız başarıyla oluşturuldu.
+              Admin onayından sonra yayınlanacaktır.
             </Typography>
           </DialogContent>
           <DialogActions sx={{ justifyContent: "center", pb: 3 }}>

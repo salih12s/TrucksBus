@@ -123,6 +123,43 @@ router.get("/:brandId/models", async (req, res) => {
   }
 });
 
+// Get models by brand slug
+router.get("/:brandSlug/models", async (req, res) => {
+  try {
+    const { brandSlug } = req.params;
+
+    const brand = await prisma.brand.findUnique({
+      where: { slug: brandSlug },
+    });
+
+    if (!brand) {
+      return res.status(404).json({ error: "Brand not found" });
+    }
+
+    const models = await prisma.model.findMany({
+      where: {
+        brandId: brand.id,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        brandId: true,
+        isActive: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return res.json(models);
+  } catch (error) {
+    console.error("Error fetching models by brand slug:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Get single brand by slug
 router.get("/:brandSlug", async (req, res) => {
   try {
@@ -146,6 +183,54 @@ router.get("/:brandSlug", async (req, res) => {
     return res.json(brand);
   } catch (error) {
     console.error("Error fetching brand:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get variants by brand slug and model slug
+router.get("/:brandSlug/models/:modelSlug/variants", async (req, res) => {
+  try {
+    const { brandSlug, modelSlug } = req.params;
+
+    const brand = await prisma.brand.findUnique({
+      where: { slug: brandSlug },
+    });
+
+    if (!brand) {
+      return res.status(404).json({ error: "Brand not found" });
+    }
+
+    const model = await prisma.model.findFirst({
+      where: {
+        slug: modelSlug,
+        brandId: brand.id,
+      },
+    });
+
+    if (!model) {
+      return res.status(404).json({ error: "Model not found" });
+    }
+
+    const variants = await prisma.variant.findMany({
+      where: {
+        modelId: model.id,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        modelId: true,
+        isActive: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return res.json(variants);
+  } catch (error) {
+    console.error("Error fetching variants by brand and model slug:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

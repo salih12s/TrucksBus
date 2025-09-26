@@ -47,11 +47,37 @@ interface District {
   cityId: number;
 }
 
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  slug: string;
+  brandId: number;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+  modelId: number;
+}
+
 interface FormData {
   title: string;
   description: string;
   productionYear: string;
   price: string;
+
+  // Brand/Model/Variant
+  categoryId: string;
+  brandId: string;
+  modelId: string;
+  variantId: string;
 
   // Kuruyük Kapaklı Özel Bilgiler
   dingilSayisi: string;
@@ -100,6 +126,10 @@ const KapakliForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    categoryId: "6", // Dorse category ID
+    brandId: "",
+    modelId: "",
+    variantId: "",
     dingilSayisi: "",
     uzunluk: "",
     genislik: "",
@@ -131,6 +161,82 @@ const KapakliForm: React.FC = () => {
   // Photo preview states
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+
+  // Brand/Model/Variant states
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+
+  // Load brands on component mount
+  useEffect(() => {
+    const loadBrands = async () => {
+      console.log("🔄 Loading brands...");
+      setLoadingBrands(true);
+      try {
+        const response = await apiClient.get("/brands");
+        const brandsData = response.data as Brand[];
+        setBrands(brandsData);
+        console.log(`✅ ${brandsData.length} marka yüklendi`);
+      } catch (error) {
+        console.error("❌ Brands loading error:", error);
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+
+    loadBrands();
+  }, []);
+
+  // Load models when brand changes
+  useEffect(() => {
+    if (formData.brandId) {
+      const loadModels = async () => {
+        try {
+          setLoadingModels(true);
+          const response = await apiClient.get(
+            `/brands/${formData.brandId}/models`
+          );
+          setModels((response.data as Model[]) || []);
+        } catch (error) {
+          console.error("Error loading models:", error);
+        } finally {
+          setLoadingModels(false);
+        }
+      };
+
+      loadModels();
+    } else {
+      setModels([]);
+      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
+    }
+  }, [formData.brandId]);
+
+  // Load variants when model changes
+  useEffect(() => {
+    if (formData.modelId) {
+      const loadVariants = async () => {
+        try {
+          setLoadingVariants(true);
+          const response = await apiClient.get(
+            `/models/${formData.modelId}/variants`
+          );
+          setVariants((response.data as Variant[]) || []);
+        } catch (error) {
+          console.error("Error loading variants:", error);
+        } finally {
+          setLoadingVariants(false);
+        }
+      };
+
+      loadVariants();
+    } else {
+      setVariants([]);
+      setFormData((prev) => ({ ...prev, variantId: "" }));
+    }
+  }, [formData.modelId]);
 
   // Şehirleri yükle
   useEffect(() => {
@@ -273,7 +379,11 @@ const KapakliForm: React.FC = () => {
       const submitData = new FormData();
 
       // Legacy format için gerekli alanlar
-      submitData.append("categoryId", "4"); // Dorse kategori ID'si
+      // Category, Brand, Model, Variant
+      submitData.append("categoryId", formData.categoryId);
+      submitData.append("brandId", formData.brandId);
+      submitData.append("modelId", formData.modelId);
+      submitData.append("variantId", formData.variantId);
 
       // Temel bilgiler
       submitData.append("title", formData.title);
@@ -429,6 +539,78 @@ const KapakliForm: React.FC = () => {
                 margin="normal"
                 required
               />
+            </Box>
+
+            {/* Marka ve Model Seçimi */}
+            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+              Marka ve Model Seçimi
+            </Typography>
+
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+            >
+              <FormControl fullWidth required>
+                <InputLabel>Marka</InputLabel>
+                <Select
+                  value={formData.brandId}
+                  label="Marka"
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      brandId: e.target.value,
+                      modelId: "",
+                      variantId: "",
+                    })
+                  }
+                  disabled={loadingBrands}
+                >
+                  {brands.map((brand) => (
+                    <MenuItem key={brand.id} value={brand.id.toString()}>
+                      {brand.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth required disabled={!formData.brandId}>
+                <InputLabel>Model</InputLabel>
+                <Select
+                  value={formData.modelId}
+                  label="Model"
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      modelId: e.target.value,
+                      variantId: "",
+                    })
+                  }
+                  disabled={loadingModels || !formData.brandId}
+                >
+                  {models.map((model) => (
+                    <MenuItem key={model.id} value={model.id.toString()}>
+                      {model.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth required disabled={!formData.modelId}>
+                <InputLabel>Varyant</InputLabel>
+                <Select
+                  value={formData.variantId}
+                  label="Varyant"
+                  onChange={(e) =>
+                    setFormData({ ...formData, variantId: e.target.value })
+                  }
+                  disabled={loadingVariants || !formData.modelId}
+                >
+                  {variants.map((variant) => (
+                    <MenuItem key={variant.id} value={variant.id.toString()}>
+                      {variant.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Box>
 
             {/* Kapaklı Özel Bilgileri */}

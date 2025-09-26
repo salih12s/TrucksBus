@@ -162,6 +162,30 @@ const MidilliForm: React.FC = () => {
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingVariants, setLoadingVariants] = useState(false);
 
+  // Form data state
+  const [formData, setFormData] = useState<MidilliFormData>({
+    title: "",
+    description: "",
+    year: 0,
+    price: "",
+    categoryId: "",
+    brandId: "",
+    modelId: "",
+    variantId: variantSlug || "",
+    uzunluk: 0,
+    lastikDurumu: 100,
+    catiPerdeSistemi: "",
+    cityId: "",
+    districtId: "",
+    photos: [],
+    showcasePhoto: null,
+    videos: [],
+    warranty: false,
+    negotiable: false,
+    exchange: false,
+    detailedInfo: "",
+  });
+
   // Video handling functions
   const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -345,6 +369,96 @@ const MidilliForm: React.FC = () => {
     loadBrands();
   }, []);
 
+  // Load brand by slug from URL params
+  useEffect(() => {
+    if (brandSlug && brands.length > 0) {
+      const selectedBrand = brands.find((b) => b.slug === brandSlug);
+      if (selectedBrand) {
+        setFormData((prev) => ({
+          ...prev,
+          brandId: selectedBrand.id.toString(),
+          modelId: "", // Reset model when brand changes
+          variantId: "", // Reset variant when brand changes
+        }));
+      }
+    }
+  }, [brandSlug, brands]);
+
+  // Load models when brand changes
+  useEffect(() => {
+    if (formData.brandId) {
+      const loadModels = async () => {
+        try {
+          setLoadingModels(true);
+          const response = await apiClient.get(
+            `/brands/${formData.brandId}/models`
+          );
+          setModels((response.data as Model[]) || []);
+        } catch (error) {
+          console.error("Error loading models:", error);
+        } finally {
+          setLoadingModels(false);
+        }
+      };
+
+      loadModels();
+    } else {
+      setModels([]);
+      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
+    }
+  }, [formData.brandId]);
+
+  // Load model by slug from URL params
+  useEffect(() => {
+    if (modelSlug && models.length > 0) {
+      const selectedModel = models.find((m) => m.slug === modelSlug);
+      if (selectedModel) {
+        setFormData((prev) => ({
+          ...prev,
+          modelId: selectedModel.id.toString(),
+          variantId: "", // Reset variant when model changes
+        }));
+      }
+    }
+  }, [modelSlug, models]);
+
+  // Load variants when model changes
+  useEffect(() => {
+    if (formData.modelId) {
+      const loadVariants = async () => {
+        try {
+          setLoadingVariants(true);
+          const response = await apiClient.get(
+            `/models/${formData.modelId}/variants`
+          );
+          setVariants((response.data as Variant[]) || []);
+        } catch (error) {
+          console.error("Error loading variants:", error);
+        } finally {
+          setLoadingVariants(false);
+        }
+      };
+
+      loadVariants();
+    } else {
+      setVariants([]);
+      setFormData((prev) => ({ ...prev, variantId: "" }));
+    }
+  }, [formData.modelId]);
+
+  // Load variant by slug from URL params
+  useEffect(() => {
+    if (variantSlug && variants.length > 0) {
+      const selectedVariant = variants.find((v) => v.slug === variantSlug);
+      if (selectedVariant) {
+        setFormData((prev) => ({
+          ...prev,
+          variantId: selectedVariant.id.toString(),
+        }));
+      }
+    }
+  }, [variantSlug, variants]);
+
   // Load cities on component mount
   useEffect(() => {
     const loadCities = async () => {
@@ -361,29 +475,6 @@ const MidilliForm: React.FC = () => {
 
     loadCities();
   }, []);
-
-  const [formData, setFormData] = useState<MidilliFormData>({
-    title: "",
-    description: "",
-    year: 0,
-    price: "",
-    categoryId: "",
-    brandId: "",
-    modelId: "",
-    variantId: variantSlug || "",
-    uzunluk: 0,
-    lastikDurumu: 100,
-    catiPerdeSistemi: "",
-    cityId: "",
-    districtId: "",
-    photos: [],
-    showcasePhoto: null,
-    videos: [],
-    warranty: false,
-    negotiable: false,
-    exchange: false,
-    detailedInfo: "",
-  });
 
   // Şehirleri yükle
   useEffect(() => {

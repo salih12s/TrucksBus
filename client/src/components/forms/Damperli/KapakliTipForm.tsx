@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Container,
@@ -106,9 +106,9 @@ interface KapakliFormData {
   sellerEmail: string;
 
   // Ekstra
-  warranty: boolean;
-  negotiable: boolean;
-  exchange: boolean;
+  warranty: string;
+  negotiable: string;
+  exchange: string;
 
   detailedInfo: string;
 }
@@ -182,9 +182,9 @@ const KapakliTipForm: React.FC = () => {
     sellerEmail: user?.email || "",
 
     // Ekstra
-    warranty: false,
-    negotiable: false,
-    exchange: false,
+    warranty: "hayir",
+    negotiable: "hayir",
+    exchange: "hayir",
 
     detailedInfo: "",
   });
@@ -233,15 +233,16 @@ const KapakliTipForm: React.FC = () => {
     }
   }, [formData.cityId, formData.districtId]);
 
-  // Auto-load brands
+  // Load brands on component mount
   useEffect(() => {
     const loadBrands = async () => {
+      setLoadingBrands(true);
       try {
-        setLoadingBrands(true);
-        const response = await apiClient.get("/brands?categoryId=6"); // Dorse category ID
+        const response = await apiClient.get("/brands");
         setBrands((response.data as Brand[]) || []);
+        console.log("✅ Brands loaded:", (response.data as Brand[]).length);
       } catch (error) {
-        console.error("Error loading brands:", error);
+        console.error("❌ Brand loading error:", error);
       } finally {
         setLoadingBrands(false);
       }
@@ -250,122 +251,187 @@ const KapakliTipForm: React.FC = () => {
     loadBrands();
   }, []);
 
-  // Load brand by slug from URL params
+  // Auto-load brand/model/variant from URL parameters
   useEffect(() => {
-    if (brandSlug && brands.length > 0) {
-      const selectedBrand = brands.find((b) => b.slug === brandSlug);
-      if (selectedBrand) {
-        setFormData((prev) => ({
-          ...prev,
-          brandId: selectedBrand.id.toString(),
-          modelId: "", // Reset model when brand changes
-          variantId: "", // Reset variant when brand changes
-        }));
-      }
-    }
-  }, [brandSlug, brands]);
+    const loadVariantDetails = async () => {
+      console.log("🔍 [KAPAKLI] variantSlug from URL:", variantSlug);
+      console.log("🔍 [KAPAKLI] brandSlug from URL:", brandSlug);
+      console.log("🔍 [KAPAKLI] modelSlug from URL:", modelSlug);
 
-  // Load models when brand changes
-  useEffect(() => {
-    if (formData.brandId) {
-      const loadModels = async () => {
+      if (variantSlug && brandSlug && modelSlug && brands.length > 0) {
+        console.log("✅ [KAPAKLI] Loading variant details for slugs:", {
+          brandSlug,
+          modelSlug,
+          variantSlug,
+        });
+
         try {
-          setLoadingModels(true);
-          const response = await apiClient.get(
-            `/brands/${formData.brandId}/models`
-          );
-          setModels((response.data as Model[]) || []);
+          // Find brand by slug
+          const brand = brands.find((b) => b.slug === brandSlug);
+          if (brand) {
+            console.log("✅ [KAPAKLI] Brand found:", brand);
+
+            // Load models for this brand
+            const modelsResponse = await apiClient.get(
+              `/brands/${brand.id}/models`
+            );
+            const modelsList = modelsResponse.data as Model[];
+            setModels(modelsList);
+            console.log("✅ [KAPAKLI] Models loaded:", modelsList.length);
+
+            // Find model by slug
+            const model = modelsList.find((m) => m.slug === modelSlug);
+            if (model) {
+              console.log("✅ [KAPAKLI] Model found:", model);
+
+              // Load variants for this model
+              const variantsResponse = await apiClient.get(
+                `/models/${model.id}/variants`
+              );
+              const variantsList = variantsResponse.data as Variant[];
+              setVariants(variantsList);
+              console.log("✅ [KAPAKLI] Variants loaded:", variantsList.length);
+
+              // Find variant by slug
+              const variant = variantsList.find((v) => v.slug === variantSlug);
+              if (variant) {
+                console.log("✅ [KAPAKLI] Variant found:", variant);
+
+                // Set form data
+                setFormData((prev) => ({
+                  ...prev,
+                  brandId: brand.id.toString(),
+                  modelId: model.id.toString(),
+                  variantId: variant.id.toString(),
+                }));
+              }
+            }
+          }
         } catch (error) {
-          console.error("Error loading models:", error);
+          console.error("❌ [KAPAKLI] Error loading variant details:", error);
+        }
+      }
+    };
+
+    loadVariantDetails();
+  }, [variantSlug, brandSlug, modelSlug, brands]);
+
+  // Load models when brand changes - using brand ID like TekstilForm
+  const handleBrandChange = useCallback(
+    async (brandId: string) => {
+      setFormData((prev) => ({
+        ...prev,
+        brandId,
+        modelId: "",
+        variantId: "",
+      }));
+      setModels([]);
+      setVariants([]);
+
+      if (brandId) {
+        setLoadingModels(true);
+        try {
+          console.log("🔗 [KAPAKLI] Loading models for brandId:", brandId);
+          const response = await apiClient.get(`/brands/${brandId}/models`);
+          setModels(response.data as Model[]);
+          console.log(
+            "✅ [KAPAKLI] Models loaded:",
+            (response.data as Model[]).length
+          );
+        } catch (error) {
+          console.error("❌ [KAPAKLI] Model loading error:", error);
+          setModels([]);
         } finally {
           setLoadingModels(false);
         }
-      };
-
-      loadModels();
-    } else {
-      setModels([]);
-      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
-    }
-  }, [formData.brandId]);
-
-  // Load model by slug from URL params
-  useEffect(() => {
-    if (modelSlug && models.length > 0) {
-      const selectedModel = models.find((m) => m.slug === modelSlug);
-      if (selectedModel) {
-        setFormData((prev) => ({
-          ...prev,
-          modelId: selectedModel.id.toString(),
-          variantId: "", // Reset variant when model changes
-        }));
       }
-    }
-  }, [modelSlug, models]);
+    },
+    [setFormData, setModels, setVariants, setLoadingModels]
+  );
 
-  // Load variants when model changes
-  useEffect(() => {
-    if (formData.modelId) {
-      const loadVariants = async () => {
+  // Load variants when model changes - using model ID like TekstilForm
+  const handleModelChange = useCallback(
+    async (modelId: string) => {
+      setFormData((prev) => ({
+        ...prev,
+        modelId,
+        variantId: "",
+      }));
+      setVariants([]);
+
+      if (modelId) {
+        setLoadingVariants(true);
         try {
-          setLoadingVariants(true);
-          const response = await apiClient.get(
-            `/models/${formData.modelId}/variants`
+          console.log("🔗 [KAPAKLI] Loading variants for modelId:", modelId);
+          const response = await apiClient.get(`/models/${modelId}/variants`);
+          setVariants(response.data as Variant[]);
+          console.log(
+            "✅ [KAPAKLI] Variants loaded:",
+            (response.data as Variant[]).length
           );
-          setVariants((response.data as Variant[]) || []);
         } catch (error) {
-          console.error("Error loading variants:", error);
+          console.error("❌ [KAPAKLI] Variant loading error:", error);
+          setVariants([]);
         } finally {
           setLoadingVariants(false);
         }
-      };
+      }
+    },
+    [setFormData, setVariants, setLoadingVariants]
+  );
 
-      loadVariants();
-    } else {
-      setVariants([]);
-      setFormData((prev) => ({ ...prev, variantId: "" }));
-    }
-  }, [formData.modelId]);
-
-  // Load variant by slug from URL params
+  // Set variant from URL
   useEffect(() => {
     if (variantSlug && variants.length > 0) {
-      const selectedVariant = variants.find((v) => v.slug === variantSlug);
-      if (selectedVariant) {
-        setFormData((prev) => ({
-          ...prev,
-          variantId: selectedVariant.id.toString(),
-        }));
+      const variant = variants.find((v) => v.slug === variantSlug);
+      if (variant) {
+        handleInputChange("variantId", variant.id.toString());
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variantSlug, variants]);
 
-  const handleInputChange = (
-    field: keyof KapakliFormData,
-    value: string | number | File[] | File | null | boolean
-  ) => {
-    if (
-      field === "year" ||
-      field === "productionYear" ||
-      field === "lastikDurumu"
-    ) {
-      const numValue =
+  const handleInputChange = useCallback(
+    (
+      field: keyof KapakliFormData,
+      value: string | number | File[] | File | null | boolean
+    ) => {
+      // Handle brand change - call handleBrandChange function
+      if (field === "brandId") {
+        handleBrandChange(value as string);
+        return;
+      }
+
+      // Handle model change - call handleModelChange function
+      if (field === "modelId") {
+        handleModelChange(value as string);
+        return;
+      }
+
+      if (
         field === "year" ||
         field === "productionYear" ||
         field === "lastikDurumu"
-          ? parseInt(value as string) || 0
-          : value;
-      setFormData((prev) => ({
-        ...prev,
-        [field]: numValue,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    }
-  };
+      ) {
+        const numValue =
+          field === "year" ||
+          field === "productionYear" ||
+          field === "lastikDurumu"
+            ? parseInt(value as string) || 0
+            : value;
+        setFormData((prev) => ({
+          ...prev,
+          [field]: numValue,
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          [field]: value,
+        }));
+      }
+    },
+    [handleBrandChange, handleModelChange]
+  );
 
   // Video upload handling
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

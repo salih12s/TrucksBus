@@ -106,9 +106,9 @@ interface HafriyatFormData {
   sellerEmail: string;
 
   // Ekstra
-  warranty: boolean;
-  negotiable: boolean;
-  exchange: boolean;
+  warranty: string;
+  negotiable: string;
+  exchange: string;
 
   detailedInfo: string;
 }
@@ -182,9 +182,9 @@ const HafriyatTipiForm: React.FC = () => {
     sellerEmail: user?.email || "",
 
     // Ekstra
-    warranty: false,
-    negotiable: false,
-    exchange: false,
+    warranty: "hayir",
+    negotiable: "hayir",
+    exchange: "hayir",
 
     detailedInfo: "",
   });

@@ -383,6 +383,96 @@ const YariMidilliForm: React.FC = () => {
     loadBrands();
   }, []);
 
+  // Load brand by slug from URL params
+  useEffect(() => {
+    if (brandSlug && brands.length > 0) {
+      const selectedBrand = brands.find((b) => b.slug === brandSlug);
+      if (selectedBrand) {
+        setFormData((prev) => ({
+          ...prev,
+          brandId: selectedBrand.id.toString(),
+          modelId: "", // Reset model when brand changes
+          variantId: "", // Reset variant when brand changes
+        }));
+      }
+    }
+  }, [brandSlug, brands]);
+
+  // Load models when brand changes
+  useEffect(() => {
+    if (formData.brandId) {
+      const loadModels = async () => {
+        try {
+          setLoadingModels(true);
+          const response = await apiClient.get(
+            `/brands/${formData.brandId}/models`
+          );
+          setModels((response.data as Model[]) || []);
+        } catch (error) {
+          console.error("Error loading models:", error);
+        } finally {
+          setLoadingModels(false);
+        }
+      };
+
+      loadModels();
+    } else {
+      setModels([]);
+      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
+    }
+  }, [formData.brandId]);
+
+  // Load model by slug from URL params
+  useEffect(() => {
+    if (modelSlug && models.length > 0) {
+      const selectedModel = models.find((m) => m.slug === modelSlug);
+      if (selectedModel) {
+        setFormData((prev) => ({
+          ...prev,
+          modelId: selectedModel.id.toString(),
+          variantId: "", // Reset variant when model changes
+        }));
+      }
+    }
+  }, [modelSlug, models]);
+
+  // Load variants when model changes
+  useEffect(() => {
+    if (formData.modelId) {
+      const loadVariants = async () => {
+        try {
+          setLoadingVariants(true);
+          const response = await apiClient.get(
+            `/models/${formData.modelId}/variants`
+          );
+          setVariants((response.data as Variant[]) || []);
+        } catch (error) {
+          console.error("Error loading variants:", error);
+        } finally {
+          setLoadingVariants(false);
+        }
+      };
+
+      loadVariants();
+    } else {
+      setVariants([]);
+      setFormData((prev) => ({ ...prev, variantId: "" }));
+    }
+  }, [formData.modelId]);
+
+  // Load variant by slug from URL params
+  useEffect(() => {
+    if (variantSlug && variants.length > 0) {
+      const selectedVariant = variants.find((v) => v.slug === variantSlug);
+      if (selectedVariant) {
+        setFormData((prev) => ({
+          ...prev,
+          variantId: selectedVariant.id.toString(),
+        }));
+      }
+    }
+  }, [variantSlug, variants]);
+
   // Kullanıcı bilgilerini yükle
   useEffect(() => {
     if (user) {
