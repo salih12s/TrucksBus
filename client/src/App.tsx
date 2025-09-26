@@ -178,6 +178,12 @@ const PersonalDataProtection = React.lazy(
 const CookiePolicy = React.lazy(() => import("./pages/legal/CookiePolicy"));
 const HelpGuide = React.lazy(() => import("./pages/legal/HelpGuide"));
 
+// Footer Pages
+const Sustainability = React.lazy(() => import("./pages/Sustainability"));
+const KullanimKosullari = React.lazy(() => import("./pages/KullanimKosullari"));
+const KisiselVeriler = React.lazy(() => import("./pages/KisiselVeriler"));
+const CerezYonetimi = React.lazy(() => import("./pages/CerezYonetimi"));
+
 // Admin Components
 const AdminLayout = React.lazy(() => import("./admin/components/AdminLayout"));
 const AdminDashboard = React.lazy(() => import("./admin/pages/AdminDashboard"));
@@ -1185,6 +1191,24 @@ function App() {
                           element={<CookiePolicy />}
                         />
                         <Route path="/help-guide" element={<HelpGuide />} />
+
+                        {/* Footer Pages */}
+                        <Route
+                          path="/sustainability"
+                          element={<Sustainability />}
+                        />
+                        <Route
+                          path="/kullanim-kosullari"
+                          element={<KullanimKosullari />}
+                        />
+                        <Route
+                          path="/kisisel-veriler"
+                          element={<KisiselVeriler />}
+                        />
+                        <Route
+                          path="/cerez-yonetimi"
+                          element={<CerezYonetimi />}
+                        />
 
                         {/* Admin Routes */}
                         <Route path="/admin" element={<AdminLayout />}>

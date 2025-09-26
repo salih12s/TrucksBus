@@ -375,6 +375,11 @@ const AdDetail: React.FC = () => {
     };
   }, [videoBlobUrls]);
 
+  // Scroll to top when component mounts or id changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [id]);
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("tr-TR").format(price) + " TL";
   };
@@ -1255,13 +1260,6 @@ const AdDetail: React.FC = () => {
                           {
                             label: "Hasar Kaydı",
                             value: (() => {
-                              console.log("Hasar Kaydı Debug:", {
-                                hasAccidentRecord: ad.hasAccidentRecord,
-                                customFieldsValue:
-                                  ad.customFields?.hasAccidentRecord,
-                                type: typeof ad.hasAccidentRecord,
-                              });
-
                               // Önce direkt ad objesi üzerinden kontrol et
                               if (ad.hasAccidentRecord === true) {
                                 return "Evet";
@@ -1288,13 +1286,6 @@ const AdDetail: React.FC = () => {
                           {
                             label: "Tramer Kaydı",
                             value: (() => {
-                              console.log("Tramer Kaydı Debug:", {
-                                hasTramerRecord: ad.hasTramerRecord,
-                                customFieldsValue:
-                                  ad.customFields?.hasTramerRecord,
-                                type: typeof ad.hasTramerRecord,
-                              });
-
                               // Önce direkt ad objesi üzerinden kontrol et
                               if (ad.hasTramerRecord === true) {
                                 return "Evet";
@@ -1367,56 +1358,6 @@ const AdDetail: React.FC = () => {
                             label: "Boyalı",
                             value: ad.customFields?.paintChange || null,
                           },
-                          {
-                            label: "Hasar Kaydı",
-                            value: (() => {
-                              // Önce direkt ad objesi üzerinden kontrol et
-                              if (ad.hasAccidentRecord === true) {
-                                return "Evet";
-                              } else if (ad.hasAccidentRecord === false) {
-                                return "Hayır";
-                              }
-
-                              // Fallback olarak customFields'tan kontrol et
-                              if (
-                                ad.customFields?.hasAccidentRecord === "evet" ||
-                                ad.customFields?.hasAccidentRecord === true
-                              ) {
-                                return "Evet";
-                              } else if (
-                                ad.customFields?.hasAccidentRecord === "hayir" ||
-                                ad.customFields?.hasAccidentRecord === false
-                              ) {
-                                return "Hayır";
-                              }
-                              return null;
-                            })(),
-                          },
-                          {
-                            label: "Tramer Kaydı",
-                            value: (() => {
-                              // Önce direkt ad objesi üzerinden kontrol et
-                              if (ad.hasTramerRecord === true) {
-                                return "Evet";
-                              } else if (ad.hasTramerRecord === false) {
-                                return "Hayır";
-                              }
-
-                              // Fallback olarak customFields'tan kontrol et
-                              if (
-                                ad.customFields?.hasTramerRecord === "evet" ||
-                                ad.customFields?.hasTramerRecord === true
-                              ) {
-                                return "Evet";
-                              } else if (
-                                ad.customFields?.hasTramerRecord === "hayir" ||
-                                ad.customFields?.hasTramerRecord === false
-                              ) {
-                                return "Hayır";
-                              }
-                              return null;
-                            })(),
-                          },
 
                           // Karoser/Ahşap Kasa Özel Alanları
                           {
@@ -1478,56 +1419,6 @@ const AdDetail: React.FC = () => {
                             value: ad.customFields?.fuelCapacity
                               ? `${ad.customFields.fuelCapacity} L`
                               : null,
-                          },
-                          {
-                            label: "Hasar Kaydı",
-                            value: (() => {
-                              // Önce direkt ad objesi üzerinden kontrol et
-                              if (ad.hasAccidentRecord === true) {
-                                return "Evet";
-                              } else if (ad.hasAccidentRecord === false) {
-                                return "Hayır";
-                              }
-
-                              // Fallback olarak customFields'tan kontrol et
-                              if (
-                                ad.customFields?.hasAccidentRecord === "evet" ||
-                                ad.customFields?.hasAccidentRecord === true
-                              ) {
-                                return "Evet";
-                              } else if (
-                                ad.customFields?.hasAccidentRecord === "hayir" ||
-                                ad.customFields?.hasAccidentRecord === false
-                              ) {
-                                return "Hayır";
-                              }
-                              return null;
-                            })(),
-                          },
-                          {
-                            label: "Tramer Kaydı",
-                            value: (() => {
-                              // Önce direkt ad objesi üzerinden kontrol et
-                              if (ad.hasTramerRecord === true) {
-                                return "Evet";
-                              } else if (ad.hasTramerRecord === false) {
-                                return "Hayır";
-                              }
-
-                              // Fallback olarak customFields'tan kontrol et
-                              if (
-                                ad.customFields?.hasTramerRecord === "evet" ||
-                                ad.customFields?.hasTramerRecord === true
-                              ) {
-                                return "Evet";
-                              } else if (
-                                ad.customFields?.hasTramerRecord === "hayir" ||
-                                ad.customFields?.hasTramerRecord === false
-                              ) {
-                                return "Hayır";
-                              }
-                              return null;
-                            })(),
                           },
 
                           // Oto Kurtarıcı Tekli Araç Özel Alanları
@@ -2791,8 +2682,12 @@ const AdDetail: React.FC = () => {
                             "Navigate ediliyor:",
                             `/ad/${similarAd.id}`
                           );
-                          // React Router yerine direct navigation deneyelim
-                          window.location.href = `/ad/${similarAd.id}`;
+                          // React Router navigate kullan
+                          navigate(`/ad/${similarAd.id}`);
+                          // Sayfayı en üste kaydır
+                          setTimeout(() => {
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }, 100);
                         } else {
                           console.log("Aynı ilan, navigate edilmiyor");
                         }

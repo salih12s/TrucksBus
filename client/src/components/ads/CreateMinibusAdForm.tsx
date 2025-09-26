@@ -316,56 +316,151 @@ const CreateMinibusAdForm: React.FC = () => {
   };
 
   const loadModels = async (brandId: string) => {
+    if (!brandId || brandId === "") {
+      setModels([]);
+      setVariants([]);
+      setFormData((prev) => ({
+        ...prev,
+        modelId: "",
+        variantId: "",
+      }));
+      return;
+    }
+
     try {
       // Brand ID'den slug'ı bul
       const brand = brands.find((b) => b.id.toString() === brandId);
       if (!brand) {
-        console.error("Brand bulunamadı:", brandId);
+        console.error(
+          "Brand bulunamadı:",
+          brandId,
+          "Mevcut brands:",
+          brands.map((b) => `${b.id}:${b.name}`)
+        );
+        setModels([]);
+        setVariants([]);
+        setFormData((prev) => ({
+          ...prev,
+          modelId: "",
+          variantId: "",
+        }));
         return;
       }
 
+      console.log(
+        "🔄 Loading models for brand:",
+        brand.name,
+        "(ID:",
+        brandId,
+        "Slug:",
+        brand.slug,
+        ")"
+      );
       const response = await apiClient.get(
         `/categories/minibus-midibus/brands/${brand.slug}/models`
       );
       const modelsData = response.data as Model[];
+      console.log(
+        "✅ Models loaded:",
+        modelsData.length,
+        "models for brand",
+        brand.name
+      );
       setModels(modelsData);
 
-      // İlk model'i otomatik seç
+      // Variant'ları temizle çünkü model değişti
+      setVariants([]);
+      setFormData((prev) => ({
+        ...prev,
+        variantId: "",
+      }));
+
+      // İlk model'i otomatik seç (eğer seçili değilse)
       if (modelsData.length > 0 && !formData.modelId) {
+        const firstModelId = modelsData[0].id.toString();
         setFormData((prev) => ({
           ...prev,
-          modelId: modelsData[0].id.toString(),
+          modelId: firstModelId,
         }));
+        // İlk model seçilince variant'ları da yükle
+        await loadVariants(firstModelId);
       }
     } catch (error) {
-      console.error("Modeller yüklenemedi:", error);
+      console.error("❌ Modeller yüklenemedi:", error);
+      setModels([]);
+      setVariants([]);
+      setFormData((prev) => ({
+        ...prev,
+        modelId: "",
+        variantId: "",
+      }));
     }
   };
 
   const loadVariants = async (modelId: string) => {
+    if (!modelId || modelId === "") {
+      setVariants([]);
+      setFormData((prev) => ({
+        ...prev,
+        variantId: "",
+      }));
+      return;
+    }
+
     try {
       // Model ID'den slug'ı bul
       const model = models.find((m) => m.id.toString() === modelId);
       const brand = brands.find((b) => b.id.toString() === formData.brandId);
 
-      if (!model || !brand) {
+      if (!model) {
         console.error(
-          "Model veya Brand bulunamadı:",
+          "Model bulunamadı:",
           modelId,
-          formData.brandId
+          "Mevcut models:",
+          models.map((m) => `${m.id}:${m.name}`)
         );
+        setVariants([]);
+        setFormData((prev) => ({
+          ...prev,
+          variantId: "",
+        }));
         return;
       }
 
-      console.log("🔍 Variant URL oluşturuluyor:");
-      console.log("  - brand.slug:", brand.slug);
-      console.log("  - model.slug:", model.slug);
+      if (!brand) {
+        console.error(
+          "Brand bulunamadı:",
+          formData.brandId,
+          "Mevcut brands:",
+          brands.map((b) => `${b.id}:${b.name}`)
+        );
+        setVariants([]);
+        setFormData((prev) => ({
+          ...prev,
+          variantId: "",
+        }));
+        return;
+      }
 
+      console.log(
+        "🔄 Loading variants for model:",
+        model.name,
+        "(ID:",
+        modelId,
+        "Slug:",
+        model.slug,
+        ") of brand:",
+        brand.name
+      );
       const variantUrl = `/categories/minibus-midibus/brands/${brand.slug}/models/${model.slug}/variants`;
-      console.log("  - Full URL:", variantUrl);
-
       const response = await apiClient.get(variantUrl);
       const variantsData = response.data as Variant[];
+      console.log(
+        "✅ Variants loaded:",
+        variantsData.length,
+        "variants for model",
+        model.name
+      );
       setVariants(variantsData);
 
       // İlk variant'ı otomatik seç (varsa)
@@ -554,6 +649,34 @@ const CreateMinibusAdForm: React.FC = () => {
       ...prev,
       [field]: value,
     }));
+
+    // Brand değiştiğinde model ve variant'ları temizle ve yeniden yükle
+    if (field === "brandId") {
+      setFormData((prev) => ({
+        ...prev,
+        brandId: value,
+        modelId: "",
+        variantId: "",
+      }));
+      setModels([]);
+      setVariants([]);
+      if (value) {
+        loadModels(value);
+      }
+    }
+
+    // Model değiştiğinde variant'ları temizle ve yeniden yükle
+    if (field === "modelId") {
+      setFormData((prev) => ({
+        ...prev,
+        modelId: value,
+        variantId: "",
+      }));
+      setVariants([]);
+      if (value) {
+        loadVariants(value);
+      }
+    }
   };
 
   const handlePhotoUpload = (

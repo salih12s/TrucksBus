@@ -54,10 +54,16 @@ apiClient.interceptors.request.use(
   }
 );
 
-// ✅ RESPONSE INTERCEPTOR - Handle 401 errors
+// ✅ RESPONSE INTERCEPTOR - Handle 401 errors, ignore 429
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // 429 hatalarını tamamen yok say - local dev için
+    if (error.response?.status === 429) {
+      // Hiçbir şey yapma, hatayı sessizce yut
+      return new Promise(() => {}); // Never resolving promise
+    }
+
     if (error.response?.status === 401) {
       console.warn("🚫 401 Unauthorized - Redirecting to login");
       localStorage.removeItem("accessToken");
@@ -93,10 +99,16 @@ videoUploadClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle video upload 401 errors
+// Handle video upload 401 errors, ignore 429
 videoUploadClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // 429 hatalarını tamamen yok say - local dev için
+    if (error.response?.status === 429) {
+      // Hiçbir şey yapma, hatayı sessizce yut
+      return new Promise(() => {}); // Never resolving promise
+    }
+
     if (error.response?.status === 401) {
       console.warn(
         "🚫 401 Unauthorized in video upload - Redirecting to login"

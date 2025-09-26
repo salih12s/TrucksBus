@@ -178,6 +178,9 @@ const MainLayout: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [filteredAds, setFilteredAds] = useState<Ad[]>([]);
   const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
+  const [districts, setDistricts] = useState<{ id: number; name: string }[]>(
+    []
+  );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -186,6 +189,7 @@ const MainLayout: React.FC = () => {
   const [yearMin, setYearMin] = useState("");
   const [yearMax, setYearMax] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [complaintModalOpen, setComplaintModalOpen] = useState(false);
   const [selectedAdForComplaint, setSelectedAdForComplaint] = useState<{
@@ -207,6 +211,7 @@ const MainLayout: React.FC = () => {
   // Trade filter
   const [tradeFilter, setTradeFilter] = useState("all"); // "all", "trade-only", "no-trade"
   const [dateFilter, setDateFilter] = useState("all"); // "all", "24h", "48h"
+  const [kmFilter, setKmFilter] = useState("all"); // "all", "0-50000", "50000-100000", "100000-200000", "200000+"
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -993,6 +998,38 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  // İlçeleri yüklemek için fonksiyon
+  const loadDistricts = async (cityId: string) => {
+    if (!cityId) {
+      setDistricts([]);
+      return;
+    }
+
+    try {
+      const response = await apiClient
+        .get(`/cities/${cityId}/districts`)
+        .catch((err) => {
+          console.error("Districts API error:", err);
+          return { data: [] };
+        });
+
+      const districtsData = Array.isArray(response.data) ? response.data : [];
+      setDistricts(districtsData);
+    } catch (error) {
+      console.error("Districts loading error:", error);
+      setDistricts([]);
+    }
+  };
+
+  // Şehir değiştiğinde ilçeleri yükle
+  useEffect(() => {
+    if (selectedCity) {
+      loadDistricts(selectedCity);
+    } else {
+      setDistricts([]);
+    }
+  }, [selectedCity]);
+
   // İlk yüklemede tüm markaları yükle, sonra kategoriye göre filtrele
   // useEffect kaldırıldı - artık category değiştiğinde API çağrısı yapmıyoruz
 
@@ -1173,11 +1210,39 @@ const MainLayout: React.FC = () => {
         console.log("After year filter:", filtered.length);
       }
 
-      // Şehir filtresi - ID ile eşleştir
+      // Şehir filtresi - daha esnek kontrol
       if (selectedCity) {
+        console.log("=== ŞEHIR FILTER DEBUG ===");
+        console.log("selectedCity:", selectedCity);
+        console.log("Sample ad city data:", filtered[0]?.city);
+
         filtered = filtered.filter((ad) => {
-          const cityMatch = ad.city?.id?.toString() === selectedCity.toString();
-          return cityMatch;
+          // City veri yapısını kontrol et
+          const cityId = ad.city?.id;
+          const cityName = ad.city?.name;
+
+          // ID ile eşleştir (öncelik)
+          const cityIdMatch = cityId?.toString() === selectedCity.toString();
+
+          // Name ile eşleştir (fallback)
+          const selectedCityName = cities.find(
+            (c) => c.id.toString() === selectedCity.toString()
+          )?.name;
+          const cityNameMatch =
+            selectedCityName &&
+            cityName?.toLowerCase() === selectedCityName.toLowerCase();
+
+          const result = cityIdMatch || cityNameMatch;
+
+          if (result) {
+            console.log(`✓ City match: ${ad.title}`);
+            console.log(`  cityId: ${cityId}, cityName: ${cityName}`);
+            console.log(
+              `  selectedCity: ${selectedCity}, selectedCityName: ${selectedCityName}`
+            );
+          }
+
+          return result;
         });
         console.log(
           "After city filter:",
@@ -1185,6 +1250,53 @@ const MainLayout: React.FC = () => {
           "City ID:",
           selectedCity
         );
+        console.log("=== END ŞEHIR DEBUG ===");
+      }
+
+      // İlçe filtresi - daha esnek kontrol
+      if (selectedDistrict) {
+        console.log("=== İLÇE FILTER DEBUG ===");
+        console.log("selectedDistrict:", selectedDistrict);
+        console.log("Sample ad district data:", filtered[0]?.district);
+
+        filtered = filtered.filter((ad) => {
+          // District veri yapısını kontrol et
+          const districtId = ad.district?.id;
+          const districtName = ad.district?.name;
+
+          // ID ile eşleştir (öncelik)
+          const districtIdMatch =
+            districtId?.toString() === selectedDistrict.toString();
+
+          // Name ile eşleştir (fallback)
+          const selectedDistrictName = districts.find(
+            (d) => d.id.toString() === selectedDistrict.toString()
+          )?.name;
+          const districtNameMatch =
+            selectedDistrictName &&
+            districtName?.toLowerCase() === selectedDistrictName.toLowerCase();
+
+          const result = districtIdMatch || districtNameMatch;
+
+          if (result) {
+            console.log(`✓ District match: ${ad.title}`);
+            console.log(
+              `  districtId: ${districtId}, districtName: ${districtName}`
+            );
+            console.log(
+              `  selectedDistrict: ${selectedDistrict}, selectedDistrictName: ${selectedDistrictName}`
+            );
+          }
+
+          return result;
+        });
+        console.log(
+          "After district filter:",
+          filtered.length,
+          "District ID:",
+          selectedDistrict
+        );
+        console.log("=== END İLÇE DEBUG ===");
       }
 
       // Seller type filtresi
@@ -1238,9 +1350,10 @@ const MainLayout: React.FC = () => {
         });
 
         filtered = filtered.filter((ad) => {
-          // İki farklı yerden takas bilgisini al
+          // Tüm olası yerlerden takas bilgisini al
           const directValue = ad.isExchangeable;
           const customValue = ad.customFields?.isExchangeable;
+          const exchangeValue = ad.customFields?.exchange;
 
           // Takas durumunu belirle
           let isTradeAllowed = false;
@@ -1253,6 +1366,10 @@ const MainLayout: React.FC = () => {
             isTradeAllowed =
               customValue.toLowerCase() === "evet" ||
               customValue.toLowerCase() === "true";
+          } else if (typeof exchangeValue === "string") {
+            isTradeAllowed =
+              exchangeValue.toLowerCase() === "evet" ||
+              exchangeValue.toLowerCase() === "true";
           }
 
           let result = false;
@@ -1274,6 +1391,7 @@ const MainLayout: React.FC = () => {
             console.log(`  - Final isTradeAllowed:`, isTradeAllowed);
             console.log(`  - directValue:`, directValue);
             console.log(`  - customValue:`, customValue);
+            console.log(`  - exchangeValue:`, exchangeValue);
           }
 
           return result;
@@ -1282,6 +1400,47 @@ const MainLayout: React.FC = () => {
         console.log("After trade filter:", filtered.length);
         console.log("Filter:", tradeFilter);
         console.log("=== END TAKAS DEBUG ===");
+      }
+
+      // KM filtresi
+      if (kmFilter !== "all") {
+        console.log("=== KM FILTER DEBUG ===");
+        console.log("kmFilter:", kmFilter);
+        console.log("Total ads before filter:", filtered.length);
+
+        filtered = filtered.filter((ad) => {
+          // Kilometre bilgisini farklı yerlerden al
+          const mileageValue = ad.mileage || ad.customFields?.mileage || 0;
+          const km =
+            typeof mileageValue === "string"
+              ? parseInt(mileageValue.replace(/[^\d]/g, ""))
+              : Number(mileageValue);
+
+          let result = false;
+          switch (kmFilter) {
+            case "0-50000":
+              result = km >= 0 && km <= 50000;
+              break;
+            case "50000-100000":
+              result = km > 50000 && km <= 100000;
+              break;
+            case "100000-200000":
+              result = km > 100000 && km <= 200000;
+              break;
+            case "200000-300000":
+              result = km > 200000 && km <= 300000;
+              break;
+            case "300000+":
+              result = km > 300000;
+              break;
+            default:
+              result = true;
+          }
+          return result;
+        });
+
+        console.log(`After km filter (${kmFilter}):`, filtered.length);
+        console.log("=== END KM DEBUG ===");
       }
 
       // Tarih filtresi
@@ -1323,11 +1482,15 @@ const MainLayout: React.FC = () => {
     yearMin,
     yearMax,
     selectedCity,
+    selectedDistrict,
     selectedSellerType,
     tradeFilter,
     dateFilter,
+    kmFilter,
     categories,
     brands,
+    cities,
+    districts,
   ]);
 
   // ❗ Favorites count'u lazy yükle - critical değil (SAFE VERSION)
@@ -1869,7 +2032,10 @@ const MainLayout: React.FC = () => {
             <FormControl size="small" fullWidth>
               <Select
                 value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
+                onChange={(e) => {
+                  setSelectedCity(e.target.value);
+                  setSelectedDistrict(""); // Şehir değiştiğinde ilçeyi sıfırla
+                }}
                 displayEmpty
                 sx={{
                   backgroundColor: "white",
@@ -1890,6 +2056,41 @@ const MainLayout: React.FC = () => {
               </Select>
             </FormControl>
           </Box>
+
+          {/* İlçe Filtresi */}
+          {selectedCity && (
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                variant="body2"
+                sx={{ mb: 1, fontSize: "12px", color: "#666" }}
+              >
+                İlçe
+              </Typography>
+              <FormControl size="small" fullWidth>
+                <Select
+                  value={selectedDistrict}
+                  onChange={(e) => setSelectedDistrict(e.target.value)}
+                  displayEmpty
+                  sx={{
+                    backgroundColor: "white",
+                    fontSize: "12px",
+                    height: "32px",
+                  }}
+                >
+                  <MenuItem value="">Tümü</MenuItem>
+                  {districts.map((district) => (
+                    <MenuItem
+                      key={district.id}
+                      value={district.id}
+                      sx={{ fontSize: "12px" }}
+                    >
+                      {district.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
 
           {/* Takas Filtresi */}
           <Box sx={{ mb: 2 }}>
@@ -1918,6 +2119,47 @@ const MainLayout: React.FC = () => {
                 </MenuItem>
                 <MenuItem value="no-trade" sx={{ fontSize: "12px" }}>
                   Hayır
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+
+          {/* KM Filtresi */}
+          <Box sx={{ mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ mb: 1, fontSize: "12px", color: "#666" }}
+            >
+              Kilometre
+            </Typography>
+            <FormControl size="small" fullWidth>
+              <Select
+                value={kmFilter}
+                onChange={(e) => setKmFilter(e.target.value)}
+                displayEmpty
+                sx={{
+                  backgroundColor: "white",
+                  fontSize: "12px",
+                  height: "32px",
+                }}
+              >
+                <MenuItem value="all" sx={{ fontSize: "12px" }}>
+                  Tümü
+                </MenuItem>
+                <MenuItem value="0-50000" sx={{ fontSize: "12px" }}>
+                  0 - 50.000 km
+                </MenuItem>
+                <MenuItem value="50000-100000" sx={{ fontSize: "12px" }}>
+                  50.000 - 100.000 km
+                </MenuItem>
+                <MenuItem value="100000-200000" sx={{ fontSize: "12px" }}>
+                  100.000 - 200.000 km
+                </MenuItem>
+                <MenuItem value="200000-300000" sx={{ fontSize: "12px" }}>
+                  200.000 - 300.000 km
+                </MenuItem>
+                <MenuItem value="300000+" sx={{ fontSize: "12px" }}>
+                  300.000+ km
                 </MenuItem>
               </Select>
             </FormControl>
@@ -1962,8 +2204,10 @@ const MainLayout: React.FC = () => {
             yearMin ||
             yearMax ||
             selectedCity ||
+            selectedDistrict ||
             tradeFilter !== "all" ||
-            dateFilter !== "all") && (
+            dateFilter !== "all" ||
+            kmFilter !== "all") && (
             <Button
               variant="outlined"
               size="small"
@@ -1975,8 +2219,10 @@ const MainLayout: React.FC = () => {
                 setYearMin("");
                 setYearMax("");
                 setSelectedCity("");
+                setSelectedDistrict("");
                 setTradeFilter("all");
                 setDateFilter("all");
+                setKmFilter("all");
               }}
               sx={{
                 color: "#d32f2f",
@@ -2009,9 +2255,6 @@ const MainLayout: React.FC = () => {
       }}
     >
       <Header favoritesCount={favoritesCount} />
-
-      {/* Animated Advertisement Banner - Only shown on AdDetail pages */}
-      {isAdDetailPage && <AdBanner variant="horizontal" />}
 
       <Box
         sx={{
