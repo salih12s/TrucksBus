@@ -783,6 +783,19 @@ const MainLayout: React.FC = () => {
       const adsLoadTime = performance.now() - adsStartTime;
       console.log(`⚡ Ads page ${page} loaded in: ${adsLoadTime.toFixed(2)}ms`);
 
+      // Debug mileage data
+      console.log("=== ADS MILEAGE DEBUG ===");
+      if (adsData && Array.isArray(adsData) && adsData.length > 0) {
+        adsData.slice(0, 3).forEach((ad: Ad, index: number) => {
+          console.log(
+            `API Ad ${index + 1} - ID: ${ad.id}, Title: ${ad.title}, Mileage: ${
+              ad.mileage
+            }, Type: ${typeof ad.mileage}`
+          );
+        });
+      }
+      console.log("=== END MILEAGE DEBUG ===");
+
       setAds(adsData as Ad[]);
     } catch (error) {
       console.error("Ads lazy loading error:", error);
@@ -2907,7 +2920,7 @@ const MainLayout: React.FC = () => {
                               }}
                             >
                               {ad.mileage
-                                ? `${ad.mileage.toLocaleString("tr-TR")}`
+                                ? `${ad.mileage.toLocaleString("tr-TR")} km`
                                 : "---"}
                             </Typography>
                           </Box>
