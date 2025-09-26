@@ -77,6 +77,8 @@ interface FormData {
   color: string;
   fuelCapacity: string;
   tireCondition: string;
+  hasAccidentRecord: string; // Hasar kaydı
+  hasTramerRecord: string; // Tramer kaydı
 
   // Özellikler
   features: string[];
@@ -133,6 +135,8 @@ const OtobusAdForm: React.FC = () => {
     color: "",
     fuelCapacity: "",
     tireCondition: "",
+    hasAccidentRecord: "",
+    hasTramerRecord: "",
     features: [],
     photos: [],
     showcasePhoto: null,
@@ -1363,6 +1367,58 @@ const OtobusAdForm: React.FC = () => {
                       },
                     }}
                   />
+                </Box>
+
+                {/* Hasar Kaydı, Tramer Kaydı */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: 2,
+                  }}
+                >
+                  <FormControl
+                    sx={{
+                      flex: 1,
+                      minWidth: 200,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                      },
+                    }}
+                  >
+                    <InputLabel>Hasar Kaydı</InputLabel>
+                    <Select
+                      value={formData.hasAccidentRecord || ""}
+                      onChange={(e) =>
+                        handleInputChange("hasAccidentRecord", e.target.value)
+                      }
+                      label="Hasar Kaydı"
+                    >
+                      <MenuItem value="evet">Evet</MenuItem>
+                      <MenuItem value="hayir">Hayır</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControl
+                    sx={{
+                      flex: 1,
+                      minWidth: 200,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                      },
+                    }}
+                  >
+                    <InputLabel>Tramer Kaydı</InputLabel>
+                    <Select
+                      value={formData.hasTramerRecord || ""}
+                      onChange={(e) =>
+                        handleInputChange("hasTramerRecord", e.target.value)
+                      }
+                      label="Tramer Kaydı"
+                    >
+                      <MenuItem value="evet">Evet</MenuItem>
+                      <MenuItem value="hayir">Hayır</MenuItem>
+                    </Select>
+                  </FormControl>
                 </Box>
               </CardContent>
             </Card>

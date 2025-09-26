@@ -90,9 +90,10 @@ interface FormData {
   cityId: string;
   districtId: string;
 
-  // Fotoğraflar
+  // Fotoğraflar ve Videolar
   photos: File[];
   showcasePhoto: File | null;
+  videos: File[];
 
   // İletişim Bilgileri
   sellerName: string;
@@ -141,9 +142,10 @@ const AcikKasaForm: React.FC = () => {
     cityId: "",
     districtId: "",
 
-    // Fotoğraflar
+    // Fotoğraflar ve Videolar
     photos: [],
     showcasePhoto: null,
+    videos: [],
 
     // İletişim Bilgileri
     sellerName: "",
@@ -324,6 +326,67 @@ const AcikKasaForm: React.FC = () => {
     }));
   };
 
+  // Video fonksiyonları
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const currentVideos = formData.videos;
+      const newVideos = Array.from(files);
+      const totalVideos = currentVideos.length + newVideos.length;
+
+      // En fazla 3 video
+      if (totalVideos <= 3) {
+        // Video dosya boyutu kontrolü (50MB limit)
+        const oversizedFiles = newVideos.filter(
+          (file) => file.size > 50 * 1024 * 1024
+        );
+        if (oversizedFiles.length > 0) {
+          console.error("Video dosyası çok büyük:", oversizedFiles);
+          alert(
+            `⚠️ Video dosyası 50MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
+              .map((f) => f.name)
+              .join(", ")}`
+          );
+          return;
+        }
+
+        // Video türü kontrolü
+        const invalidFiles = newVideos.filter(
+          (file) => !file.type.startsWith("video/")
+        );
+        if (invalidFiles.length > 0) {
+          alert(
+            `⚠️ Sadece video dosyaları yükleyebilirsiniz. Geçersiz dosyalar: ${invalidFiles
+              .map((f) => f.name)
+              .join(", ")}`
+          );
+          return;
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          videos: [...prev.videos, ...newVideos],
+        }));
+
+        console.log(
+          `✅ ${newVideos.length} video başarıyla yüklendi:`,
+          newVideos.map((v) => v.name)
+        );
+
+        // Video önizlemeleri oluştur (URL.createObjectURL direct kullanılacak)
+      } else {
+        alert("En fazla 3 video yükleyebilirsiniz");
+      }
+    }
+  };
+
+  const removeVideo = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -333,7 +396,12 @@ const AcikKasaForm: React.FC = () => {
 
       // Temel bilgileri ekle (price özel olarak parse edilir)
       Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "photos" && key !== "showcasePhoto" && value) {
+        if (
+          key !== "photos" &&
+          key !== "showcasePhoto" &&
+          key !== "videos" &&
+          value
+        ) {
           if (key === "price") {
             // Price değerini number olarak parse et
             const parsedPrice = parseFloat(
@@ -368,6 +436,18 @@ const AcikKasaForm: React.FC = () => {
       formData.photos.forEach((photo, index) => {
         submitData.append(`photo_${index}`, photo);
       });
+
+      // Videoları ekle
+      console.log("🎥 Video append işlemi başlıyor:", formData.videos.length);
+      formData.videos.forEach((video, index) => {
+        console.log(
+          `🎥 Video ${index} append ediliyor:`,
+          video.name,
+          video.size
+        );
+        submitData.append(`video_${index}`, video);
+      });
+      console.log("🎥 Video append işlemi tamamlandı");
 
       const response = await apiClient.post("/ads/karoser", submitData, {
         headers: {
@@ -844,6 +924,81 @@ const AcikKasaForm: React.FC = () => {
                         >
                           ×
                         </Button>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Videolar */}
+            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
+              🎥 Videolar
+            </Typography>
+
+            <Card sx={{ mb: 4 }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2 }}>
+                  Videolar (En fazla 3 adet, maksimum 50MB)
+                </Typography>
+                <input
+                  type="file"
+                  accept="video/*"
+                  multiple
+                  onChange={handleVideoUpload}
+                  style={{ marginBottom: "16px" }}
+                />
+
+                {formData.videos.length > 0 && (
+                  <Box
+                    sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 2 }}
+                  >
+                    {formData.videos.map((video, index) => (
+                      <Box key={index} sx={{ position: "relative" }}>
+                        <video
+                          width="200"
+                          height="150"
+                          controls
+                          style={{
+                            borderRadius: "8px",
+                            objectFit: "cover",
+                          }}
+                        >
+                          <source
+                            src={URL.createObjectURL(video)}
+                            type={video.type}
+                          />
+                          Tarayıcınız bu video formatını desteklemiyor.
+                        </video>
+                        <Button
+                          size="small"
+                          onClick={() => removeVideo(index)}
+                          sx={{
+                            position: "absolute",
+                            top: -10,
+                            right: -10,
+                            minWidth: "auto",
+                            backgroundColor: "red",
+                            color: "white",
+                            "&:hover": { backgroundColor: "darkred" },
+                          }}
+                        >
+                          ×
+                        </Button>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            position: "absolute",
+                            bottom: 5,
+                            left: 5,
+                            backgroundColor: "rgba(0,0,0,0.7)",
+                            color: "white",
+                            px: 1,
+                            borderRadius: 1,
+                          }}
+                        >
+                          {video.name}
+                        </Typography>
                       </Box>
                     ))}
                   </Box>

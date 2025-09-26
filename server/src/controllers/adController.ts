@@ -466,7 +466,7 @@ export const getAdById = async (req: Request, res: Response) => {
 export const getAdVideos = async (req: Request, res: Response) => {
   console.log("🎥 getAdVideos called for ad:", req.params.id);
   const startTime = performance.now();
-  
+
   try {
     const { id } = req.params;
     const adId = parseInt(id);
@@ -478,8 +478,9 @@ export const getAdVideos = async (req: Request, res: Response) => {
     // Quick cache check for videos
     const videoCacheKey = `videos_${id}`;
     const cachedVideos = adCache.get(videoCacheKey);
-    
-    if (cachedVideos && Date.now() - cachedVideos.timestamp < 3600000) { // 1 hour cache
+
+    if (cachedVideos && Date.now() - cachedVideos.timestamp < 3600000) {
+      // 1 hour cache
       console.log(`⚡ VIDEO CACHE HIT for ad ${id}`);
       return res.json({ videos: cachedVideos.data });
     }
@@ -497,7 +498,30 @@ export const getAdVideos = async (req: Request, res: Response) => {
         displayOrder: true,
         description: true,
       },
-      orderBy: { displayOrder: 'asc' }
+      orderBy: { displayOrder: "asc" },
+    });
+
+    // Debug: Log video details
+    console.log(`🎥 Found ${videos.length} videos for ad ${id}`);
+    videos.forEach((video, index) => {
+      console.log(`Video ${index + 1}:`, {
+        id: video.id,
+        hasVideoUrl: !!video.videoUrl,
+        videoUrlLength: video.videoUrl?.length || 0,
+        videoUrlType: typeof video.videoUrl,
+        mimeType: video.mimeType,
+      });
+    });
+
+    console.log(`🎥 Found ${videos.length} videos for ad ${id}`);
+    videos.forEach((video, index) => {
+      console.log(`Video ${index + 1}:`, {
+        id: video.id,
+        hasVideoUrl: !!video.videoUrl,
+        videoUrlLength: video.videoUrl?.length || 0,
+        mimeType: video.mimeType,
+        fileSize: video.fileSize,
+      });
     });
 
     // Cache the result
@@ -510,9 +534,8 @@ export const getAdVideos = async (req: Request, res: Response) => {
     const responseTime = performance.now() - startTime;
     console.log(`🎥 Videos loaded in: ${responseTime.toFixed(2)}ms`);
 
-    res.set('Cache-Control', 'public, max-age=3600'); // 1 hour cache
+    res.set("Cache-Control", "public, max-age=3600"); // 1 hour cache
     return res.json({ videos });
-
   } catch (error) {
     console.error("❌ Error fetching ad videos:", error);
     return res.status(500).json({ error: "Server error" });
@@ -1464,6 +1487,8 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       damageRecord,
       paintChange,
       exchange,
+      hasAccidentRecord,
+      hasTramerRecord,
       cityId,
       districtId,
       detailedInfo,
@@ -1580,6 +1605,8 @@ export const createCekiciAd = async (req: Request, res: Response) => {
           damageRecord: damageRecord || null,
           paintChange: paintChange || null,
           exchange: exchange || null,
+          hasAccidentRecord: hasAccidentRecord || null,
+          hasTramerRecord: hasTramerRecord || null,
           cityId: cityId || null,
           districtId: districtId || null,
           detailedInfo: detailedInfo || null,
@@ -2253,7 +2280,56 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       }
     }
 
-    // Oluşturulan ilanı resimlerle birlikte getir
+    // Video yükleme işlemleri (Ana createAd fonksiyonundan kopyalanmış)
+    const videoFiles = files
+      ? files.filter((f: any) => f.fieldname.startsWith("video_"))
+      : [];
+    console.log(`🎥 Total files received: ${files?.length || 0}`);
+    console.log(`🎥 Video files found: ${videoFiles.length}`);
+
+    if (videoFiles.length > 0) {
+      console.log(`🎥 Processing ${videoFiles.length} videos for ad ${ad.id}`);
+      videoFiles.forEach((file: any, index: number) => {
+        console.log(`📹 Video ${index + 1}:`, {
+          fieldname: file.fieldname,
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+        });
+      });
+
+      const videoPromises = videoFiles.map((videoFile: any, index: number) => {
+        const base64Video = `data:${
+          videoFile.mimetype
+        };base64,${videoFile.buffer.toString("base64")}`;
+
+        console.log(
+          `💾 Saving video ${index + 1} to database for ad ${ad.id}`,
+          {
+            fieldname: videoFile.fieldname,
+            mimetype: videoFile.mimetype,
+            size: videoFile.size,
+            base64Length: base64Video.length,
+          }
+        );
+
+        return prisma.adVideo.create({
+          data: {
+            adId: ad.id,
+            videoUrl: base64Video,
+            displayOrder: index,
+            mimeType: videoFile.mimetype,
+            fileSize: videoFile.size,
+            description: `Video ${index + 1}`,
+          },
+        });
+      });
+
+      await Promise.all(videoPromises);
+      console.log(`✅ ${videoFiles.length} video başarıyla kaydedildi!`);
+    }
+
+    // Oluşturulan ilanı resimler ve videolarla birlikte getir
     const createdAd = await prisma.ad.findUnique({
       where: { id: ad.id },
       include: {
@@ -2325,6 +2401,8 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       exchange,
       damageRecord,
       paintChange,
+      hasAccidentRecord,
+      hasTramerRecord,
       plateType,
       plateNumber,
       cityId,
@@ -2459,6 +2537,8 @@ export const createOtobusAd = async (req: Request, res: Response) => {
           exchange: exchange || null,
           damageRecord: damageRecord || null,
           paintChange: paintChange || null,
+          hasAccidentRecord: hasAccidentRecord || null,
+          hasTramerRecord: hasTramerRecord || null,
           plateType: plateType || null,
           plateNumber: plateNumber || null,
           cityId: cityId ? parseInt(cityId) : null,

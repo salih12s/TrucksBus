@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -118,18 +118,23 @@ const AdDetail: React.FC = () => {
   const [similarAdsLoading, setSimilarAdsLoading] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [showComplaintModal, setShowComplaintModal] = useState(false);
-  const [adVideos, setAdVideos] = useState<{
-    id: number;
-    videoUrl: string;
-    thumbnailUrl?: string;
-    duration?: number;
-    fileSize?: number;
-    mimeType?: string;
-    displayOrder: number;
-    description?: string;
-  }[]>([]);
+  const [adVideos, setAdVideos] = useState<
+    {
+      id: number;
+      videoUrl: string;
+      thumbnailUrl?: string;
+      duration?: number;
+      fileSize?: number;
+      mimeType?: string;
+      displayOrder: number;
+      description?: string;
+    }[]
+  >([]);
   const [videosLoading, setVideosLoading] = useState(false);
   const [videosLoaded, setVideosLoaded] = useState(false);
+  const [videoBlobUrls, setVideoBlobUrls] = useState<Map<number, string>>(
+    new Map()
+  );
 
   // Get current user from Redux store
   const currentUser = useSelector((state: RootState) => state.auth.user);
@@ -301,24 +306,74 @@ const AdDetail: React.FC = () => {
   }, [ad]);
 
   // Fetch videos separately for performance
-  const fetchVideos = async () => {
+  const fetchVideos = useCallback(async () => {
     if (!id || videosLoaded || videosLoading) return;
-    
+
     setVideosLoading(true);
     try {
       console.log("🎥 Loading videos for ad:", id);
       const response = await apiClient.get(`/ads/${id}/videos`);
+
+      console.log("🎥 Raw video response:", response.data);
+
       const data = response.data as { videos: typeof adVideos };
-      setAdVideos(data.videos || []);
+      const videos = data.videos || [];
+
+      console.log("🎥 Processed videos:", videos.length);
+      videos.forEach((video, index) => {
+        console.log(`Video ${index + 1}:`, {
+          id: video.id,
+          hasVideoUrl: !!video.videoUrl,
+          videoUrlLength: video.videoUrl?.length || 0,
+          mimeType: video.mimeType,
+          isDataUrl: video.videoUrl?.startsWith("data:") || false,
+        });
+      });
+
+      setAdVideos(videos);
       setVideosLoaded(true);
-      console.log("🎥 Videos loaded:", data.videos?.length || 0);
+      console.log("🎥 Videos loaded successfully:", videos.length);
     } catch (error) {
-      console.error("Error loading videos:", error);
+      console.error("❌ Error loading videos:", error);
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+      }
       setAdVideos([]);
     } finally {
       setVideosLoading(false);
     }
-  };
+  }, [id, videosLoaded, videosLoading]);
+
+  // Auto-fetch videos if metadata exists but videoUrl is missing
+  useEffect(() => {
+    if (
+      ad &&
+      ad.videos &&
+      ad.videos.length > 0 &&
+      !videosLoaded &&
+      !videosLoading
+    ) {
+      const hasVideoWithoutUrl = ad.videos.some(
+        (video) => video && !video.videoUrl && video.id
+      );
+
+      if (hasVideoWithoutUrl) {
+        console.log(
+          "🎥 Auto-fetching videos - metadata exists but videoUrl missing"
+        );
+        fetchVideos();
+      }
+    }
+  }, [ad, videosLoaded, videosLoading, fetchVideos]);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      videoBlobUrls.forEach((blobUrl) => {
+        URL.revokeObjectURL(blobUrl);
+      });
+    };
+  }, [videoBlobUrls]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("tr-TR").format(price) + " TL";
@@ -1312,6 +1367,56 @@ const AdDetail: React.FC = () => {
                             label: "Boyalı",
                             value: ad.customFields?.paintChange || null,
                           },
+                          {
+                            label: "Hasar Kaydı",
+                            value: (() => {
+                              // Önce direkt ad objesi üzerinden kontrol et
+                              if (ad.hasAccidentRecord === true) {
+                                return "Evet";
+                              } else if (ad.hasAccidentRecord === false) {
+                                return "Hayır";
+                              }
+
+                              // Fallback olarak customFields'tan kontrol et
+                              if (
+                                ad.customFields?.hasAccidentRecord === "evet" ||
+                                ad.customFields?.hasAccidentRecord === true
+                              ) {
+                                return "Evet";
+                              } else if (
+                                ad.customFields?.hasAccidentRecord === "hayir" ||
+                                ad.customFields?.hasAccidentRecord === false
+                              ) {
+                                return "Hayır";
+                              }
+                              return null;
+                            })(),
+                          },
+                          {
+                            label: "Tramer Kaydı",
+                            value: (() => {
+                              // Önce direkt ad objesi üzerinden kontrol et
+                              if (ad.hasTramerRecord === true) {
+                                return "Evet";
+                              } else if (ad.hasTramerRecord === false) {
+                                return "Hayır";
+                              }
+
+                              // Fallback olarak customFields'tan kontrol et
+                              if (
+                                ad.customFields?.hasTramerRecord === "evet" ||
+                                ad.customFields?.hasTramerRecord === true
+                              ) {
+                                return "Evet";
+                              } else if (
+                                ad.customFields?.hasTramerRecord === "hayir" ||
+                                ad.customFields?.hasTramerRecord === false
+                              ) {
+                                return "Hayır";
+                              }
+                              return null;
+                            })(),
+                          },
 
                           // Karoser/Ahşap Kasa Özel Alanları
                           {
@@ -1373,6 +1478,56 @@ const AdDetail: React.FC = () => {
                             value: ad.customFields?.fuelCapacity
                               ? `${ad.customFields.fuelCapacity} L`
                               : null,
+                          },
+                          {
+                            label: "Hasar Kaydı",
+                            value: (() => {
+                              // Önce direkt ad objesi üzerinden kontrol et
+                              if (ad.hasAccidentRecord === true) {
+                                return "Evet";
+                              } else if (ad.hasAccidentRecord === false) {
+                                return "Hayır";
+                              }
+
+                              // Fallback olarak customFields'tan kontrol et
+                              if (
+                                ad.customFields?.hasAccidentRecord === "evet" ||
+                                ad.customFields?.hasAccidentRecord === true
+                              ) {
+                                return "Evet";
+                              } else if (
+                                ad.customFields?.hasAccidentRecord === "hayir" ||
+                                ad.customFields?.hasAccidentRecord === false
+                              ) {
+                                return "Hayır";
+                              }
+                              return null;
+                            })(),
+                          },
+                          {
+                            label: "Tramer Kaydı",
+                            value: (() => {
+                              // Önce direkt ad objesi üzerinden kontrol et
+                              if (ad.hasTramerRecord === true) {
+                                return "Evet";
+                              } else if (ad.hasTramerRecord === false) {
+                                return "Hayır";
+                              }
+
+                              // Fallback olarak customFields'tan kontrol et
+                              if (
+                                ad.customFields?.hasTramerRecord === "evet" ||
+                                ad.customFields?.hasTramerRecord === true
+                              ) {
+                                return "Evet";
+                              } else if (
+                                ad.customFields?.hasTramerRecord === "hayir" ||
+                                ad.customFields?.hasTramerRecord === false
+                              ) {
+                                return "Hayır";
+                              }
+                              return null;
+                            })(),
                           },
 
                           // Oto Kurtarıcı Tekli Araç Özel Alanları
@@ -2316,7 +2471,8 @@ const AdDetail: React.FC = () => {
               )}
 
               {/* Video Section - Lazy loaded */}
-              {((ad.videos && ad.videos.length > 0) || (adVideos && adVideos.length > 0)) && (
+              {((ad.videos && ad.videos.length > 0) ||
+                (adVideos && adVideos.length > 0)) && (
                 <Box
                   sx={{
                     backgroundColor: "white",
@@ -2340,7 +2496,11 @@ const AdDetail: React.FC = () => {
                         color: "#333",
                       }}
                     >
-                      🎬 Videolar ({(adVideos.length > 0 ? adVideos.length : ad.videos?.length) || 0})
+                      🎬 Videolar (
+                      {(adVideos.length > 0
+                        ? adVideos.length
+                        : ad.videos?.length) || 0}
+                      )
                     </Typography>
                   </Box>
 
@@ -2356,59 +2516,207 @@ const AdDetail: React.FC = () => {
                       }}
                     >
                       {!videosLoaded && !videosLoading && (
-                        <Box sx={{ textAlign: 'center', p: 2 }}>
-                          <Button 
+                        <Box sx={{ textAlign: "center", p: 2 }}>
+                          <Button
                             onClick={fetchVideos}
-                            variant="outlined" 
-                            sx={{ color: '#dc3545', borderColor: '#dc3545' }}
+                            variant="outlined"
+                            sx={{ color: "#dc3545", borderColor: "#dc3545" }}
                           >
                             📹 Videoları Yükle
                           </Button>
                         </Box>
                       )}
+
                       {videosLoading && (
-                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                        <Box sx={{ textAlign: "center", p: 2 }}>
                           <Typography>🎬 Videolar yükleniyor...</Typography>
                         </Box>
                       )}
-                      {(adVideos.length > 0 ? adVideos : ad.videos || []).map((video) => (
-                        <Box
-                          key={video.id}
-                          sx={{
-                            position: "relative",
-                            borderRadius: 1,
-                            overflow: "hidden",
-                            border: "1px solid #e0e0e0",
-                            backgroundColor: "#f8f9fa",
-                          }}
-                        >
-                          <video
-                            controls
-                            style={{
-                              width: "100%",
-                              height: "200px",
-                              objectFit: "cover",
+                      {(adVideos.length > 0 ? adVideos : ad.videos || []).map(
+                        (video) => (
+                          <Box
+                            key={video.id}
+                            sx={{
+                              position: "relative",
+                              borderRadius: 1,
+                              overflow: "hidden",
+                              border: "1px solid #e0e0e0",
+                              backgroundColor: "#f8f9fa",
                             }}
-                            poster={video.thumbnailUrl}
                           >
-                            <source
-                              src={video.videoUrl}
-                              type={video.mimeType || "video/mp4"}
-                            />
-                            Tarayıcınız bu video formatını desteklemiyor.
-                          </video>
-                          {video.description && (
-                            <Box sx={{ p: 1 }}>
-                              <Typography
-                                variant="caption"
-                                sx={{ color: "#666", fontSize: "11px" }}
-                              >
-                                {video.description}
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-                      ))}
+                            <video
+                              controls
+                              style={{
+                                width: "100%",
+                                height: "200px",
+                                objectFit: "cover",
+                                backgroundColor: "#000",
+                              }}
+                              poster={video.thumbnailUrl}
+                              preload="metadata"
+                              playsInline
+                              muted={false}
+                              onError={(e) => {
+                                console.error(
+                                  "🚫 Video yükleme hatası:",
+                                  video.id,
+                                  e.nativeEvent
+                                );
+                              }}
+                              onLoadStart={() => {
+                                console.log(
+                                  "▶️ Video yüklenmeye başladı:",
+                                  video.id
+                                );
+                              }}
+                              onLoadedData={() => {
+                                console.log(
+                                  "✅ Video data yüklendi:",
+                                  video.id
+                                );
+                              }}
+                              onCanPlay={() => {
+                                console.log(
+                                  "🎬 Video oynatılabilir:",
+                                  video.id
+                                );
+                              }}
+                              onLoadedMetadata={(e) => {
+                                const video_element =
+                                  e.target as HTMLVideoElement;
+                                console.log("📊 Video metadata:", video.id, {
+                                  duration: video_element.duration,
+                                  videoWidth: video_element.videoWidth,
+                                  videoHeight: video_element.videoHeight,
+                                });
+                              }}
+                              src={(() => {
+                                try {
+                                  // Önce cache'te var mı kontrol et
+                                  const cachedUrl = videoBlobUrls.get(video.id);
+                                  if (cachedUrl) {
+                                    console.log(
+                                      "🔄 Using cached blob URL for video:",
+                                      video.id
+                                    );
+                                    return cachedUrl;
+                                  }
+
+                                  // Güvenli kontrol: videoUrl var mı?
+                                  if (!video.videoUrl) {
+                                    console.warn(
+                                      "Video URL bulunamadı:",
+                                      video
+                                    );
+                                    return "";
+                                  }
+
+                                  // String değil ise hata
+                                  if (typeof video.videoUrl !== "string") {
+                                    console.warn(
+                                      "Video URL string değil:",
+                                      typeof video.videoUrl,
+                                      video.videoUrl
+                                    );
+                                    return "";
+                                  }
+
+                                  // Eğer zaten data: ile başlıyorsa, blob URL'e çevir (daha performanslı)
+                                  if (video.videoUrl.startsWith("data:")) {
+                                    console.log(
+                                      "🎬 Converting data URL to blob for video:",
+                                      video.id,
+                                      "Size:",
+                                      video.videoUrl.length
+                                    );
+
+                                    try {
+                                      // Data URL'den blob oluştur
+                                      const [header, base64Data] =
+                                        video.videoUrl.split(",");
+                                      const mimeType =
+                                        header.match(/:(.*?);/)?.[1] ||
+                                        "video/mp4";
+
+                                      // Base64'ü binary'ye çevir
+                                      const binaryString = atob(base64Data);
+                                      const bytes = new Uint8Array(
+                                        binaryString.length
+                                      );
+                                      for (
+                                        let i = 0;
+                                        i < binaryString.length;
+                                        i++
+                                      ) {
+                                        bytes[i] = binaryString.charCodeAt(i);
+                                      }
+
+                                      // Blob oluştur
+                                      const blob = new Blob([bytes], {
+                                        type: mimeType,
+                                      });
+                                      const blobUrl = URL.createObjectURL(blob);
+
+                                      // Cache blob URL - async olarak
+                                      setTimeout(() => {
+                                        setVideoBlobUrls((prev) => {
+                                          const newMap = new Map(prev);
+                                          newMap.set(video.id, blobUrl);
+                                          return newMap;
+                                        });
+                                      }, 0);
+
+                                      console.log(
+                                        "✅ Blob URL created for video:",
+                                        video.id,
+                                        "Blob size:",
+                                        blob.size
+                                      );
+                                      return blobUrl;
+                                    } catch (blobError) {
+                                      console.error(
+                                        "❌ Blob conversion failed, using original data URL:",
+                                        blobError
+                                      );
+                                      return video.videoUrl;
+                                    }
+                                  }
+
+                                  // Base64 string ise data: prefix ekle
+                                  const mimeType =
+                                    video.mimeType || "video/mp4";
+                                  const dataUrl = `data:${mimeType};base64,${video.videoUrl}`;
+                                  console.log(
+                                    "🎬 Created data URL for video:",
+                                    video.id,
+                                    "Size:",
+                                    dataUrl.length
+                                  );
+                                  return dataUrl;
+                                } catch (error) {
+                                  console.error(
+                                    "Video URL oluşturma hatası:",
+                                    error
+                                  );
+                                  return "";
+                                }
+                              })()}
+                            >
+                              Tarayıcınız bu video formatını desteklemiyor.
+                            </video>
+                            {video.description && (
+                              <Box sx={{ p: 1 }}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: "#666", fontSize: "11px" }}
+                                >
+                                  {video.description}
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+                        )
+                      )}
                     </Box>
                   </Box>
                 </Box>

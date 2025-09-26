@@ -695,6 +695,8 @@ const KamyonAdForm: React.FC = () => {
         alert("En fazla 3 video yükleyebilirsiniz");
       }
     }
+    // Input'u temizle
+    event.target.value = "";
   };
 
   const removeVideo = (index: number) => {
@@ -2675,6 +2677,7 @@ const KamyonAdForm: React.FC = () => {
                               controls={false}
                               muted
                               preload="metadata"
+                              poster=""
                             />
                             {/* Play Overlay */}
                             <Box

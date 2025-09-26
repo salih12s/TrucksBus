@@ -158,6 +158,8 @@ interface FormData {
   damageRecord: string;
   paintChange: string;
   exchange: string;
+  hasAccidentRecord: string; // Hasar kaydı
+  hasTramerRecord: string; // Tramer kaydı
 
   // Konum
   cityId: string;
@@ -283,7 +285,9 @@ const CekiciAdForm: React.FC = () => {
     tireCondition: "",
     damageRecord: "hayir",
     paintChange: "hayir",
-    exchange: "olabilir",
+    exchange: "evet",
+    hasAccidentRecord: "",
+    hasTramerRecord: "",
 
     // Konum
     cityId: "",
@@ -1466,8 +1470,60 @@ const CekiciAdForm: React.FC = () => {
                     required
                     label="Takas"
                   >
-                    <MenuItem value="olabilir">Olabilir</MenuItem>
-                    <MenuItem value="olmaz">Olmaz</MenuItem>
+                    <MenuItem value="evet">Evet</MenuItem>
+                    <MenuItem value="hayır">Hayır</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {/* Hasar Kaydı, Tramer Kaydı */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: 2,
+                }}
+              >
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 200,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
+                  <InputLabel>Hasar Kaydı</InputLabel>
+                  <Select
+                    value={formData.hasAccidentRecord || ""}
+                    onChange={(e) =>
+                      handleInputChange("hasAccidentRecord", e.target.value)
+                    }
+                    label="Hasar Kaydı"
+                  >
+                    <MenuItem value="evet">Evet</MenuItem>
+                    <MenuItem value="hayir">Hayır</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl
+                  sx={{
+                    flex: 1,
+                    minWidth: 200,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 3,
+                    },
+                  }}
+                >
+                  <InputLabel>Tramer Kaydı</InputLabel>
+                  <Select
+                    value={formData.hasTramerRecord || ""}
+                    onChange={(e) =>
+                      handleInputChange("hasTramerRecord", e.target.value)
+                    }
+                    label="Tramer Kaydı"
+                  >
+                    <MenuItem value="evet">Evet</MenuItem>
+                    <MenuItem value="hayir">Hayır</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
