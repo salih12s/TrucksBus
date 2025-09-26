@@ -21,6 +21,7 @@ import {
   Radio,
   RadioGroup,
   FormLabel,
+  CircularProgress,
 } from "@mui/material";
 import { CheckCircle } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
@@ -52,7 +53,29 @@ interface District {
   cityId: number;
 }
 
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+}
+
 interface FormData {
+  categoryId: string;
+  brandId: string;
+  modelId: string;
+  variantId: string;
   title: string;
   description: string;
   productionYear: string;
@@ -88,12 +111,22 @@ const AcikKasaForm: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
 
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [loadingVariants, setLoadingVariants] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
+    categoryId: "7", // Karoser & Üst Yapı
+    brandId: "",
+    modelId: "",
+    variantId: "",
     title: "",
     description: "",
     productionYear: "",
@@ -124,6 +157,75 @@ const AcikKasaForm: React.FC = () => {
 
     detailedInfo: "",
   });
+
+  // Brand'ları yükle
+  useEffect(() => {
+    const fetchBrands = async () => {
+      if (!formData.categoryId) return;
+
+      setLoadingBrands(true);
+      try {
+        const response = await apiClient.get(
+          `/brands?categoryId=${formData.categoryId}`
+        );
+        setBrands(response.data as Brand[]);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+      } finally {
+        setLoadingBrands(false);
+      }
+    };
+
+    fetchBrands();
+  }, [formData.categoryId]);
+
+  // Model'leri yükle
+  useEffect(() => {
+    const fetchModels = async () => {
+      if (!formData.brandId) {
+        setModels([]);
+        return;
+      }
+
+      setLoadingModels(true);
+      try {
+        const response = await apiClient.get(
+          `/brands/${formData.brandId}/models`
+        );
+        setModels(response.data as Model[]);
+      } catch (error) {
+        console.error("Error fetching models:", error);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+
+    fetchModels();
+  }, [formData.brandId]);
+
+  // Variant'ları yükle
+  useEffect(() => {
+    const fetchVariants = async () => {
+      if (!formData.modelId) {
+        setVariants([]);
+        return;
+      }
+
+      setLoadingVariants(true);
+      try {
+        const response = await apiClient.get(
+          `/models/${formData.modelId}/variants`
+        );
+        setVariants(response.data as Variant[]);
+      } catch (error) {
+        console.error("Error fetching variants:", error);
+      } finally {
+        setLoadingVariants(false);
+      }
+    };
+
+    fetchVariants();
+  }, [formData.modelId]);
 
   // Kullanıcı bilgilerini otomatik yükle
   useEffect(() => {
@@ -252,6 +354,12 @@ const AcikKasaForm: React.FC = () => {
       submitData.append("modelSlug", modelSlug || "");
       submitData.append("variantSlug", variantSlug || "");
 
+      // Kategori, marka, model, varyant ID'lerini ekle
+      submitData.append("categoryId", formData.categoryId);
+      submitData.append("brandId", formData.brandId);
+      submitData.append("modelId", formData.modelId);
+      submitData.append("variantId", formData.variantId);
+
       // Fotoğrafları ekle
       if (formData.showcasePhoto) {
         submitData.append("showcasePhoto", formData.showcasePhoto);
@@ -301,6 +409,93 @@ const AcikKasaForm: React.FC = () => {
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
+              {/* Marka, Model, Varyant Seçimi */}
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 2,
+                }}
+              >
+                <FormControl fullWidth required>
+                  <InputLabel>Marka</InputLabel>
+                  <Select
+                    value={formData.brandId}
+                    label="Marka"
+                    onChange={(e) => {
+                      handleInputChange("brandId", e.target.value);
+                      setFormData((prev) => ({
+                        ...prev,
+                        modelId: "",
+                        variantId: "",
+                      }));
+                    }}
+                    disabled={loadingBrands}
+                  >
+                    {brands.map((brand) => (
+                      <MenuItem key={brand.id} value={brand.id.toString()}>
+                        {brand.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {loadingBrands && (
+                    <CircularProgress
+                      size={20}
+                      sx={{ position: "absolute", right: 8, top: 8 }}
+                    />
+                  )}
+                </FormControl>
+
+                <FormControl fullWidth required disabled={!formData.brandId}>
+                  <InputLabel>Model</InputLabel>
+                  <Select
+                    value={formData.modelId}
+                    label="Model"
+                    onChange={(e) => {
+                      handleInputChange("modelId", e.target.value);
+                      setFormData((prev) => ({ ...prev, variantId: "" }));
+                    }}
+                    disabled={loadingModels || !formData.brandId}
+                  >
+                    {models.map((model) => (
+                      <MenuItem key={model.id} value={model.id.toString()}>
+                        {model.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {loadingModels && (
+                    <CircularProgress
+                      size={20}
+                      sx={{ position: "absolute", right: 8, top: 8 }}
+                    />
+                  )}
+                </FormControl>
+
+                <FormControl fullWidth disabled={!formData.modelId}>
+                  <InputLabel>Varyant</InputLabel>
+                  <Select
+                    value={formData.variantId}
+                    label="Varyant"
+                    onChange={(e) =>
+                      handleInputChange("variantId", e.target.value)
+                    }
+                    disabled={loadingVariants || !formData.modelId}
+                  >
+                    {variants.map((variant) => (
+                      <MenuItem key={variant.id} value={variant.id.toString()}>
+                        {variant.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {loadingVariants && (
+                    <CircularProgress
+                      size={20}
+                      sx={{ position: "absolute", right: 8, top: 8 }}
+                    />
+                  )}
+                </FormControl>
+              </Box>
+
               <TextField
                 fullWidth
                 label="İlan Başlığı *"
