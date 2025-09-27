@@ -35,29 +35,8 @@ interface District {
   cityId: number;
 }
 
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Model {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Variant {
-  id: number;
-  name: string;
-  slug: string;
-}
-
 interface FormData {
   categoryId: string;
-  brandId: string;
-  modelId: string;
-  variantId: string;
   title: string;
   description: string;
   year: string;
@@ -97,12 +76,6 @@ const KayaTipiForm: React.FC = () => {
   const navigate = useNavigate();
   const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
 
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [loadingBrands, setLoadingBrands] = useState(false);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [loadingVariants, setLoadingVariants] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
@@ -110,9 +83,6 @@ const KayaTipiForm: React.FC = () => {
 
   const [formData, setFormData] = useState<FormData>({
     categoryId: "7", // Karoser & Üst Yapı
-    brandId: "",
-    modelId: "",
-    variantId: "",
     title: "",
     description: "",
     year: "",
@@ -144,75 +114,6 @@ const KayaTipiForm: React.FC = () => {
 
     detailedInfo: "",
   });
-
-  // Brand'ları yükle
-  useEffect(() => {
-    const fetchBrands = async () => {
-      if (!formData.categoryId) return;
-
-      setLoadingBrands(true);
-      try {
-        const response = await apiClient.get(
-          `/brands?categoryId=${formData.categoryId}`
-        );
-        setBrands(response.data as Brand[]);
-      } catch (error) {
-        console.error("Error fetching brands:", error);
-      } finally {
-        setLoadingBrands(false);
-      }
-    };
-
-    fetchBrands();
-  }, [formData.categoryId]);
-
-  // Model'leri yükle
-  useEffect(() => {
-    const fetchModels = async () => {
-      if (!formData.brandId) {
-        setModels([]);
-        return;
-      }
-
-      setLoadingModels(true);
-      try {
-        const response = await apiClient.get(
-          `/brands/${formData.brandId}/models`
-        );
-        setModels(response.data as Model[]);
-      } catch (error) {
-        console.error("Error fetching models:", error);
-      } finally {
-        setLoadingModels(false);
-      }
-    };
-
-    fetchModels();
-  }, [formData.brandId]);
-
-  // Variant'ları yükle
-  useEffect(() => {
-    const fetchVariants = async () => {
-      if (!formData.modelId) {
-        setVariants([]);
-        return;
-      }
-
-      setLoadingVariants(true);
-      try {
-        const response = await apiClient.get(
-          `/models/${formData.modelId}/variants`
-        );
-        setVariants(response.data as Variant[]);
-      } catch (error) {
-        console.error("Error fetching variants:", error);
-      } finally {
-        setLoadingVariants(false);
-      }
-    };
-
-    fetchVariants();
-  }, [formData.modelId]);
 
   // Kullanıcı bilgilerini otomatik yükle
   useEffect(() => {
@@ -350,9 +251,7 @@ const KayaTipiForm: React.FC = () => {
 
       // Kategori bilgilerini ekle
       submitData.append("categoryId", formData.categoryId);
-      submitData.append("brandId", formData.brandId);
-      submitData.append("modelId", formData.modelId);
-      submitData.append("variantId", formData.variantId);
+
       submitData.append("categorySlug", categorySlug || "");
       submitData.append("brandSlug", brandSlug || "");
       submitData.append("modelSlug", modelSlug || "");
@@ -401,74 +300,6 @@ const KayaTipiForm: React.FC = () => {
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
               🚛 Marka ve Model Seçimi
             </Typography>
-
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 3,
-                mb: 4,
-              }}
-            >
-              <FormControl fullWidth required>
-                <InputLabel>Marka</InputLabel>
-                <Select
-                  value={formData.brandId}
-                  label="Marka"
-                  onChange={(e) => {
-                    handleInputChange("brandId", e.target.value);
-                    handleInputChange("modelId", "");
-                    handleInputChange("variantId", "");
-                  }}
-                  disabled={loadingBrands}
-                >
-                  {brands.map((brand) => (
-                    <MenuItem key={brand.id} value={brand.id.toString()}>
-                      {brand.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth required disabled={!formData.brandId}>
-                <InputLabel>Model</InputLabel>
-                <Select
-                  value={formData.modelId}
-                  label="Model"
-                  onChange={(e) => {
-                    handleInputChange("modelId", e.target.value);
-                    handleInputChange("variantId", "");
-                  }}
-                  disabled={loadingModels || !formData.brandId}
-                >
-                  {models.map((model) => (
-                    <MenuItem key={model.id} value={model.id.toString()}>
-                      {model.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth required disabled={!formData.modelId}>
-                <InputLabel>Varyant</InputLabel>
-                <Select
-                  value={formData.variantId}
-                  label="Varyant"
-                  onChange={(e) =>
-                    handleInputChange("variantId", e.target.value)
-                  }
-                  disabled={loadingVariants || !formData.modelId}
-                >
-                  {variants.map((variant) => (
-                    <MenuItem key={variant.id} value={variant.id.toString()}>
-                      {variant.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Divider sx={{ my: 4 }} />
 
             {/* Temel Bilgiler */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>

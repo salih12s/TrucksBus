@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Box,
   Container,
@@ -164,6 +164,10 @@ const OtobusAdForm: React.FC = () => {
   const [_selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
   const [_selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [_selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+
+  // Cache and request tracking to prevent duplicate API calls
+  const requestCache = useRef(new Map());
+  const lastRequestTime = useRef(new Map());
 
   // Consume unused variables to avoid lint errors
   void _variants;
@@ -532,28 +536,56 @@ const OtobusAdForm: React.FC = () => {
   }, [videoModalOpen, navigateVideo]);
 
   // Brand/Model/Variant yükleme fonksiyonları
-  const loadBrands = useCallback(
-    async (categorySlug: string) => {
-      try {
-        const response = await apiClient.get(
-          `/categories/${categorySlug}/brands`
-        );
-        const brandsData = response.data as Brand[];
-        setBrands(brandsData);
+  const loadBrands = useCallback(async (categorySlug: string) => {
+    const cacheKey = `brands-${categorySlug}`;
+    const now = Date.now();
 
-        // İlk brand'ı otomatik seç (eğer seçili değilse)
-        if (brandsData.length > 0 && !formData.brandId) {
-          setFormData((prev) => ({
-            ...prev,
-            brandId: brandsData[0].id.toString(),
-          }));
-        }
-      } catch (error) {
-        console.error("Markalar yüklenemedi:", error);
+    // Check if we made a request recently (within 1 second)
+    const lastTime = lastRequestTime.current.get(cacheKey);
+    if (lastTime && now - lastTime < 1000) {
+      console.log("🚫 Skipping duplicate brand request within 1 second");
+      return;
+    }
+
+    // Check cache
+    const cached = requestCache.current.get(cacheKey);
+    if (cached) {
+      console.log("📦 Using cached brands data");
+      setBrands(cached);
+      return;
+    }
+
+    lastRequestTime.current.set(cacheKey, now);
+
+    try {
+      const response = await apiClient.get(
+        `/categories/${categorySlug}/brands`
+      );
+      const brandsData = response.data as Brand[];
+
+      // Cache the result
+      requestCache.current.set(cacheKey, brandsData);
+      setBrands(brandsData);
+
+      // İlk brand'ı otomatik seç (eğer seçili değilse)
+      if (brandsData.length > 0) {
+        setFormData((prev) => {
+          if (!prev.brandId) {
+            return {
+              ...prev,
+              brandId: brandsData[0].id.toString(),
+            };
+          }
+          return prev;
+        });
       }
-    },
-    [formData.brandId]
-  );
+    } catch (error) {
+      console.error("Markalar yüklenemedi:", error);
+      // Clear cache on error
+      requestCache.current.delete(cacheKey);
+      lastRequestTime.current.delete(cacheKey);
+    }
+  }, []);
 
   const loadModels = useCallback(
     async (brandId: string) => {
@@ -567,6 +599,17 @@ const OtobusAdForm: React.FC = () => {
             variantId: "",
           }));
         }
+        return;
+      }
+
+      const cacheKey = `models-${brandId}`;
+      const now = Date.now();
+
+      // Check if we made a request recently (within 1 second)
+      const lastTime = lastRequestTime.current.get(cacheKey);
+      if (lastTime && now - lastTime < 1000) {
+        console.log("🚫 Skipping duplicate model request within 1 second");
+        setIsLoadingModels(false);
         return;
       }
 
@@ -592,6 +635,17 @@ const OtobusAdForm: React.FC = () => {
           return;
         }
 
+        // Check cache
+        const cached = requestCache.current.get(cacheKey);
+        if (cached) {
+          console.log("📦 Using cached models data for brand:", brand.name);
+          setModels(cached);
+          setIsLoadingModels(false);
+          return;
+        }
+
+        lastRequestTime.current.set(cacheKey, now);
+
         console.log(
           "🔄 Loading models for brand:",
           brand.name,
@@ -611,6 +665,9 @@ const OtobusAdForm: React.FC = () => {
           "models for brand",
           brand.name
         );
+
+        // Cache the result
+        requestCache.current.set(cacheKey, modelsData);
         setModels(modelsData);
 
         // Variant'ları temizle çünkü model değişti
@@ -621,15 +678,22 @@ const OtobusAdForm: React.FC = () => {
         }));
 
         // İlk model'i otomatik seç (eğer seçili değilse)
-        if (modelsData.length > 0 && !formData.modelId) {
-          const firstModelId = modelsData[0].id.toString();
-          setFormData((prev) => ({
-            ...prev,
-            modelId: firstModelId,
-          }));
+        if (modelsData.length > 0) {
+          setFormData((prev) => {
+            if (!prev.modelId) {
+              return {
+                ...prev,
+                modelId: modelsData[0].id.toString(),
+              };
+            }
+            return prev;
+          });
         }
       } catch (error) {
         console.error("❌ Modeller yüklenemedi:", error);
+        // Clear cache on error
+        requestCache.current.delete(cacheKey);
+        lastRequestTime.current.delete(cacheKey);
         setModels([]);
         setVariants([]);
         setFormData((prev) => ({
@@ -641,7 +705,7 @@ const OtobusAdForm: React.FC = () => {
         setIsLoadingModels(false);
       }
     },
-    [brands, formData.modelId, isLoadingModels]
+    [brands, isLoadingModels]
   );
 
   const loadVariants = useCallback(
@@ -717,11 +781,16 @@ const OtobusAdForm: React.FC = () => {
         setVariants(variantsData);
 
         // İlk variant'ı otomatik seç (eğer seçili değilse)
-        if (variantsData.length > 0 && !formData.variantId) {
-          setFormData((prev) => ({
-            ...prev,
-            variantId: variantsData[0].id.toString(),
-          }));
+        if (variantsData.length > 0) {
+          setFormData((prev) => {
+            if (!prev.variantId) {
+              return {
+                ...prev,
+                variantId: variantsData[0].id.toString(),
+              };
+            }
+            return prev;
+          });
         }
       } catch (error) {
         console.error("❌ Varyantlar yüklenemedi:", error);
@@ -734,15 +803,27 @@ const OtobusAdForm: React.FC = () => {
         setIsLoadingVariants(false);
       }
     },
-    [models, brands, formData.brandId, formData.variantId, isLoadingVariants]
+    [models, brands, formData.brandId, isLoadingVariants]
   );
+
+  // Function refs to avoid dependency issues
+  const loadBrandsRef = useRef(loadBrands);
+  const loadModelsRef = useRef(loadModels);
+  const loadVariantsRef = useRef(loadVariants);
+
+  // Update refs when functions change
+  useEffect(() => {
+    loadBrandsRef.current = loadBrands;
+    loadModelsRef.current = loadModels;
+    loadVariantsRef.current = loadVariants;
+  }, [loadBrands, loadModels, loadVariants]);
 
   // URL parametrelerinden seçili öğeleri yükle
   useEffect(() => {
     const loadSelectedItems = async () => {
       try {
         // Önce tüm brands'ları yükle
-        await loadBrands("otobus");
+        await loadBrandsRef.current("otobus");
 
         // Brand yükle ve doğrula
         if (selectedBrandSlug) {
@@ -754,7 +835,7 @@ const OtobusAdForm: React.FC = () => {
           setSelectedBrand(brandData);
 
           // Models'ları yükle
-          await loadModels(brandData.id.toString());
+          await loadModelsRef.current(brandData.id.toString());
 
           setFormData((prev) => ({
             ...prev,
@@ -772,7 +853,7 @@ const OtobusAdForm: React.FC = () => {
             setSelectedModel(modelData);
 
             // Variants'ları yükle
-            await loadVariants(modelData.id.toString());
+            await loadVariantsRef.current(modelData.id.toString());
 
             setFormData((prev) => ({
               ...prev,
@@ -810,9 +891,6 @@ const OtobusAdForm: React.FC = () => {
     selectedModelSlug,
     selectedVariantSlug,
     selectedCategorySlug,
-    loadBrands,
-    loadModels,
-    loadVariants,
   ]);
 
   const validateForm = () => {

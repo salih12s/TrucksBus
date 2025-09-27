@@ -12,6 +12,179 @@ const prisma = new PrismaClient({
   log: [], // Log'ları kapat performance için
 });
 
+// Helper function for automatic brand/model/variant creation
+const ensureBrandModelVariant = async (
+  categoryId: number,
+  brandSlug?: string,
+  brandName?: string,
+  modelSlug?: string,
+  modelName?: string,
+  variantSlug?: string,
+  variantName?: string,
+  existingBrandId?: number,
+  existingModelId?: number,
+  existingVariantId?: number
+) => {
+  let brandId = existingBrandId;
+  let modelId = existingModelId;
+  let variantId = existingVariantId;
+
+  // Brand'ı bul veya oluştur
+  if (!brandId && (brandSlug || brandName)) {
+    // Slug'dan name'i çıkar (eğer name gelmemişse)
+    const finalBrandName =
+      brandName ||
+      (brandSlug
+        ? brandSlug
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (l: string) => l.toUpperCase())
+        : "");
+
+    let brand = await prisma.brand.findFirst({
+      where: {
+        OR: [
+          { slug: brandSlug || "" },
+          { name: { equals: finalBrandName || "", mode: "insensitive" } },
+        ],
+      },
+    });
+
+    if (!brand && finalBrandName) {
+      console.log(
+        "🆕 Yeni brand oluşturuluyor:",
+        finalBrandName,
+        "(slug:",
+        brandSlug,
+        ")"
+      );
+      brand = await prisma.brand.create({
+        data: {
+          name: finalBrandName,
+          slug:
+            brandSlug ||
+            finalBrandName
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/[^a-z0-9-]/g, ""),
+        },
+      });
+
+      // Brand-Category ilişkisini oluştur
+      try {
+        await prisma.categoryBrand.create({
+          data: {
+            brandId: brand.id,
+            categoryId: categoryId,
+          },
+        });
+      } catch (error) {
+        console.log("Brand-Category ilişkisi zaten var veya hata:", error);
+      }
+
+      console.log("✅ Brand oluşturuldu:", brand);
+    }
+    brandId = brand?.id || undefined;
+  }
+
+  // Model'i bul veya oluştur
+  if (!modelId && (modelSlug || modelName) && brandId) {
+    // Slug'dan name'i çıkar (eğer name gelmemişse)
+    const finalModelName =
+      modelName ||
+      (modelSlug
+        ? modelSlug
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (l: string) => l.toUpperCase())
+        : "");
+
+    let model = await prisma.model.findFirst({
+      where: {
+        brandId: brandId,
+        categoryId: categoryId,
+        OR: [
+          { slug: modelSlug || "" },
+          { name: { equals: finalModelName || "", mode: "insensitive" } },
+        ],
+      },
+    });
+
+    if (!model && finalModelName) {
+      console.log(
+        "🆕 Yeni model oluşturuluyor:",
+        finalModelName,
+        "(slug:",
+        modelSlug,
+        ") for brand ID:",
+        brandId
+      );
+      model = await prisma.model.create({
+        data: {
+          name: finalModelName,
+          slug:
+            modelSlug ||
+            finalModelName
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/[^a-z0-9-]/g, ""),
+          brandId: brandId,
+          categoryId: categoryId,
+        },
+      });
+      console.log("✅ Model oluşturuldu:", model);
+    }
+    modelId = model?.id || undefined;
+  }
+
+  // Variant'ı bul veya oluştur
+  if (!variantId && (variantSlug || variantName) && modelId) {
+    // Slug'dan name'i çıkar (eğer name gelmemişse)
+    const finalVariantName =
+      variantName ||
+      (variantSlug
+        ? variantSlug
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (l: string) => l.toUpperCase())
+        : "");
+
+    let variant = await prisma.variant.findFirst({
+      where: {
+        modelId: modelId,
+        OR: [
+          { slug: variantSlug || "" },
+          { name: { equals: finalVariantName || "", mode: "insensitive" } },
+        ],
+      },
+    });
+
+    if (!variant && finalVariantName) {
+      console.log(
+        "🆕 Yeni variant oluşturuluyor:",
+        finalVariantName,
+        "(slug:",
+        variantSlug,
+        ") for model ID:",
+        modelId
+      );
+      variant = await prisma.variant.create({
+        data: {
+          name: finalVariantName,
+          slug:
+            variantSlug ||
+            finalVariantName
+              .toLowerCase()
+              .replace(/\s+/g, "-")
+              .replace(/[^a-z0-9-]/g, ""),
+          modelId: modelId,
+        },
+      });
+      console.log("✅ Variant oluşturuldu:", variant);
+    }
+    variantId = variant?.id || undefined;
+  }
+
+  return { brandId, modelId, variantId };
+};
+
 // Get all ads with filters
 export const getAds = async (req: Request, res: Response) => {
   const startTime = Date.now(); // ❗ Performance monitoring
@@ -2452,56 +2625,69 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       }
     }
 
-    // CategoryId validasyonu - önce frontend'den gelen ID'yi kontrol et
+    // Otobüs kategorisini bul
     let validCategoryId = null;
     if (categoryId && categoryId !== "" && categoryId !== "undefined") {
       const categoryExists = await prisma.category.findUnique({
         where: { id: parseInt(categoryId) },
       });
-      if (categoryExists) {
+      if (categoryExists && categoryExists.slug === "otobus") {
         validCategoryId = parseInt(categoryId);
-        console.log("✅ Frontend categoryId geçerli:", validCategoryId);
+        console.log("✅ Frontend Otobüs categoryId geçerli:", validCategoryId);
       } else {
         console.log(
-          "❌ Frontend categoryId geçersiz, otomatik arayacağım:",
+          "❌ Frontend categoryId yanlış, Otobüs kategori ID'sini arayacağım:",
           categoryId
         );
       }
     }
 
-    // Eğer geçerli categoryId yoksa, otomatik bul veya oluştur
+    // Eğer geçerli Otobüs categoryId yoksa, database'den bul
     if (!validCategoryId) {
-      console.log("🔍 Otobüs kategorisini arıyorum...");
-      let otobusCategory = await prisma.category.findFirst({
+      console.log("🔍 Otobüs kategorisini database'de arıyorum...");
+      const otobusCategory = await prisma.category.findFirst({
         where: {
-          OR: [{ slug: "otobus" }, { name: { contains: "Otobüs" } }],
+          OR: [{ slug: "otobus" }, { id: 5 }], // Otobüs ID = 5
         },
       });
 
       if (!otobusCategory) {
-        console.log("⚠️ Otobüs kategorisi bulunamadı, oluşturuyorum...");
-        otobusCategory = await prisma.category.create({
-          data: {
-            name: "Otobüs",
-            slug: "otobus",
-            isActive: true,
-            displayOrder: 0,
-          },
-        });
-        console.log("✅ Otobüs kategorisi oluşturuldu:", otobusCategory.id);
+        console.error("❌ Otobüs kategorisi bulunamadı!");
+        return res.status(400).json({ error: "Otobüs kategorisi bulunamadı" });
       }
 
       validCategoryId = otobusCategory.id;
-      console.log("✅ Kullanılacak categoryId:", validCategoryId);
+      console.log("✅ Kullanılacak Otobüs categoryId:", validCategoryId);
     }
 
-    // Brand/Model/Variant ID'lerini integer'a çevir ve validate et
-    const parsedBrandId = brandId && brandId !== "" ? parseInt(brandId) : null;
-    const parsedModelId = modelId && modelId !== "" ? parseInt(modelId) : null;
-    const parsedVariantId =
-      variantId && variantId !== "" ? parseInt(variantId) : null;
+    // Brand/Model/Variant'ları bul veya oluştur
+    const {
+      brandSlug,
+      modelSlug,
+      variantSlug,
+      brandName,
+      modelName,
+      variantName,
+    } = req.body;
 
-    console.log("🔧 Parsed IDs:", {
+    const result = await ensureBrandModelVariant(
+      validCategoryId, // Otobüs kategorisi
+      brandSlug,
+      brandName,
+      modelSlug,
+      modelName,
+      variantSlug,
+      variantName,
+      brandId && brandId !== "" ? parseInt(brandId) : undefined,
+      modelId && modelId !== "" ? parseInt(modelId) : undefined,
+      variantId && variantId !== "" ? parseInt(variantId) : undefined
+    );
+
+    const parsedBrandId = result.brandId || null;
+    const parsedModelId = result.modelId || null;
+    const parsedVariantId = result.variantId || null;
+
+    console.log("🔧 Final Otobüs IDs:", {
       categoryId: validCategoryId,
       brandId: parsedBrandId,
       modelId: parsedModelId,
@@ -2795,7 +2981,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
       detailedInfo,
     } = req.body;
 
-    // Category validation and auto-creation
+    // Dorse kategorisini bul
     let categoryId = req.body.categoryId;
     console.log("📋 Provided categoryId:", categoryId);
 
@@ -2805,55 +2991,67 @@ export const createDorseAd = async (req: Request, res: Response) => {
         where: { id: parseInt(categoryId) },
       });
 
-      if (!categoryExists) {
+      if (!categoryExists || categoryExists.slug !== "dorse") {
         console.log(
-          "⚠️ Provided categoryId not found, falling back to auto-detection"
+          "⚠️ Provided categoryId yanlış, Dorse kategori ID'sini arayacağım:",
+          categoryId
         );
         categoryId = null;
       } else {
         console.log(
-          "✅ CategoryId validation successful:",
+          "✅ Dorse CategoryId validation successful:",
           categoryExists.name
         );
+        categoryId = parseInt(categoryId);
       }
     }
 
     if (!categoryId) {
-      // Auto-detect or create category
-      let dorseCategory = await prisma.category.findFirst({
+      // Database'den Dorse kategorisini bul
+      const dorseCategory = await prisma.category.findFirst({
         where: {
           OR: [
             { slug: "dorse" },
-            { slug: "damperli-dorse" },
-            { name: { contains: "Dorse" } },
+            { id: 6 }, // Dorse ID = 6
           ],
         },
       });
 
       if (!dorseCategory) {
-        console.log("📁 Dorse category not found, creating new category");
-        dorseCategory = await prisma.category.create({
-          data: {
-            name: "Dorse",
-            slug: "dorse",
-            description: "Dorse kategorisi otomatik oluşturuldu",
-            displayOrder: 999,
-          },
-        });
-        console.log("✅ New Dorse category created:", dorseCategory.id);
+        console.error("❌ Dorse kategorisi bulunamadı!");
+        return res.status(400).json({ error: "Dorse kategorisi bulunamadı" });
       }
 
       categoryId = dorseCategory.id;
     }
 
-    console.log("🎯 Final categoryId for Dorse:", categoryId);
+    console.log("🎯 Final Dorse categoryId:", categoryId);
 
-    // Brand, Model, Variant ID validation
-    const brandId = req.body.brandId ? parseInt(req.body.brandId) : null;
-    const modelId = req.body.modelId ? parseInt(req.body.modelId) : null;
-    const variantId = req.body.variantId ? parseInt(req.body.variantId) : null;
+    // Brand/Model/Variant'ları bul veya oluştur
 
-    console.log("🏷️ Brand/Model/Variant IDs:", { brandId, modelId, variantId });
+    const result = await ensureBrandModelVariant(
+      categoryId, // Dorse kategorisi
+      brandSlug,
+      req.body.brandName,
+      modelSlug,
+      req.body.modelName,
+      variantSlug,
+      req.body.variantName,
+      req.body.brandId ? parseInt(req.body.brandId) : undefined,
+      req.body.modelId ? parseInt(req.body.modelId) : undefined,
+      req.body.variantId ? parseInt(req.body.variantId) : undefined
+    );
+
+    const brandId = result.brandId || null;
+    const modelId = result.modelId || null;
+    const variantId = result.variantId || null;
+
+    console.log("🏷️ Final Dorse IDs:", {
+      categoryId,
+      brandId,
+      modelId,
+      variantId,
+    });
 
     const ad = await prisma.ad.create({
       data: {
@@ -3091,14 +3289,13 @@ export const createKaroserAd = async (req: Request, res: Response) => {
       detailedInfo,
     } = req.body;
 
-    // Karoser kategorisini bul (karoser-ustyapi veya benzer)
+    // Karoser kategorisini bul (ID = 7)
     const karoserCategory = await prisma.category.findFirst({
       where: {
         OR: [
-          { slug: "karoser-ustyapi" },
+          { slug: "karoser-ust-yapi" },
           { slug: "karoser" },
-          { name: { contains: "Karoser" } },
-          { name: { contains: "Üst Yapı" } },
+          { id: 7 }, // Karoser Üst Yapı ID = 7
         ],
       },
     });
@@ -3107,10 +3304,67 @@ export const createKaroserAd = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Karoser kategorisi bulunamadı" });
     }
 
+    // Form tipine göre brand ve model belirle
+    let brandName = "Diğer Markalar";
+    let modelName = "Standart";
+
+    // Damperli formları - genişlik/uzunluk/devrilme yönü varsa
+    if (
+      req.body.genislik ||
+      req.body.uzunluk ||
+      req.body.devrilmeYonu ||
+      req.body.tippingDirection
+    ) {
+      brandName = "Damperli";
+
+      if (req.body.tippingDirection) {
+        modelName = "Ahşap Kasa";
+      } else if (req.body.devrilmeYonu === "geri") {
+        modelName = "Hafriyat Tipi";
+      } else if (req.body.devrilmeYonu === "yan") {
+        modelName = "Kaya Tipi";
+      } else if (req.body.genislik && req.body.uzunluk) {
+        modelName = "Kapaklı Tip";
+      } else {
+        modelName = "Havuz Hardox Tipi";
+      }
+    }
+    // Sabit Kabin formları - length/width kombinasyonu
+    else if (req.body.length && req.body.width) {
+      brandName = "Sabit Kabin";
+
+      if (req.body.usageArea) {
+        modelName = "Kapalı Kasa";
+      } else if (req.body.isExchangeable !== undefined) {
+        modelName = "Açık Kasa";
+      } else if (req.body.caseType) {
+        modelName = "Özel Kasa";
+      } else {
+        modelName = "Standart";
+      }
+    }
+
+    // Brand/Model/Variant'ları otomatik oluştur
+    const result = await ensureBrandModelVariant(
+      karoserCategory.id,
+      undefined, // brandSlug
+      brandName,
+      undefined, // modelSlug
+      modelName,
+      undefined, // variantSlug
+      "Standart", // variant her zaman Standart
+      undefined, // brandId
+      undefined, // modelId
+      undefined // variantId
+    );
+
     const ad = await prisma.ad.create({
       data: {
         userId,
         categoryId: karoserCategory.id,
+        brandId: result.brandId || null,
+        modelId: result.modelId || null,
+        variantId: result.variantId || null,
         title,
         description,
         year: year
@@ -3367,14 +3621,13 @@ export const createOtoKurtariciTekliAd = async (
       }
     }
 
-    // Oto Kurtarıcı kategorisini bul
+    // Oto Kurtarıcı kategorisini bul (ID = 9)
     const otoKurtariciCategory = await prisma.category.findFirst({
       where: {
         OR: [
           { slug: "oto-kurtarici-tasiyici" },
           { slug: "oto-kurtarici" },
-          { name: { contains: "Oto Kurtarıcı" } },
-          { name: { contains: "Kurtarıcı" } },
+          { id: 9 }, // Oto Kurtarıcı ve Taşıyıcı ID = 9
         ],
       },
     });
@@ -3385,10 +3638,27 @@ export const createOtoKurtariciTekliAd = async (
         .json({ error: "Oto Kurtarıcı kategorisi bulunamadı" });
     }
 
+    // Brand/Model/Variant'ları bul veya oluştur
+    const result = await ensureBrandModelVariant(
+      otoKurtariciCategory.id, // Oto Kurtarıcı kategorisi
+      req.body.brandSlug,
+      req.body.brandName,
+      req.body.modelSlug,
+      req.body.modelName,
+      req.body.variantSlug,
+      req.body.variantName,
+      undefined, // brandId
+      undefined, // modelId
+      undefined // variantId
+    );
+
     const ad = await prisma.ad.create({
       data: {
         userId,
         categoryId: otoKurtariciCategory.id,
+        brandId: result.brandId || null,
+        modelId: result.modelId || null,
+        variantId: result.variantId || null,
         title,
         description,
         year: year ? parseInt(year) : null,
@@ -3595,14 +3865,13 @@ export const createOtoKurtariciCokluAd = async (
       }
     }
 
-    // Oto Kurtarıcı kategorisini bul
+    // Oto Kurtarıcı kategorisini bul (ID = 9)
     const otoKurtariciCategory = await prisma.category.findFirst({
       where: {
         OR: [
           { slug: "oto-kurtarici-tasiyici" },
           { slug: "oto-kurtarici" },
-          { name: { contains: "Oto Kurtarıcı" } },
-          { name: { contains: "Kurtarıcı" } },
+          { id: 9 }, // Oto Kurtarıcı ve Taşıyıcı ID = 9
         ],
       },
     });
@@ -3613,10 +3882,27 @@ export const createOtoKurtariciCokluAd = async (
         .json({ error: "Oto Kurtarıcı kategorisi bulunamadı" });
     }
 
+    // Brand/Model/Variant'ları bul veya oluştur
+    const result = await ensureBrandModelVariant(
+      otoKurtariciCategory.id, // Oto Kurtarıcı kategorisi
+      req.body.brandSlug,
+      req.body.brandName,
+      req.body.modelSlug,
+      req.body.modelName,
+      req.body.variantSlug,
+      req.body.variantName,
+      undefined, // brandId
+      undefined, // modelId
+      undefined // variantId
+    );
+
     const ad = await prisma.ad.create({
       data: {
         userId,
         categoryId: otoKurtariciCategory.id,
+        brandId: result.brandId || null,
+        modelId: result.modelId || null,
+        variantId: result.variantId || null,
         title,
         description,
         year: year ? parseInt(year) : null,
@@ -4133,12 +4419,19 @@ export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
 
     const location = `${district.name}, ${city.name}`;
 
-    // Konteyner/Taşıyıcı Şasi kategorisini bul
-    const category = await prisma.category.findFirst({
+    // Konteyner/Taşıyıcı Şasi kategorisini bul (ID: 10)
+    let category = await prisma.category.findFirst({
       where: {
         name: { contains: "Konteyner", mode: "insensitive" },
       },
     });
+
+    // Eğer kategori bulunamazsa ID 10'u kullan
+    if (!category) {
+      category = await prisma.category.findUnique({
+        where: { id: 10 },
+      });
+    }
 
     if (!category) {
       return res.status(400).json({
@@ -4146,40 +4439,16 @@ export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
       });
     }
 
-    // Uzayabilir markasını bul veya oluştur
-    let brand = await prisma.brand.findFirst({
-      where: { name: "Uzayabilir" },
-    });
-
-    if (!brand) {
-      brand = await prisma.brand.create({
-        data: {
-          name: "Uzayabilir",
-          slug: "uzayabilir",
-          logoUrl: "/BrandsImage/DigerMarkalar.png",
-        },
-      });
-    }
-
-    // Şasi modelini bul veya oluştur
-    let model = await prisma.model.findFirst({
-      where: {
-        name: "Şasi",
-        brandId: brand.id,
-        categoryId: category.id,
-      },
-    });
-
-    if (!model) {
-      model = await prisma.model.create({
-        data: {
-          name: "Şasi",
-          slug: "sasi",
-          brandId: brand.id,
-          categoryId: category.id,
-        },
-      });
-    }
+    // Brand, model ve variant'ı otomatik oluştur
+    const result = await ensureBrandModelVariant(
+      category.id,
+      "uzayabilir",
+      "Uzayabilir",
+      "sasi",
+      "Şasi",
+      "standart",
+      "Standart"
+    );
 
     // İlanı oluştur
     const ad = await prisma.ad.create({
@@ -4192,8 +4461,9 @@ export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
         cityId: parseInt(cityId),
         districtId: parseInt(districtId),
         categoryId: category.id,
-        brandId: brand.id,
-        modelId: model.id,
+        brandId: result.brandId,
+        modelId: result.modelId,
+        variantId: result.variantId,
         userId,
         status: "PENDING",
 
@@ -4320,29 +4590,23 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       categoryId = category?.id || null;
     }
 
-    // Brand ID slug'dan veya direkt ID'den al
-    if (!brandId && brandSlug) {
-      const brand = await prisma.brand.findFirst({
-        where: { slug: brandSlug },
-      });
-      brandId = brand?.id || null;
-    }
+    // Brand/Model/Variant'ları bul veya oluştur
+    const result = await ensureBrandModelVariant(
+      categoryId || 8, // Römork kategorisi
+      brandSlug,
+      brandName,
+      modelSlug,
+      modelName,
+      variantSlug,
+      variantName,
+      brandId || undefined,
+      modelId || undefined,
+      variantId || undefined
+    );
 
-    // Model ID slug'dan veya direkt ID'den al
-    if (!modelId && modelSlug) {
-      const model = await prisma.model.findFirst({
-        where: { slug: modelSlug },
-      });
-      modelId = model?.id || null;
-    }
-
-    // Variant ID slug'dan veya direkt ID'den al
-    if (!variantId && variantSlug) {
-      const variant = await prisma.variant.findFirst({
-        where: { slug: variantSlug },
-      });
-      variantId = variant?.id || null;
-    }
+    brandId = result.brandId || null;
+    modelId = result.modelId || null;
+    variantId = result.variantId || null;
 
     // Şehir ve ilçe bilgilerini al
     let locationString = "";
@@ -4383,7 +4647,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
     const ad = await prisma.ad.create({
       data: {
         userId,
-        categoryId: categoryId || 1, // Varsayılan kategori ID'si
+        categoryId: categoryId || 8, // Römork kategorisi
         brandId: brandId || undefined,
         modelId: modelId || undefined,
         variantId: variantId || undefined,
