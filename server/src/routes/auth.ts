@@ -1,10 +1,17 @@
 import { Router } from "express";
+import multer from "multer";
 import { AuthController } from "../controllers/authController";
 import { authenticateToken } from "../middleware/auth";
 import { authLimiter } from "../middleware/security";
 import { validateRegistration, validateLogin } from "../middleware/validation";
 
 const router = Router();
+
+// Multer configuration for profile image upload
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
 
 // Auth routes with rate limiting and validation
 router.post(
@@ -24,6 +31,12 @@ router.post("/reset-password", authLimiter, AuthController.resetPassword);
 router.get("/me", authenticateToken, AuthController.getCurrentUser);
 router.get("/stats", authenticateToken, AuthController.getUserStats);
 router.put("/profile", authenticateToken, AuthController.updateProfile);
+router.post(
+  "/upload-profile-image",
+  authenticateToken,
+  upload.single("profileImage"),
+  AuthController.uploadProfileImage
+);
 router.put(
   "/update-password",
   authenticateToken,

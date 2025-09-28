@@ -386,22 +386,36 @@ const AdDetail: React.FC = () => {
     return new Intl.NumberFormat("tr-TR").format(price) + " TL";
   };
 
-  const getImageUrl = (images?: (string | { imageUrl: string })[]): string => {
-    // ❗ Performance: No debug logs
+  const getImageUrl = (
+    images?: (string | { imageUrl: string; isPrimary?: boolean })[]
+  ): string => {
     if (!images || images.length === 0) {
       return "https://via.placeholder.com/400x300/f0f0f0/999999?text=Resim+Yok";
     }
 
-    const firstImage = images[0];
+    // Önce vitrin resmini (isPrimary: true) ara
+    let selectedImage = images.find(
+      (img) => typeof img === "object" && img.isPrimary === true
+    );
+
+    // Vitrin resmi yoksa ilk resmi al
+    if (!selectedImage) {
+      selectedImage = images[0];
+    }
 
     // Eğer object ise imageUrl property'sini al
     let imageUrl: string;
-    if (typeof firstImage === "object" && firstImage.imageUrl) {
-      imageUrl = firstImage.imageUrl;
-    } else if (typeof firstImage === "string") {
-      imageUrl = firstImage;
+    if (typeof selectedImage === "object" && selectedImage.imageUrl) {
+      imageUrl = selectedImage.imageUrl;
+    } else if (typeof selectedImage === "string") {
+      imageUrl = selectedImage;
     } else {
       return "https://via.placeholder.com/400x300/f0f0f0/999999?text=Hatalı+Resim";
+    }
+
+    // URL güvenlik kontrolü
+    if (!imageUrl || typeof imageUrl !== "string") {
+      return "https://via.placeholder.com/400x300/f0f0f0/999999?text=Resim+Yok";
     }
 
     // Base64 kontrolü - keep original images for display

@@ -12,36 +12,30 @@ import {
   Alert,
   IconButton,
   Chip,
-  Tooltip,
   Avatar,
   Modal,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Divider,
 } from "@mui/material";
 import {
   AddCircle,
-  Edit,
-  Delete,
-  Visibility,
   LocationOn,
   Settings,
   CameraAlt,
   Close,
   Save,
 } from "@mui/icons-material";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { RootState } from "../store";
 import type { User } from "../store/authSlice";
+import { setCredentials } from "../store/authSlice";
 import apiClient from "../api/client";
 
 interface AdImage {
   id: number;
   url: string;
+  imageUrl?: string;
   isPrimary: boolean;
   displayOrder: number;
 }
@@ -141,31 +135,19 @@ const Dukkanim: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [cities, setCities] = useState<City[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     phone: "",
     companyName: "",
     address: "",
-    cityId: null as number | null,
-    districtId: null as number | null,
     profileImageUrl: "",
   });
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const user = useSelector((state: RootState) => state.auth.user);
-
-  const deleteAd = async (adId: number) => {
-    try {
-      await apiClient.delete(`/ads/${adId}`);
-      setUserAds((prevAds) => prevAds.filter((ad) => ad.id !== adId));
-    } catch (error) {
-      console.error("Ad delete error:", error);
-      alert("İlan silinirken bir hata oluştu");
-    }
-  };
 
   const fetchStoreData = useCallback(async () => {
     if (!user) return;
@@ -188,7 +170,10 @@ const Dukkanim: React.FC = () => {
 
   useEffect(() => {
     fetchStoreData();
-    fetchCities();
+  }, [fetchStoreData]);
+
+  // User bilgileri değiştiğinde form data'yı güncelle
+  useEffect(() => {
     if (user) {
       setFormData({
         firstName: user.firstName || "",
@@ -196,45 +181,16 @@ const Dukkanim: React.FC = () => {
         phone: user.phone || "",
         companyName: user.companyName || "",
         address: user.address || "",
-        cityId: null,
-        districtId: null,
         profileImageUrl: user.profileImageUrl || "",
       });
     }
-  }, [fetchStoreData, user]);
-
-  const fetchCities = async () => {
-    try {
-      const response = await apiClient.get("/cities");
-      setCities(response.data as City[]);
-    } catch (error) {
-      console.error("Error fetching cities:", error);
-    }
-  };
-
-  const fetchDistricts = async (cityId: number) => {
-    try {
-      const response = await apiClient.get(`/cities/${cityId}/districts`);
-      setDistricts(response.data as District[]);
-    } catch (error) {
-      console.error("Error fetching districts:", error);
-    }
-  };
+  }, [user]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
-  };
-
-  const handleCityChange = (cityId: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      cityId,
-      districtId: null,
-    }));
-    fetchDistricts(cityId);
   };
 
   const handleSaveProfile = async () => {
@@ -257,8 +213,16 @@ const Dukkanim: React.FC = () => {
       const responseData = response.data as { user: User };
       const updatedUser = { ...user!, ...responseData.user };
 
-      // localStorage'u da güncelle
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      // Redux store'u dispatch ile güncelle
+      const currentToken = localStorage.getItem("accessToken");
+      if (currentToken) {
+        dispatch(
+          setCredentials({
+            user: updatedUser,
+            token: currentToken,
+          })
+        );
+      }
 
       setSettingsOpen(false);
     } catch (error: unknown) {
@@ -280,7 +244,7 @@ const Dukkanim: React.FC = () => {
 
     try {
       const response = await apiClient.post(
-        "/users/upload-profile-image",
+        "/auth/upload-profile-image",
         formDataUpload,
         {
           headers: {
@@ -302,8 +266,27 @@ const Dukkanim: React.FC = () => {
   };
 
   const formatPrice = (price: number | null | undefined) => {
-    if (!price) return "Fiyat belirtilmemiş";
-    return price.toLocaleString("tr-TR");
+    if (!price || price === 0) return "Fiyat belirtilmemiş";
+    return new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: "TRY",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const formatPhone = (phone: string | null | undefined) => {
+    if (!phone) return "Telefon belirtilmemiş";
+    // Sadece rakamları al
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length === 11 && digits.startsWith("0")) {
+      // 0XXX XXX XX XX formatı
+      return digits.replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4");
+    } else if (digits.length === 10) {
+      // XXX XXX XX XX formatı (başında 0 yoksa)
+      return digits.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4");
+    }
+    return phone; // Formatlanamadıysa orijinali döndür
   };
 
   const formatLocation = (city: City | null, district: District | null) => {
@@ -316,13 +299,72 @@ const Dukkanim: React.FC = () => {
   };
 
   const getImageUrl = (images: AdImage[]) => {
+    console.log("🖼️ getImageUrl called with:", images);
+
     if (!images || images.length === 0) {
+      console.log("❌ No images found, using default");
       return "/Trucksbus.png";
     }
 
-    const primaryImage = images.find((img) => img.isPrimary);
-    const imageUrl = primaryImage ? primaryImage.url : images[0].url;
-    return imageUrl;
+    // Öncelikle vitrin resmini (isPrimary: true) ara
+    const primaryImage = images.find((img) => img.isPrimary === true);
+    console.log("🏆 Primary image found:", primaryImage);
+
+    let imageUrl: string = "";
+
+    if (primaryImage) {
+      console.log("🔍 Primary image details:", {
+        id: primaryImage.id,
+        url: primaryImage.url,
+        imageUrl: primaryImage.imageUrl,
+        isPrimary: primaryImage.isPrimary,
+        hasUrl: !!primaryImage.url,
+        hasImageUrl: !!primaryImage.imageUrl,
+      });
+
+      imageUrl = primaryImage.url || primaryImage.imageUrl || "";
+      if (imageUrl) {
+        console.log("✅ Using primary image:", imageUrl);
+      }
+    }
+
+    if (!imageUrl && images[0]) {
+      console.log("🔍 First image details:", {
+        id: images[0].id,
+        url: images[0].url,
+        imageUrl: images[0].imageUrl,
+        isPrimary: images[0].isPrimary,
+      });
+
+      imageUrl = images[0].url || images[0].imageUrl || "";
+      if (imageUrl) {
+        console.log("📷 Using first image:", imageUrl);
+      }
+    }
+
+    if (!imageUrl) {
+      console.log("❌ No valid image URL found in any image");
+      return "/Trucksbus.png";
+    }
+
+    // imageUrl null/undefined kontrolü
+    if (!imageUrl || typeof imageUrl !== "string") {
+      console.log("❌ Invalid imageUrl:", imageUrl);
+      return "/Trucksbus.png";
+    }
+
+    // Eğer URL zaten tam URL ise olduğu gibi döndür
+    if (imageUrl.startsWith("http") || imageUrl.startsWith("data:")) {
+      console.log("🌐 Full URL detected:", imageUrl);
+      return imageUrl;
+    }
+
+    // API base URL ile birleştir - /api kısmını kaldır
+    const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:3000";
+    const baseUrl = apiUrl.replace("/api", "");
+    const finalUrl = `${baseUrl}${imageUrl}`;
+    console.log("🔗 Final URL:", finalUrl);
+    return finalUrl;
   };
 
   if (loading) {
@@ -488,7 +530,6 @@ const Dukkanim: React.FC = () => {
                 </Typography>
 
                 <Chip
-                  icon={<Visibility />}
                   label={`${userAds.length} aktif ilan`}
                   size="small"
                   variant="outlined"
@@ -566,25 +607,30 @@ const Dukkanim: React.FC = () => {
         {userAds.length > 0 ? (
           <Box
             sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
-                md: "repeat(3, 1fr)",
-                lg: "repeat(4, 1fr)",
-              },
+              display: "flex",
+              flexWrap: "wrap",
               gap: 2,
+              justifyContent: "flex-start",
             }}
           >
             {userAds.map((ad) => (
               <Card
                 key={ad.id}
                 sx={{
-                  maxWidth: 280,
+                  width: {
+                    xs: "100%",
+                    sm: "calc(50% - 8px)",
+                    md: "calc(33.333% - 11px)",
+                    lg: "calc(25% - 12px)",
+                  },
+                  minWidth: "280px",
                   border: "1px solid #e0e0e0",
                   borderRadius: 2,
                   boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                   transition: "all 0.3s ease",
+                  position: "relative",
+                  display: "flex",
+                  flexDirection: "column",
                   "&:hover": {
                     boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
                     transform: "translateY(-2px)",
@@ -659,7 +705,7 @@ const Dukkanim: React.FC = () => {
                       fontSize: "1.25rem",
                     }}
                   >
-                    ₺{formatPrice(ad.price)}
+                    {formatPrice(ad.price)}
                   </Typography>
 
                   {/* Bilgiler */}
@@ -733,7 +779,7 @@ const Dukkanim: React.FC = () => {
                       variant="body2"
                       sx={{ color: "#666", fontSize: "0.8rem" }}
                     >
-                      {user?.phone || "0545 835 13 61"}
+                      {formatPhone(user?.phone) || "0545 835 13 61"}
                     </Typography>
                   </Box>
 
@@ -753,84 +799,6 @@ const Dukkanim: React.FC = () => {
                   >
                     Detayları Gör
                   </Button>
-
-                  {/* Alt Butonlar */}
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="error"
-                      startIcon={<Visibility />}
-                      sx={{ flex: 1, fontSize: "0.75rem" }}
-                    >
-                      Şikayet Et
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="primary"
-                      sx={{ flex: 1, fontSize: "0.75rem" }}
-                      onClick={() => {
-                        navigator.clipboard.writeText(
-                          `${window.location.origin}/ad/${ad.id}`
-                        );
-                        alert("İlan linki kopyalandı!");
-                      }}
-                    >
-                      Mesaj
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      sx={{ flex: 1, fontSize: "0.75rem" }}
-                      onClick={() => navigate(`/edit-ad/${ad.id}`)}
-                    >
-                      Kaydet
-                    </Button>
-                  </Box>
-
-                  {/* Admin Butonları (İlan Sahibi İçin) */}
-                  <Box
-                    sx={{ display: "flex", gap: 1, mt: 1 }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Tooltip title="İlanı Düzenle">
-                      <IconButton
-                        size="small"
-                        sx={{
-                          backgroundColor: "#f5f5f5",
-                          "&:hover": { backgroundColor: "#e0e0e0" },
-                          flex: 1,
-                        }}
-                        onClick={() => navigate(`/edit-ad/${ad.id}`)}
-                      >
-                        <Edit fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-
-                    <Tooltip title="İlanı Sil">
-                      <IconButton
-                        size="small"
-                        sx={{
-                          backgroundColor: "#ffe6e6",
-                          "&:hover": { backgroundColor: "#ffcccc" },
-                          color: "#d32f2f",
-                          flex: 1,
-                        }}
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              "Bu ilanı silmek istediğinizden emin misiniz?"
-                            )
-                          ) {
-                            deleteAd(ad.id);
-                          }
-                        }}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
                 </CardContent>
               </Card>
             ))}
@@ -997,47 +965,6 @@ const Dukkanim: React.FC = () => {
           <Typography variant="h6" sx={{ mb: 2 }}>
             Adres Bilgileri
           </Typography>
-
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-              gap: 2,
-              mb: 2,
-            }}
-          >
-            <FormControl fullWidth>
-              <InputLabel>Şehir</InputLabel>
-              <Select
-                value={formData.cityId || ""}
-                onChange={(e) => handleCityChange(Number(e.target.value))}
-                label="Şehir"
-              >
-                {cities.map((city) => (
-                  <MenuItem key={city.id} value={city.id}>
-                    {city.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth disabled={!formData.cityId}>
-              <InputLabel>İlçe</InputLabel>
-              <Select
-                value={formData.districtId || ""}
-                onChange={(e) =>
-                  handleInputChange("districtId", Number(e.target.value))
-                }
-                label="İlçe"
-              >
-                {districts.map((district) => (
-                  <MenuItem key={district.id} value={district.id}>
-                    {district.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
 
           <TextField
             label="Adres"

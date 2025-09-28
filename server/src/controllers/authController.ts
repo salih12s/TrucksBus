@@ -789,6 +789,56 @@ export class AuthController {
     }
   }
 
+  // Upload profile image
+  static async uploadProfileImage(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user!.id;
+      const file = req.file;
+
+      if (!file) {
+        res.status(400).json({ error: "No image file provided" });
+        return;
+      }
+
+      // Convert to base64
+      const base64Image = `data:${file.mimetype};base64,${file.buffer.toString(
+        "base64"
+      )}`;
+
+      // Update user's profile image URL
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          profileImageUrl: base64Image,
+          updatedAt: new Date(),
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          role: true,
+          companyName: true,
+          address: true,
+          city: true,
+          profileImageUrl: true,
+          isVerified: true,
+          createdAt: true,
+        },
+      });
+
+      res.json({
+        message: "Profile image uploaded successfully",
+        imageUrl: base64Image,
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.error("Upload profile image error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
   // Forgot password - generate JWT reset token
   static async forgotPassword(req: Request, res: Response) {
     try {
