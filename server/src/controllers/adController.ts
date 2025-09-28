@@ -248,12 +248,20 @@ export const getAds = async (req: Request, res: Response) => {
           d.name as district_name,
           b.name as brand_name,
           cat.name as category_name,
-          img.image_url as image_url
+          img.image_url as image_url,
+          u.id as user_id,
+          u.first_name as user_first_name,
+          u.last_name as user_last_name,
+          u.phone as user_phone,
+          u.company_name as user_company_name,
+          u.role as user_role,
+          u.user_type as user_user_type
         FROM ads a
         LEFT JOIN cities c ON a.city_id = c.id
         LEFT JOIN districts d ON a.district_id = d.id
         LEFT JOIN brands b ON a.brand_id = b.id
         LEFT JOIN categories cat ON a.category_id = cat.id
+        LEFT JOIN users u ON a.user_id = u.id
         LEFT JOIN (
           SELECT DISTINCT ON (ad_id) ad_id, image_url 
           FROM ad_images 
@@ -283,11 +291,22 @@ export const getAds = async (req: Request, res: Response) => {
           year: ad.year,
           mileage: ad.mileage,
           createdAt: ad.createdAt,
+          isExchangeable: ad.isExchangeable,
+          customFields: ad.customFields,
           city: ad.city_name ? { name: ad.city_name } : null,
           district: ad.district_name ? { name: ad.district_name } : null,
           brand: ad.brand_name ? { name: ad.brand_name } : null,
           category: ad.category_name ? { name: ad.category_name } : null,
           images: ad.image_url ? [{ imageUrl: ad.image_url }] : [],
+          user: {
+            id: ad.user_id,
+            firstName: ad.user_first_name,
+            lastName: ad.user_last_name,
+            phone: ad.user_phone,
+            companyName: ad.user_company_name,
+            role: ad.user_role,
+            userType: ad.user_user_type,
+          },
         })),
         pagination: {
           page: parseInt(page as string),

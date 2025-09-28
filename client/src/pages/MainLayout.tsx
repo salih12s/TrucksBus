@@ -93,6 +93,7 @@ interface Ad {
     phone: string | null;
     companyName?: string | null;
     userType?: string;
+    role?: string;
   };
   category?: {
     name: string;
@@ -1302,20 +1303,35 @@ const MainLayout: React.FC = () => {
       // Seller type filtresi
       if (selectedSellerType !== "all") {
         filtered = filtered.filter((ad) => {
-          // UserType'ı companyName'e göre belirle
+          // Role'e göre user type'ı belirle
           const userType =
-            ad.user?.userType ||
-            (ad.user?.companyName ? "corporate" : "individual");
+            ad.user?.role === "CORPORATE" ? "corporate" : "individual";
+
+          // Debug için ilk ilan bilgilerini yazdır
+          if (filtered.indexOf(ad) === 0) {
+            console.log("=== SELLER FILTER DEBUG ===");
+            console.log("Selected seller type:", selectedSellerType);
+            console.log("Sample ad user:", {
+              id: ad.user?.id,
+              firstName: ad.user?.firstName,
+              companyName: ad.user?.companyName,
+              role: ad.user?.role,
+              userType: ad.user?.userType,
+              calculatedUserType: userType,
+            });
+            console.log("=== END SELLER DEBUG ===");
+          }
 
           switch (selectedSellerType) {
             case "individual":
+              // Üyeden: sadece bireysel kullanıcılar (USER role)
               return userType === "individual";
             case "trader":
-              // Esnaftan: trader veya corporate (kurumsal hesaplar her iki kategoride görünsün)
-              return userType === "trader" || userType === "corporate";
+              // Esnaftan: kurumsal kullanıcılar (CORPORATE role)
+              return userType === "corporate";
             case "corporate":
-              // Kurumdan: corporate veya trader (kurumsal hesaplar her iki kategoride görünsün)
-              return userType === "corporate" || userType === "trader";
+              // Kurumdan: kurumsal kullanıcılar (CORPORATE role)
+              return userType === "corporate";
             default:
               return true;
           }

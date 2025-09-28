@@ -194,6 +194,7 @@ export class AuthController {
           lastName,
           phone,
           role: (role as UserRole) || UserRole.USER,
+          userType: role === "CORPORATE" ? "corporate" : "individual",
           companyName,
           taxId,
           tradeRegistryNo,

@@ -50,6 +50,8 @@ interface Ad {
   transmission?: string;
   mileage?: number;
   enginePower?: string;
+  motorPower?: string;
+  engineHorsepower?: string;
   engineVolume?: string;
   wheelDrive?: string;
   seatCount?: number;
@@ -1216,15 +1218,31 @@ const AdDetail: React.FC = () => {
                           },
                           {
                             label: "Motor Gücü",
-                            value:
-                              ad.customFields?.motorPower ||
-                              ad.customFields?.enginePower ||
-                              ad.enginePower ||
-                              ad.customFields?.motor_power ||
-                              ad.customFields?.engine_power ||
-                              ad.dynamicFields?.enginePower ||
-                              ad.dynamicFields?.motorPower ||
-                              null,
+                            value: (() => {
+                              // Tüm olası motor gücü kaynaklarını kontrol et
+                              const sources = [
+                                ad.customFields?.motorPower,
+                                ad.customFields?.enginePower,
+                                ad.enginePower,
+                                ad.motorPower,
+                                ad.engineHorsepower,
+                                ad.customFields?.motor_power,
+                                ad.customFields?.engine_power,
+                                ad.dynamicFields?.enginePower,
+                                ad.dynamicFields?.motorPower,
+                                ad.customFields?.power,
+                                ad.customFields?.hp,
+                                ad.customFields?.horsepower,
+                              ];
+
+                              for (const source of sources) {
+                                if (source && source.toString().trim() !== "") {
+                                  return source.toString();
+                                }
+                              }
+
+                              return null;
+                            })(),
                           },
                           {
                             label: "Motor Hacmi",
@@ -1415,10 +1433,18 @@ const AdDetail: React.FC = () => {
                             value: ad.customFields?.seatBackScreen || null,
                           },
                           {
+                            label: "Renk",
+                            value: ad.customFields?.color || ad.color || null,
+                          },
+                          {
                             label: "Yakıt Hacmi (Litre)",
                             value: ad.customFields?.fuelCapacity
                               ? `${ad.customFields.fuelCapacity} L`
                               : null,
+                          },
+                          {
+                            label: "Lastik Durumu",
+                            value: ad.customFields?.tireCondition || null,
                           },
 
                           // Oto Kurtarıcı Tekli Araç Özel Alanları

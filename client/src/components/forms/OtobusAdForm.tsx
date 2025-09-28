@@ -984,6 +984,15 @@ const OtobusAdForm: React.FC = () => {
       if (formData.tireCondition && formData.tireCondition.trim() !== "") {
         submitData.append("tireCondition", formData.tireCondition);
       }
+      if (
+        formData.hasAccidentRecord &&
+        formData.hasAccidentRecord.trim() !== ""
+      ) {
+        submitData.append("hasAccidentRecord", formData.hasAccidentRecord);
+      }
+      if (formData.hasTramerRecord && formData.hasTramerRecord.trim() !== "") {
+        submitData.append("hasTramerRecord", formData.hasTramerRecord);
+      }
 
       // Özellikler - JSON olarak gönder
       if (formData.features.length > 0) {
