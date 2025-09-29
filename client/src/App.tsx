@@ -13,6 +13,7 @@ import socketService, { SocketService } from "./services/socketService";
 // Components
 import {
   ErrorBoundary,
+  ChunkErrorBoundary,
   PerformanceMonitor,
   LoadingScreen,
   SplashScreen,
@@ -360,8 +361,9 @@ function App() {
             <ThemeProvider theme={theme}>
               <CssBaseline />
               <ErrorBoundary>
-                <Router>
-                  <div className="min-h-screen bg-gray-50">
+                <ChunkErrorBoundary>
+                  <Router>
+                    <div className="min-h-screen bg-gray-50">
                     <React.Suspense
                       fallback={
                         <LoadingFallback
@@ -1295,6 +1297,7 @@ function App() {
                     <PWAStatus />
                   </div>
                 </Router>
+                </ChunkErrorBoundary>
               </ErrorBoundary>
             </ThemeProvider>
           </AuthProvider>

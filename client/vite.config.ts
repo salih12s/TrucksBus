@@ -4,6 +4,9 @@ import { resolve } from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vitejs.dev/config/
+// Cache busting için unique timestamp
+const buildTimestamp = Date.now();
+
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
@@ -41,14 +44,27 @@ export default defineConfig(({ mode }) => ({
     assetsDir: "assets",
     sourcemap: false, // Production'da sourcemap'i kapat
     minify: "terser", // Daha iyi minification
-
-    // Code splitting
+    
+    // Cache busting için
+    cssCodeSplit: true,
+    
+    // Rollup options
     rollupOptions: {
+      // Chunk loading sorununu çözmek için
       output: {
-        // Chunk isimlendirmesini iyileştir
-        chunkFileNames: "assets/js/[name]-[hash].js",
-        entryFileNames: "assets/js/[name]-[hash].js",
-        assetFileNames: "assets/[ext]/[name]-[hash].[ext]",
+        // Her build'de farklı hash oluştur (cache busting)
+        chunkFileNames: () => {
+          return `assets/js/[name]-[hash]-${buildTimestamp}.js`;
+        },
+        entryFileNames: () => {
+          return `assets/js/[name]-[hash]-${buildTimestamp}.js`;
+        },
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.css')) {
+            return `assets/css/[name]-[hash]-${buildTimestamp}.[ext]`;
+          }
+          return `assets/[name]-[hash]-${buildTimestamp}.[ext]`;
+        },
 
         manualChunks: {
           // Vendor chunks

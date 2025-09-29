@@ -5,6 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { onCLS, onINP, onFCP, onLCP, onTTFB } from "web-vitals";
 import "./index.css";
 import App from "./App.tsx";
+import { setupChunkErrorHandler } from "./utils/chunkErrorHandler";
 
 // Web Vitals reporting
 const reportWebVitals = () => {
@@ -51,6 +52,9 @@ createRoot(document.getElementById("root")!).render(
   </ThemeProvider>
   // </StrictMode>
 );
+
+// Setup chunk error handler
+setupChunkErrorHandler();
 
 // Report web vitals
 reportWebVitals();
