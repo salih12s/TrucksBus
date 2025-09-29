@@ -4,9 +4,6 @@ import { resolve } from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vitejs.dev/config/
-// Cache busting için unique timestamp
-const buildTimestamp = Date.now();
-
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
@@ -37,7 +34,7 @@ export default defineConfig(({ mode }) => ({
     ],
   },
 
-  // Build configuration
+  // Build configuration - CHUNK LOADING KAPATILDI
   build: {
     target: "es2015", // Daha geniş browser desteği için
     outDir: "dist",
@@ -45,35 +42,15 @@ export default defineConfig(({ mode }) => ({
     sourcemap: false, // Production'da sourcemap'i kapat
     minify: "terser", // Daha iyi minification
     
-    // Cache busting için
-    cssCodeSplit: true,
+    // CHUNK LOADING'İ TAMAMEN KAPAT
+    cssCodeSplit: false, // CSS'i tek dosyada birleştir
     
     // Rollup options
     rollupOptions: {
-      // Chunk loading sorununu çözmek için
       output: {
-        // Her build'de farklı hash oluştur (cache busting)
-        chunkFileNames: () => {
-          return `assets/js/[name]-[hash]-${buildTimestamp}.js`;
-        },
-        entryFileNames: () => {
-          return `assets/js/[name]-[hash]-${buildTimestamp}.js`;
-        },
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name?.endsWith('.css')) {
-            return `assets/css/[name]-[hash]-${buildTimestamp}.[ext]`;
-          }
-          return `assets/[name]-[hash]-${buildTimestamp}.[ext]`;
-        },
-
-        manualChunks: {
-          // Vendor chunks
-          react: ["react", "react-dom"],
-          router: ["react-router-dom"],
-          mui: ["@mui/material", "@emotion/react", "@emotion/styled"],
-          redux: ["@reduxjs/toolkit", "react-redux"],
-          charts: ["recharts"],
-        },
+        // Tek JS dosyası oluştur - chunk yok
+        manualChunks: undefined, // Chunk'ları kapat
+        inlineDynamicImports: true, // Dynamic import'ları inline yap
       },
     },
 

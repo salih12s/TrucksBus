@@ -3,10 +3,19 @@
   RewriteEngine On
   RewriteBase /
   
-  # Handle client-side routing
+  # CRITICAL: JS dosyalarının doğru MIME type ile servis edilmesi
+  AddType application/javascript .js
+  AddType text/css .css
+  
+  # Assets klasörü için özel ayar - KESINLIKLE index.html'e yönlendirme
+  RewriteCond %{REQUEST_URI} ^/assets/.*$
+  RewriteRule .* - [L]
+  
+  # Handle client-side routing - sadece HTML sayfa istekleri için
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !^/assets/.*$
   RewriteRule . /index.html [L]
 </IfModule>
 
