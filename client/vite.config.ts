@@ -4,7 +4,7 @@ import { resolve } from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     // Bundle analyzer - only in build mode
@@ -16,6 +16,9 @@ export default defineConfig({
         brotliSize: true,
       }),
   ].filter(Boolean),
+
+  // Base URL for production
+  base: mode === "production" ? "/" : "/",
 
   // Optimize dependencies
   optimizeDeps: {
@@ -33,13 +36,20 @@ export default defineConfig({
 
   // Build configuration
   build: {
-    target: "esnext",
+    target: "es2015", // Daha geniş browser desteği için
     outDir: "dist",
     assetsDir: "assets",
+    sourcemap: false, // Production'da sourcemap'i kapat
+    minify: "terser", // Daha iyi minification
 
     // Code splitting
     rollupOptions: {
       output: {
+        // Chunk isimlendirmesini iyileştir
+        chunkFileNames: "assets/js/[name]-[hash].js",
+        entryFileNames: "assets/js/[name]-[hash].js",
+        assetFileNames: "assets/[ext]/[name]-[hash].[ext]",
+
         manualChunks: {
           // Vendor chunks
           react: ["react", "react-dom"],
@@ -51,15 +61,8 @@ export default defineConfig({
       },
     },
 
-    // Compression and optimization
-    minify: "esbuild",
-    cssMinify: true,
-
     // Asset optimization
     assetsInlineLimit: 4096, // 4kb
-
-    // Source maps for production debugging
-    sourcemap: false,
 
     // Reduce bundle size warnings threshold
     chunkSizeWarningLimit: 600,
@@ -104,6 +107,6 @@ export default defineConfig({
   // Experimental features
   esbuild: {
     // Drop console.log in production
-    drop: process.env.NODE_ENV === "production" ? ["console", "debugger"] : [],
+    drop: mode === "production" ? ["console", "debugger"] : [],
   },
-});
+}));

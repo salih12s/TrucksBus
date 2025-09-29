@@ -9,9 +9,15 @@ interface EmailOptions {
 
 class EmailService {
   private transporter: nodemailer.Transporter | null = null;
-  private useSendGrid: boolean = false;
+  private isDisabled: boolean = false;
 
   constructor() {
+    // Geliştirme ortamında e-posta göndermeyi devre dışı bırak
+    if (process.env.DISABLE_EMAIL === "true") {
+      console.log("📧 E-posta servisi devre dışı (development mode)");
+      this.isDisabled = true;
+      return;
+    }
     this.initializeSMTP();
   }
 
@@ -34,7 +40,6 @@ class EmailService {
       }
 
       this.transporter = nodemailer.createTransport(emailConfig);
-      this.useSendGrid = false;
 
       // Bağlantıyı test et
       this.verifyConnection();
@@ -59,6 +64,15 @@ class EmailService {
   }
 
   async sendEmail(options: EmailOptions): Promise<void> {
+    // Development ortamında e-posta gönderme simülasyonu
+    if (this.isDisabled) {
+      console.log("📧 [SIMULATED EMAIL]");
+      console.log("📮 To:", options.to);
+      console.log("📑 Subject:", options.subject);
+      console.log("💌 E-posta gönderildi (simulated)");
+      return;
+    }
+
     if (!this.transporter) {
       throw new Error("E-posta servisi yapılandırılmamış");
     }
@@ -95,48 +109,66 @@ class EmailService {
         <title>Şifre Sıfırlama - TrucksBus</title>
         <style>
           body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             line-height: 1.6;
             color: #333;
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f4f4f4;
+            background-color: #f8f9fa;
           }
           .container {
             background-color: #ffffff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4A90E2;
           }
           .logo {
-            text-align: center;
-            margin-bottom: 30px;
-          }
-          .logo h1 {
             color: #4A90E2;
             margin: 0;
-            font-size: 28px;
+            font-size: 32px;
+            font-weight: bold;
           }
           .content {
             text-align: center;
+            line-height: 1.8;
+          }
+          .content h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+          }
+          .content p {
+            margin-bottom: 20px;
+            color: #555;
+            font-size: 16px;
           }
           .reset-button {
             display: inline-block;
-            background-color: #4A90E2;
-            color: white;
-            padding: 15px 30px;
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            color: white !important;
+            padding: 16px 32px;
             text-decoration: none;
-            border-radius: 5px;
-            margin: 20px 0;
-            font-weight: bold;
+            border-radius: 8px;
+            margin: 30px 0;
+            font-weight: 600;
             font-size: 16px;
+            box-shadow: 0 3px 6px rgba(74, 144, 226, 0.3);
+            transition: all 0.3s ease;
           }
           .reset-button:hover {
-            background-color: #357ABD;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(74, 144, 226, 0.4);
           }
           .footer {
-            margin-top: 30px;
+            margin-top: 40px;
             padding-top: 20px;
             border-top: 1px solid #eee;
             font-size: 14px;
@@ -144,47 +176,86 @@ class EmailService {
             text-align: center;
           }
           .warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 30px 0;
             color: #856404;
+          }
+          .warning strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+          }
+          .warning ul {
+            margin: 0;
+            padding-left: 20px;
+          }
+          .warning li {
+            margin-bottom: 8px;
+          }
+          .link-fallback {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+          }
+          .link-fallback p {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #666;
+          }
+          .link-text {
+            word-break: break-all;
+            font-size: 12px;
+            color: #888;
+            background-color: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
           }
         </style>
       </head>
       <body>
         <div class="container">
-          <div class="logo">
-            <h1>🚛 TrucksBus</h1>
+          <div class="header">
+            <h1 class="logo">🚛 TrucksBus</h1>
           </div>
           
           <div class="content">
-            <h2>Şifre Sıfırlama Talebi</h2>
-            <p>Merhaba,</p>
-            <p>Hesabınız için şifre sıfırlama talebinde bulundunuz. Şifrenizi sıfırlamak için aşağıdaki butona tıklayın:</p>
+            <h2>🔐 Şifre Sıfırlama Talebi</h2>
+            <p><strong>Merhaba,</strong></p>
+            <p>TrucksBus hesabınız için şifre sıfırlama talebinde bulundunuz. Güvenliğiniz için bu işlemi tamamlamak üzere aşağıdaki butona tıklayın:</p>
             
-            <a href="${resetLink}" class="reset-button">Şifremi Sıfırla</a>
+            <a href="${resetLink}" class="reset-button">🔑 Şifremi Şimdi Sıfırla</a>
             
             <div class="warning">
-              <strong>⚠️ Önemli Güvenlik Uyarısı:</strong><br>
-              • Bu bağlantı 1 saat süreyle geçerlidir<br>
-              • Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelin<br>
-              • Şifrenizi asla kimseyle paylaşmayın
+              <strong>⚠️ Güvenlik Uyarıları:</strong>
+              <ul>
+                <li><strong>Bu bağlantı sadece 1 saat süreyle geçerlidir</strong></li>
+                <li>Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelin</li>
+                <li>Şifrenizi asla kimseyle paylaşmayın</li>
+                <li>Şüpheli aktivite fark ederseniz derhal bizimle iletişime geçin</li>
+              </ul>
             </div>
             
-            <p style="font-size: 14px; color: #666;">
-              Eğer yukarıdaki buton çalışmıyorsa, aşağıdaki bağlantıyı tarayıcınıza kopyalayın:
-            </p>
-            <p style="word-break: break-all; font-size: 12px; color: #888;">
-              ${resetLink}
-            </p>
+            <div class="link-fallback">
+              <p><strong>Buton çalışmıyor mu?</strong></p>
+              <p>Aşağıdaki bağlantıyı tarayıcınıza kopyalayıp yapıştırın:</p>
+              <div class="link-text">${resetLink}</div>
+            </div>
           </div>
           
           <div class="footer">
-            <p>Bu e-posta otomatik olarak gönderilmiştir, lütfen yanıtlamayın.</p>
-            <p><strong>TrucksBus Ekibi</strong></p>
-            <p>📧 destek@trucksbus.com.tr | 🌐 www.trucksbus.com.tr</p>
+            <p>📧 Bu e-posta otomatik olarak gönderilmiştir, lütfen yanıtlamayın.</p>
+            <p><strong>🚛 TrucksBus Destek Ekibi</strong></p>
+            <p>📞 Destek: destek@trucksbus.com.tr</p>
+            <p>🌐 Website: <a href="https://trucksbus.com.tr" style="color: #4A90E2;">www.trucksbus.com.tr</a></p>
+            <p style="font-size: 12px; color: #999; margin-top: 20px;">
+              © 2025 TrucksBus. Tüm hakları saklıdır.
+            </p>
           </div>
         </div>
       </body>
@@ -192,26 +263,30 @@ class EmailService {
     `;
 
     const textContent = `
-TrucksBus - Şifre Sıfırlama
+🚛 TrucksBus - Şifre Sıfırlama Talebi
 
 Merhaba,
 
-Hesabınız için şifre sıfırlama talebinde bulundunuz. 
+TrucksBus hesabınız için şifre sıfırlama talebinde bulundunuz.
 
 Şifrenizi sıfırlamak için aşağıdaki bağlantıya tıklayın:
 ${resetLink}
 
-Bu bağlantı 1 saat süreyle geçerlidir.
+⚠️ ÖNEMLI:
+- Bu bağlantı sadece 1 saat süreyle geçerlidir
+- Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelin
+- Şüpheli aktivite fark ederseniz bizimle iletişime geçin
 
-Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelin.
+TrucksBus Destek Ekibi
+📧 destek@trucksbus.com.tr
+🌐 www.trucksbus.com.tr
 
-TrucksBus Ekibi
-www.trucksbus.com.tr
+© 2025 TrucksBus. Tüm hakları saklıdır.
     `;
 
     await this.sendEmail({
       to: email,
-      subject: "🔐 TrucksBus - Şifre Sıfırlama Talebi",
+      subject: "🔐 TrucksBus - Şifre Sıfırlama Talebi (1 saat geçerli)",
       html: htmlTemplate,
       text: textContent,
     });
