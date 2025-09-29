@@ -23,7 +23,6 @@ model User {
   tradeRegistryNo  String?        @map("trade_registry_no")
   address          String?
   city             String?
-  district         String?
   country          String?
   profileImageUrl  String?        @map("profile_image_url")
   kvkkAccepted     Boolean        @default(false) @map("kvkk_accepted")

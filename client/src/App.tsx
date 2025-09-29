@@ -160,8 +160,12 @@ const AnalyticsDashboard = React.lazy(
 );
 
 // Legal Pages
-const PrivacyPolicy = React.lazy(() => import("./pages/legal/PrivacyPolicy"));
-const TermsOfService = React.lazy(() => import("./pages/legal/TermsOfService"));
+const PrivacyPolicy = React.lazy(
+  () => import("./pages/legal/PrivacyPolicyNew")
+);
+const TermsOfService = React.lazy(
+  () => import("./pages/legal/TermsOfServiceNew")
+);
 const KVKK = React.lazy(() => import("./pages/legal/KVKK"));
 const ContractsAndRules = React.lazy(
   () => import("./pages/legal/ContractsAndRules")
@@ -1169,6 +1173,7 @@ function App() {
                           path="/terms-of-service"
                           element={<TermsOfService />}
                         />
+                        <Route path="/terms" element={<TermsOfService />} />
                         <Route path="/kvkk" element={<KVKK />} />
                         <Route
                           path="/contracts-and-rules"

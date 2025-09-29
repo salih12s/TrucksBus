@@ -893,7 +893,7 @@ const RegisterCorporate: React.FC = () => {
                 dahil olmak üzere tüm bilgilendirmelerimiz için alınmaktadır.
                 Kişisel verilerin korunması hakkında detaylı bilgiye{" "}
                 <Link
-                  to="/privacy"
+                  to="/privacy-policy"
                   style={{ color: "#4A90E2", textDecoration: "none" }}
                 >
                   buradan

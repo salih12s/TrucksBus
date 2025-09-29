@@ -27,6 +27,11 @@ router.post("/forgot-password", authLimiter, AuthController.forgotPassword);
 router.get("/verify-reset-token", AuthController.verifyResetToken);
 router.post("/reset-password", authLimiter, AuthController.resetPassword);
 
+// Debug endpoint - sadece development ortamında
+if (process.env.NODE_ENV === "development") {
+  router.get("/test-email", AuthController.testEmailService);
+}
+
 // Protected routes
 router.get("/me", authenticateToken, AuthController.getCurrentUser);
 router.get("/stats", authenticateToken, AuthController.getUserStats);

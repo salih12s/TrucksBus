@@ -5,6 +5,7 @@ import { prisma } from "../config/database";
 import { UserRole, User, Ad } from "@prisma/client";
 import { AuthenticatedRequest } from "../middleware/auth";
 import { AdminLogController } from "./adminLogController";
+import { emailService } from "../services/emailService";
 
 interface RegisterRequest {
   email: string;
@@ -887,15 +888,22 @@ export class AuthController {
         { expiresIn: "1h" }
       );
 
-      // In a real application, you would send an email here
-      // For now, we'll just log the reset link
+      // Şifre sıfırlama bağlantısını oluştur
       const resetLink = `${
         process.env.FRONTEND_URL || "https://trucksbus.com.tr"
       }/reset-password?token=${resetToken}`;
-      console.log("Password reset link for", email, ":", resetLink);
 
-      // TODO: Implement email sending
-      // await sendPasswordResetEmail(user.email, resetLink);
+      console.log("Şifre sıfırlama bağlantısı oluşturuluyor:", email);
+
+      try {
+        // E-posta gönder
+        await emailService.sendPasswordResetEmail(user.email, resetLink);
+        console.log("Şifre sıfırlama e-postası başarıyla gönderildi:", email);
+      } catch (emailError) {
+        console.error("E-posta gönderme hatası:", emailError);
+        // E-posta gönderilemese bile güvenlik nedeniyle başarılı mesajı döndür
+        // Bu şekilde saldırganlar e-posta adresinin sistemde olup olmadığını anlayamaz
+      }
 
       res.json({ message: successMessage });
     } catch (error) {
@@ -1045,6 +1053,37 @@ export class AuthController {
       } else {
         res.status(500).json({ error: "Internal server error" });
       }
+    }
+  }
+
+  // Test e-posta servisi (sadece development)
+  static async testEmailService(req: Request, res: Response) {
+    if (process.env.NODE_ENV !== "development") {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+
+    try {
+      const testEmail = (req.query.email as string) || "test@example.com";
+      const testResetLink = `${
+        process.env.FRONTEND_URL || "http://localhost:5174"
+      }/reset-password?token=test-token-123`;
+
+      console.log("🧪 E-posta servisi test ediliyor...");
+
+      await emailService.sendPasswordResetEmail(testEmail, testResetLink);
+
+      res.json({
+        message: "Test e-postası gönderildi!",
+        email: testEmail,
+        resetLink: testResetLink,
+      });
+    } catch (error) {
+      console.error("Test e-posta hatası:", error);
+      res.status(500).json({
+        error: "E-posta servisi çalışmıyor",
+        details: error instanceof Error ? error.message : "Bilinmeyen hata",
+      });
     }
   }
 }
