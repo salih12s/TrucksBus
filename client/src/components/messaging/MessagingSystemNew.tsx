@@ -43,9 +43,11 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import socketService from "../../services/socketService";
+import { useLocation } from "react-router-dom";
 
 const MessagingSystem: React.FC = () => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
   const { user } = useAppSelector((state) => state.auth);
   const { conversations, currentConversation, loading, error } = useAppSelector(
     (state) => state.messaging
@@ -55,42 +57,31 @@ const MessagingSystem: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
+  const [newConversationParams, setNewConversationParams] = useState<{
+    userId: number;
+    adId?: number;
+  } | null>(null);
+  const [newConversationAd, setNewConversationAd] = useState<{
+    id: number;
+    title: string;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const [isUserScrolling, setIsUserScrolling] = useState(false);
   const previousMessageCountRef = useRef(0);
 
-  // Kullanıcının scroll davranışını takip et
-  const handleScroll = () => {
-    if (!messagesContainerRef.current) return;
-
-    const { scrollTop, scrollHeight, clientHeight } =
-      messagesContainerRef.current;
-    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
-
-    setIsUserScrolling(!isAtBottom);
-  };
-
-  // Sadece yeni mesaj eklendiğinde scroll yap
+  // ✅ SADECE İLK YÜKLEMEDE SCROLL YAP - Yeni mesajlarda ASLA scroll yapma
   useEffect(() => {
     const currentMessageCount = currentConversation.messages.length;
     const previousMessageCount = previousMessageCountRef.current;
 
-    // İlk yükleme veya yeni mesaj eklendiyse scroll yap
-    if (
-      previousMessageCount === 0 ||
-      currentMessageCount > previousMessageCount
-    ) {
-      // Kısa bir gecikme ile scroll yap (DOM güncellensin diye)
+    // SADECE İLK YÜKLEME (0'dan bir sayıya geçiş)
+    if (previousMessageCount === 0 && currentMessageCount > 0) {
       setTimeout(() => {
-        if (!isUserScrolling) {
-          messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-        }
-      }, 100);
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 200);
     }
 
     previousMessageCountRef.current = currentMessageCount;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentConversation.messages]);
 
   // Load conversations on component mount and refresh when needed
@@ -124,6 +115,54 @@ const MessagingSystem: React.FC = () => {
     }
   }, [loading.conversations, dispatch]);
 
+  // URL parametrelerinden konuşma başlat
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const userId = searchParams.get("userId");
+    const adId = searchParams.get("adId");
+
+    if (userId && !selectedConversation && !newConversationParams) {
+      const userIdNum = parseInt(userId);
+      const adIdNum = adId ? parseInt(adId) : undefined;
+
+      // Konuşmaları yenile
+      dispatch(fetchConversations())
+        .unwrap()
+        .then((fetchedConversations) => {
+          // Konuşmayı bul
+          const targetConversation = fetchedConversations.find(
+            (conv: Conversation) =>
+              conv.otherUser.id === userIdNum &&
+              (adIdNum ? conv.ad?.id === adIdNum : true)
+          );
+
+          if (targetConversation) {
+            console.log(
+              "🎯 URL parametresinden konuşma açılıyor:",
+              targetConversation
+            );
+            handleConversationSelect(targetConversation);
+          } else {
+            // Konuşma yoksa yeni konuşma parametrelerini kaydet
+            console.log("🆕 Yeni konuşma modu açılıyor...");
+            setNewConversationParams({ userId: userIdNum, adId: adIdNum });
+
+            // Eğer adId varsa, ad bilgisini çek
+            if (adIdNum) {
+              fetch(`/api/ads/${adIdNum}`)
+                .then((res) => res.json())
+                .then((data) => {
+                  if (data) {
+                    setNewConversationAd({ id: data.id, title: data.title });
+                  }
+                })
+                .catch((err) => console.error("İlan bilgisi alınamadı:", err));
+            }
+          }
+        });
+    }
+  }, [location.search, selectedConversation, newConversationParams, dispatch]);
+
   // Load messages when conversation is selected
   useEffect(() => {
     if (selectedConversation) {
@@ -147,7 +186,14 @@ const MessagingSystem: React.FC = () => {
   }, [selectedConversation, dispatch]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !user) return;
+    if (!newMessage.trim() || !user) return;
+
+    // Yeni konuşma modunda veya mevcut konuşmada olabilir
+    const receiverId =
+      selectedConversation?.otherUser.id || newConversationParams?.userId;
+    const adId = selectedConversation?.ad?.id || newConversationParams?.adId;
+
+    if (!receiverId) return;
 
     const messageContent = newMessage.trim();
     setNewMessage(""); // Hemen input'u temizle
@@ -155,17 +201,30 @@ const MessagingSystem: React.FC = () => {
     try {
       await dispatch(
         sendMessage({
-          receiverId: selectedConversation.otherUser.id,
+          receiverId,
           content: messageContent,
-          adId: selectedConversation.ad?.id,
+          adId,
         })
-      ).unwrap(); // unwrap kullanarak hata durumunu yakalayın
+      ).unwrap();
 
-      // Mesaj gönderildikten sonra en alta scroll yap
-      setIsUserScrolling(false);
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-      }, 150);
+      // Mesaj gönderildikten sonra konuşmaları yenile ve konuşmayı aç
+      if (newConversationParams) {
+        dispatch(fetchConversations())
+          .unwrap()
+          .then((fetchedConversations) => {
+            const newConv = fetchedConversations.find(
+              (conv: Conversation) =>
+                conv.otherUser.id === receiverId &&
+                (adId ? conv.ad?.id === adId : true)
+            );
+            if (newConv) {
+              setNewConversationParams(null);
+              handleConversationSelect(newConv);
+            }
+          });
+      }
+
+      // ❌ SCROLL YAPMA - Kullanıcı istediği yerde kalabilir
     } catch (error) {
       console.error("Failed to send message:", error);
       setNewMessage(messageContent); // Hata durumunda mesajı geri yükle
@@ -174,16 +233,17 @@ const MessagingSystem: React.FC = () => {
 
   const handleConversationSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation);
-    // Yeni konuşma açıldığında scroll state'lerini resetle
-    setIsUserScrolling(false);
+    setNewConversationParams(null); // Yeni konuşma modunu kapat
+    // Yeni konuşma açıldığında mesaj sayacını resetle
     previousMessageCountRef.current = 0;
   };
 
   const handleBackToConversations = () => {
     setSelectedConversation(null);
+    setNewConversationParams(null); // Yeni konuşma modunu kapat
+    setNewConversationAd(null); // Ad bilgisini temizle
     dispatch(clearCurrentConversation());
-    // State'leri temizle
-    setIsUserScrolling(false);
+    // Mesaj sayacını resetle
     previousMessageCountRef.current = 0;
   };
 
@@ -359,135 +419,149 @@ const MessagingSystem: React.FC = () => {
     </Card>
   );
 
-  const renderMessagesView = () => (
-    <Card sx={{ height: "70vh", display: "flex", flexDirection: "column" }}>
-      <CardContent sx={{ pb: 1 }}>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-          <IconButton onClick={handleBackToConversations} sx={{ mr: 1 }}>
-            <ArrowBack />
-          </IconButton>
-          <Avatar sx={{ mr: 2 }}>
-            <Person />
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6">
-              {getUserDisplayName(selectedConversation!.otherUser)}
-            </Typography>
-            {selectedConversation!.ad && (
-              <Chip
-                size="small"
-                icon={<DirectionsCar />}
-                label={selectedConversation!.ad.title}
-                variant="outlined"
-                sx={{ fontSize: "0.7rem" }}
-              />
-            )}
-          </Box>
-        </Box>
-      </CardContent>
+  const renderMessagesView = () => {
+    // Yeni konuşma modu veya mevcut konuşma
+    const displayUser = selectedConversation?.otherUser || {
+      id: newConversationParams?.userId || 0,
+      firstName: null,
+      lastName: null,
+      email: "İlk mesajınızı yazın",
+    };
+    const displayAd = selectedConversation?.ad || newConversationAd;
 
-      <Divider />
+    return (
+      <Card sx={{ height: "70vh", display: "flex", flexDirection: "column" }}>
+        <CardContent sx={{ pb: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <IconButton onClick={handleBackToConversations} sx={{ mr: 1 }}>
+              <ArrowBack />
+            </IconButton>
+            <Avatar sx={{ mr: 2 }}>
+              <Person />
+            </Avatar>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="h6">
+                {getUserDisplayName(displayUser)}
+              </Typography>
+              {displayAd && (
+                <Chip
+                  size="small"
+                  icon={<DirectionsCar />}
+                  label={displayAd.title}
+                  variant="outlined"
+                  sx={{ fontSize: "0.7rem" }}
+                />
+              )}
+            </Box>
+          </Box>
+        </CardContent>
 
-      <Box
-        ref={messagesContainerRef}
-        onScroll={handleScroll}
-        sx={{ flex: 1, overflow: "auto", p: 1 }}
-      >
-        {loading.messages ? (
-          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : currentConversation.messages.length === 0 ? (
-          <Box sx={{ p: 4, textAlign: "center" }}>
-            <Typography color="text.secondary">
-              Henüz hiç mesaj yok. İlk mesajı gönderin!
-            </Typography>
-          </Box>
-        ) : (
-          <>
-            {currentConversation.messages.map((message) => (
-              <Box
-                key={message.id}
-                sx={{
-                  display: "flex",
-                  justifyContent:
-                    message.senderId === user?.id ? "flex-end" : "flex-start",
-                  mb: 1,
-                }}
-              >
-                <Paper
+        <Divider />
+
+        <Box
+          ref={messagesContainerRef}
+          sx={{ flex: 1, overflow: "auto", p: 1 }}
+        >
+          {loading.messages ? (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : currentConversation.messages.length === 0 ? (
+            <Box sx={{ p: 4, textAlign: "center" }}>
+              <Typography color="text.secondary">
+                Henüz hiç mesaj yok. İlk mesajı gönderin!
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              {currentConversation.messages.map((message) => (
+                <Box
+                  key={message.id}
                   sx={{
-                    p: 1.5,
-                    maxWidth: "70%",
-                    backgroundColor:
-                      message.senderId === user?.id
-                        ? "primary.main"
-                        : "grey.100",
-                    color:
-                      message.senderId === user?.id
-                        ? "primary.contrastText"
-                        : "text.primary",
+                    display: "flex",
+                    justifyContent:
+                      message.senderId === user?.id ? "flex-end" : "flex-start",
+                    mb: 1,
                   }}
                 >
-                  <Typography variant="body2">{message.content}</Typography>
-                  <Typography
-                    variant="caption"
+                  <Paper
                     sx={{
-                      display: "block",
-                      mt: 0.5,
+                      p: 1.5,
+                      maxWidth: "70%",
+                      backgroundColor:
+                        message.senderId === user?.id
+                          ? "primary.main"
+                          : "grey.100",
                       color:
                         message.senderId === user?.id
                           ? "primary.contrastText"
-                          : "text.secondary",
-                      opacity: 0.8,
+                          : "text.primary",
                     }}
                   >
-                    <Schedule sx={{ fontSize: 12, mr: 0.5 }} />
-                    {formatMessageTime(message.createdAt)}
-                  </Typography>
-                </Paper>
-              </Box>
-            ))}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-      </Box>
+                    <Typography variant="body2">{message.content}</Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        mt: 0.5,
+                        color:
+                          message.senderId === user?.id
+                            ? "primary.contrastText"
+                            : "text.secondary",
+                        opacity: 0.8,
+                      }}
+                    >
+                      <Schedule sx={{ fontSize: 12, mr: 0.5 }} />
+                      {formatMessageTime(message.createdAt)}
+                    </Typography>
+                  </Paper>
+                </Box>
+              ))}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+        </Box>
 
-      <Divider />
+        <Divider />
 
-      <Box sx={{ p: 2 }}>
-        <TextField
-          fullWidth
-          multiline
-          maxRows={3}
-          placeholder="Mesajınızı yazın..."
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => {
-            // Enter'a basıldığında (Shift olmadan) mesajı gönder
-            if (e.key === "Enter" && !e.shiftKey && !loading.sending) {
-              e.preventDefault();
-              handleSendMessage();
-            }
-          }}
-          disabled={loading.sending}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || loading.sending}
-                  color="primary"
-                >
-                  {loading.sending ? <CircularProgress size={24} /> : <Send />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
-    </Card>
-  );
+        <Box sx={{ p: 2 }}>
+          <TextField
+            fullWidth
+            multiline
+            maxRows={3}
+            placeholder="Mesajınızı yazın..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => {
+              // Enter'a basıldığında (Shift olmadan) mesajı gönder
+              if (e.key === "Enter" && !e.shiftKey && !loading.sending) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            disabled={loading.sending}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim() || loading.sending}
+                    color="primary"
+                  >
+                    {loading.sending ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <Send />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+      </Card>
+    );
+  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -506,16 +580,20 @@ const MessagingSystem: React.FC = () => {
       >
         <Box
           sx={{
-            flex: selectedConversation ? { xs: 1, md: "0 0 33%" } : 1,
-            display: selectedConversation
-              ? { xs: "none", md: "block" }
-              : "block",
+            flex:
+              selectedConversation || newConversationParams
+                ? { xs: 1, md: "0 0 33%" }
+                : 1,
+            display:
+              selectedConversation || newConversationParams
+                ? { xs: "none", md: "block" }
+                : "block",
           }}
         >
           {renderConversationsList()}
         </Box>
 
-        {selectedConversation && (
+        {(selectedConversation || newConversationParams) && (
           <Box sx={{ flex: { xs: 1, md: "0 0 67%" } }}>
             {renderMessagesView()}
           </Box>
