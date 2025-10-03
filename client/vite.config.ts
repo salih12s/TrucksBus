@@ -41,10 +41,10 @@ export default defineConfig(({ mode }) => ({
     assetsDir: "assets",
     sourcemap: false, // Production'da sourcemap'i kapat
     minify: "terser", // Daha iyi minification
-    
+
     // CHUNK LOADING'İ TAMAMEN KAPAT
     cssCodeSplit: false, // CSS'i tek dosyada birleştir
-    
+
     // Rollup options
     rollupOptions: {
       output: {

@@ -303,7 +303,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAuthenticated && user?.id && isInitialized) {
       // Connect to socket
-      socketService.connect(user.id);
+      const socket = socketService.connect(user.id);
 
       // Fetch initial unread count
       dispatch(fetchUnreadCount());
@@ -311,8 +311,29 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       // Request notification permission
       SocketService.requestNotificationPermission();
 
+      // 🔔 Listen for real-time notifications
+      socket?.on(
+        "notification",
+        (data: { title: string; message: string; type: string }) => {
+          console.log("📬 Yeni bildirim alındı:", data);
+
+          // Browser notification göster
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification(data.title, {
+              body: data.message,
+              icon: "/logo.svg",
+              badge: "/logo.svg",
+            });
+          }
+        }
+      );
+
       return () => {
         // Disconnect socket when component unmounts or user logs out
+        socket?.off("notification");
         socketService.disconnect();
       };
     } else if (!isAuthenticated && isInitialized) {

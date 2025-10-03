@@ -2188,11 +2188,29 @@ export const approveAd = async (req: Request, res: Response) => {
       },
     });
 
+    // ✅ Kullanıcıya bildirim gönder
+    await prisma.notification.create({
+      data: {
+        userId: ad.userId,
+        title: "İlanınız Onaylandı! 🎉",
+        message: `"${ad.title}" başlıklı ilanınız yayına alındı ve artık sitede görünüyor.`,
+        type: "SUCCESS",
+        relatedId: ad.id,
+      },
+    });
+
     // ❗ GERÇEK ZAMANLI BİLDİRİM: Socket.io ile tüm bağlı kullanıcılara bildir
     io.emit("adApproved", {
       adId: ad.id,
       title: ad.title,
       message: "Yeni bir ilan onaylandı!",
+    });
+
+    // Kullanıcıya özel bildirim gönder
+    io.to(`user_${ad.userId}`).emit("notification", {
+      title: "İlanınız Onaylandı! 🎉",
+      message: `"${ad.title}" başlıklı ilanınız yayına alındı.`,
+      type: "SUCCESS",
     });
 
     // Log
@@ -2223,7 +2241,28 @@ export const rejectAd = async (req: Request, res: Response) => {
       },
     });
 
-    // Kullanıcıya red bildirimi (şimdilik console log)
+    // ❌ Kullanıcıya bildirim gönder
+    await prisma.notification.create({
+      data: {
+        userId: ad.userId,
+        title: "İlanınız Reddedildi",
+        message: `"${ad.title}" başlıklı ilanınız yayına alınmadı. Sebep: ${
+          reason || "Belirtilmedi"
+        }`,
+        type: "ERROR",
+        relatedId: ad.id,
+      },
+    });
+
+    // Kullanıcıya özel bildirim gönder
+    io.to(`user_${ad.userId}`).emit("notification", {
+      title: "İlanınız Reddedildi",
+      message: `"${ad.title}" başlıklı ilanınız yayına alınmadı.`,
+      type: "ERROR",
+      reason: reason || "Belirtilmedi",
+    });
+
+    // Log
     console.log(
       `İlan reddedildi: ${ad.title} - Kullanıcı: ${ad.user.email} - Sebep: ${reason}`
     );

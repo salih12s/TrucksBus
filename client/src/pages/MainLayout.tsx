@@ -217,7 +217,7 @@ const MainLayout: React.FC = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const adsPerPage = 40;
+  const adsPerPage = 1000; // ✅ Tüm ilanları göster (sınırlama kaldırıldı)
 
   // Mobile drawer state
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);

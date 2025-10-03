@@ -26,6 +26,7 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { notificationAPI, type Notification } from "../api/notifications";
+import NotificationDetailModal from "./modals/NotificationDetailModal";
 
 interface NotificationDropdownProps {
   className?: string;
@@ -41,6 +42,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   const open = Boolean(anchorEl);
 
@@ -84,6 +88,20 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    setSelectedNotification(notification);
+    setDetailModalOpen(true);
+    // Otomatik olarak okundu işaretle
+    if (!notification.isRead) {
+      handleMarkAsRead(notification.id);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setDetailModalOpen(false);
+    setSelectedNotification(null);
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
@@ -249,11 +267,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               {notifications.map((notification, index) => (
                 <React.Fragment key={notification.id}>
                   <ListItem
+                    onClick={() => handleNotificationClick(notification)}
                     sx={{
                       backgroundColor: notification.isRead
                         ? "transparent"
                         : "action.hover",
                       "&:hover": { backgroundColor: "action.selected" },
+                      cursor: "pointer",
                     }}
                   >
                     <ListItemIcon>
@@ -353,6 +373,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           )}
         </Paper>
       </Popover>
+
+      {/* Notification Detail Modal */}
+      <NotificationDetailModal
+        open={detailModalOpen}
+        onClose={handleCloseDetailModal}
+        notification={selectedNotification}
+      />
     </>
   );
 };

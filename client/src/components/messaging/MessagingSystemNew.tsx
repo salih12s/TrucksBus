@@ -23,7 +23,7 @@ import {
 import {
   Send,
   Search,
-  Message,
+  Message as MessageIcon,
   Person,
   ArrowBack,
   Schedule,
@@ -36,10 +36,13 @@ import {
   sendMessage,
   markConversationAsRead,
   clearCurrentConversation,
+  newMessageReceived,
   type Conversation,
+  type Message,
 } from "../../store/messagingSlice";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
+import socketService from "../../services/socketService";
 
 const MessagingSystem: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -53,20 +56,66 @@ const MessagingSystem: React.FC = () => {
   const [selectedConversation, setSelectedConversation] =
     useState<Conversation | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const previousMessageCountRef = useRef(0);
 
-  // Scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Kullanıcının scroll davranışını takip et
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } =
+      messagesContainerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+
+    setIsUserScrolling(!isAtBottom);
   };
 
+  // Sadece yeni mesaj eklendiğinde scroll yap
   useEffect(() => {
-    scrollToBottom();
+    const currentMessageCount = currentConversation.messages.length;
+    const previousMessageCount = previousMessageCountRef.current;
+
+    // İlk yükleme veya yeni mesaj eklendiyse scroll yap
+    if (
+      previousMessageCount === 0 ||
+      currentMessageCount > previousMessageCount
+    ) {
+      // Kısa bir gecikme ile scroll yap (DOM güncellensin diye)
+      setTimeout(() => {
+        if (!isUserScrolling) {
+          messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+        }
+      }, 100);
+    }
+
+    previousMessageCountRef.current = currentMessageCount;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentConversation.messages]);
 
   // Load conversations on component mount and refresh when needed
   useEffect(() => {
     dispatch(fetchConversations());
   }, [dispatch]);
+
+  // Socket.io ile gerçek zamanlı mesaj dinle
+  useEffect(() => {
+    if (!user) return;
+
+    const socket = socketService.getSocket();
+    if (!socket) return;
+
+    const handleNewMessage = (message: Message) => {
+      console.log("📬 Yeni mesaj alındı:", message);
+      dispatch(newMessageReceived({ message, currentUserId: user.id }));
+    };
+
+    socket.on("newMessage", handleNewMessage);
+
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+    };
+  }, [user, dispatch]);
 
   // Refresh conversations when loading flag is set (triggered by new message from unknown conversation)
   useEffect(() => {
@@ -100,27 +149,42 @@ const MessagingSystem: React.FC = () => {
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !user) return;
 
+    const messageContent = newMessage.trim();
+    setNewMessage(""); // Hemen input'u temizle
+
     try {
       await dispatch(
         sendMessage({
           receiverId: selectedConversation.otherUser.id,
-          content: newMessage.trim(),
+          content: messageContent,
           adId: selectedConversation.ad?.id,
         })
-      );
-      setNewMessage("");
+      ).unwrap(); // unwrap kullanarak hata durumunu yakalayın
+
+      // Mesaj gönderildikten sonra en alta scroll yap
+      setIsUserScrolling(false);
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 150);
     } catch (error) {
       console.error("Failed to send message:", error);
+      setNewMessage(messageContent); // Hata durumunda mesajı geri yükle
     }
   };
 
   const handleConversationSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation);
+    // Yeni konuşma açıldığında scroll state'lerini resetle
+    setIsUserScrolling(false);
+    previousMessageCountRef.current = 0;
   };
 
   const handleBackToConversations = () => {
     setSelectedConversation(null);
     dispatch(clearCurrentConversation());
+    // State'leri temizle
+    setIsUserScrolling(false);
+    previousMessageCountRef.current = 0;
   };
 
   const filteredConversations = conversations.filter(
@@ -191,7 +255,9 @@ const MessagingSystem: React.FC = () => {
           </Box>
         ) : filteredConversations.length === 0 ? (
           <Box sx={{ p: 4, textAlign: "center" }}>
-            <Message sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
+            <MessageIcon
+              sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}
+            />
             <Typography color="text.secondary">
               {searchQuery
                 ? "Arama kriterine uygun konuşma bulunamadı"
@@ -322,7 +388,11 @@ const MessagingSystem: React.FC = () => {
 
       <Divider />
 
-      <Box sx={{ flex: 1, overflow: "auto", p: 1 }}>
+      <Box
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        sx={{ flex: 1, overflow: "auto", p: 1 }}
+      >
         {loading.messages ? (
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
             <CircularProgress />
@@ -393,12 +463,14 @@ const MessagingSystem: React.FC = () => {
           placeholder="Mesajınızı yazın..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+          onKeyDown={(e) => {
+            // Enter'a basıldığında (Shift olmadan) mesajı gönder
+            if (e.key === "Enter" && !e.shiftKey && !loading.sending) {
               e.preventDefault();
               handleSendMessage();
             }
           }}
+          disabled={loading.sending}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
