@@ -1,9 +1,11 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Container, Typography, Link } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { Phone, Email } from "@mui/icons-material";
 
 const Footer: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Box sx={{ backgroundColor: "#F9F9F9", color: "#666", mt: "auto" }}>
       <Container maxWidth="lg" sx={{ py: 1.5, px: { xs: 2, md: 4 } }}>
@@ -32,7 +34,7 @@ const Footer: React.FC = () => {
                 textAlign: "center",
               }}
             >
-              Kurumsal
+              {t("footer.corporate")}
             </Typography>
             <Box
               sx={{
@@ -53,7 +55,7 @@ const Footer: React.FC = () => {
                   textAlign: "center",
                 }}
               >
-                Hakkımızda
+                {t("footer.aboutUs")}
               </Link>
               <Link
                 component={RouterLink}
@@ -65,7 +67,7 @@ const Footer: React.FC = () => {
                   "&:hover": { color: "#333" },
                 }}
               >
-                Sürdürülebilirlik
+                {t("footer.sustainability")}
               </Link>
               <Link
                 component={RouterLink}
@@ -77,7 +79,7 @@ const Footer: React.FC = () => {
                   "&:hover": { color: "#333" },
                 }}
               >
-                İnsan Kaynakları
+                {t("footer.humanResources")}
               </Link>
               <Link
                 component={RouterLink}
@@ -89,7 +91,7 @@ const Footer: React.FC = () => {
                   "&:hover": { color: "#333" },
                 }}
               >
-                Haberler
+                {t("footer.news")}
               </Link>
               <Link
                 component={RouterLink}
@@ -101,7 +103,7 @@ const Footer: React.FC = () => {
                   "&:hover": { color: "#333" },
                 }}
               >
-                İletişim
+                {t("footer.contact")}
               </Link>
             </Box>
           </Box>
@@ -118,7 +120,7 @@ const Footer: React.FC = () => {
                 textAlign: "center",
               }}
             >
-              Gizlilik ve Kullanım
+              {t("footer.privacyAndUsage")}
             </Typography>
             <Box
               sx={{
@@ -138,7 +140,7 @@ const Footer: React.FC = () => {
                   "&:hover": { color: "#333" },
                 }}
               >
-                Güvenli Alışveriş İpuçları
+                {t("footer.safeShopping")}
               </Link>
               <Link
                 component={RouterLink}
@@ -150,7 +152,7 @@ const Footer: React.FC = () => {
                   "&:hover": { color: "#333" },
                 }}
               >
-                Kullanım Koşulları
+                {t("footer.termsOfUse")}
               </Link>
               <Link
                 component={RouterLink}
@@ -162,7 +164,7 @@ const Footer: React.FC = () => {
                   "&:hover": { color: "#333" },
                 }}
               >
-                Kişisel Verilerin Korunması
+                {t("footer.dataProtection")}
               </Link>
               <Link
                 component={RouterLink}
@@ -174,7 +176,7 @@ const Footer: React.FC = () => {
                   "&:hover": { color: "#333" },
                 }}
               >
-                Çerez Yönetimi
+                {t("footer.cookieManagement")}
               </Link>
             </Box>
           </Box>
@@ -191,7 +193,7 @@ const Footer: React.FC = () => {
                 textAlign: "center",
               }}
             >
-              Bizi Takip Edin
+              {t("footer.followUs")}
             </Typography>
             <Box
               sx={{
@@ -286,7 +288,7 @@ const Footer: React.FC = () => {
                       fontSize: "12px",
                     }}
                   >
-                    7/24 Müşteri Hizmetleri
+                    {t("footer.customerService247")}
                   </Typography>
                   <Typography sx={{ color: "#333", fontSize: "12px" }}>
                     0 850 222 44 44
@@ -304,7 +306,7 @@ const Footer: React.FC = () => {
                       fontSize: "12px",
                     }}
                   >
-                    Yardım Merkezi
+                    {t("footer.helpCenter")}
                   </Typography>
                   <Typography sx={{ color: "#333", fontSize: "12px" }}>
                     yardim.trucksbus.com.tr
@@ -325,7 +327,7 @@ const Footer: React.FC = () => {
                 textAlign: "center",
               }}
             >
-              trucksbus.com.tr'da yer alan tüm içerik kullanıcılara aittir.
+              {t("footer.allContentBelongsToUsers")}
             </Typography>
 
             <Box
@@ -339,10 +341,10 @@ const Footer: React.FC = () => {
               }}
             >
               <Typography sx={{ color: "#666", fontSize: "11px" }}>
-                Copyright © 2000-2025 trucksbus.com.tr
+                {t("footer.copyright")}
               </Typography>
               <Typography sx={{ color: "#666", fontSize: "11px" }}>
-                ETBİS Kayıtlıdır.
+                {t("footer.registeredWithETBIS")}
               </Typography>
             </Box>
           </Box>

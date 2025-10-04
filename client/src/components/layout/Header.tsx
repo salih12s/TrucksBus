@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   AppBar,
   Toolbar,
@@ -30,6 +31,7 @@ import { useAppSelector, useAppDispatch } from "../../hooks/redux";
 import { logoutUser } from "../../store/authSlice";
 import FeedbackModal from "../modals/FeedbackModal";
 import NotificationDropdown from "../NotificationDropdown";
+import LanguageSwitcher from "../common/LanguageSwitcher";
 
 interface HeaderProps {
   favoritesCount?: number;
@@ -44,6 +46,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const { t } = useTranslation(); // i18n hook
 
   // Responsive hooks
   const theme = useTheme();
@@ -245,7 +248,9 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                   },
                 }}
               >
-                {isMobile ? "İlan" : "İlan Ver"}
+                {isMobile
+                  ? t("common.createAd").split(" ")[0]
+                  : t("common.createAd")}
               </Button>
 
               {/* User Avatar */}
@@ -274,6 +279,9 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                   </Avatar>
                 </IconButton>
               )}
+
+              {/* Dil Değiştirme */}
+              <LanguageSwitcher />
 
               {/* User Menu */}
               <Menu

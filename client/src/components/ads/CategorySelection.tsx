@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Container,
@@ -28,15 +29,12 @@ interface Category {
 }
 
 const CategorySelection: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPath, setSelectedPath] = useState<Category[]>([]);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   const fetchCategories = async () => {
     try {
@@ -45,12 +43,17 @@ const CategorySelection: React.FC = () => {
       console.log("Categories response:", response.data);
       setCategories(response.data as Category[]);
     } catch (err) {
-      setError("Kategoriler yüklenirken bir hata oluştu");
+      setError(t("categorySelection.error"));
       console.error("Error fetching categories:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCategorySelect = (category: Category) => {
     if (category.children && category.children.length > 0) {
@@ -123,7 +126,7 @@ const CategorySelection: React.FC = () => {
         <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
           <CircularProgress size={60} />
           <Typography variant="h6" sx={{ mt: 2 }}>
-            Kategoriler yükleniyor...
+            {t("categorySelection.loading")}
           </Typography>
         </Container>
       </>
@@ -153,10 +156,10 @@ const CategorySelection: React.FC = () => {
             gutterBottom
             sx={{ fontWeight: "bold", color: "#000000" }}
           >
-            Araç Kategorisi Seçin
+            {t("categorySelection.title")}
           </Typography>
           <Typography variant="h6" color="text.secondary">
-            İlan vermek istediğiniz araç tipini seçerek devam edin
+            {t("categorySelection.subtitle")}
           </Typography>
         </Box>
 
@@ -170,7 +173,7 @@ const CategorySelection: React.FC = () => {
                 onClick={() => handleBreadcrumbClick(-1)}
                 sx={{ textDecoration: "none", cursor: "pointer" }}
               >
-                Ana Kategoriler
+                {t("categorySelection.mainCategories")}
               </Link>
               {selectedPath.map((category, index) => (
                 <Link
@@ -311,7 +314,7 @@ const CategorySelection: React.FC = () => {
         {categories.length === 0 && !loading && (
           <Box sx={{ textAlign: "center", py: 8 }}>
             <Typography variant="h6" color="text.secondary">
-              Bu kategoride alt kategori bulunmuyor.
+              {t("categorySelection.noSubcategories")}
             </Typography>
           </Box>
         )}

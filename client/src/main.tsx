@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { onCLS, onINP, onFCP, onLCP, onTTFB } from "web-vitals";
 import "./index.css";
+import "./i18n/config"; // i18n yapılandırması
 import App from "./App.tsx";
 import { setupChunkErrorHandler } from "./utils/chunkErrorHandler";
 

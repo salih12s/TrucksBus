@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Box,
@@ -169,6 +170,7 @@ interface FavoriteAd {
 }
 
 const MainLayout: React.FC = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const params = useParams();
@@ -270,6 +272,14 @@ const MainLayout: React.FC = () => {
       // Scroll to top
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  };
+
+  // Kategori ismini çevir
+  const getCategoryName = (category: Category) => {
+    const key = `categories.${category.slug}`;
+    const translated = t(key);
+    // Eğer çeviri bulunamazsa orijinal ismi göster
+    return translated.startsWith("categories.") ? category.name : translated;
   };
 
   const getImageUrl = (images?: Ad["images"]) => {
@@ -416,10 +426,10 @@ const MainLayout: React.FC = () => {
               mb: 1,
             }}
           >
-            Kaydettiğim İlanlar
+            {t("homePage.savedAds")}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Beğendiğiniz ve kaydettiğiniz ilanları buradan takip edebilirsiniz
+            {t("homePage.trackYourSavedAds")}
           </Typography>
         </Box>
 
@@ -437,7 +447,7 @@ const MainLayout: React.FC = () => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="İlan ara (başlık, marka, model, ilan no)..."
+                placeholder={t("homePage.searchPlaceholder")}
                 value={bookmarkSearchQuery}
                 onChange={(e) => setBookmarkSearchQuery(e.target.value)}
                 InputProps={{
@@ -463,26 +473,30 @@ const MainLayout: React.FC = () => {
 
             <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
               <FormControl fullWidth size="small">
-                <InputLabel>Sırala</InputLabel>
+                <InputLabel>{t("homePage.sortBy")}</InputLabel>
                 <Select
                   value={bookmarkSortBy}
-                  label="Sırala"
+                  label={t("homePage.sortBy")}
                   onChange={(e) => setBookmarkSortBy(e.target.value)}
                 >
-                  <MenuItem value="newest">En Yeni</MenuItem>
-                  <MenuItem value="oldest">En Eski</MenuItem>
-                  <MenuItem value="price-high">Fiyat (Yüksek-Düşük)</MenuItem>
-                  <MenuItem value="price-low">Fiyat (Düşük-Yüksek)</MenuItem>
+                  <MenuItem value="newest">{t("homePage.newest")}</MenuItem>
+                  <MenuItem value="oldest">{t("homePage.oldest")}</MenuItem>
+                  <MenuItem value="price-high">
+                    {t("homePage.priceHighToLow")}
+                  </MenuItem>
+                  <MenuItem value="price-low">
+                    {t("homePage.priceLowToHigh")}
+                  </MenuItem>
                 </Select>
               </FormControl>
             </Box>
 
             <Box sx={{ flex: "0 1 200px", minWidth: "150px" }}>
               <FormControl fullWidth size="small">
-                <InputLabel>Filtrele</InputLabel>
+                <InputLabel>{t("homePage.filter")}</InputLabel>
                 <Select
                   value={bookmarkFilterBy}
-                  label="Filtrele"
+                  label={t("homePage.filter")}
                   onChange={(e) => setBookmarkFilterBy(e.target.value)}
                 >
                   <MenuItem value="all">Tümü</MenuItem>
@@ -730,7 +744,7 @@ const MainLayout: React.FC = () => {
                     >
                       {favorite.ad.price
                         ? `${formatPrice(favorite.ad.price)} TL`
-                        : "Fiyat Yok"}
+                        : t("homePage.noPrice")}
                     </Typography>
                   </Box>
                 </Box>
@@ -1679,7 +1693,7 @@ const MainLayout: React.FC = () => {
               borderBottom: "1px solid #e0e0e0",
             }}
           >
-            Kategoriler
+            {t("categories.title")}
           </Typography>
 
           {/* Categories List */}
@@ -1714,7 +1728,7 @@ const MainLayout: React.FC = () => {
                     fontWeight: 400,
                   }}
                 >
-                  Tüm İlanlar
+                  {t("homePage.allAds")}
                 </Typography>
                 <Typography
                   sx={{
@@ -1765,7 +1779,7 @@ const MainLayout: React.FC = () => {
                       fontWeight: 400,
                     }}
                   >
-                    {category.name}
+                    {getCategoryName(category)}
                   </Typography>
                   <Typography
                     sx={{
@@ -1814,7 +1828,7 @@ const MainLayout: React.FC = () => {
               },
             }}
           >
-            ← Tüm Kategoriler
+            ← {t("homePage.allCategories")}
           </Button>
           <Typography
             variant="h6"
@@ -1841,12 +1855,12 @@ const MainLayout: React.FC = () => {
             mb: 1,
           }}
         >
-          Markalar
+          {t("homePage.brands")}
         </Typography>
 
         {/* Marka Arama */}
         <TextField
-          placeholder="Marka ara..."
+          placeholder={t("homePage.searchBrand")}
           variant="outlined"
           size="small"
           value={brandSearchQuery}
@@ -1963,7 +1977,7 @@ const MainLayout: React.FC = () => {
               borderBottom: "1px solid #e0e0e0",
             }}
           >
-            Filtreler
+            {t("homePage.filters")}
           </Typography>
 
           {/* Fiyat Aralığı */}
@@ -1977,7 +1991,7 @@ const MainLayout: React.FC = () => {
             <Box sx={{ display: "flex", gap: 1 }}>
               <TextField
                 size="small"
-                placeholder="Min"
+                placeholder={t("homePage.min")}
                 type="number"
                 value={priceMin}
                 onChange={(e) => setPriceMin(e.target.value)}
@@ -1992,7 +2006,7 @@ const MainLayout: React.FC = () => {
               />
               <TextField
                 size="small"
-                placeholder="Max"
+                placeholder={t("homePage.max")}
                 type="number"
                 value={priceMax}
                 onChange={(e) => setPriceMax(e.target.value)}
@@ -2014,12 +2028,12 @@ const MainLayout: React.FC = () => {
               variant="body2"
               sx={{ mb: 1, fontSize: "12px", color: "#666" }}
             >
-              Model Yılı
+              {t("homePage.modelYear")}
             </Typography>
             <Box sx={{ display: "flex", gap: 1 }}>
               <TextField
                 size="small"
-                placeholder="Min"
+                placeholder={t("homePage.min")}
                 type="number"
                 value={yearMin}
                 onChange={(e) => setYearMin(e.target.value)}
@@ -2034,7 +2048,7 @@ const MainLayout: React.FC = () => {
               />
               <TextField
                 size="small"
-                placeholder="Max"
+                placeholder={t("homePage.max")}
                 type="number"
                 value={yearMax}
                 onChange={(e) => setYearMax(e.target.value)}
@@ -2264,7 +2278,7 @@ const MainLayout: React.FC = () => {
                 },
               }}
             >
-              Filtreleri Temizle
+              {t("homePage.clearFilters")}
             </Button>
           )}
         </Box>
@@ -2339,7 +2353,7 @@ const MainLayout: React.FC = () => {
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-              Filtreler
+              {t("homePage.filters")}
             </Typography>
             <IconButton onClick={() => setMobileDrawerOpen(false)}>
               <CloseIcon />
@@ -2454,14 +2468,13 @@ const MainLayout: React.FC = () => {
                         ? categories.find(
                             (cat) => cat.slug === selectedCategory
                           )?.name || selectedCategory
-                        : "Vitrin"}
-                    </Typography>
-
+                        : t("homePage.showcase")}
+                    </Typography>{" "}
                     {/* Universal Search Box */}
                     <TextField
                       fullWidth
                       size="small"
-                      placeholder="Araç, marka, model, konum, ilan no ara..."
+                      placeholder={t("homePage.searchBarPlaceholder")}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       InputProps={{
@@ -2526,9 +2539,9 @@ const MainLayout: React.FC = () => {
                         fontWeight: 500,
                       }}
                     >
-                      📍 "{searchTerm}" için{" "}
+                      📍 "{searchTerm}" {t("homePage.searchResultsFor")}{" "}
                       {Array.isArray(filteredAds) ? filteredAds.length : 0}{" "}
-                      sonuç bulundu
+                      {t("homePage.resultsFound")}
                     </Typography>
                   </Box>
                 )}

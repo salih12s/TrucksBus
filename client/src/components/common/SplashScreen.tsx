@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import LoadingScreen from "./LoadingScreen";
 
 interface SplashScreenProps {
@@ -13,6 +14,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   showOnRefresh = true,
 }) => {
   const [showSplash, setShowSplash] = useState(showOnRefresh);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (showOnRefresh) {
@@ -29,7 +31,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
 
   // Eğer splash screen gösteriliyorsa
   if (showSplash) {
-    return <LoadingScreen message="TrucksBus'a Hoş Geldiniz!" />;
+    return <LoadingScreen message={t("common.welcome")} />;
   }
 
   // Normal içeriği göster
