@@ -79,7 +79,6 @@ const colorOptions = [
   "Sarı",
   "Siyah",
   "Turkuaz",
-  "Turuncu",
   "Yeşil",
 ];
 
@@ -135,7 +134,7 @@ const transmissionOptions = ["Manuel", "Otomatik"];
 const fuelTypeOptions = ["Dizel", "Benzin", "LPG", "Elektrik", "Hibrit"];
 
 // Durumu seçenekleri
-const conditionOptions = ["Sıfır", "Sıfır Ayarında", "İkinci El", "Hasarlı"];
+const conditionOptions = ["Sıfır", "İkinci El"];
 
 // Üst yapı seçenekleri (yeni)
 const superstructureOptions = [
@@ -267,7 +266,6 @@ const KamyonAdForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
@@ -275,11 +273,6 @@ const KamyonAdForm: React.FC = () => {
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
-
-  // Seçili olan brand, model ve variant bilgileri
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
-  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     // Category/Brand/Model/Variant IDs
@@ -389,7 +382,6 @@ const KamyonAdForm: React.FC = () => {
             `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}`
           );
           const brandData = brandResponse.data as Brand;
-          setSelectedBrand(brandData);
           setFormData((prev) => ({
             ...prev,
             brandId: brandData.id.toString(),
@@ -404,7 +396,6 @@ const KamyonAdForm: React.FC = () => {
             `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}`
           );
           const modelData = modelResponse.data as Model;
-          setSelectedModel(modelData);
           setFormData((prev) => ({
             ...prev,
             modelId: modelData.id.toString(),
@@ -419,7 +410,6 @@ const KamyonAdForm: React.FC = () => {
             `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`
           );
           const variantData = variantResponse.data as Variant;
-          setSelectedVariant(variantData);
           setFormData((prev) => ({
             ...prev,
             variantId: variantData.id.toString(),
@@ -510,7 +500,6 @@ const KamyonAdForm: React.FC = () => {
   const loadModels = async (brandId: string) => {
     if (!brandId || brandId === "") {
       setModels([]);
-      setVariants([]);
       setFormData((prev) => ({
         ...prev,
         modelId: "",
@@ -530,7 +519,6 @@ const KamyonAdForm: React.FC = () => {
           brands.map((b) => `${b.id}:${b.name}`)
         );
         setModels([]);
-        setVariants([]);
         setFormData((prev) => ({
           ...prev,
           modelId: "",
@@ -560,8 +548,7 @@ const KamyonAdForm: React.FC = () => {
       );
       setModels(modelsData);
 
-      // Variant'ları temizle çünkü model değişti
-      setVariants([]);
+      // Variant'ı temizle çünkü model değişti
       setFormData((prev) => ({
         ...prev,
         variantId: "",
@@ -580,7 +567,6 @@ const KamyonAdForm: React.FC = () => {
     } catch (error) {
       console.error("❌ Modeller yüklenemedi:", error);
       setModels([]);
-      setVariants([]);
       setFormData((prev) => ({
         ...prev,
         modelId: "",
@@ -591,7 +577,6 @@ const KamyonAdForm: React.FC = () => {
 
   const loadVariants = async (modelId: string) => {
     if (!modelId || modelId === "") {
-      setVariants([]);
       setFormData((prev) => ({
         ...prev,
         variantId: "",
@@ -611,7 +596,6 @@ const KamyonAdForm: React.FC = () => {
           "Mevcut models:",
           models.map((m) => `${m.id}:${m.name}`)
         );
-        setVariants([]);
         setFormData((prev) => ({
           ...prev,
           variantId: "",
@@ -626,7 +610,6 @@ const KamyonAdForm: React.FC = () => {
           "Mevcut brands:",
           brands.map((b) => `${b.id}:${b.name}`)
         );
-        setVariants([]);
         setFormData((prev) => ({
           ...prev,
           variantId: "",
@@ -654,7 +637,6 @@ const KamyonAdForm: React.FC = () => {
         "variants for model",
         model.name
       );
-      setVariants(variantsData);
 
       // İlk variant'ı otomatik seç (eğer seçili değilse)
       if (variantsData.length > 0 && !formData.variantId) {
@@ -683,7 +665,6 @@ const KamyonAdForm: React.FC = () => {
         variantId: "",
       }));
       setModels([]);
-      setVariants([]);
       if (value) {
         loadModels(value);
       }
@@ -696,7 +677,6 @@ const KamyonAdForm: React.FC = () => {
         modelId: value,
         variantId: "",
       }));
-      setVariants([]);
       if (value) {
         loadVariants(value);
       }
@@ -1056,16 +1036,7 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     Temel Bilgiler
                   </Typography>
                 </Box>
@@ -1132,127 +1103,10 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     Araç Detayları
                   </Typography>
                 </Box>
-
-                {/* Marka ve Model Seçimi */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                    gap: 3,
-                    mb: 3,
-                  }}
-                >
-                  {/* Marka Seçimi */}
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Marka *</InputLabel>
-                    <Select
-                      value={formData.brandId}
-                      label="Marka *"
-                      disabled={!!selectedBrand}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          brandId: e.target.value,
-                          modelId: "",
-                          variantId: "",
-                        }));
-                      }}
-                    >
-                      {/* Seçili marka varsa onu göster */}
-                      {selectedBrand && (
-                        <MenuItem value={selectedBrand.id.toString()}>
-                          {selectedBrand.name} (Seçili)
-                        </MenuItem>
-                      )}
-                      {/* Diğer markalar */}
-                      {!selectedBrand &&
-                        brands.map((brand) => (
-                          <MenuItem key={brand.id} value={brand.id.toString()}>
-                            {brand.name}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-
-                  {/* Model Seçimi */}
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Model *</InputLabel>
-                    <Select
-                      value={formData.modelId}
-                      label="Model *"
-                      disabled={!!selectedModel || !formData.brandId}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          modelId: e.target.value,
-                          variantId: "",
-                        }));
-                      }}
-                    >
-                      {/* Seçili model varsa onu göster */}
-                      {selectedModel && (
-                        <MenuItem value={selectedModel.id.toString()}>
-                          {selectedModel.name} (Seçili)
-                        </MenuItem>
-                      )}
-                      {/* Diğer modeller */}
-                      {!selectedModel &&
-                        models.map((model) => (
-                          <MenuItem key={model.id} value={model.id.toString()}>
-                            {model.name}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-
-                {/* Variant Seçimi */}
-                {(variants.length > 0 || selectedVariant) && (
-                  <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                    <InputLabel>Variant</InputLabel>
-                    <Select
-                      value={formData.variantId}
-                      label="Variant"
-                      disabled={!!selectedVariant}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          variantId: e.target.value,
-                        }));
-                      }}
-                    >
-                      {/* Seçili variant varsa onu göster */}
-                      {selectedVariant && (
-                        <MenuItem value={selectedVariant.id.toString()}>
-                          {selectedVariant.name} (Seçili)
-                        </MenuItem>
-                      )}
-                      {/* Diğer variantlar */}
-                      {!selectedVariant &&
-                        variants.map((variant) => (
-                          <MenuItem
-                            key={variant.id}
-                            value={variant.id.toString()}
-                          >
-                            {variant.name}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                )}
 
                 {/* Yıl, Fiyat, KM */}
                 <Box
@@ -1890,16 +1744,7 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     Konum Bilgileri
                   </Typography>
                 </Box>
@@ -2028,16 +1873,7 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     Araç Özellikleri
                   </Typography>
                 </Box>
@@ -2057,11 +1893,7 @@ const KamyonAdForm: React.FC = () => {
                     variant="h6"
                     sx={{
                       fontWeight: 600,
-                      color: "#d32f2f",
                       mb: 3,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
                     }}
                   >
                     Güvenlik Özellikleri
@@ -2073,9 +1905,9 @@ const KamyonAdForm: React.FC = () => {
                         "repeat(auto-fit, minmax(200px, 1fr))",
                       gap: 2,
                       p: 3,
-                      backgroundColor: "#ffebee",
+                      backgroundColor: "#f5f5f5",
                       borderRadius: 2,
-                      border: "1px solid #ffcdd2",
+                      border: "1px solid #e0e0e0",
                     }}
                   >
                     {[
@@ -2133,11 +1965,7 @@ const KamyonAdForm: React.FC = () => {
                     variant="h6"
                     sx={{
                       fontWeight: 600,
-                      color: "#1976d2",
                       mb: 3,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
                     }}
                   >
                     İç Donanım
@@ -2149,9 +1977,9 @@ const KamyonAdForm: React.FC = () => {
                         "repeat(auto-fit, minmax(200px, 1fr))",
                       gap: 2,
                       p: 3,
-                      backgroundColor: "#e3f2fd",
+                      backgroundColor: "#f5f5f5",
                       borderRadius: 2,
-                      border: "1px solid #bbdefb",
+                      border: "1px solid #e0e0e0",
                     }}
                   >
                     {[
@@ -2207,11 +2035,7 @@ const KamyonAdForm: React.FC = () => {
                     variant="h6"
                     sx={{
                       fontWeight: 600,
-                      color: "#388e3c",
                       mb: 3,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
                     }}
                   >
                     Dış Donanım
@@ -2223,9 +2047,9 @@ const KamyonAdForm: React.FC = () => {
                         "repeat(auto-fit, minmax(200px, 1fr))",
                       gap: 2,
                       p: 3,
-                      backgroundColor: "#e8f5e8",
+                      backgroundColor: "#f5f5f5",
                       borderRadius: 2,
-                      border: "1px solid #c8e6c9",
+                      border: "1px solid #e0e0e0",
                     }}
                   >
                     {[
@@ -2288,16 +2112,7 @@ const KamyonAdForm: React.FC = () => {
             >
               <CardContent sx={{ p: 4 }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     Fotoğraflar
                   </Typography>
                 </Box>
@@ -2651,45 +2466,20 @@ const KamyonAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
-                >
-                  <Box
-                    sx={{
-                      width: 50,
-                      height: 50,
-                      borderRadius: "50%",
-                      background:
-                        "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0 4px 15px rgba(255, 107, 53, 0.3)",
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontSize: "1.5rem",
-                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
-                      }}
-                    >
-                      Videolar
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="h5"
-                      fontWeight="bold"
-                      sx={{ color: "#1e293b" }}
-                    >
-                      Videolar
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Aracınızın video tanıtımını ekleyerek daha fazla ilgi
-                      çekin (Opsiyonel - Max 3 video, 100MB/video)
-                    </Typography>
-                  </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                    Videolar
+                  </Typography>
                 </Box>
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 4, textAlign: "center", fontStyle: "italic" }}
+                >
+                  Aracınızın videolarını yükleyerek daha fazla detay
+                  sunabilirsiniz (En fazla 3 video, max 50MB)
+                </Typography>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                   {/* Video Yükleme */}
@@ -2734,15 +2524,6 @@ const KamyonAdForm: React.FC = () => {
                             fontSize: "1rem",
                             py: 1.5,
                             px: 3,
-                            background:
-                              "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
-                            "&:hover": {
-                              background:
-                                "linear-gradient(45deg, #e55a2e 30%, #de831a 90%)",
-                            },
-                            "&:disabled": {
-                              background: "#e0e0e0",
-                            },
                           }}
                         >
                           Video Ekle ({formData.videos.length}/3)
@@ -2913,19 +2694,6 @@ const KamyonAdForm: React.FC = () => {
                   fontSize: "1.1rem",
                   fontWeight: 600,
                   borderRadius: 3,
-                  background:
-                    "linear-gradient(45deg, #FF6B35 30%, #F7931E 90%)",
-                  boxShadow: "0 4px 20px rgba(255, 107, 53, 0.4)",
-                  "&:hover": {
-                    background:
-                      "linear-gradient(45deg, #E55A2B 30%, #E0841A 90%)",
-                    boxShadow: "0 6px 25px rgba(255, 107, 53, 0.6)",
-                    transform: "translateY(-2px)",
-                  },
-                  "&:disabled": {
-                    background: "#cccccc",
-                    boxShadow: "none",
-                  },
                 }}
               >
                 {loading ? "İlan Yayınlanıyor..." : "İlanı Yayınla"}
@@ -2938,21 +2706,26 @@ const KamyonAdForm: React.FC = () => {
         <DialogTitle sx={{ textAlign: "center" }}>
           <CheckCircle color="success" sx={{ fontSize: 48, mb: 2 }} />
           <Typography variant="h6" component="span">
-            İlan Başarıyla Gönderildi!
+            İlan Başarıyla Oluşturuldu!
           </Typography>
         </DialogTitle>
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            İlanınız admin onayına gönderilmiştir. Onaylandıktan sonra
-            yayınlanacaktır.
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            <strong>Önemli:</strong> İlanınız henüz yayında değil! Admin onayı
+            bekliyor.
           </Alert>
-          <Typography variant="body1" align="center">
-            İlanınızın durumunu "İlanlarım" sayfasından takip edebilirsiniz.
+          <Typography variant="body1" align="center" sx={{ mb: 2 }}>
+            İlanınız admin tarafından incelenip onaylandıktan sonra sitede
+            yayınlanacaktır.
+          </Typography>
+          <Typography variant="body2" align="center" color="text.secondary">
+            İlanınızın onay durumunu "İlanlarım" sayfasından takip
+            edebilirsiniz.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
           <Button onClick={handleSuccessClose} variant="contained" size="large">
-            İlanlarım Sayfasına Git
+            Tamam
           </Button>
         </DialogActions>
       </Dialog>

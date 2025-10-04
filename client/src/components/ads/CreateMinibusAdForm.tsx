@@ -197,7 +197,14 @@ const CreateMinibusAdForm: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
+
+  // Seçili öğeler için setter fonksiyonları (arka planda kullanılıyor - URL parametrelerinden yükleniyor)
+  // Form alanları kaldırıldı ama backend işlemleri için gerekli
+  const setSelectedCategory = (_: Category | null) => {}; // eslint-disable-line @typescript-eslint/no-unused-vars
+  const setSelectedBrand = (_: Brand | null) => {}; // eslint-disable-line @typescript-eslint/no-unused-vars
+  const setSelectedModel = (_: Model | null) => {}; // eslint-disable-line @typescript-eslint/no-unused-vars
+  const setSelectedVariant = (_: Variant | null) => {}; // eslint-disable-line @typescript-eslint/no-unused-vars
+
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
@@ -205,14 +212,6 @@ const CreateMinibusAdForm: React.FC = () => {
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
-
-  // Seçili olan kategori, brand, model ve variant bilgileri
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
-    null
-  );
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
-  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     categoryId: "1", // Minibüs & Midibüs kategorisi
@@ -318,7 +317,6 @@ const CreateMinibusAdForm: React.FC = () => {
   const loadModels = async (brandId: string) => {
     if (!brandId || brandId === "") {
       setModels([]);
-      setVariants([]);
       setFormData((prev) => ({
         ...prev,
         modelId: "",
@@ -338,7 +336,7 @@ const CreateMinibusAdForm: React.FC = () => {
           brands.map((b) => `${b.id}:${b.name}`)
         );
         setModels([]);
-        setVariants([]);
+
         setFormData((prev) => ({
           ...prev,
           modelId: "",
@@ -369,7 +367,7 @@ const CreateMinibusAdForm: React.FC = () => {
       setModels(modelsData);
 
       // Variant'ları temizle çünkü model değişti
-      setVariants([]);
+
       setFormData((prev) => ({
         ...prev,
         variantId: "",
@@ -388,7 +386,7 @@ const CreateMinibusAdForm: React.FC = () => {
     } catch (error) {
       console.error("❌ Modeller yüklenemedi:", error);
       setModels([]);
-      setVariants([]);
+
       setFormData((prev) => ({
         ...prev,
         modelId: "",
@@ -399,7 +397,6 @@ const CreateMinibusAdForm: React.FC = () => {
 
   const loadVariants = async (modelId: string) => {
     if (!modelId || modelId === "") {
-      setVariants([]);
       setFormData((prev) => ({
         ...prev,
         variantId: "",
@@ -419,7 +416,7 @@ const CreateMinibusAdForm: React.FC = () => {
           "Mevcut models:",
           models.map((m) => `${m.id}:${m.name}`)
         );
-        setVariants([]);
+
         setFormData((prev) => ({
           ...prev,
           variantId: "",
@@ -434,7 +431,7 @@ const CreateMinibusAdForm: React.FC = () => {
           "Mevcut brands:",
           brands.map((b) => `${b.id}:${b.name}`)
         );
-        setVariants([]);
+
         setFormData((prev) => ({
           ...prev,
           variantId: "",
@@ -461,7 +458,6 @@ const CreateMinibusAdForm: React.FC = () => {
         "variants for model",
         model.name
       );
-      setVariants(variantsData);
 
       // İlk variant'ı otomatik seç (varsa)
       if (variantsData.length > 0 && !formData.variantId) {
@@ -659,7 +655,7 @@ const CreateMinibusAdForm: React.FC = () => {
         variantId: "",
       }));
       setModels([]);
-      setVariants([]);
+
       if (value) {
         loadModels(value);
       }
@@ -672,7 +668,7 @@ const CreateMinibusAdForm: React.FC = () => {
         modelId: value,
         variantId: "",
       }));
-      setVariants([]);
+
       if (value) {
         loadVariants(value);
       }
@@ -1035,137 +1031,7 @@ const CreateMinibusAdForm: React.FC = () => {
                   >
                     Araç Bilgileri
                   </Typography>
-
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr 1fr",
-                      gap: 2,
-                      mb: 2,
-                    }}
-                  >
-                    {/* Kategori Seçimi */}
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Kategori *</InputLabel>
-                      <Select
-                        value={formData.categoryId}
-                        label="Kategori *"
-                        disabled={!!selectedCategory}
-                      >
-                        {selectedCategory ? (
-                          <MenuItem value={selectedCategory.id.toString()}>
-                            {selectedCategory.name} (Seçili)
-                          </MenuItem>
-                        ) : (
-                          <MenuItem value="1">Minibüs & Midibüs</MenuItem>
-                        )}
-                      </Select>
-                    </FormControl>
-
-                    {/* Marka Seçimi */}
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Marka *</InputLabel>
-                      <Select
-                        value={formData.brandId}
-                        label="Marka *"
-                        disabled={!!selectedBrand}
-                        onChange={(e) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            brandId: e.target.value,
-                            modelId: "",
-                            variantId: "",
-                          }));
-                        }}
-                      >
-                        {/* Seçili marka varsa onu göster */}
-                        {selectedBrand && (
-                          <MenuItem value={selectedBrand.id.toString()}>
-                            {selectedBrand.name} (Seçili)
-                          </MenuItem>
-                        )}
-                        {/* Diğer markalar */}
-                        {!selectedBrand &&
-                          brands.map((brand) => (
-                            <MenuItem
-                              key={brand.id}
-                              value={brand.id.toString()}
-                            >
-                              {brand.name}
-                            </MenuItem>
-                          ))}
-                      </Select>
-                    </FormControl>
-
-                    {/* Model Seçimi */}
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Model *</InputLabel>
-                      <Select
-                        value={formData.modelId}
-                        label="Model *"
-                        disabled={!!selectedModel || !formData.brandId}
-                        onChange={(e) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            modelId: e.target.value,
-                            variantId: "",
-                          }));
-                        }}
-                      >
-                        {/* Seçili model varsa onu göster */}
-                        {selectedModel && (
-                          <MenuItem value={selectedModel.id.toString()}>
-                            {selectedModel.name} (Seçili)
-                          </MenuItem>
-                        )}
-                        {/* Diğer modeller */}
-                        {!selectedModel &&
-                          models.map((model) => (
-                            <MenuItem
-                              key={model.id}
-                              value={model.id.toString()}
-                            >
-                              {model.name}
-                            </MenuItem>
-                          ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-
-                  {/* Variant Seçimi */}
-                  {(variants.length > 0 || selectedVariant) && (
-                    <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                      <InputLabel>Variant</InputLabel>
-                      <Select
-                        value={formData.variantId}
-                        label="Variant"
-                        disabled={!!selectedVariant}
-                        onChange={(e) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            variantId: e.target.value,
-                          }));
-                        }}
-                      >
-                        {/* Seçili variant varsa onu göster */}
-                        {selectedVariant && (
-                          <MenuItem value={selectedVariant.id.toString()}>
-                            {selectedVariant.name} (Seçili)
-                          </MenuItem>
-                        )}
-                        {/* Diğer variantlar */}
-                        {!selectedVariant &&
-                          variants.map((variant) => (
-                            <MenuItem
-                              key={variant.id}
-                              value={variant.id.toString()}
-                            >
-                              {variant.name}
-                            </MenuItem>
-                          ))}
-                      </Select>
-                    </FormControl>
-                  )}
+                  {/* Kategori, Marka, Model, Variant arka planda işleniyor */}
                 </Box>
 
                 {/* İlan Başlığı */}
@@ -1189,18 +1055,6 @@ const CreateMinibusAdForm: React.FC = () => {
                       },
                     }}
                   />
-                  <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-                    <Checkbox size="small" sx={{ p: 0.5 }} />
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "orange", fontWeight: 500 }}
-                    >
-                      İLANINIZ FARKLI GÖRÜNSÜN:
-                    </Typography>
-                    <Typography variant="caption" sx={{ ml: 1 }}>
-                      Kalın Yazı ve Renkli Çerçeve (429,99 TL)
-                    </Typography>
-                  </Box>
                 </Box>
 
                 {/* Açıklama */}
@@ -1457,15 +1311,7 @@ const CreateMinibusAdForm: React.FC = () => {
                     >
                       {motorPowerOptions.map((option) => (
                         <MenuItem key={option} value={option}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <span>💪</span> {option}
-                          </Box>
+                          {option}
                         </MenuItem>
                       ))}
                     </Select>
@@ -1936,15 +1782,7 @@ const CreateMinibusAdForm: React.FC = () => {
                     >
                       {cities.map((city) => (
                         <MenuItem key={city.id} value={city.id.toString()}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <span>🏙️</span> {city.plateCode} - {city.name}
-                          </Box>
+                          {city.plateCode} - {city.name}
                         </MenuItem>
                       ))}
                     </Select>
@@ -1975,15 +1813,7 @@ const CreateMinibusAdForm: React.FC = () => {
                           key={district.id}
                           value={district.id.toString()}
                         >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <span>🏘️</span> {district.name}
-                          </Box>
+                          {district.name}
                         </MenuItem>
                       ))}
                     </Select>
@@ -2057,15 +1887,8 @@ const CreateMinibusAdForm: React.FC = () => {
                   variant="outlined"
                   sx={{
                     mb: 3,
-                    borderRadius: 3,
-                    background: "#ffffff",
-                    border: "1px solid #f0f0f0",
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-                      transform: "translateY(-2px)",
-                    },
+                    borderRadius: 1,
+                    border: "1px solid #e0e0e0",
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
@@ -2074,11 +1897,7 @@ const CreateMinibusAdForm: React.FC = () => {
                       sx={{
                         mb: 3,
                         fontWeight: 600,
-                        color: "#2c3e50",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        borderBottom: "2px solid #f8f9fa",
+                        borderBottom: "1px solid #e0e0e0",
                         paddingBottom: 2,
                       }}
                     >
@@ -2106,7 +1925,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#5a6c7d" }}
                           />
                         }
                         label="ABS"
@@ -2127,7 +1945,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="ASR"
@@ -2148,7 +1965,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="ESP"
@@ -2169,7 +1985,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="Hava Yastığı"
@@ -2190,7 +2005,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="Hava Yastığı (Yolcu)"
@@ -2211,7 +2025,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="Yan Hava Yastığı"
@@ -2232,7 +2045,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="Immobilizer"
@@ -2253,7 +2065,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="Alarm"
@@ -2274,7 +2085,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="Park Sensörü"
@@ -2295,7 +2105,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="Geri Görüş Kamerası"
@@ -2316,7 +2125,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="Yokuş Kalkış Desteği"
@@ -2337,7 +2145,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="El Freni"
@@ -2358,7 +2165,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#d32f2f" }}
                           />
                         }
                         label="Ayak Freni"
@@ -2373,15 +2179,8 @@ const CreateMinibusAdForm: React.FC = () => {
                   variant="outlined"
                   sx={{
                     mb: 3,
-                    borderRadius: 3,
-                    background: "#ffffff",
-                    border: "1px solid #f0f0f0",
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-                      transform: "translateY(-2px)",
-                    },
+                    borderRadius: 1,
+                    border: "1px solid #e0e0e0",
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
@@ -2390,15 +2189,11 @@ const CreateMinibusAdForm: React.FC = () => {
                       sx={{
                         mb: 3,
                         fontWeight: 600,
-                        color: "#2c3e50",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        borderBottom: "2px solid #f8f9fa",
+                        borderBottom: "1px solid #e0e0e0",
                         paddingBottom: 2,
                       }}
                     >
-                      🛋️ Konfor Özellikleri
+                      Konfor Özellikleri
                     </Typography>
                     <Box
                       sx={{
@@ -2422,7 +2217,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Klima"
@@ -2443,7 +2237,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Isıtmalı Koltuklar"
@@ -2464,7 +2257,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Deri Döşeme"
@@ -2485,7 +2277,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Elektrikli Camlar"
@@ -2506,7 +2297,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Elektrikli Aynalar"
@@ -2527,7 +2317,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Otomatik Cam"
@@ -2548,7 +2337,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Otomatik Kapı"
@@ -2569,7 +2357,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Hidrolik Direksiyon"
@@ -2590,7 +2377,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Merkezi Kilit"
@@ -2611,7 +2397,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Hız Sabitleme"
@@ -2632,7 +2417,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Sunroof"
@@ -2653,7 +2437,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#0284c7" }}
                           />
                         }
                         label="Soğutucu / Frigo"
@@ -2668,15 +2451,8 @@ const CreateMinibusAdForm: React.FC = () => {
                   variant="outlined"
                   sx={{
                     mb: 3,
-                    borderRadius: 3,
-                    background: "#ffffff",
-                    border: "1px solid #f0f0f0",
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-                      transform: "translateY(-2px)",
-                    },
+                    borderRadius: 1,
+                    border: "1px solid #e0e0e0",
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
@@ -2685,11 +2461,7 @@ const CreateMinibusAdForm: React.FC = () => {
                       sx={{
                         mb: 3,
                         fontWeight: 600,
-                        color: "#2c3e50",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        borderBottom: "2px solid #f8f9fa",
+                        borderBottom: "1px solid #e0e0e0",
                         paddingBottom: 2,
                       }}
                     >
@@ -2717,7 +2489,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#9333ea" }}
                           />
                         }
                         label="Radio - Teyp"
@@ -2738,7 +2509,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#9333ea" }}
                           />
                         }
                         label="CD Çalar"
@@ -2759,7 +2529,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#9333ea" }}
                           />
                         }
                         label="DVD Player"
@@ -2780,7 +2549,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#9333ea" }}
                           />
                         }
                         label="Müzik Sistemi"
@@ -2801,7 +2569,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#9333ea" }}
                           />
                         }
                         label="TV - Navigasyon"
@@ -2822,7 +2589,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#9333ea" }}
                           />
                         }
                         label="Yol Bilgisayarı"
@@ -2837,15 +2603,8 @@ const CreateMinibusAdForm: React.FC = () => {
                   variant="outlined"
                   sx={{
                     mb: 3,
-                    borderRadius: 3,
-                    background: "#ffffff",
-                    border: "1px solid #f0f0f0",
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-                      transform: "translateY(-2px)",
-                    },
+                    borderRadius: 1,
+                    border: "1px solid #e0e0e0",
                   }}
                 >
                   <CardContent sx={{ p: 3 }}>
@@ -2854,15 +2613,11 @@ const CreateMinibusAdForm: React.FC = () => {
                       sx={{
                         mb: 3,
                         fontWeight: 600,
-                        color: "#2c3e50",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        borderBottom: "2px solid #f8f9fa",
+                        borderBottom: "1px solid #e0e0e0",
                         paddingBottom: 2,
                       }}
                     >
-                      ⚡ Diğer Özellikler
+                      Diğer Özellikler
                     </Typography>
                     <Box
                       sx={{
@@ -2886,7 +2641,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Alaşım Jant"
@@ -2907,7 +2661,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Spoyler"
@@ -2928,7 +2681,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Xenon Far"
@@ -2949,7 +2701,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Far Sis"
@@ -2970,7 +2721,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Far Sensörü"
@@ -2991,7 +2741,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Far Yıkama Sistemi"
@@ -3012,7 +2761,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Yağmur Sensörü"
@@ -3033,7 +2781,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Çeki Demiri"
@@ -3054,7 +2801,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Turizm Paketi"
@@ -3075,7 +2821,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Okul Aracı"
@@ -3096,7 +2841,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Geniş Bagaj Hacmi"
@@ -3117,7 +2861,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Sigortali"
@@ -3138,7 +2881,6 @@ const CreateMinibusAdForm: React.FC = () => {
                                 },
                               }))
                             }
-                            sx={{ color: "#16a34a" }}
                           />
                         }
                         label="Garantili"
@@ -3860,11 +3602,7 @@ const CreateMinibusAdForm: React.FC = () => {
           <Typography variant="h6">
             Video Önizleme ({selectedVideoIndex + 1}/{formData.videos.length})
           </Typography>
-          <IconButton
-            onClick={closeVideoModal}
-            sx={{ color: "white" }}
-            size="small"
-          >
+          <IconButton onClick={closeVideoModal} size="small">
             <Close />
           </IconButton>
         </DialogTitle>
@@ -3896,7 +3634,6 @@ const CreateMinibusAdForm: React.FC = () => {
             <Button
               onClick={() => navigateVideo("prev")}
               disabled={selectedVideoIndex === 0}
-              sx={{ color: "white" }}
               startIcon={<ArrowBackIos />}
             >
               Önceki
@@ -3904,7 +3641,6 @@ const CreateMinibusAdForm: React.FC = () => {
             <Button
               onClick={() => navigateVideo("next")}
               disabled={selectedVideoIndex >= formData.videos.length - 1}
-              sx={{ color: "white" }}
               endIcon={<ArrowForwardIos />}
             >
               Sonraki

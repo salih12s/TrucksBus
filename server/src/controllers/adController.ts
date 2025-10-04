@@ -2178,22 +2178,35 @@ export const approveAd = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
+    // İlanı onayla
     const ad = await prisma.ad.update({
       where: { id: parseInt(id) },
       data: {
         status: "APPROVED",
       },
       include: {
-        user: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        category: true,
+        brand: true,
+        model: true,
       },
     });
+
+    console.log("✅ İlan onaylandı - Cache yenileniyor:", ad.id);
 
     // ✅ Kullanıcıya bildirim gönder
     await prisma.notification.create({
       data: {
         userId: ad.userId,
         title: "İlanınız Onaylandı! 🎉",
-        message: `"${ad.title}" başlıklı ilanınız yayına alındı ve artık sitede görünüyor.`,
+        message: `"${ad.title}" başlıklı ilanınız onaylandı. İlanınız birkaç dakika içinde anasayfada görünecektir.`,
         type: "SUCCESS",
         relatedId: ad.id,
       },
@@ -2209,7 +2222,7 @@ export const approveAd = async (req: Request, res: Response) => {
     // Kullanıcıya özel bildirim gönder
     io.to(`user_${ad.userId}`).emit("notification", {
       title: "İlanınız Onaylandı! 🎉",
-      message: `"${ad.title}" başlıklı ilanınız yayına alındı.`,
+      message: `"${ad.title}" başlıklı ilanınız onaylandı. İlanınız kısa süre içinde anasayfada görünecektir.`,
       type: "SUCCESS",
     });
 

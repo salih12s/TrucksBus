@@ -916,29 +916,28 @@ const MainLayout: React.FC = () => {
     };
   }, []);
 
-  // ❗ Socket.io ile gerçek zamanlı onaylı ilan bildirimi
+  // ❗ Socket.io ile gerçek zamanlı onaylı ilan bildirimi (TÜM KULLANICILAR İÇİN)
   useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      // Socket bağlantısını kur
-      const socket = socketService.connect(user.id);
+    // Socket bağlantısını kur (auth gerekli değil, herkes dinleyebilir)
+    const socket = socketService.connect(user?.id || 0);
 
-      // Onaylı ilan bildirimi dinle
-      const handleAdApproved = (data: { adId: number; message: string }) => {
-        console.log("🔔 İlan onaylandı bildirimi alındı:", data);
-        // Anında ilanları yenile (sayfa 1'e dön)
-        loadAdsLazy(1);
-        // Toast bildirim göster (opsiyonel)
-        // toast.success(data.message || "Bir ilan onaylandı ve anasayfaya eklendi!");
-      };
+    // Onaylı ilan bildirimi dinle
+    const handleAdApproved = (data: { adId: number; message: string }) => {
+      console.log("🔔 İlan onaylandı bildirimi alındı:", data);
+      // Anında ilanları yenile (sayfa 1'e dön)
+      loadAdsLazy(1);
+      // Toast bildirim göster (opsiyonel)
+      // toast.success(data.message || "Bir ilan onaylandı ve anasayfaya eklendi!");
+    };
 
-      socket?.on("adApproved", handleAdApproved);
+    socket?.on("adApproved", handleAdApproved);
 
-      // Cleanup
-      return () => {
-        socket?.off("adApproved", handleAdApproved);
-      };
-    }
-  }, [isAuthenticated, user?.id]);
+    // Cleanup
+    return () => {
+      socket?.off("adApproved", handleAdApproved);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Dependency array boş - sadece mount/unmount'ta çalışır
 
   // ❗ FALLBACK LİSTENER'LAR: PostMessage ve CustomEvent
   useEffect(() => {

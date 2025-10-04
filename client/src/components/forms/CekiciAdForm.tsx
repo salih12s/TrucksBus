@@ -25,11 +25,6 @@ import {
   CheckCircle,
   CloudUpload,
   PhotoCamera,
-  EditNote,
-  Build,
-  LocationOn,
-  Star,
-  CameraAlt,
   Close,
   ChevronLeft,
   ChevronRight,
@@ -242,19 +237,11 @@ const CekiciAdForm: React.FC = () => {
 
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
-
-  // Seçili olan brand, model ve variant bilgileri
-  const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
-  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     // Category/Brand/Model/Variant IDs
@@ -383,7 +370,6 @@ const CekiciAdForm: React.FC = () => {
             `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}`
           );
           const brandData = brandResponse.data as Brand;
-          setSelectedBrand(brandData);
           setFormData((prev) => ({
             ...prev,
             brandId: brandData.id.toString(),
@@ -398,7 +384,6 @@ const CekiciAdForm: React.FC = () => {
             `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}`
           );
           const modelData = modelResponse.data as Model;
-          setSelectedModel(modelData);
           setFormData((prev) => ({
             ...prev,
             modelId: modelData.id.toString(),
@@ -413,7 +398,6 @@ const CekiciAdForm: React.FC = () => {
             `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`
           );
           const variantData = variantResponse.data as Variant;
-          setSelectedVariant(variantData);
           setFormData((prev) => ({
             ...prev,
             variantId: variantData.id.toString(),
@@ -487,7 +471,6 @@ const CekiciAdForm: React.FC = () => {
         `/categories/${categorySlug}/brands`
       );
       const brandsData = response.data as Brand[];
-      setBrands(brandsData);
 
       // İlk brand'ı otomatik seç (eğer seçili değilse)
       if (brandsData.length > 0 && !formData.brandId) {
@@ -503,8 +486,6 @@ const CekiciAdForm: React.FC = () => {
 
   const loadModels = async (brandId: string) => {
     if (!brandId || brandId === "") {
-      setModels([]);
-      setVariants([]);
       setFormData((prev) => ({
         ...prev,
         modelId: "",
@@ -514,48 +495,12 @@ const CekiciAdForm: React.FC = () => {
     }
 
     try {
-      // Brand ID'den slug'ı bul
-      const brand = brands.find((b) => b.id.toString() === brandId);
-      if (!brand) {
-        console.error(
-          "Brand bulunamadı:",
-          brandId,
-          "Mevcut brands:",
-          brands.map((b) => `${b.id}:${b.name}`)
-        );
-        setModels([]);
-        setVariants([]);
-        setFormData((prev) => ({
-          ...prev,
-          modelId: "",
-          variantId: "",
-        }));
-        return;
-      }
-
-      console.log(
-        "🔄 Loading models for brand:",
-        brand.name,
-        "(ID:",
-        brandId,
-        "Slug:",
-        brand.slug,
-        ")"
-      );
       const response = await apiClient.get(
-        `/categories/cekici/brands/${brand.slug}/models`
+        `/categories/cekici/brands/${brandId}/models`
       );
       const modelsData = response.data as Model[];
-      console.log(
-        "✅ Models loaded:",
-        modelsData.length,
-        "models for brand",
-        brand.name
-      );
-      setModels(modelsData);
 
-      // Variant'ları temizle çünkü model değişti
-      setVariants([]);
+      // Variant'ı temizle çünkü model değişti
       setFormData((prev) => ({
         ...prev,
         variantId: "",
@@ -568,13 +513,11 @@ const CekiciAdForm: React.FC = () => {
           ...prev,
           modelId: firstModelId,
         }));
-        // İlk model seçilince variant'ları da yükle
+        // İlk model seçilince variant'ı da yükle
         await loadVariants(firstModelId);
       }
     } catch (error) {
       console.error("❌ Modeller yüklenemedi:", error);
-      setModels([]);
-      setVariants([]);
       setFormData((prev) => ({
         ...prev,
         modelId: "",
@@ -585,7 +528,6 @@ const CekiciAdForm: React.FC = () => {
 
   const loadVariants = async (modelId: string) => {
     if (!modelId || modelId === "") {
-      setVariants([]);
       setFormData((prev) => ({
         ...prev,
         variantId: "",
@@ -594,61 +536,10 @@ const CekiciAdForm: React.FC = () => {
     }
 
     try {
-      // Model ID'den slug'ı bul
-      const model = models.find((m) => m.id.toString() === modelId);
-      const brand = brands.find((b) => b.id.toString() === formData.brandId);
-
-      if (!model) {
-        console.error(
-          "Model bulunamadı:",
-          modelId,
-          "Mevcut models:",
-          models.map((m) => `${m.id}:${m.name}`)
-        );
-        setVariants([]);
-        setFormData((prev) => ({
-          ...prev,
-          variantId: "",
-        }));
-        return;
-      }
-
-      if (!brand) {
-        console.error(
-          "Brand bulunamadı:",
-          formData.brandId,
-          "Mevcut brands:",
-          brands.map((b) => `${b.id}:${b.name}`)
-        );
-        setVariants([]);
-        setFormData((prev) => ({
-          ...prev,
-          variantId: "",
-        }));
-        return;
-      }
-
-      console.log(
-        "🔄 Loading variants for model:",
-        model.name,
-        "(ID:",
-        modelId,
-        "Slug:",
-        model.slug,
-        ") of brand:",
-        brand.name
-      );
       const response = await apiClient.get(
-        `/categories/cekici/brands/${brand.slug}/models/${model.slug}/variants`
+        `/categories/cekici/brands/${formData.brandId}/models/${modelId}/variants`
       );
       const variantsData = response.data as Variant[];
-      console.log(
-        "✅ Variants loaded:",
-        variantsData.length,
-        "variants for model",
-        model.name
-      );
-      setVariants(variantsData);
 
       // İlk variant'ı otomatik seç (eğer seçili değilse)
       if (variantsData.length > 0 && !formData.variantId) {
@@ -659,7 +550,6 @@ const CekiciAdForm: React.FC = () => {
       }
     } catch (error) {
       console.error("❌ Varyantlar yüklenemedi:", error);
-      setVariants([]);
       setFormData((prev) => ({
         ...prev,
         variantId: "",
@@ -681,8 +571,6 @@ const CekiciAdForm: React.FC = () => {
         modelId: "",
         variantId: "",
       }));
-      setModels([]);
-      setVariants([]);
       if (value) {
         loadModels(value);
       }
@@ -695,7 +583,6 @@ const CekiciAdForm: React.FC = () => {
         modelId: value,
         variantId: "",
       }));
-      setVariants([]);
       if (value) {
         loadVariants(value);
       }
@@ -964,9 +851,7 @@ const CekiciAdForm: React.FC = () => {
         sx={{
           mt: 4,
           mb: 6,
-          background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
           minHeight: "100vh",
-          borderRadius: 3,
           p: 0,
         }}
       >
@@ -990,28 +875,8 @@ const CekiciAdForm: React.FC = () => {
           >
             <CardContent sx={{ p: 4 }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <Box
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    borderRadius: "50%",
-                    p: 1.5,
-                    mr: 2,
-                  }}
-                >
-                  <EditNote sx={{ color: "white", fontSize: 28 }} />
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontWeight: 700,
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  📝 Genel Bilgiler
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  Genel Bilgiler
                 </Typography>
               </Box>
 
@@ -1048,114 +913,6 @@ const CekiciAdForm: React.FC = () => {
                   },
                 }}
               />
-
-              {/* Marka ve Model Seçimi */}
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                  gap: 3,
-                  mb: 3,
-                }}
-              >
-                {/* Marka Seçimi */}
-                <FormControl fullWidth>
-                  <InputLabel>Marka *</InputLabel>
-                  <Select
-                    value={formData.brandId}
-                    label="Marka *"
-                    disabled={!!selectedBrand}
-                    onChange={(e) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        brandId: e.target.value,
-                        modelId: "",
-                        variantId: "",
-                      }));
-                    }}
-                  >
-                    {/* Seçili marka varsa onu göster */}
-                    {selectedBrand && (
-                      <MenuItem value={selectedBrand.id.toString()}>
-                        {selectedBrand.name} (Seçili)
-                      </MenuItem>
-                    )}
-                    {/* Diğer markalar */}
-                    {!selectedBrand &&
-                      brands.map((brand) => (
-                        <MenuItem key={brand.id} value={brand.id.toString()}>
-                          {brand.name}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-
-                {/* Model Seçimi */}
-                <FormControl fullWidth>
-                  <InputLabel>Model *</InputLabel>
-                  <Select
-                    value={formData.modelId}
-                    label="Model *"
-                    disabled={!!selectedModel || !formData.brandId}
-                    onChange={(e) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        modelId: e.target.value,
-                        variantId: "",
-                      }));
-                    }}
-                  >
-                    {/* Seçili model varsa onu göster */}
-                    {selectedModel && (
-                      <MenuItem value={selectedModel.id.toString()}>
-                        {selectedModel.name} (Seçili)
-                      </MenuItem>
-                    )}
-                    {/* Diğer modeller */}
-                    {!selectedModel &&
-                      models.map((model) => (
-                        <MenuItem key={model.id} value={model.id.toString()}>
-                          {model.name}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-              </Box>
-
-              {/* Variant Seçimi */}
-              {(variants.length > 0 || selectedVariant) && (
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                  <InputLabel>Variant</InputLabel>
-                  <Select
-                    value={formData.variantId}
-                    label="Variant"
-                    disabled={!!selectedVariant}
-                    onChange={(e) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        variantId: e.target.value,
-                      }));
-                    }}
-                  >
-                    {/* Seçili variant varsa onu göster */}
-                    {selectedVariant && (
-                      <MenuItem value={selectedVariant.id.toString()}>
-                        {selectedVariant.name} (Seçili)
-                      </MenuItem>
-                    )}
-                    {/* Diğer variantlar */}
-                    {!selectedVariant &&
-                      variants.map((variant) => (
-                        <MenuItem
-                          key={variant.id}
-                          value={variant.id.toString()}
-                        >
-                          {variant.name}
-                        </MenuItem>
-                      ))}
-                  </Select>
-                </FormControl>
-              )}
 
               {/* Yıl, Fiyat, KM */}
               <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
@@ -1327,28 +1084,8 @@ const CekiciAdForm: React.FC = () => {
           >
             <CardContent sx={{ p: 4 }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <Box
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    borderRadius: "50%",
-                    p: 1.5,
-                    mr: 2,
-                  }}
-                >
-                  <Build sx={{ color: "white", fontSize: 28 }} />
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontWeight: 700,
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  🔧 Teknik Özellikler
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  Teknik Özellikler
                 </Typography>
               </Box>
 
@@ -1616,29 +1353,9 @@ const CekiciAdForm: React.FC = () => {
                   display: "flex",
                   flexDirection: { xs: "column", sm: "row" },
                   gap: 2,
+                  mt: 3,
                 }}
               >
-                <FormControl
-                  sx={{
-                    flex: 1,
-                    minWidth: 200,
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 3,
-                    },
-                  }}
-                >
-                  <InputLabel>Hasar Kaydı</InputLabel>
-                  <Select
-                    value={formData.hasAccidentRecord || ""}
-                    onChange={(e) =>
-                      handleInputChange("hasAccidentRecord", e.target.value)
-                    }
-                    label="Hasar Kaydı"
-                  >
-                    <MenuItem value="evet">Evet</MenuItem>
-                    <MenuItem value="hayir">Hayır</MenuItem>
-                  </Select>
-                </FormControl>
                 <FormControl
                   sx={{
                     flex: 1,
@@ -1681,28 +1398,8 @@ const CekiciAdForm: React.FC = () => {
           >
             <CardContent sx={{ p: 4 }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <Box
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    borderRadius: "50%",
-                    p: 1.5,
-                    mr: 2,
-                  }}
-                >
-                  <LocationOn sx={{ color: "white", fontSize: 28 }} />
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontWeight: 700,
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  📍 Konum Bilgileri
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  Konum Bilgileri
                 </Typography>
               </Box>
 
@@ -1782,28 +1479,8 @@ const CekiciAdForm: React.FC = () => {
           >
             <CardContent sx={{ p: 4 }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <Box
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    borderRadius: "50%",
-                    p: 1.5,
-                    mr: 2,
-                  }}
-                >
-                  <Star sx={{ color: "white", fontSize: 28 }} />
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontWeight: 700,
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  ⭐ Araç Özellikleri
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  Araç Özellikleri
                 </Typography>
               </Box>
 
@@ -1811,9 +1488,9 @@ const CekiciAdForm: React.FC = () => {
               <Typography
                 variant="subtitle1"
                 gutterBottom
-                sx={{ mt: 2, fontWeight: "bold", color: "#1976d2" }}
+                sx={{ mt: 2, fontWeight: "bold" }}
               >
-                🛡️ Güvenlik
+                Güvenlik
               </Typography>
               <Box
                 sx={{
@@ -2204,9 +1881,9 @@ const CekiciAdForm: React.FC = () => {
               <Typography
                 variant="subtitle1"
                 gutterBottom
-                sx={{ mt: 3, fontWeight: "bold", color: "#1976d2" }}
+                sx={{ mt: 3, fontWeight: "bold" }}
               >
-                🔧 Donanım
+                Donanım
               </Typography>
               <Box
                 sx={{
@@ -2740,39 +2417,15 @@ const CekiciAdForm: React.FC = () => {
           >
             <CardContent sx={{ p: 4 }}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <Box
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    borderRadius: "50%",
-                    p: 1.5,
-                    mr: 2,
-                  }}
-                >
-                  <CameraAlt sx={{ color: "white", fontSize: 28 }} />
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontWeight: 700,
-                    background:
-                      "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  📸 Fotoğraflar
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  Fotoğraflar
                 </Typography>
               </Box>
 
               {/* Vitrin Fotoğrafı */}
               <Box sx={{ mb: 4 }}>
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{ color: "#1976d2", fontWeight: 600 }}
-                >
-                  📌 Vitrin Fotoğrafı *
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                  Vitrin Fotoğrafı *
                 </Typography>
                 <input
                   accept="image/*"
@@ -2835,12 +2488,8 @@ const CekiciAdForm: React.FC = () => {
 
               {/* Diğer Fotoğraflar */}
               <Box>
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{ color: "#1976d2", fontWeight: 600 }}
-                >
-                  🖼️ Diğer Fotoğraflar (En fazla 15 adet)
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+                  Diğer Fotoğraflar (En fazla 15 adet)
                 </Typography>
                 <input
                   accept="image/*"
@@ -2938,7 +2587,7 @@ const CekiciAdForm: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* 🎬 Videolar */}
+          {/* Videolar */}
           <Card
             elevation={6}
             sx={{
@@ -3203,7 +2852,7 @@ const CekiciAdForm: React.FC = () => {
           </Card>
 
           {/* Submit Button */}
-          <Box sx={{ textAlign: "center", mb: 4 }}>
+          <Box sx={{ textAlign: "center", mb: 4, mt: 5 }}>
             <Button
               type="submit"
               variant="contained"
@@ -3362,9 +3011,9 @@ const CekiciAdForm: React.FC = () => {
           <Typography variant="h5">İlan Başarıyla Gönderildi!</Typography>
         </DialogTitle>
         <DialogContent>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            İlanınız admin onayına gönderilmiştir. Onaylandıktan sonra
-            yayınlanacaktır.
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            İlanınız henüz yayında değil! Admin onayı bekliyor. Onaylandıktan
+            sonra anasayfada görünecektir.
           </Alert>
           <Typography variant="body1" align="center">
             İlanınızın durumunu "İlanlarım" sayfasından takip edebilirsiniz.

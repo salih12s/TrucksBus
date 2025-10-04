@@ -263,7 +263,7 @@ const KamyonRomorkForm: React.FC = () => {
           <form onSubmit={handleSubmit}>
             {/* Temel Bilgiler */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📋 İlan Bilgileri
+              İlan Bilgileri
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
@@ -330,7 +330,7 @@ const KamyonRomorkForm: React.FC = () => {
 
             {/* Römork Özellikleri */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              ⚙️ Römork Özellikleri
+              Römork Özellikleri
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
@@ -410,7 +410,7 @@ const KamyonRomorkForm: React.FC = () => {
 
             {/* Konum Bilgileri */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📍 Konum Bilgileri
+              Konum Bilgileri
             </Typography>
 
             <Box
@@ -461,7 +461,7 @@ const KamyonRomorkForm: React.FC = () => {
 
             {/* Fotoğraflar */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📸 Fotoğraflar
+              Fotoğraflar
             </Typography>
 
             {/* Vitrin Fotoğrafı */}
@@ -576,15 +576,7 @@ const KamyonRomorkForm: React.FC = () => {
                 variant="contained"
                 size="large"
                 disabled={loading}
-                sx={{
-                  px: 6,
-                  background:
-                    "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-                  "&:hover": {
-                    background:
-                      "linear-gradient(45deg, #1565c0 30%, #1976d2 90%)",
-                  },
-                }}
+                sx={{ px: 6 }}
               >
                 {loading ? "İlan Oluşturuluyor..." : "İlanı Yayınla"}
               </Button>
@@ -609,9 +601,6 @@ const KamyonRomorkForm: React.FC = () => {
               onClick={handleSuccessClose}
               variant="contained"
               size="large"
-              sx={{
-                background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-              }}
             >
               Tamam
             </Button>
