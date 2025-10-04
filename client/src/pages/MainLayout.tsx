@@ -40,6 +40,10 @@ import AdBanner from "../components/ads/AdBanner";
 import ComplaintModal from "../components/complaints/ComplaintModal";
 import ContactPage from "./ContactPage";
 import AboutPage from "./AboutPage";
+import Sustainability from "./Sustainability";
+import KullanimKosullari from "./KullanimKosullari";
+import KisiselVeriler from "./KisiselVeriler";
+import CerezYonetimi from "./CerezYonetimi";
 import Profile from "./Profile";
 import MyAds from "./MyAds";
 import Doping from "./Doping";
@@ -242,12 +246,17 @@ const MainLayout: React.FC = () => {
     "/bookmarks",
   ];
   const isAvatarMenuPage = avatarMenuPages.includes(location.pathname);
-  const isContactOrAboutPage =
-    location.pathname === "/contact" || location.pathname === "/about";
+  const isFooterPage = [
+    "/contact",
+    "/about",
+    "/sustainability",
+    "/kullanim-kosullari",
+    "/kisisel-verilerin-korunmasi",
+    "/cerez-yonetimi",
+  ].includes(location.pathname);
   const isAdDetailPage = location.pathname.startsWith("/ad/") && params.id;
   const isBookmarksPage = location.pathname === "/bookmarks";
-  const shouldHideSidebar =
-    isAvatarMenuPage || isContactOrAboutPage || isAdDetailPage;
+  const shouldHideSidebar = isAvatarMenuPage || isFooterPage || isAdDetailPage;
 
   // Category navigation handler
   const handleCategoryClick = (categorySlug: string | null) => {
@@ -824,6 +833,13 @@ const MainLayout: React.FC = () => {
       setCurrentPage(1);
     }
   };
+
+  // Scroll to top when navigating to footer pages
+  useEffect(() => {
+    if (isFooterPage) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [isFooterPage, location.pathname]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -2412,6 +2428,14 @@ const MainLayout: React.FC = () => {
               {/* Right padding for banner space */}
               <AdDetail />
             </Box>
+          ) : location.pathname === "/sustainability" ? (
+            <Sustainability />
+          ) : location.pathname === "/kullanim-kosullari" ? (
+            <KullanimKosullari />
+          ) : location.pathname === "/kisisel-verilerin-korunmasi" ? (
+            <KisiselVeriler />
+          ) : location.pathname === "/cerez-yonetimi" ? (
+            <CerezYonetimi />
           ) : location.pathname === "/contact" ? (
             <ContactPage />
           ) : location.pathname === "/about" ? (

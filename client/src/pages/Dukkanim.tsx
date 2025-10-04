@@ -18,7 +18,6 @@ import {
   Divider,
 } from "@mui/material";
 import {
-  AddCircle,
   LocationOn,
   Settings,
   CameraAlt,
@@ -546,19 +545,6 @@ const Dukkanim: React.FC = () => {
                 )}
               </Box>
             </Box>
-
-            <Button
-              variant="contained"
-              startIcon={<AddCircle />}
-              sx={{
-                backgroundColor: "#27ae60",
-                "&:hover": { backgroundColor: "#219a52" },
-                borderRadius: 2,
-              }}
-              onClick={() => navigate("/create-ad")}
-            >
-              Yeni İlan
-            </Button>
           </Box>
         </Box>
       </Paper>
@@ -808,20 +794,6 @@ const Dukkanim: React.FC = () => {
             <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
               Henüz hiç ilanınız bulunmuyor
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddCircle />}
-              sx={{
-                mt: 2,
-                backgroundColor: "#313B4C",
-                "&:hover": {
-                  backgroundColor: "#586575",
-                },
-              }}
-              onClick={() => navigate("/create-ad")}
-            >
-              İlk İlanını Oluştur
-            </Button>
           </Box>
         )}
       </Box>

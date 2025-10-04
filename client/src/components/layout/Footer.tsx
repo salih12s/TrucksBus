@@ -6,8 +6,13 @@ import { Phone, Email } from "@mui/icons-material";
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
+
+  const handleLinkClick = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <Box sx={{ backgroundColor: "#F9F9F9", color: "#666", mt: "auto" }}>
+    <Box sx={{ backgroundColor: "#E8E8E8", color: "#666", mt: "auto" }}>
       <Container maxWidth="lg" sx={{ py: 1.5, px: { xs: 2, md: 4 } }}>
         <Box
           sx={{
@@ -47,6 +52,7 @@ const Footer: React.FC = () => {
               <Link
                 component={RouterLink}
                 to="/about"
+                onClick={handleLinkClick}
                 sx={{
                   color: "#666",
                   textDecoration: "none",
@@ -60,6 +66,7 @@ const Footer: React.FC = () => {
               <Link
                 component={RouterLink}
                 to="/sustainability"
+                onClick={handleLinkClick}
                 sx={{
                   color: "#666",
                   textDecoration: "none",
@@ -71,31 +78,8 @@ const Footer: React.FC = () => {
               </Link>
               <Link
                 component={RouterLink}
-                to="/human-resources"
-                sx={{
-                  color: "#666",
-                  textDecoration: "none",
-                  fontSize: "14px",
-                  "&:hover": { color: "#333" },
-                }}
-              >
-                {t("footer.humanResources")}
-              </Link>
-              <Link
-                component={RouterLink}
-                to="/news"
-                sx={{
-                  color: "#666",
-                  textDecoration: "none",
-                  fontSize: "14px",
-                  "&:hover": { color: "#333" },
-                }}
-              >
-                {t("footer.news")}
-              </Link>
-              <Link
-                component={RouterLink}
                 to="/contact"
+                onClick={handleLinkClick}
                 sx={{
                   color: "#666",
                   textDecoration: "none",
@@ -132,19 +116,8 @@ const Footer: React.FC = () => {
             >
               <Link
                 component={RouterLink}
-                to="/guvenli-alisveris"
-                sx={{
-                  color: "#666",
-                  textDecoration: "none",
-                  fontSize: "14px",
-                  "&:hover": { color: "#333" },
-                }}
-              >
-                {t("footer.safeShopping")}
-              </Link>
-              <Link
-                component={RouterLink}
                 to="/kullanim-kosullari"
+                onClick={handleLinkClick}
                 sx={{
                   color: "#666",
                   textDecoration: "none",
@@ -157,6 +130,7 @@ const Footer: React.FC = () => {
               <Link
                 component={RouterLink}
                 to="/kisisel-verilerin-korunmasi"
+                onClick={handleLinkClick}
                 sx={{
                   color: "#666",
                   textDecoration: "none",
@@ -169,6 +143,7 @@ const Footer: React.FC = () => {
               <Link
                 component={RouterLink}
                 to="/cerez-yonetimi"
+                onClick={handleLinkClick}
                 sx={{
                   color: "#666",
                   textDecoration: "none",
@@ -257,7 +232,7 @@ const Footer: React.FC = () => {
       </Container>
 
       {/* Alt Kısım - İletişim ve Copyright */}
-      <Box sx={{ backgroundColor: "#F9F9F9", py: 1.5 }}>
+      <Box sx={{ backgroundColor: "#E8E8E8", py: 1.5 }}>
         <Container maxWidth="lg" sx={{ px: { xs: 2, md: 4 } }}>
           <Box
             sx={{
@@ -290,9 +265,9 @@ const Footer: React.FC = () => {
                   >
                     {t("footer.customerService247")}
                   </Typography>
-                  <Typography sx={{ color: "#333", fontSize: "12px" }}>
-                    0 850 222 44 44
-                  </Typography>
+                  <Typography
+                    sx={{ color: "#333", fontSize: "12px" }}
+                  ></Typography>
                 </Box>
               </Box>
 

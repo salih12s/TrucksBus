@@ -110,7 +110,7 @@ const MembershipSelection: React.FC = () => {
                   </Box>
 
                   <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-                    Normal Üye
+                    Bireysel Üye
                   </Typography>
 
                   <Typography
@@ -157,7 +157,7 @@ const MembershipSelection: React.FC = () => {
                       },
                     }}
                   >
-                    Normal Üye Ol
+                    Bireysel Üye Ol
                   </Button>
                 </CardActions>
               </Card>

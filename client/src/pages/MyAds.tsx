@@ -15,12 +15,7 @@ import {
   Alert,
   CircularProgress,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
-  Divider,
   Tooltip,
   Snackbar,
   useMediaQuery,
@@ -28,12 +23,9 @@ import {
 } from "@mui/material";
 import {
   Visibility as ViewIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
   Refresh as RefreshIcon,
   ArrowBack as ArrowBackIcon,
-  Close as CloseIcon,
-  Add as AddIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { getMyAds, deleteAd, type Ad, type AdImage } from "../api/ads";
@@ -45,7 +37,6 @@ const MyAds: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
     message: string;
@@ -112,12 +103,8 @@ const MyAds: React.FC = () => {
     }
   };
 
-  const handleViewAd = (ad: Ad) => {
-    setSelectedAd(ad);
-  };
-
-  const handleEditAd = (adId: number) => {
-    navigate(`/edit-ad/${adId}`);
+  const handleViewAd = (adId: number) => {
+    navigate(`/ad/${adId}`);
   };
 
   const handleDeleteAd = async (adId: number) => {
@@ -140,16 +127,8 @@ const MyAds: React.FC = () => {
     }
   };
 
-  const handleCloseModal = () => {
-    setSelectedAd(null);
-  };
-
   const handleGoBack = () => {
     navigate(-1);
-  };
-
-  const handleCreateAd = () => {
-    navigate("/create-ad");
   };
 
   const formatPrice = (price: number | undefined) => {
@@ -215,16 +194,6 @@ const MyAds: React.FC = () => {
               justifyContent: { xs: "stretch", md: "flex-end" },
             }}
           >
-            <Button
-              variant="contained"
-              startIcon={!isMobile ? <AddIcon /> : undefined}
-              onClick={handleCreateAd}
-              color="primary"
-              size={isMobile ? "small" : "medium"}
-              sx={{ flex: { xs: 1, md: "none" } }}
-            >
-              {isMobile ? "Yeni" : "Yeni İlan"}
-            </Button>
             <Button
               variant="outlined"
               startIcon={!isMobile ? <RefreshIcon /> : undefined}
@@ -333,18 +302,9 @@ const MyAds: React.FC = () => {
                             <Tooltip title="Görüntüle">
                               <IconButton
                                 size="small"
-                                onClick={() => handleViewAd(ad)}
+                                onClick={() => handleViewAd(ad.id)}
                               >
                                 <ViewIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Düzenle">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleEditAd(ad.id)}
-                                color="primary"
-                              >
-                                <EditIcon />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Sil">
@@ -483,17 +443,10 @@ const MyAds: React.FC = () => {
                         <Box sx={{ display: "flex", gap: 0.5 }}>
                           <IconButton
                             size="small"
-                            onClick={() => handleViewAd(ad)}
+                            onClick={() => handleViewAd(ad.id)}
                             sx={{ color: "#666" }}
                           >
                             <ViewIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEditAd(ad.id)}
-                            color="primary"
-                          >
-                            <EditIcon fontSize="small" />
                           </IconButton>
                           <IconButton
                             size="small"
@@ -515,124 +468,10 @@ const MyAds: React.FC = () => {
                 <Typography variant="body1" color="text.secondary" gutterBottom>
                   Henüz ilanınız bulunmuyor.
                 </Typography>
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleCreateAd}
-                  sx={{ mt: 2 }}
-                >
-                  İlk İlanınızı Oluşturun
-                </Button>
               </Box>
             )}
           </CardContent>
         </Card>
-
-        {/* İlan Detayı Modal'ı */}
-        <Dialog
-          open={!!selectedAd}
-          onClose={handleCloseModal}
-          maxWidth="md"
-          fullWidth
-        >
-          {selectedAd && (
-            <>
-              <DialogTitle
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Typography variant="h6">İlan Detayı</Typography>
-                <IconButton onClick={handleCloseModal}>
-                  <CloseIcon />
-                </IconButton>
-              </DialogTitle>
-              <DialogContent dividers>
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 3,
-                    flexDirection: { xs: "column", md: "row" },
-                  }}
-                >
-                  <Box sx={{ flex: 1 }}>
-                    <img
-                      src={getImageUrl(selectedAd.images)}
-                      alt={selectedAd.title}
-                      style={{
-                        width: "100%",
-                        height: 200,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                      }}
-                    />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" gutterBottom>
-                      {selectedAd.title}
-                    </Typography>
-                    <Typography variant="h5" color="primary" gutterBottom>
-                      {formatPrice(selectedAd.price)}
-                    </Typography>
-                    <Box sx={{ mb: 2 }}>
-                      <Chip
-                        label={getStatusLabel(selectedAd.status)}
-                        color={getStatusColor(selectedAd.status)}
-                        sx={{ mr: 1 }}
-                      />
-                      <Chip
-                        label={selectedAd.category.name}
-                        variant="outlined"
-                      />
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      gutterBottom
-                    >
-                      📍 {selectedAd.location}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      gutterBottom
-                    >
-                      👁️ {selectedAd.viewCount} görüntüleme
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      📞 İletişim bilgisi mevcut değil
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                <Typography variant="subtitle1" gutterBottom>
-                  <strong>Açıklama:</strong>
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {selectedAd.description}
-                </Typography>
-
-                <Typography variant="caption" color="text.secondary">
-                  Oluşturulma:{" "}
-                  {new Date(selectedAd.createdAt).toLocaleString("tr-TR")}
-                </Typography>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleCloseModal}>Kapat</Button>
-                <Button
-                  variant="contained"
-                  onClick={() => handleEditAd(selectedAd.id)}
-                >
-                  Düzenle
-                </Button>
-              </DialogActions>
-            </>
-          )}
-        </Dialog>
 
         <Snackbar
           open={snackbar.open}
