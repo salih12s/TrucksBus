@@ -184,7 +184,7 @@ const OtobusAdForm: React.FC = () => {
 
   const transmissionOptions = ["Manuel", "Otomatik", "Yarı Otomatik"];
 
-  const conditionOptions = ["Sıfır", "2. El", "Hasarlı"];
+  const conditionOptions = ["Sıfır", "2. El"];
 
   const enginePowerOptions = [
     "150-200 HP",
@@ -1097,20 +1097,15 @@ const OtobusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: "bold",
-                      color: "primary.main",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    📝 Temel Bilgiler
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: "bold",
+                    mb: 3,
+                  }}
+                >
+                  Temel Bilgiler
+                </Typography>
 
                 {/* İlan Başlığı */}
                 <Box sx={{ mb: 3 }}>
@@ -1224,20 +1219,15 @@ const OtobusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: "bold",
-                      color: "primary.main",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    📍 Konum Bilgileri
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: "bold",
+                    mb: 3,
+                  }}
+                >
+                  Konum Bilgileri
+                </Typography>
 
                 <Box sx={{ display: "flex", gap: 2 }}>
                   <Autocomplete
@@ -1317,20 +1307,15 @@ const OtobusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: "bold",
-                      color: "primary.main",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    🚍 Araç Bilgileri
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: "bold",
+                    mb: 3,
+                  }}
+                >
+                  Araç Bilgileri
+                </Typography>
 
                 <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
                   <FormControl fullWidth error={!!errors.year}>
@@ -1575,6 +1560,7 @@ const OtobusAdForm: React.FC = () => {
                     display: "flex",
                     flexDirection: { xs: "column", sm: "row" },
                     gap: 2,
+                    mt: 3,
                   }}
                 >
                   <FormControl
@@ -1638,20 +1624,15 @@ const OtobusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: "bold",
-                      color: "primary.main",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    ⭐ Konfor & Güvenlik Özellikleri
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: "bold",
+                    mb: 3,
+                  }}
+                >
+                  Konfor & Güvenlik Özellikleri
+                </Typography>
 
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
                   {availableFeatures.map((feature) => (
@@ -1706,31 +1687,15 @@ const OtobusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <PhotoCamera sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
-                    Fotoğraflar
-                  </Typography>
-                </Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: "bold",
+                    mb: 3,
+                  }}
+                >
+                  Fotoğraflar
+                </Typography>
 
                 <Typography
                   variant="body2"
@@ -2084,45 +2049,23 @@ const OtobusAdForm: React.FC = () => {
               }}
             >
               <CardContent sx={{ p: 4 }}>
-                <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: "bold",
+                    mb: 1,
+                  }}
                 >
-                  <Box
-                    sx={{
-                      width: 50,
-                      height: 50,
-                      borderRadius: "50%",
-                      background:
-                        "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0 4px 15px rgba(255, 107, 53, 0.3)",
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontSize: "1.5rem",
-                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
-                      }}
-                    >
-                      🎬
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="h5"
-                      fontWeight="bold"
-                      sx={{ color: "#1e293b" }}
-                    >
-                      Videolar
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Otobüsünüzün video tanıtımını ekleyerek daha fazla ilgi
-                      çekin (Opsiyonel - Max 3 video, 100MB/video)
-                    </Typography>
-                  </Box>
-                </Box>
+                  Videolar
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 3 }}
+                >
+                  Otobüsünüzün video tanıtımını ekleyerek daha fazla ilgi çekin
+                  (Opsiyonel - Max 3 video, 100MB/video)
+                </Typography>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                   {/* Video Yükleme */}
@@ -2154,7 +2097,7 @@ const OtobusAdForm: React.FC = () => {
                         color="text.secondary"
                         sx={{ mb: 2 }}
                       >
-                        🎬 Videolarınızı buraya sürükleyip bırakın veya seçin
+                        Videolarınızı buraya sürükleyip bırakın veya seçin
                       </Typography>
                       <label htmlFor="video-upload">
                         <Button
@@ -2360,7 +2303,7 @@ const OtobusAdForm: React.FC = () => {
                   },
                 }}
               >
-                {loading ? <CircularProgress size={28} /> : "🚀 İlanı Yayınla"}
+                {loading ? <CircularProgress size={28} /> : "İlanı Yayınla"}
               </Button>
             </Box>
           </Box>
@@ -2532,11 +2475,14 @@ const OtobusAdForm: React.FC = () => {
             }}
           />
           <Typography variant="h5" component="h2" gutterBottom>
-            🎉 İlanınız Başarıyla Yayınlandı!
+            İlan Başarıyla Gönderildi!
           </Typography>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            İlanınız henüz yayında değil! Admin onayı bekliyor. Onaylandıktan
+            sonra anasayfada görünecektir.
+          </Alert>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Otobüs ilanınız başarıyla oluşturuldu ve yayına alındı. İlanınızı
-            ana sayfada görebilir ve yönetebilirsiniz.
+            İlanınızın durumunu "İlanlarım" sayfasından takip edebilirsiniz.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
@@ -2558,7 +2504,7 @@ const OtobusAdForm: React.FC = () => {
               },
             }}
           >
-            🏠 Ana Sayfaya Git
+            Ana Sayfaya Git
           </Button>
         </DialogActions>
       </Dialog>
