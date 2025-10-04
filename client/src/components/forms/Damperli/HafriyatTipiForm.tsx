@@ -136,9 +136,9 @@ const HafriyatTipiForm: React.FC = () => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
-  const [loadingBrands, setLoadingBrands] = useState(false);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [loadingVariants, setLoadingVariants] = useState(false);
+  const [, setLoadingBrands] = useState(false);
+  const [, setLoadingModels] = useState(false);
+  const [, setLoadingVariants] = useState(false);
 
   // Success modal states
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -493,23 +493,54 @@ const HafriyatTipiForm: React.FC = () => {
       submitData.append("description", formData.description);
       submitData.append("productionYear", formData.year.toString());
 
-      // Brand/Model/Variant bilgileri
-      if (formData.categoryId) {
-        submitData.append("categoryId", formData.categoryId);
-        console.log("✅ CategoryId added:", formData.categoryId);
+      // Category/Brand/Model/Variant ID'lerini ekle
+      submitData.append("categoryId", formData.categoryId);
+      submitData.append("brandId", formData.brandId);
+      submitData.append("modelId", formData.modelId);
+      submitData.append("variantId", formData.variantId || "");
+
+      // Brand/Model/Variant name'lerini ekle (ensureBrandModelVariant için gerekli)
+      const selectedBrand = brands.find(
+        (b) => b.id.toString() === formData.brandId
+      );
+      const selectedModel = models.find(
+        (m) => m.id.toString() === formData.modelId
+      );
+      const selectedVariant = variants.find(
+        (v) => v.id.toString() === formData.variantId
+      );
+
+      if (selectedBrand) {
+        submitData.append("brandName", selectedBrand.name);
+        submitData.append("brandSlug", selectedBrand.slug);
       }
-      if (formData.brandId) {
-        submitData.append("brandId", formData.brandId);
-        console.log("✅ BrandId added:", formData.brandId);
+      if (selectedModel) {
+        submitData.append("modelName", selectedModel.name);
+        submitData.append("modelSlug", selectedModel.slug);
       }
-      if (formData.modelId) {
-        submitData.append("modelId", formData.modelId);
-        console.log("✅ ModelId added:", formData.modelId);
+      if (selectedVariant) {
+        submitData.append("variantName", selectedVariant.name);
+        submitData.append("variantSlug", selectedVariant.slug);
       }
-      if (formData.variantId) {
-        submitData.append("variantId", formData.variantId);
-        console.log("✅ VariantId added:", formData.variantId);
-      }
+
+      // URL params'tan gelen slug'ları da ekle
+      if (categorySlug) submitData.append("categorySlug", categorySlug);
+      if (brandSlug && !selectedBrand)
+        submitData.append("brandSlug", brandSlug);
+      if (modelSlug && !selectedModel)
+        submitData.append("modelSlug", modelSlug);
+      if (variantSlug && !selectedVariant)
+        submitData.append("variantSlug", variantSlug);
+
+      console.log("✅ Dorse Category/Brand/Model/Variant IDs:", {
+        categoryId: formData.categoryId,
+        brandId: formData.brandId,
+        modelId: formData.modelId,
+        variantId: formData.variantId,
+        brandName: selectedBrand?.name,
+        modelName: selectedModel?.name,
+        variantName: selectedVariant?.name,
+      });
 
       // Fiyatı parse ederek ekle
       const parsedPrice = parseFormattedNumber(formData.price);
@@ -517,8 +548,16 @@ const HafriyatTipiForm: React.FC = () => {
         submitData.append("price", parsedPrice);
       }
 
-      submitData.append("category", "dorse");
-      submitData.append("subcategory", "damperli-hafriyat");
+      // Seller bilgileri (backend'in beklediği field name'ler)
+      if (formData.sellerName)
+        submitData.append("sellerName", formData.sellerName);
+      if (formData.sellerPhone)
+        submitData.append("phone", formData.sellerPhone);
+      if (formData.sellerEmail)
+        submitData.append("email", formData.sellerEmail);
+
+      // Yıl bilgisi
+      submitData.append("year", formData.year.toString());
 
       // Hafriyat dorse özel bilgileri
       submitData.append("genislik", formData.genislik);
@@ -531,14 +570,6 @@ const HafriyatTipiForm: React.FC = () => {
       submitData.append("districtId", formData.districtId);
       submitData.append("city", formData.city || "");
       submitData.append("district", formData.district || "");
-
-      // Seller bilgileri
-      if (formData.sellerName)
-        submitData.append("seller_name", formData.sellerName);
-      if (formData.sellerPhone)
-        submitData.append("seller_phone", formData.sellerPhone);
-      if (formData.sellerEmail)
-        submitData.append("seller_email", formData.sellerEmail);
 
       // Ekstra
       submitData.append("warranty", formData.warranty ? "evet" : "hayir");
@@ -595,7 +626,7 @@ const HafriyatTipiForm: React.FC = () => {
         console.log("ℹ️ No videos to add");
       }
 
-      const response = await apiClient.post("/listings", submitData, {
+      const response = await apiClient.post("/ads/dorse", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -623,38 +654,13 @@ const HafriyatTipiForm: React.FC = () => {
   // Modal handler fonksiyonları
   const handleCloseSuccessModal = () => {
     setShowSuccessModal(false);
+    navigate("/"); // Anasayfaya yönlendir
   };
 
   return (
     <>
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            🚛 Hafriyat Tipi Damperli Dorse İlanı Ver
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ fontWeight: 500 }}
-          >
-            {categorySlug} - {brandSlug} - {modelSlug} - {variantSlug}
-          </Typography>
-        </Box>
-
         <Paper elevation={3} sx={{ p: 4 }}>
           <form
             onSubmit={(e) => {
@@ -664,73 +670,10 @@ const HafriyatTipiForm: React.FC = () => {
           >
             {/* Temel Bilgiler */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📋 Temel Bilgiler
+              Temel Bilgiler
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
-              {/* Brand/Model/Variant Selection */}
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr 1fr",
-                  gap: 2,
-                }}
-              >
-                <FormControl fullWidth required>
-                  <InputLabel>Marka</InputLabel>
-                  <Select
-                    value={formData.brandId}
-                    label="Marka"
-                    onChange={(e) =>
-                      handleInputChange("brandId", e.target.value)
-                    }
-                    disabled={loadingBrands || !!brandSlug}
-                  >
-                    {brands.map((brand) => (
-                      <MenuItem key={brand.id} value={brand.id.toString()}>
-                        {brand.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth required disabled={!formData.brandId}>
-                  <InputLabel>Model</InputLabel>
-                  <Select
-                    value={formData.modelId}
-                    label="Model"
-                    onChange={(e) =>
-                      handleInputChange("modelId", e.target.value)
-                    }
-                    disabled={loadingModels || !!modelSlug}
-                  >
-                    {models.map((model) => (
-                      <MenuItem key={model.id} value={model.id.toString()}>
-                        {model.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth disabled={!formData.modelId}>
-                  <InputLabel>Variant</InputLabel>
-                  <Select
-                    value={formData.variantId}
-                    label="Variant"
-                    onChange={(e) =>
-                      handleInputChange("variantId", e.target.value)
-                    }
-                    disabled={loadingVariants || !!variantSlug}
-                  >
-                    {variants.map((variant) => (
-                      <MenuItem key={variant.id} value={variant.id.toString()}>
-                        {variant.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-
               <TextField
                 fullWidth
                 label="İlan Başlığı *"
@@ -756,7 +699,6 @@ const HafriyatTipiForm: React.FC = () => {
               {/* Video Upload Section */}
               <Box sx={{ mb: 3 }}>
                 <Typography variant="h6" sx={{ mb: 2 }}>
-                  <VideoLibraryIcon sx={{ mr: 1, verticalAlign: "middle" }} />
                   Video Ekle
                 </Typography>
                 <Typography
@@ -872,7 +814,7 @@ const HafriyatTipiForm: React.FC = () => {
 
             {/* Teknik Özellikler */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              ⚙️ Teknik Özellikler
+              Teknik Özellikler
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
@@ -881,23 +823,23 @@ const HafriyatTipiForm: React.FC = () => {
               >
                 <TextField
                   fullWidth
-                  type="number"
+                  type="text"
                   label="Genişlik (metre) *"
                   value={formData.genislik}
                   onChange={(e) =>
                     handleInputChange("genislik", e.target.value)
                   }
-                  inputProps={{ step: "0.1", min: "0" }}
+                  placeholder="Örn: 2.45"
                   required
                 />
 
                 <TextField
                   fullWidth
-                  type="number"
+                  type="text"
                   label="Uzunluk (metre) *"
                   value={formData.uzunluk}
                   onChange={(e) => handleInputChange("uzunluk", e.target.value)}
-                  inputProps={{ step: "0.1", min: "0" }}
+                  placeholder="Örn: 13.60"
                   required
                 />
               </Box>
@@ -939,7 +881,7 @@ const HafriyatTipiForm: React.FC = () => {
 
             {/* Konum Bilgileri */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📍 Konum Bilgileri
+              Konum Bilgileri
             </Typography>
 
             <Box
@@ -988,7 +930,7 @@ const HafriyatTipiForm: React.FC = () => {
 
             {/* Ek Seçenekler */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              ⚡ Ek Seçenekler
+              Ek Seçenekler
             </Typography>
 
             <Box
@@ -999,20 +941,6 @@ const HafriyatTipiForm: React.FC = () => {
                 mb: 4,
               }}
             >
-              <FormControl fullWidth>
-                <InputLabel>Garanti</InputLabel>
-                <Select
-                  value={formData.warranty}
-                  onChange={(e) =>
-                    handleInputChange("warranty", e.target.value)
-                  }
-                  label="Garanti"
-                >
-                  <MenuItem value="evet">Evet</MenuItem>
-                  <MenuItem value="hayir">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
               <FormControl fullWidth>
                 <InputLabel>Pazarlık</InputLabel>
                 <Select
@@ -1046,7 +974,7 @@ const HafriyatTipiForm: React.FC = () => {
 
             {/* Fotoğraflar */}
             <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📸 Fotoğraflar
+              Fotoğraflar
             </Typography>
 
             {/* Vitrin Fotoğrafı */}
@@ -1056,7 +984,7 @@ const HafriyatTipiForm: React.FC = () => {
                   variant="h6"
                   sx={{ mb: 2, display: "flex", alignItems: "center" }}
                 >
-                  ⭐ Vitrin Fotoğrafı
+                  Vitrin Fotoğrafı
                   <Chip
                     label="Zorunlu"
                     size="small"
@@ -1131,7 +1059,7 @@ const HafriyatTipiForm: React.FC = () => {
                   variant="h6"
                   sx={{ mb: 2, display: "flex", alignItems: "center" }}
                 >
-                  📷 Diğer Fotoğraflar
+                  Diğer Fotoğraflar
                   <Chip
                     label={`${formData.photos.length}/15`}
                     size="small"
@@ -1230,18 +1158,6 @@ const HafriyatTipiForm: React.FC = () => {
             </Card>
 
             {/* Detaylı Bilgi */}
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Detaylı Bilgi"
-              value={formData.detailedInfo}
-              onChange={(e) =>
-                handleInputChange("detailedInfo", e.target.value)
-              }
-              placeholder="Dorseniz hakkında ek bilgiler..."
-              sx={{ mb: 4 }}
-            />
 
             {/* Submit Button */}
             <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
@@ -1279,12 +1195,21 @@ const HafriyatTipiForm: React.FC = () => {
         <Dialog open={showSuccessModal} onClose={handleCloseSuccessModal}>
           <DialogTitle sx={{ textAlign: "center" }}>
             <CheckCircle sx={{ fontSize: 60, color: "green", mb: 2 }} />
-            <Typography variant="h4">Başarılı!</Typography>
+            <Typography variant="h4">İlan Başarıyla Gönderildi!</Typography>
           </DialogTitle>
           <DialogContent>
-            <Typography variant="body1" sx={{ textAlign: "center" }}>
-              Hafriyat Tipi Damperli Dorse ilanınız başarıyla oluşturuldu. Admin
-              onayından sonra yayınlanacaktır.
+            <Typography variant="body1" sx={{ textAlign: "center", mb: 2 }}>
+              İlanınız başarıyla oluşturuldu.
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: "center",
+                color: "warning.main",
+                fontWeight: "bold",
+              }}
+            >
+              ⚠️ İlanınız henüz yayında değil! Admin onayı bekliyor.
             </Typography>
           </DialogContent>
           <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
@@ -1296,7 +1221,7 @@ const HafriyatTipiForm: React.FC = () => {
                 background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
               }}
             >
-              Tamam
+              Anasayfaya Dön
             </Button>
           </DialogActions>
         </Dialog>

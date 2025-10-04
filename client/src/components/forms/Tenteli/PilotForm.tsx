@@ -37,13 +37,10 @@ import {
   CloudUpload,
   Close,
   Person,
-  Phone,
-  Email,
   LocationOn,
   AttachMoney,
   Umbrella,
   DateRange,
-  Straighten,
   VideoLibrary,
   PlayArrow,
 } from "@mui/icons-material";
@@ -167,9 +164,9 @@ const PilotForm: React.FC = () => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
-  const [loadingBrands, setLoadingBrands] = useState(false);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [loadingVariants, setLoadingVariants] = useState(false);
+  const [, setLoadingBrands] = useState(false);
+  const [, setLoadingModels] = useState(false);
+  const [, setLoadingVariants] = useState(false);
 
   const [formData, setFormData] = useState<PilotFormData>({
     title: "",
@@ -432,19 +429,15 @@ const PilotForm: React.FC = () => {
     }
   };
 
-  const formatPhoneNumber = (value: string) => {
+  const formatPrice = (value: string) => {
     const numbers = value.replace(/\D/g, "");
-    if (numbers.length <= 11) {
-      return numbers
-        .replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, "$1 $2 $3 $4")
-        .trim();
-    }
-    return value;
+    if (!numbers) return "";
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
   };
 
-  const handlePhoneChange = (value: string) => {
-    const formattedPhone = formatPhoneNumber(value);
-    setFormData((prev) => ({ ...prev, sellerPhone: formattedPhone }));
+  const handlePriceChange = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    setFormData((prev) => ({ ...prev, price: numbers }));
   };
 
   const handleInputChange = (
@@ -556,27 +549,48 @@ const PilotForm: React.FC = () => {
       submitData.append("description", formData.description);
       submitData.append("productionYear", formData.year.toString());
 
-      // Brand/Model/Variant bilgileri
-      if (formData.categoryId) {
-        submitData.append("categoryId", formData.categoryId);
-        console.log("✅ CategoryId added:", formData.categoryId);
+      // Category/Brand/Model/Variant ID'lerini ekle
+      submitData.append("categoryId", formData.categoryId);
+      submitData.append("brandId", formData.brandId);
+      submitData.append("modelId", formData.modelId);
+      submitData.append("variantId", formData.variantId || "");
+
+      // Brand/Model/Variant name'lerini ekle (ensureBrandModelVariant için gerekli)
+      const selectedBrand = brands.find(
+        (b) => b.id.toString() === formData.brandId
+      );
+      const selectedModel = models.find(
+        (m) => m.id.toString() === formData.modelId
+      );
+      const selectedVariant = variants.find(
+        (v) => v.id.toString() === formData.variantId
+      );
+
+      if (selectedBrand) {
+        submitData.append("brandName", selectedBrand.name);
+        submitData.append("brandSlug", selectedBrand.slug);
       }
-      if (formData.brandId) {
-        submitData.append("brandId", formData.brandId);
-        console.log("✅ BrandId added:", formData.brandId);
+      if (selectedModel) {
+        submitData.append("modelName", selectedModel.name);
+        submitData.append("modelSlug", selectedModel.slug);
       }
-      if (formData.modelId) {
-        submitData.append("modelId", formData.modelId);
-        console.log("✅ ModelId added:", formData.modelId);
-      }
-      if (formData.variantId) {
-        submitData.append("variantId", formData.variantId);
-        console.log("✅ VariantId added:", formData.variantId);
+      if (selectedVariant) {
+        submitData.append("variantName", selectedVariant.name);
+        submitData.append("variantSlug", selectedVariant.slug);
       }
 
+      // URL params'tan gelen slug'ları da ekle
+      if (brandSlug && !selectedBrand)
+        submitData.append("brandSlug", brandSlug);
+      if (modelSlug && !selectedModel)
+        submitData.append("modelSlug", modelSlug);
+      if (variantSlug && !selectedVariant)
+        submitData.append("variantSlug", variantSlug);
+
+      // Year field'ı ekle
+      submitData.append("year", formData.year.toString());
+
       submitData.append("price", formData.price);
-      submitData.append("category", "dorse");
-      submitData.append("subcategory", "tenteli-pilot");
 
       // Pilot özel bilgileri
       submitData.append("uzunluk", formData.uzunluk.toString());
@@ -589,13 +603,13 @@ const PilotForm: React.FC = () => {
       submitData.append("city", formData.city || "");
       submitData.append("district", formData.district || "");
 
-      // İletişim bilgileri
+      // Seller bilgileri (backend'in beklediği field name'ler)
       if (formData.sellerName)
-        submitData.append("seller_name", formData.sellerName);
+        submitData.append("sellerName", formData.sellerName);
       if (formData.sellerPhone)
-        submitData.append("seller_phone", formData.sellerPhone);
+        submitData.append("phone", formData.sellerPhone);
       if (formData.sellerEmail)
-        submitData.append("seller_email", formData.sellerEmail);
+        submitData.append("email", formData.sellerEmail);
 
       // Ekstra özellikler
       submitData.append("warranty", formData.warranty ? "evet" : "hayir");
@@ -650,7 +664,7 @@ const PilotForm: React.FC = () => {
         console.log("ℹ️ No videos to add");
       }
 
-      const response = await apiClient.post("/listings", submitData, {
+      const response = await apiClient.post("/ads/dorse", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -660,19 +674,21 @@ const PilotForm: React.FC = () => {
 
       const responseData = response.data as {
         success?: boolean;
+        id?: string;
         adId?: string;
         message?: string;
       };
 
-      if (responseData?.success) {
-        console.log("✅ PilotForm submission successful!");
-        if (responseData.adId) {
-          setCreatedAdId(responseData.adId);
-        }
-        setShowSuccessModal(true);
-      } else {
-        throw new Error(responseData?.message || "İlan oluşturulamadı");
+      // Backend'den başarılı yanıt geldi (200 status code)
+      console.log("✅ PilotForm submission successful!");
+
+      // İlan ID'sini kaydet (id veya adId field'ından)
+      const adId = responseData.id || responseData.adId;
+      if (adId) {
+        setCreatedAdId(adId);
       }
+
+      setShowSuccessModal(true);
     } catch (err: unknown) {
       console.error("❌ PilotForm submission error:", err);
       const error = err as {
@@ -692,6 +708,7 @@ const PilotForm: React.FC = () => {
   // Modal handler fonksiyonları
   const handleCloseSuccessModal = () => {
     setShowSuccessModal(false);
+    navigate("/"); // Anasayfaya yönlendir
   };
 
   const handleViewAd = () => {
@@ -720,194 +737,6 @@ const PilotForm: React.FC = () => {
               <Umbrella color="primary" />
               Pilot Tenteli Bilgileri
             </Typography>
-
-            {/* Brand/Model/Variant Selection */}
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: 2,
-              }}
-            >
-              <Autocomplete
-                options={brands}
-                getOptionLabel={(option) => option.name}
-                value={
-                  brands.find((b) => b.id.toString() === formData.brandId) ||
-                  null
-                }
-                onChange={(_, newValue) => {
-                  if (!variantSlug) {
-                    // Sadece URL'den variant gelmiyorsa değiştirilebilir
-                    const brandId = newValue?.id.toString() || "";
-                    setFormData((prev) => ({
-                      ...prev,
-                      brandId,
-                      modelId: "",
-                      variantId: "",
-                    }));
-                    // Handle brand change - load models
-                    if (brandId) {
-                      setLoadingModels(true);
-                      setModels([]);
-                      setVariants([]);
-                      apiClient
-                        .get(`/brands/${brandId}/models`)
-                        .then((res) => {
-                          const modelData = res.data as Model[];
-                          setModels(modelData);
-                          setLoadingModels(false);
-                          console.log(
-                            `✅ ${modelData.length} model yüklendi:`,
-                            modelData.map((m) => m.name)
-                          );
-                        })
-                        .catch((err) => {
-                          console.error("❌ Model yükleme hatası:", err);
-                          setLoadingModels(false);
-                        });
-                    } else {
-                      setModels([]);
-                      setVariants([]);
-                    }
-                  }
-                }}
-                disabled={!!variantSlug} // URL'den variant geliyorsa disable
-                loading={loadingBrands}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Marka"
-                    required
-                    helperText={
-                      variantSlug
-                        ? "Form önceden seçilmiş variant ile dolduruldu"
-                        : ""
-                    }
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingBrands ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-
-              <Autocomplete
-                options={models}
-                getOptionLabel={(option) => option.name}
-                value={
-                  models.find((m) => m.id.toString() === formData.modelId) ||
-                  null
-                }
-                onChange={(_, newValue) => {
-                  if (!variantSlug) {
-                    const modelId = newValue?.id.toString() || "";
-                    setFormData((prev) => ({
-                      ...prev,
-                      modelId,
-                      variantId: "",
-                    }));
-                    // Handle model change - load variants
-                    if (modelId) {
-                      setLoadingVariants(true);
-                      setVariants([]);
-                      apiClient
-                        .get(`/models/${modelId}/variants`)
-                        .then((res) => {
-                          const variantData = res.data as Variant[];
-                          setVariants(variantData);
-                          setLoadingVariants(false);
-                          console.log(
-                            `✅ ${variantData.length} variant yüklendi:`,
-                            variantData.map((v) => v.name)
-                          );
-                        })
-                        .catch((err) => {
-                          console.error("❌ Variant yükleme hatası:", err);
-                          setLoadingVariants(false);
-                        });
-                    } else {
-                      setVariants([]);
-                    }
-                  }
-                }}
-                loading={loadingModels}
-                disabled={!!variantSlug || !formData.brandId}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Model"
-                    required
-                    helperText={
-                      variantSlug
-                        ? "Form önceden seçilmiş variant ile dolduruldu"
-                        : ""
-                    }
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingModels ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-
-              <Autocomplete
-                options={variants}
-                getOptionLabel={(option) => option.name}
-                value={
-                  variants.find(
-                    (v) => v.id.toString() === formData.variantId
-                  ) || null
-                }
-                onChange={(_, newValue) => {
-                  if (!variantSlug) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      variantId: newValue?.id.toString() || "",
-                    }));
-                  }
-                }}
-                loading={loadingVariants}
-                disabled={!!variantSlug || !formData.modelId}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Varyant"
-                    required
-                    helperText={
-                      variantSlug
-                        ? "Form önceden seçilmiş variant ile dolduruldu"
-                        : ""
-                    }
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingVariants ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-            </Box>
 
             <TextField
               fullWidth
@@ -956,24 +785,11 @@ const PilotForm: React.FC = () => {
 
               <TextField
                 fullWidth
-                type="number"
-                label="Uzunluk"
+                type="text"
+                label="Uzunluk (m)"
                 value={formData.uzunluk}
-                onChange={(e) =>
-                  handleInputChange("uzunluk", parseFloat(e.target.value))
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Straighten />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">metre</InputAdornment>
-                  ),
-                }}
-                inputProps={{ step: 0.1, min: 0 }}
-                placeholder="Örn: 13.6"
+                onChange={(e) => handleInputChange("uzunluk", e.target.value)}
+                placeholder="Örn: 13.60"
                 required
               />
             </Box>
@@ -1254,59 +1070,6 @@ const PilotForm: React.FC = () => {
               İletişim & Fiyat Bilgileri
             </Typography>
 
-            <TextField
-              fullWidth
-              label="Ad Soyad"
-              value={formData.sellerName}
-              onChange={(e) => handleInputChange("sellerName", e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Person />
-                  </InputAdornment>
-                ),
-              }}
-              required
-            />
-
-            <Box
-              sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
-            >
-              <TextField
-                fullWidth
-                label="Telefon"
-                value={formData.sellerPhone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                placeholder="0xxx xxx xx xx"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-
-              <TextField
-                fullWidth
-                label="E-posta"
-                type="email"
-                value={formData.sellerEmail}
-                onChange={(e) =>
-                  handleInputChange("sellerEmail", e.target.value)
-                }
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email />
-                    </InputAdornment>
-                  ),
-                }}
-                required
-              />
-            </Box>
-
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
             >
@@ -1391,8 +1154,8 @@ const PilotForm: React.FC = () => {
             <TextField
               fullWidth
               label="Fiyat"
-              value={formData.price}
-              onChange={(e) => handleInputChange("price", e.target.value)}
+              value={formatPrice(formData.price)}
+              onChange={(e) => handlePriceChange(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -1403,22 +1166,11 @@ const PilotForm: React.FC = () => {
                   <InputAdornment position="end">TL</InputAdornment>
                 ),
               }}
-              placeholder="150000"
+              placeholder="150.000"
               required
             />
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.warranty}
-                    onChange={(e) =>
-                      handleInputChange("warranty", e.target.checked)
-                    }
-                  />
-                }
-                label="Garanti var"
-              />
               <FormControlLabel
                 control={
                   <Checkbox
@@ -1466,7 +1218,7 @@ const PilotForm: React.FC = () => {
               WebkitTextFillColor: "transparent",
             }}
           >
-            ✈️ Pilot Tenteli İlan Ver
+            Pilot Tenteli İlan Ver
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Pilot tenteli dorsenizi kolayca satışa çıkarın
@@ -1564,8 +1316,8 @@ const PilotForm: React.FC = () => {
       <SuccessModal
         open={showSuccessModal}
         onClose={handleCloseSuccessModal}
-        title="✈️ İlan Başarıyla Yayınlandı!"
-        message="Pilot tenteli dorse ilanınız başarıyla oluşturuldu ve yayına alındı."
+        title="İlan Başarıyla Gönderildi!"
+        message="İlanınız başarıyla oluşturuldu. ⚠️ İlanınız henüz yayında değil! Admin onayı bekliyor."
         adId={createdAdId || undefined}
         onViewAd={createdAdId ? handleViewAd : undefined}
         onGoHome={handleGoHome}

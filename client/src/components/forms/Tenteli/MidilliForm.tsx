@@ -35,7 +35,6 @@ import {
   AttachMoney,
   Umbrella,
   DateRange,
-  Straighten,
   VideoLibrary,
   PlayArrow,
 } from "@mui/icons-material";
@@ -158,9 +157,9 @@ const MidilliForm: React.FC = () => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
-  const [loadingBrands, setLoadingBrands] = useState(false);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [loadingVariants, setLoadingVariants] = useState(false);
+  const [, setLoadingBrands] = useState(false);
+  const [, setLoadingModels] = useState(false);
+  const [, setLoadingVariants] = useState(false);
 
   // Form data state
   const [formData, setFormData] = useState<MidilliFormData>({
@@ -650,6 +649,17 @@ const MidilliForm: React.FC = () => {
     return value.replace(/\D/g, "");
   };
 
+  const formatPrice = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const handlePriceChange = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    setFormData((prev) => ({ ...prev, price: numbers }));
+  };
+
   // Form gönderimi
   const handleSubmit = async () => {
     console.log("🚀 MidilliForm handleSubmit başladı");
@@ -663,23 +673,56 @@ const MidilliForm: React.FC = () => {
       submitData.append("description", formData.description);
       submitData.append("productionYear", formData.year.toString());
 
-      // Brand/Model/Variant bilgileri
-      if (formData.categoryId) {
-        submitData.append("categoryId", formData.categoryId);
-        console.log("✅ CategoryId added:", formData.categoryId);
+      // Category/Brand/Model/Variant ID'lerini ekle
+      submitData.append("categoryId", formData.categoryId);
+      submitData.append("brandId", formData.brandId);
+      submitData.append("modelId", formData.modelId);
+      submitData.append("variantId", formData.variantId || "");
+
+      // Brand/Model/Variant name'lerini ekle (ensureBrandModelVariant için gerekli)
+      const selectedBrand = brands.find(
+        (b) => b.id.toString() === formData.brandId
+      );
+      const selectedModel = models.find(
+        (m) => m.id.toString() === formData.modelId
+      );
+      const selectedVariant = variants.find(
+        (v) => v.id.toString() === formData.variantId
+      );
+
+      if (selectedBrand) {
+        submitData.append("brandName", selectedBrand.name);
+        submitData.append("brandSlug", selectedBrand.slug);
       }
-      if (formData.brandId) {
-        submitData.append("brandId", formData.brandId);
-        console.log("✅ BrandId added:", formData.brandId);
+      if (selectedModel) {
+        submitData.append("modelName", selectedModel.name);
+        submitData.append("modelSlug", selectedModel.slug);
       }
-      if (formData.modelId) {
-        submitData.append("modelId", formData.modelId);
-        console.log("✅ ModelId added:", formData.modelId);
+      if (selectedVariant) {
+        submitData.append("variantName", selectedVariant.name);
+        submitData.append("variantSlug", selectedVariant.slug);
       }
-      if (formData.variantId) {
-        submitData.append("variantId", formData.variantId);
-        console.log("✅ VariantId added:", formData.variantId);
-      }
+
+      // URL params'tan gelen slug'ları da ekle
+      if (brandSlug && !selectedBrand)
+        submitData.append("brandSlug", brandSlug);
+      if (modelSlug && !selectedModel)
+        submitData.append("modelSlug", modelSlug);
+      if (variantSlug && !selectedVariant)
+        submitData.append("variantSlug", variantSlug);
+
+      // Year field'ı ekle
+      submitData.append("year", formData.year.toString());
+
+      console.log("✅ Dorse Category/Brand/Model/Variant IDs:", {
+        categoryId: formData.categoryId,
+        brandId: formData.brandId,
+        modelId: formData.modelId,
+        variantId: formData.variantId,
+        brandName: selectedBrand?.name,
+        modelName: selectedModel?.name,
+        variantName: selectedVariant?.name,
+      });
 
       // Fiyatı parse ederek ekle
       const parsedPrice = parseFormattedNumber(formData.price);
@@ -687,8 +730,13 @@ const MidilliForm: React.FC = () => {
         submitData.append("price", parsedPrice);
       }
 
-      submitData.append("category", "dorse");
-      submitData.append("subcategory", "tenteli-midilli");
+      // Seller bilgileri (backend'in beklediği field name'ler)
+      if (formData.sellerName)
+        submitData.append("sellerName", formData.sellerName);
+      if (formData.sellerPhone)
+        submitData.append("phone", formData.sellerPhone);
+      if (formData.sellerEmail)
+        submitData.append("email", formData.sellerEmail);
 
       // Tenteli midilli özel bilgileri
       submitData.append("uzunluk", formData.uzunluk.toString());
@@ -700,14 +748,6 @@ const MidilliForm: React.FC = () => {
       submitData.append("districtId", formData.districtId);
       submitData.append("city", formData.city || "");
       submitData.append("district", formData.district || "");
-
-      // Seller bilgileri
-      if (formData.sellerName)
-        submitData.append("seller_name", formData.sellerName);
-      if (formData.sellerPhone)
-        submitData.append("seller_phone", formData.sellerPhone);
-      if (formData.sellerEmail)
-        submitData.append("seller_email", formData.sellerEmail);
 
       // Ekstra
       submitData.append("warranty", formData.warranty ? "evet" : "hayir");
@@ -762,7 +802,7 @@ const MidilliForm: React.FC = () => {
         console.log("ℹ️ No videos to add");
       }
 
-      const response = await apiClient.post("/listings", submitData, {
+      const response = await apiClient.post("/ads/dorse", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -800,6 +840,7 @@ const MidilliForm: React.FC = () => {
   // Modal handler fonksiyonları
   const handleCloseSuccessModal = () => {
     setShowSuccessModal(false);
+    navigate("/"); // Anasayfaya yönlendir
   };
 
   const handleViewAd = () => {
@@ -828,194 +869,6 @@ const MidilliForm: React.FC = () => {
               <Umbrella color="primary" />
               Midilli Tenteli Bilgileri
             </Typography>
-
-            {/* Brand/Model/Variant Selection */}
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: 2,
-              }}
-            >
-              <Autocomplete
-                options={brands}
-                getOptionLabel={(option) => option.name}
-                value={
-                  brands.find((b) => b.id.toString() === formData.brandId) ||
-                  null
-                }
-                onChange={(_, newValue) => {
-                  if (!variantSlug) {
-                    // Sadece URL'den variant gelmiyorsa değiştirilebilir
-                    const brandId = newValue?.id.toString() || "";
-                    setFormData((prev) => ({
-                      ...prev,
-                      brandId,
-                      modelId: "",
-                      variantId: "",
-                    }));
-                    // Handle brand change - load models
-                    if (brandId) {
-                      setLoadingModels(true);
-                      setModels([]);
-                      setVariants([]);
-                      apiClient
-                        .get(`/brands/${brandId}/models`)
-                        .then((res) => {
-                          const modelData = res.data as Model[];
-                          setModels(modelData);
-                          setLoadingModels(false);
-                          console.log(
-                            `✅ ${modelData.length} model yüklendi:`,
-                            modelData.map((m) => m.name)
-                          );
-                        })
-                        .catch((err) => {
-                          console.error("❌ Model yükleme hatası:", err);
-                          setLoadingModels(false);
-                        });
-                    } else {
-                      setModels([]);
-                      setVariants([]);
-                    }
-                  }
-                }}
-                disabled={!!variantSlug} // URL'den variant geliyorsa disable
-                loading={loadingBrands}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Marka"
-                    required
-                    helperText={
-                      variantSlug
-                        ? "Form önceden seçilmiş variant ile dolduruldu"
-                        : ""
-                    }
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingBrands ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-
-              <Autocomplete
-                options={models}
-                getOptionLabel={(option) => option.name}
-                value={
-                  models.find((m) => m.id.toString() === formData.modelId) ||
-                  null
-                }
-                onChange={(_, newValue) => {
-                  if (!variantSlug) {
-                    const modelId = newValue?.id.toString() || "";
-                    setFormData((prev) => ({
-                      ...prev,
-                      modelId,
-                      variantId: "",
-                    }));
-                    // Handle model change - load variants
-                    if (modelId) {
-                      setLoadingVariants(true);
-                      setVariants([]);
-                      apiClient
-                        .get(`/models/${modelId}/variants`)
-                        .then((res) => {
-                          const variantData = res.data as Variant[];
-                          setVariants(variantData);
-                          setLoadingVariants(false);
-                          console.log(
-                            `✅ ${variantData.length} variant yüklendi:`,
-                            variantData.map((v) => v.name)
-                          );
-                        })
-                        .catch((err) => {
-                          console.error("❌ Variant yükleme hatası:", err);
-                          setLoadingVariants(false);
-                        });
-                    } else {
-                      setVariants([]);
-                    }
-                  }
-                }}
-                loading={loadingModels}
-                disabled={!!variantSlug || !formData.brandId}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Model"
-                    required
-                    helperText={
-                      variantSlug
-                        ? "Form önceden seçilmiş variant ile dolduruldu"
-                        : ""
-                    }
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingModels ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-
-              <Autocomplete
-                options={variants}
-                getOptionLabel={(option) => option.name}
-                value={
-                  variants.find(
-                    (v) => v.id.toString() === formData.variantId
-                  ) || null
-                }
-                onChange={(_, newValue) => {
-                  if (!variantSlug) {
-                    setFormData((prev) => ({
-                      ...prev,
-                      variantId: newValue?.id.toString() || "",
-                    }));
-                  }
-                }}
-                loading={loadingVariants}
-                disabled={!!variantSlug || !formData.modelId}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Varyant"
-                    required
-                    helperText={
-                      variantSlug
-                        ? "Form önceden seçilmiş variant ile dolduruldu"
-                        : ""
-                    }
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingVariants ? (
-                            <CircularProgress color="inherit" size={20} />
-                          ) : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-            </Box>
 
             <TextField
               fullWidth
@@ -1062,22 +915,11 @@ const MidilliForm: React.FC = () => {
 
               <TextField
                 fullWidth
-                type="number"
-                label="Uzunluk"
+                type="text"
+                label="Uzunluk (m)"
                 value={formData.uzunluk}
                 onChange={(e) => handleInputChange("uzunluk", e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Straighten />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">metre</InputAdornment>
-                  ),
-                }}
-                inputProps={{ step: 0.1, min: 0 }}
-                placeholder="Örn: 13.6"
+                placeholder="Örn: 13.60"
                 required
               />
             </Box>
@@ -1443,8 +1285,8 @@ const MidilliForm: React.FC = () => {
             <TextField
               fullWidth
               label="Fiyat"
-              value={formData.price}
-              onChange={(e) => handleInputChange("price", e.target.value)}
+              value={formatPrice(formData.price)}
+              onChange={(e) => handlePriceChange(e.target.value)}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -1455,7 +1297,7 @@ const MidilliForm: React.FC = () => {
                   <InputAdornment position="end">TL</InputAdornment>
                 ),
               }}
-              placeholder="150000"
+              placeholder="150.000"
               required
             />
           </Box>
@@ -1482,7 +1324,7 @@ const MidilliForm: React.FC = () => {
               WebkitTextFillColor: "transparent",
             }}
           >
-            🎪 Midilli Tenteli İlan Ver
+            Midilli Tenteli İlan Ver
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Midilli tenteli dorsenizi kolayca satışa çıkarın
@@ -1580,8 +1422,8 @@ const MidilliForm: React.FC = () => {
       <SuccessModal
         open={showSuccessModal}
         onClose={handleCloseSuccessModal}
-        title="🎪 İlan Başarıyla Yayınlandı!"
-        message="Midilli tenteli dorse ilanınız başarıyla oluşturuldu ve yayına alındı."
+        title="İlan Başarıyla Gönderildi!"
+        message="İlanınız başarıyla oluşturuldu. ⚠️ İlanınız henüz yayında değil! Admin onayı bekliyor."
         adId={createdAdId || undefined}
         onViewAd={createdAdId ? handleViewAd : undefined}
         onGoHome={handleGoHome}

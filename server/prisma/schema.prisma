@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model User {
@@ -14,7 +16,6 @@ model User {
   firstName        String?        @map("first_name")
   lastName         String?        @map("last_name")
   phone            String?
-  userType         String?        @default("individual") @map("user_type")
   role             UserRole       @default(USER)
   isVerified       Boolean        @default(false) @map("is_verified")
   isActive         Boolean        @default(true) @map("is_active")
@@ -30,6 +31,7 @@ model User {
   lastLoginAt      DateTime?      @map("last_login_at")
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
+  userType         String?        @default("individual") @map("user_type")
   adminLogs        AdminLog[]     @relation("AdminLogs")
   ads              Ad[]
   complaints       Complaint[]
@@ -144,8 +146,6 @@ model Ad {
   engineCapacity     String?           @map("engine_capacity")
   fuelType           FuelType?         @map("fuel_type")
   isExchangeable     Boolean?          @map("is_exchangeable")
-  hasAccidentRecord  Boolean?          @map("has_accident_record")
-  hasTramerRecord    Boolean?          @map("has_tramer_record")
   plateNumber        String?           @map("plate_number")
   plateType          PlateType?        @map("plate_type")
   roofType           RoofType?         @map("roof_type")
@@ -161,6 +161,8 @@ model Ad {
   maxVehicleCapacity String?           @map("max_vehicle_capacity")
   platformLength     String?           @map("platform_length")
   platformWidth      String?           @map("platform_width")
+  hasAccidentRecord  Boolean?          @map("has_accident_record")
+  hasTramerRecord    Boolean?          @map("has_tramer_record")
   images             AdImage[]
   videos             AdVideo[]
   brand              Brand?            @relation(fields: [brandId], references: [id])
@@ -175,11 +177,10 @@ model Ad {
   messages           Message[]
   pendingAd          PendingAd?
 
-  // ❗ ULTRA PERFORMANCE INDEX'LER
   @@index([status, createdAt])
   @@index([status, isPromoted, createdAt])
-  @@index([status]) // ❗ Sadece status için
-  @@index([createdAt]) // ❗ Sadece tarih için
+  @@index([status])
+  @@index([createdAt])
   @@index([categoryId, status])
   @@index([brandId, status])
   @@index([cityId, status])
@@ -196,7 +197,6 @@ model AdImage {
   isShowcase   Boolean @default(false) @map("is_showcase")
   ad           Ad      @relation(fields: [adId], references: [id], onDelete: Cascade)
 
-  // ❗ Performans için index'ler  
   @@index([adId, isPrimary])
   @@map("ad_images")
 }
@@ -206,11 +206,11 @@ model AdVideo {
   adId         Int      @map("ad_id")
   videoUrl     String   @map("video_url")
   thumbnailUrl String?  @map("thumbnail_url")
-  duration     Int?     @map("duration") // Video süresi (saniye)
-  fileSize     Int?     @map("file_size") // Dosya boyutu (byte)
-  mimeType     String?  @map("mime_type") // video/mp4, video/avi vb.
+  duration     Int?     @map("duration")
+  fileSize     Int?     @map("file_size")
+  mimeType     String?  @map("mime_type")
   displayOrder Int      @default(1) @map("display_order")
-  description  String?  // Video açıklaması
+  description  String?
   createdAt    DateTime @default(now()) @map("created_at")
   ad           Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
 

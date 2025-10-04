@@ -27,7 +27,7 @@ import {
   FormGroup,
 } from "@mui/material";
 import { CheckCircle, PhotoCamera, Close } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../layout/Header";
 import apiClient from "../../../api/client";
 
@@ -111,6 +111,7 @@ const RAMPA_MEKANIZMASI = ["Hidrolik", "Pnömatik", "Manuel"];
 
 const OndekirmalıForm: React.FC = () => {
   const navigate = useNavigate();
+  const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
 
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -123,9 +124,9 @@ const OndekirmalıForm: React.FC = () => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
-  const [loadingBrands, setLoadingBrands] = useState(false);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [loadingVariants, setLoadingVariants] = useState(false);
+  const [, setLoadingBrands] = useState(false);
+  const [, setLoadingModels] = useState(false);
+  const [, setLoadingVariants] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -173,6 +174,74 @@ const OndekirmalıForm: React.FC = () => {
 
     loadBrands();
   }, []);
+
+  // Auto-load brand/model/variant from URL parameters
+  useEffect(() => {
+    const loadVariantDetails = async () => {
+      console.log("🔍 [ÖNDEKIRMA] variantSlug from URL:", variantSlug);
+      console.log("🔍 [ÖNDEKIRMA] brandSlug from URL:", brandSlug);
+      console.log("🔍 [ÖNDEKIRMA] modelSlug from URL:", modelSlug);
+
+      if (variantSlug && brandSlug && modelSlug && brands.length > 0) {
+        console.log("✅ [ÖNDEKIRMA] Loading variant details for slugs:", {
+          brandSlug,
+          modelSlug,
+          variantSlug,
+        });
+
+        try {
+          // Find brand by slug
+          const brand = brands.find((b) => b.slug === brandSlug);
+          if (brand) {
+            console.log("✅ [ÖNDEKIRMA] Brand found:", brand);
+
+            // Load models for this brand
+            const modelsResponse = await apiClient.get(
+              `/brands/${brand.id}/models`
+            );
+            const modelsList = modelsResponse.data as Model[];
+            setModels(modelsList);
+            console.log("✅ [ÖNDEKIRMA] Models loaded:", modelsList.length);
+
+            // Find model by slug
+            const model = modelsList.find((m) => m.slug === modelSlug);
+            if (model) {
+              console.log("✅ [ÖNDEKIRMA] Model found:", model);
+
+              // Load variants for this model
+              const variantsResponse = await apiClient.get(
+                `/models/${model.id}/variants`
+              );
+              const variantsList = variantsResponse.data as Variant[];
+              setVariants(variantsList);
+              console.log(
+                "✅ [ÖNDEKIRMA] Variants loaded:",
+                variantsList.length
+              );
+
+              // Find variant by slug
+              const variant = variantsList.find((v) => v.slug === variantSlug);
+              if (variant) {
+                console.log("✅ [ÖNDEKIRMA] Variant found:", variant);
+
+                // Set form data
+                setFormData((prev) => ({
+                  ...prev,
+                  brandId: brand.id.toString(),
+                  modelId: model.id.toString(),
+                  variantId: variant.id.toString(),
+                }));
+              }
+            }
+          }
+        } catch (error) {
+          console.error("❌ [ÖNDEKIRMA] Error loading variant details:", error);
+        }
+      }
+    };
+
+    loadVariantDetails();
+  }, [variantSlug, brandSlug, modelSlug, brands]);
 
   // Load models when brand changes
   useEffect(() => {
@@ -360,11 +429,57 @@ const OndekirmalıForm: React.FC = () => {
         submitData.append("price", parsedPrice);
       }
 
-      // Category, Brand, Model, Variant
+      // Category/Brand/Model/Variant ID'lerini ekle
       submitData.append("categoryId", formData.categoryId);
       submitData.append("brandId", formData.brandId);
       submitData.append("modelId", formData.modelId);
-      submitData.append("variantId", formData.variantId);
+      submitData.append("variantId", formData.variantId || "");
+
+      // Brand/Model/Variant name'lerini ekle (ensureBrandModelVariant için gerekli)
+      const selectedBrand = brands.find(
+        (b) => b.id.toString() === formData.brandId
+      );
+      const selectedModel = models.find(
+        (m) => m.id.toString() === formData.modelId
+      );
+      const selectedVariant = variants.find(
+        (v) => v.id.toString() === formData.variantId
+      );
+
+      if (selectedBrand) {
+        submitData.append("brandName", selectedBrand.name);
+        submitData.append("brandSlug", selectedBrand.slug);
+      }
+      if (selectedModel) {
+        submitData.append("modelName", selectedModel.name);
+        submitData.append("modelSlug", selectedModel.slug);
+      }
+      if (selectedVariant) {
+        submitData.append("variantName", selectedVariant.name);
+        submitData.append("variantSlug", selectedVariant.slug);
+      }
+
+      // URL params'tan gelen slug'ları da ekle
+      if (categorySlug) submitData.append("categorySlug", categorySlug);
+      if (brandSlug && !selectedBrand)
+        submitData.append("brandSlug", brandSlug);
+      if (modelSlug && !selectedModel)
+        submitData.append("modelSlug", modelSlug);
+      if (variantSlug && !selectedVariant)
+        submitData.append("variantSlug", variantSlug);
+
+      // Year field'ı ekle
+      submitData.append("year", formData.productionYear);
+
+      console.log("✅ Dorse Category/Brand/Model/Variant IDs:", {
+        categoryId: formData.categoryId,
+        brandId: formData.brandId,
+        modelId: formData.modelId,
+        variantId: formData.variantId,
+        brandName: selectedBrand?.name,
+        modelName: selectedModel?.name,
+        variantName: selectedVariant?.name,
+      });
 
       // Öndekirmalı özel bilgileri
       submitData.append("havuzDerinligi", formData.havuzDerinligi);
@@ -455,7 +570,7 @@ const OndekirmalıForm: React.FC = () => {
   // Başarı dialogu
   const handleSuccessClose = () => {
     setSubmitSuccess(false);
-    navigate("/");
+    navigate("/"); // Anasayfaya yönlendir
   };
 
   return (
@@ -463,12 +578,8 @@ const OndekirmalıForm: React.FC = () => {
       <Header />
 
       <Container maxWidth="md" sx={{ py: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Öndekirmalı Dorse İlanı Ver
-        </Typography>
-
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
             Temel Bilgiler
           </Typography>
           <Divider sx={{ mb: 2 }} />
@@ -527,124 +638,43 @@ const OndekirmalıForm: React.FC = () => {
         </Paper>
 
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Marka ve Model Seçimi
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <FormControl fullWidth required>
-              <InputLabel>Marka</InputLabel>
-              <Select
-                value={formData.brandId}
-                label="Marka"
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    brandId: e.target.value,
-                    modelId: "",
-                    variantId: "",
-                  })
-                }
-                disabled={loadingBrands}
-              >
-                {brands.map((brand) => (
-                  <MenuItem key={brand.id} value={brand.id.toString()}>
-                    {brand.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth required disabled={!formData.brandId}>
-              <InputLabel>Model</InputLabel>
-              <Select
-                value={formData.modelId}
-                label="Model"
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    modelId: e.target.value,
-                    variantId: "",
-                  })
-                }
-                disabled={loadingModels || !formData.brandId}
-              >
-                {models.map((model) => (
-                  <MenuItem key={model.id} value={model.id.toString()}>
-                    {model.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth required disabled={!formData.modelId}>
-              <InputLabel>Varyant</InputLabel>
-              <Select
-                value={formData.variantId}
-                label="Varyant"
-                onChange={(e) =>
-                  setFormData({ ...formData, variantId: e.target.value })
-                }
-                disabled={loadingVariants || !formData.modelId}
-              >
-                {variants.map((variant) => (
-                  <MenuItem key={variant.id} value={variant.id.toString()}>
-                    {variant.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        </Paper>
-
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Öndekirmalı Dorse Özellikleri
+          <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
+            Teknik Özellikler
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <Box sx={{ display: "flex", gap: 2 }}>
               <TextField
-                label="Havuz Derinliği"
+                type="text"
+                label="Havuz Derinliği (m)"
                 value={formData.havuzDerinligi}
                 onChange={(e) =>
                   setFormData({ ...formData, havuzDerinligi: e.target.value })
                 }
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">m</InputAdornment>
-                  ),
-                }}
+                placeholder="Örn: 1.80"
                 sx={{ flex: 1 }}
               />
 
               <TextField
-                label="Havuz Genişliği"
+                type="text"
+                label="Havuz Genişliği (m)"
                 value={formData.havuzGenisligi}
                 onChange={(e) =>
                   setFormData({ ...formData, havuzGenisligi: e.target.value })
                 }
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">m</InputAdornment>
-                  ),
-                }}
+                placeholder="Örn: 2.45"
                 sx={{ flex: 1 }}
               />
 
               <TextField
-                label="Havuz Uzunluğu"
+                type="text"
+                label="Havuz Uzunluğu (m)"
                 value={formData.havuzUzunlugu}
                 onChange={(e) =>
                   setFormData({ ...formData, havuzUzunlugu: e.target.value })
                 }
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">m</InputAdornment>
-                  ),
-                }}
+                placeholder="Örn: 13.60"
                 sx={{ flex: 1 }}
               />
             </Box>
@@ -730,7 +760,7 @@ const OndekirmalıForm: React.FC = () => {
         </Paper>
 
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
             Konum Bilgileri
           </Typography>
           <Divider sx={{ mb: 2 }} />
@@ -772,7 +802,7 @@ const OndekirmalıForm: React.FC = () => {
 
         {/* Fotoğraf Yükleme */}
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
             Fotoğraflar
           </Typography>
           <Divider sx={{ mb: 2 }} />
@@ -882,34 +912,12 @@ const OndekirmalıForm: React.FC = () => {
         </Paper>
 
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Ek Özellikler
+          <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
+            Ek Seçenekler
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <FormControl component="fieldset">
-              <FormLabel component="legend">Garantili</FormLabel>
-              <RadioGroup
-                row
-                value={formData.warranty}
-                onChange={(e) =>
-                  setFormData({ ...formData, warranty: e.target.value })
-                }
-              >
-                <FormControlLabel
-                  value="Evet"
-                  control={<Radio />}
-                  label="Evet"
-                />
-                <FormControlLabel
-                  value="Hayır"
-                  control={<Radio />}
-                  label="Hayır"
-                />
-              </RadioGroup>
-            </FormControl>
-
             <FormControl component="fieldset">
               <FormLabel component="legend">Pazarlık Yapılır</FormLabel>
               <RadioGroup
@@ -953,17 +961,6 @@ const OndekirmalıForm: React.FC = () => {
                 />
               </RadioGroup>
             </FormControl>
-
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Detaylı Bilgi"
-              value={formData.detailedInfo}
-              onChange={(e) =>
-                setFormData({ ...formData, detailedInfo: e.target.value })
-              }
-            />
           </Box>
         </Paper>
 
@@ -979,21 +976,35 @@ const OndekirmalıForm: React.FC = () => {
 
       {/* Başarı Dialogu */}
       <Dialog open={submitSuccess} onClose={handleSuccessClose}>
-        <DialogTitle>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <CheckCircle color="success" />
-            İlan Başarıyla Yayınlandı
-          </Box>
+        <DialogTitle sx={{ textAlign: "center" }}>
+          <CheckCircle sx={{ fontSize: 60, color: "green", mb: 2 }} />
+          <Typography variant="h4">İlan Başarıyla Gönderildi!</Typography>
         </DialogTitle>
         <DialogContent>
-          <Typography>
-            Öndekirmalı dorse ilanınız başarıyla yayınlandı. İlanınızı
-            "İlanlarım" sayfasından görüntüleyebilirsiniz.
+          <Typography variant="body1" sx={{ textAlign: "center", mb: 2 }}>
+            İlanınız başarıyla oluşturuldu.
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: "center",
+              color: "warning.main",
+              fontWeight: "bold",
+            }}
+          >
+            ⚠️ İlanınız henüz yayında değil! Admin onayı bekliyor.
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleSuccessClose} variant="contained">
-            Tamam
+        <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
+          <Button
+            onClick={handleSuccessClose}
+            variant="contained"
+            size="large"
+            sx={{
+              background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
+            }}
+          >
+            Anasayfaya Dön
           </Button>
         </DialogActions>
       </Dialog>

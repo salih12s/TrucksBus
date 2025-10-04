@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../store";
 import {
@@ -33,9 +33,7 @@ import {
   Close,
   Person,
   LocationOn,
-  AttachMoney,
   AcUnit,
-  Straighten,
   DateRange,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
@@ -49,7 +47,7 @@ interface FrigofirikFormData {
   year: number;
 
   // Teknik Özellikler
-  uzunluk: number; // metre
+  uzunluk: string; // metre (text input)
   lastikDurumu: number; // yüzde
   sogutucu: string; // Çalışıyor/Arızalı/Yok
 
@@ -84,7 +82,6 @@ const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
 
 const FrigofirikForm: React.FC = () => {
   const navigate = useNavigate();
-  const { variantId } = useParams<{ variantId: string }>();
   const user = useSelector((state: RootState) => state.auth.user);
 
   const [activeStep, setActiveStep] = useState(0);
@@ -104,7 +101,7 @@ const FrigofirikForm: React.FC = () => {
     description: "",
     price: "",
     year: new Date().getFullYear(),
-    uzunluk: 0,
+    uzunluk: "",
     lastikDurumu: 100,
     sogutucu: "",
     cityId: "",
@@ -116,6 +113,18 @@ const FrigofirikForm: React.FC = () => {
     negotiable: false,
     exchange: false,
   });
+
+  // Price formatting functions
+  const formatPrice = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const handlePriceChange = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    setFormData((prev) => ({ ...prev, price: numbers }));
+  };
 
   // Kullanıcı bilgilerini yükle
   useEffect(() => {
@@ -220,7 +229,7 @@ const FrigofirikForm: React.FC = () => {
           setError("Geçerli bir üretim yılı giriniz");
           return false;
         }
-        if (formData.uzunluk <= 0) {
+        if (!formData.uzunluk.trim()) {
           setError("Uzunluk bilgisi gereklidir");
           return false;
         }
@@ -301,12 +310,18 @@ const FrigofirikForm: React.FC = () => {
       formDataToSend.append("description", formData.description);
       formDataToSend.append("price", formData.price);
       formDataToSend.append("year", formData.year.toString());
-      formDataToSend.append("category", "Dorse");
-      formDataToSend.append("subcategory", "Frigofirik");
-      formDataToSend.append("variant_id", variantId || "");
+
+      // Dorse kategorisi - Frigofirik alt kategorisi
+      formDataToSend.append("categoryId", "6"); // Dorse category ID
+      formDataToSend.append("brandName", "Frigofirik");
+      formDataToSend.append("brandSlug", "frigofirik");
+      formDataToSend.append("modelName", "Frigofirik");
+      formDataToSend.append("modelSlug", "frigofirik");
+      formDataToSend.append("variantName", "Frigofirik");
+      formDataToSend.append("variantSlug", "frigofirik");
 
       // Teknik özellikler
-      formDataToSend.append("uzunluk", formData.uzunluk.toString());
+      formDataToSend.append("uzunluk", formData.uzunluk);
       formDataToSend.append("lastikDurumu", formData.lastikDurumu.toString());
       formDataToSend.append("sogutucu", formData.sogutucu);
 
@@ -347,24 +362,29 @@ const FrigofirikForm: React.FC = () => {
         }
       });
 
-      const response = await apiClient.post("/listings", formDataToSend, {
+      const response = await apiClient.post("/ads/dorse", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
       const responseData = response.data as {
-        success: boolean;
+        success?: boolean;
+        id?: string;
+        adId?: string;
         message?: string;
-        listing?: { id: string };
       };
 
-      if (responseData.success) {
-        setCreatedAdId(responseData.listing?.id || null);
-        setShowSuccessModal(true);
-      } else {
-        throw new Error(responseData.message || "İlan oluşturulamadı");
+      // Backend'den başarılı yanıt geldi (200 status code)
+      console.log("✅ Frigofirik form submission successful!");
+
+      // İlan ID'sini kaydet (id veya adId field'ından)
+      const adId = responseData.id || responseData.adId;
+      if (adId) {
+        setCreatedAdId(adId);
       }
+
+      setShowSuccessModal(true);
     } catch (err: unknown) {
       console.error("Frigofirik ilanı oluşturma hatası:", err);
       const error = err as {
@@ -441,24 +461,15 @@ const FrigofirikForm: React.FC = () => {
 
               <TextField
                 fullWidth
-                type="number"
                 label="Uzunluk"
                 value={formData.uzunluk}
-                onChange={(e) =>
-                  handleInputChange("uzunluk", parseFloat(e.target.value))
-                }
+                onChange={(e) => handleInputChange("uzunluk", e.target.value)}
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Straighten />
-                    </InputAdornment>
-                  ),
                   endAdornment: (
                     <InputAdornment position="end">metre</InputAdornment>
                   ),
                 }}
-                inputProps={{ step: 0.1, min: 0 }}
-                placeholder="Örn: 13.6"
+                placeholder="Örn: 13.6 m"
                 required
               />
             </Box>
@@ -723,34 +734,18 @@ const FrigofirikForm: React.FC = () => {
             <TextField
               fullWidth
               label="Fiyat"
-              value={formData.price}
-              onChange={(e) => handleInputChange("price", e.target.value)}
+              value={formatPrice(formData.price)}
+              onChange={(e) => handlePriceChange(e.target.value)}
               InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <AttachMoney />
-                  </InputAdornment>
-                ),
                 endAdornment: (
                   <InputAdornment position="end">TL</InputAdornment>
                 ),
               }}
-              placeholder="150000"
+              placeholder="150.000"
               required
             />
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.warranty}
-                    onChange={(e) =>
-                      handleInputChange("warranty", e.target.checked)
-                    }
-                  />
-                }
-                label="Garanti var"
-              />
               <FormControlLabel
                 control={
                   <Checkbox
@@ -798,7 +793,7 @@ const FrigofirikForm: React.FC = () => {
               WebkitTextFillColor: "transparent",
             }}
           >
-            🧊 Frigofirik İlan Ver
+            Frigofirik İlan Ver
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Frigofirik dorsenizi kolayca satışa çıkarın
@@ -877,8 +872,8 @@ const FrigofirikForm: React.FC = () => {
         onGoHome={handleGoHome}
         onViewAd={handleViewAd}
         onMyAds={handleMyAds}
-        title="🎉 İlan Başarıyla Yayınlandı!"
-        message="Frigofirik dorse ilanınız başarıyla yayınlandı. Artık alıcılar tarafından görülebilir ve iletişime geçebilirler."
+        title="İlan Başarıyla Oluşturuldu!"
+        message="Frigofirik dorse ilanınız başarıyla oluşturuldu ve yönetici onayı bekliyor. Onaylandıktan sonra yayınlanacaktır."
       />
     </Container>
   );
