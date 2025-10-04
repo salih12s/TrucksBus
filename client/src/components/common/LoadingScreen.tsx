@@ -104,7 +104,7 @@ interface LoadingScreenProps {
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({
   message = "TrucksBus'a Hoş Geldiniz",
-  subMessage = "En kaliteli ticari araç ilanları yükleniyor...",
+  subMessage,
 }) => {
   return (
     <LoadingContainer>
@@ -120,7 +120,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
 
       <LoadingText variant="h1">{message}</LoadingText>
 
-      <SubText variant="h6">{subMessage}</SubText>
+      {subMessage && <SubText variant="h6">{subMessage}</SubText>}
 
       <LoadingDots>
         <span></span>

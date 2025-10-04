@@ -123,9 +123,16 @@ const BrandSelection: React.FC = () => {
     fetchBrands();
   }, [fetchBrands]);
 
-  const filteredBrands = brands.filter((brand) =>
-    brand.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Markaları filtrele ve tekrarları kaldır
+  const filteredBrands = brands
+    .filter((brand) =>
+      brand.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .filter(
+      (brand, index, self) =>
+        // Aynı slug'a sahip ilk markayı tut, tekrarları kaldır
+        index === self.findIndex((b) => b.slug === brand.slug)
+    );
 
   const handleBrandSelect = (brandSlug: string) => {
     navigate(`/categories/${categorySlug}/brands/${brandSlug}/models`);

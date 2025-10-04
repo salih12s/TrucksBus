@@ -1098,11 +1098,14 @@ const MainLayout: React.FC = () => {
         }
       }
 
-      // Marka filtresi
+      // Marka filtresi - categoryBrands kullan (seçili kategorideki markalar)
       if (selectedBrand) {
-        const selectedBrandName = brands.find(
+        // Önce categoryBrands'de ara, bulamazsan brands'de ara
+        const allBrands = categoryBrands.length > 0 ? categoryBrands : brands;
+        const selectedBrandName = allBrands.find(
           (brand) => brand.slug === selectedBrand
         )?.name;
+
         if (selectedBrandName) {
           filtered = filtered.filter((ad) => {
             const brandMatch =
@@ -1113,7 +1116,17 @@ const MainLayout: React.FC = () => {
             "After brand filter:",
             filtered.length,
             "Brand:",
-            selectedBrandName
+            selectedBrandName,
+            "(from:",
+            categoryBrands.length > 0 ? "categoryBrands" : "brands",
+            ")"
+          );
+        } else {
+          console.warn(
+            "⚠️ Brand not found:",
+            selectedBrand,
+            "in",
+            categoryBrands.length > 0 ? "categoryBrands" : "brands"
           );
         }
       }
@@ -1504,6 +1517,7 @@ const MainLayout: React.FC = () => {
     kmFilter,
     categories,
     brands,
+    categoryBrands,
     cities,
     districts,
   ]);

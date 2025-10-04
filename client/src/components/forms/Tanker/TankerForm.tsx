@@ -11,7 +11,6 @@ import {
   InputLabel,
   Button,
   Card,
-  CardContent,
   Divider,
   Dialog,
   DialogTitle,
@@ -22,18 +21,15 @@ import {
   RadioGroup,
   FormLabel,
   InputAdornment,
-  Chip,
   IconButton,
 } from "@mui/material";
 import {
   CheckCircle,
-  PhotoCamera,
-  Videocam,
   Delete as DeleteIcon,
   PlayArrow,
   Close as CloseIcon,
 } from "@mui/icons-material";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store";
 import Header from "../../layout/Header";
@@ -51,26 +47,6 @@ interface District {
   cityId: number;
 }
 
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Model {
-  id: number;
-  name: string;
-  slug: string;
-  brandId: number;
-}
-
-interface Variant {
-  id: number;
-  name: string;
-  slug: string;
-  modelId: number;
-}
-
 interface TankerFormData {
   title: string;
   description: string;
@@ -85,7 +61,7 @@ interface TankerFormData {
   variantId: string;
 
   // Tanker Özel Bilgileri
-  hacim: string;
+  hacim: string; // text input
   gozSayisi: string;
   lastikDurumu: string;
   renk: string;
@@ -133,7 +109,6 @@ const TANKER_COLORS = [
 
 const TankerForm: React.FC = () => {
   const navigate = useNavigate();
-  const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
   const user = useSelector((state: RootState) => state.auth.user);
 
   const [cities, setCities] = useState<City[]>([]);
@@ -147,20 +122,24 @@ const TankerForm: React.FC = () => {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
-  // Brand/Model/Variant states
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [loadingBrands, setLoadingBrands] = useState(false);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [loadingVariants, setLoadingVariants] = useState(false);
-
   // Success modal states
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdAdId, setCreatedAdId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Auto-load category ID - Dorse category ID (integer)
+  // Price formatting functions
+  const formatPrice = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    if (!numbers) return "";
+    return new Intl.NumberFormat("tr-TR").format(parseInt(numbers));
+  };
+
+  const handlePriceChange = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    setFormData((prev) => ({ ...prev, price: numbers }));
+  };
+
   const [formData, setFormData] = useState<TankerFormData>({
     title: "",
     description: "",
@@ -251,113 +230,6 @@ const TankerForm: React.FC = () => {
     }
   }, [formData.cityId, formData.districtId]);
 
-  // Auto-load brands
-  useEffect(() => {
-    const loadBrands = async () => {
-      try {
-        setLoadingBrands(true);
-        const response = await apiClient.get("/brands?categoryId=6"); // Dorse category ID
-        setBrands((response.data as Brand[]) || []);
-      } catch (error) {
-        console.error("Error loading brands:", error);
-      } finally {
-        setLoadingBrands(false);
-      }
-    };
-
-    loadBrands();
-  }, []);
-
-  // Load brand by slug from URL params
-  useEffect(() => {
-    if (brandSlug && brands.length > 0) {
-      const selectedBrand = brands.find((b) => b.slug === brandSlug);
-      if (selectedBrand) {
-        setFormData((prev) => ({
-          ...prev,
-          brandId: selectedBrand.id.toString(),
-          modelId: "", // Reset model when brand changes
-          variantId: "", // Reset variant when brand changes
-        }));
-      }
-    }
-  }, [brandSlug, brands]);
-
-  // Load models when brand changes
-  useEffect(() => {
-    if (formData.brandId) {
-      const loadModels = async () => {
-        try {
-          setLoadingModels(true);
-          const response = await apiClient.get(
-            `/brands/${formData.brandId}/models`
-          );
-          setModels((response.data as Model[]) || []);
-        } catch (error) {
-          console.error("Error loading models:", error);
-        } finally {
-          setLoadingModels(false);
-        }
-      };
-
-      loadModels();
-    } else {
-      setModels([]);
-      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
-    }
-  }, [formData.brandId]);
-
-  // Load model by slug from URL params
-  useEffect(() => {
-    if (modelSlug && models.length > 0) {
-      const selectedModel = models.find((m) => m.slug === modelSlug);
-      if (selectedModel) {
-        setFormData((prev) => ({
-          ...prev,
-          modelId: selectedModel.id.toString(),
-          variantId: "", // Reset variant when model changes
-        }));
-      }
-    }
-  }, [modelSlug, models]);
-
-  // Load variants when model changes
-  useEffect(() => {
-    if (formData.modelId) {
-      const loadVariants = async () => {
-        try {
-          setLoadingVariants(true);
-          const response = await apiClient.get(
-            `/models/${formData.modelId}/variants`
-          );
-          setVariants((response.data as Variant[]) || []);
-        } catch (error) {
-          console.error("Error loading variants:", error);
-        } finally {
-          setLoadingVariants(false);
-        }
-      };
-
-      loadVariants();
-    } else {
-      setVariants([]);
-      setFormData((prev) => ({ ...prev, variantId: "" }));
-    }
-  }, [formData.modelId]);
-
-  // Load variant by slug from URL params
-  useEffect(() => {
-    if (variantSlug && variants.length > 0) {
-      const selectedVariant = variants.find((v) => v.slug === variantSlug);
-      if (selectedVariant) {
-        setFormData((prev) => ({
-          ...prev,
-          variantId: selectedVariant.id.toString(),
-        }));
-      }
-    }
-  }, [variantSlug, variants]);
-
   const handleInputChange = (
     field: keyof TankerFormData,
     value: string | number | File[] | File | null | boolean
@@ -430,11 +302,6 @@ const TankerForm: React.FC = () => {
     setVideoModalOpen(false);
   };
 
-  // Parse formatted number for submission
-  const parseFormattedNumber = (formatted: string) => {
-    return formatted.replace(/[^\d]/g, "");
-  };
-
   // Modern fotoğraf upload fonksiyonu
   const handlePhotoUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -488,34 +355,17 @@ const TankerForm: React.FC = () => {
       // Temel bilgiler
       submitData.append("title", formData.title);
       submitData.append("description", formData.description);
-      submitData.append("productionYear", formData.year.toString());
+      submitData.append("year", formData.year.toString());
+      submitData.append("price", formData.price);
 
-      // Brand/Model/Variant bilgileri
-      if (formData.categoryId) {
-        submitData.append("categoryId", formData.categoryId);
-        console.log("✅ CategoryId added:", formData.categoryId);
-      }
-      if (formData.brandId) {
-        submitData.append("brandId", formData.brandId);
-        console.log("✅ BrandId added:", formData.brandId);
-      }
-      if (formData.modelId) {
-        submitData.append("modelId", formData.modelId);
-        console.log("✅ ModelId added:", formData.modelId);
-      }
-      if (formData.variantId) {
-        submitData.append("variantId", formData.variantId);
-        console.log("✅ VariantId added:", formData.variantId);
-      }
-
-      // Fiyatı parse ederek ekle
-      const parsedPrice = parseFormattedNumber(formData.price);
-      if (parsedPrice) {
-        submitData.append("price", parsedPrice);
-      }
-
-      submitData.append("category", "dorse");
-      submitData.append("subcategory", "tanker");
+      // Dorse kategorisi - Tanker markası
+      submitData.append("categoryId", "6"); // Dorse category ID
+      submitData.append("brandName", "Tanker");
+      submitData.append("brandSlug", "tanker");
+      submitData.append("modelName", "Tanker Model");
+      submitData.append("modelSlug", "tanker-model");
+      submitData.append("variantName", "Tanker");
+      submitData.append("variantSlug", "tanker");
 
       // Tanker özel bilgileri
       submitData.append("hacim", formData.hacim.toString());
@@ -566,7 +416,7 @@ const TankerForm: React.FC = () => {
 
       submitData.append("detailedInfo", detailedDescription);
 
-      // Fotoğrafları ekle
+      // Fotoğrafları ekle - showcasePhoto ve photo_ formatında
       if (formData.showcasePhoto) {
         submitData.append("showcasePhoto", formData.showcasePhoto);
       }
@@ -574,6 +424,12 @@ const TankerForm: React.FC = () => {
       formData.photos.forEach((photo, index) => {
         submitData.append(`photo_${index}`, photo);
       });
+
+      console.log(
+        `📷 ${
+          formData.photos.length + (formData.showcasePhoto ? 1 : 0)
+        } fotoğraf gönderiliyor`
+      );
 
       // Video dosyalarını ekle
       if (formData.videos && formData.videos.length > 0) {
@@ -592,22 +448,29 @@ const TankerForm: React.FC = () => {
         console.log("ℹ️ No videos to add");
       }
 
-      const response = await apiClient.post("/listings", submitData, {
+      const response = await apiClient.post("/ads/dorse", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      console.log("Tanker Dorse ilanı başarıyla oluşturuldu:", response.data);
+      const responseData = response.data as {
+        success?: boolean;
+        id?: string;
+        adId?: string;
+        message?: string;
+      };
 
-      // İlan ID'sini kaydet ve başarı modal'ını göster
-      const responseData = response.data as { id?: string; success?: boolean };
-      if (responseData && responseData.id) {
-        setCreatedAdId(responseData.id);
-        setShowSuccessModal(true);
-      } else {
-        setShowSuccessModal(true);
+      // Backend'den başarılı yanıt geldi (200 status code)
+      console.log("✅ Tanker form submission successful!");
+
+      // İlan ID'sini kaydet (id veya adId field'ından)
+      const adId = responseData.id || responseData.adId;
+      if (adId) {
+        setCreatedAdId(adId);
       }
+
+      setShowSuccessModal(true);
     } catch (error: unknown) {
       console.error("İlan oluşturulurken hata:", error);
       const err = error as {
@@ -651,29 +514,9 @@ const TankerForm: React.FC = () => {
     <>
       <Header />
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              background: "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 2,
-              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-          >
-            ⛽ Tanker Dorse İlanı Ver
-          </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ fontWeight: 500 }}
-          >
-            {categorySlug} - {brandSlug} - {modelSlug} - {variantSlug}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" component="h1" gutterBottom>
+            Tanker Dorse İlanı Ver
           </Typography>
         </Box>
 
@@ -685,74 +528,11 @@ const TankerForm: React.FC = () => {
             }}
           >
             {/* Temel Bilgiler */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📋 Temel Bilgiler
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+              Temel Bilgiler
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
-              {/* Brand/Model/Variant Selection */}
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr 1fr",
-                  gap: 2,
-                }}
-              >
-                <FormControl fullWidth required>
-                  <InputLabel>Marka</InputLabel>
-                  <Select
-                    value={formData.brandId}
-                    label="Marka"
-                    onChange={(e) =>
-                      handleInputChange("brandId", e.target.value)
-                    }
-                    disabled={loadingBrands || !!brandSlug}
-                  >
-                    {brands.map((brand) => (
-                      <MenuItem key={brand.id} value={brand.id.toString()}>
-                        {brand.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth required disabled={!formData.brandId}>
-                  <InputLabel>Model</InputLabel>
-                  <Select
-                    value={formData.modelId}
-                    label="Model"
-                    onChange={(e) =>
-                      handleInputChange("modelId", e.target.value)
-                    }
-                    disabled={loadingModels || !!modelSlug}
-                  >
-                    {models.map((model) => (
-                      <MenuItem key={model.id} value={model.id.toString()}>
-                        {model.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth disabled={!formData.modelId}>
-                  <InputLabel>Variant</InputLabel>
-                  <Select
-                    value={formData.variantId}
-                    label="Variant"
-                    onChange={(e) =>
-                      handleInputChange("variantId", e.target.value)
-                    }
-                    disabled={loadingVariants || !!variantSlug}
-                  >
-                    {variants.map((variant) => (
-                      <MenuItem key={variant.id} value={variant.id.toString()}>
-                        {variant.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-
               <TextField
                 fullWidth
                 label="İlan Başlığı *"
@@ -797,10 +577,15 @@ const TankerForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  type="number"
                   label="Fiyat (TL) *"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
+                  value={formatPrice(formData.price)}
+                  onChange={(e) => handlePriceChange(e.target.value)}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">TL</InputAdornment>
+                    ),
+                  }}
+                  placeholder="150.000"
                   required
                 />
               </Box>
@@ -809,8 +594,8 @@ const TankerForm: React.FC = () => {
             <Divider sx={{ my: 4 }} />
 
             {/* Tanker Özellikleri */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              ⛽ Tanker Özellikleri
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+              Tanker Özellikleri
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
@@ -819,16 +604,15 @@ const TankerForm: React.FC = () => {
               >
                 <TextField
                   fullWidth
-                  type="number"
                   label="Hacim *"
                   value={formData.hacim}
                   onChange={(e) => handleInputChange("hacim", e.target.value)}
-                  inputProps={{ step: "0.1", min: "0" }}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">m³</InputAdornment>
                     ),
                   }}
+                  placeholder="Örn: 25 m³"
                   required
                 />
 
@@ -910,8 +694,8 @@ const TankerForm: React.FC = () => {
             <Divider sx={{ my: 4 }} />
 
             {/* Konum Bilgileri */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              📍 Konum Bilgileri
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+              Konum Bilgileri
             </Typography>
 
             <Box
@@ -959,8 +743,8 @@ const TankerForm: React.FC = () => {
             <Divider sx={{ my: 4 }} />
 
             {/* Ek Seçenekler */}
-            <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold" }}>
-              ⚡ Ek Seçenekler
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+              Ek Seçenekler
             </Typography>
 
             <Box
@@ -1016,397 +800,138 @@ const TankerForm: React.FC = () => {
 
             <Divider sx={{ my: 4 }} />
 
-            {/* 📸 Fotoğraflar */}
-            <Card
-              elevation={6}
-              sx={{
-                borderRadius: 3,
-                background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-                border: "1px solid #e2e8f0",
-                transition: "all 0.3s ease-in-out",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-                },
-                mb: 4,
-              }}
-            >
-              <CardContent sx={{ p: 4 }}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      borderRadius: "50%",
-                      p: 1.5,
-                      mr: 2,
-                    }}
-                  >
-                    <PhotoCamera sx={{ color: "white", fontSize: 28 }} />
-                  </Box>
+            {/* Fotoğraflar */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Fotoğraflar
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                  gap: 2,
+                }}
+              >
+                {/* Vitrin Fotoğrafı */}
+                <Card variant="outlined" sx={{ p: 3 }}>
                   <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 700,
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
+                    variant="subtitle1"
+                    sx={{ mb: 2, fontWeight: 600 }}
                   >
-                    Fotoğraflar
+                    Vitrin Fotoğrafı *
                   </Typography>
-                </Box>
-
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 4, textAlign: "center", fontStyle: "italic" }}
-                >
-                  Kaliteli fotoğraflar ile ilanınızın dikkat çekmesini sağlayın
-                </Typography>
-
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-                    gap: 4,
-                    mt: 3,
-                  }}
-                >
-                  {/* Vitrin Fotoğrafı */}
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      background:
-                        "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-                      border: "2px dashed #0284c7",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease-in-out",
-                      "&:hover": {
-                        borderColor: "primary.main",
-                        transform: "translateY(-2px)",
-                        boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
-                      },
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        mb: 2,
-                        color: "primary.main",
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 1,
-                      }}
-                    >
-                      🖼️ Vitrin Fotoğrafı
-                      <Chip label="Zorunlu" color="error" size="small" />
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 3 }}
-                    >
-                      Ana fotoğraf olarak kullanılacak en iyi fotoğrafınızı
-                      seçin
-                    </Typography>
-                    <input
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      id="showcase-photo"
-                      type="file"
-                      onChange={(e) => handlePhotoUpload(e, true)}
-                    />
-                    <label htmlFor="showcase-photo">
-                      <Button
-                        variant="contained"
-                        component="span"
-                        startIcon={<PhotoCamera />}
-                        sx={{
-                          borderRadius: 3,
-                          py: 1.5,
-                          px: 3,
-                          fontWeight: 600,
-                          background:
-                            "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-                          "&:hover": {
-                            background:
-                              "linear-gradient(45deg, #1565c0 30%, #1976d2 90%)",
-                          },
-                        }}
-                      >
-                        Vitrin Fotoğrafı Seç
-                      </Button>
-                    </label>
-
-                    {/* Vitrin fotoğrafı önizlemesi */}
-                    {showcasePreview && (
-                      <Box sx={{ mt: 3 }}>
-                        <Box
-                          sx={{
-                            position: "relative",
-                            display: "inline-block",
-                            borderRadius: 2,
-                            overflow: "hidden",
-                            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                          }}
-                        >
-                          <img
-                            src={showcasePreview}
-                            alt="Vitrin fotoğrafı önizleme"
-                            style={{
-                              width: "200px",
-                              height: "150px",
-                              objectFit: "cover",
-                              display: "block",
-                            }}
-                          />
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              top: 8,
-                              right: 8,
-                              background: "rgba(0,0,0,0.7)",
-                              borderRadius: "50%",
-                              p: 0.5,
-                              cursor: "pointer",
-                              "&:hover": { background: "rgba(0,0,0,0.9)" },
-                            }}
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                showcasePhoto: null,
-                              }));
-                              setShowcasePreview(null);
-                            }}
-                          >
-                            <Typography sx={{ color: "white", fontSize: 16 }}>
-                              ×
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </Box>
-                    )}
-                  </Card>
-
-                  {/* Diğer Fotoğraflar */}
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      p: 3,
-                      borderRadius: 3,
-                      background:
-                        "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-                      border: "2px dashed #64748b",
-                      textAlign: "center",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease-in-out",
-                      "&:hover": {
-                        borderColor: "secondary.main",
-                        transform: "translateY(-2px)",
-                        boxShadow: "0 8px 25px rgba(0,0,0,0.1)",
-                      },
-                    }}
-                  >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        mb: 2,
-                        color: "secondary.main",
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 1,
-                      }}
-                    >
-                      📷 Diğer Fotoğraflar
-                      <Chip
-                        label={`${formData.photos.length}/15`}
-                        color="secondary"
-                        size="small"
-                      />
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 3 }}
-                    >
-                      Ürününüzü farklı açılardan gösteren fotoğraflar ekleyin
-                    </Typography>
-                    <input
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      id="other-photos"
-                      type="file"
-                      multiple
-                      onChange={(e) => handlePhotoUpload(e, false)}
-                    />
-                    <label htmlFor="other-photos">
-                      <Button
-                        variant="contained"
-                        component="span"
-                        startIcon={<PhotoCamera />}
-                        sx={{
-                          borderRadius: 3,
-                          py: 1.5,
-                          px: 3,
-                          fontWeight: 600,
-                          background:
-                            "linear-gradient(45deg, #9c27b0 30%, #e1bee7 90%)",
-                          "&:hover": {
-                            background:
-                              "linear-gradient(45deg, #7b1fa2 30%, #9c27b0 90%)",
-                          },
-                        }}
-                      >
-                        Fotoğraf Ekle
-                      </Button>
-                    </label>
-
-                    {/* Diğer fotoğraflar önizlemesi */}
-                    {photoPreviews.length > 0 && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexWrap: "wrap",
-                          gap: 2,
-                          mt: 3,
-                          justifyContent: "center",
-                        }}
-                      >
-                        {photoPreviews.map((preview, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              position: "relative",
-                              borderRadius: 2,
-                              overflow: "hidden",
-                              boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-                            }}
-                          >
-                            <img
-                              src={preview}
-                              alt={`Fotoğraf ${index + 1}`}
-                              style={{
-                                width: "80px",
-                                height: "60px",
-                                objectFit: "cover",
-                                display: "block",
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                position: "absolute",
-                                top: 4,
-                                right: 4,
-                                background: "rgba(0,0,0,0.7)",
-                                borderRadius: "50%",
-                                p: 0.3,
-                                cursor: "pointer",
-                                "&:hover": { background: "rgba(0,0,0,0.9)" },
-                              }}
-                              onClick={() => removePhoto(index)}
-                            >
-                              <Typography sx={{ color: "white", fontSize: 12 }}>
-                                ×
-                              </Typography>
-                            </Box>
-                          </Box>
-                        ))}
-                      </Box>
-                    )}
-                  </Card>
-                </Box>
-              </CardContent>
-            </Card>
-
-            <Divider sx={{ my: 4 }} />
-
-            {/* 🎥 Videolar */}
-            <Card elevation={2} sx={{ mb: 4 }}>
-              <CardContent>
-                <Box sx={{ textAlign: "center" }}>
-                  <Box
-                    sx={{
-                      background:
-                        "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
-                      borderRadius: 3,
-                      p: 2,
-                      mb: 3,
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
-                  >
-                    <Videocam sx={{ color: "white", fontSize: 28 }} />
-                    <Box>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: "white",
-                          fontWeight: "bold",
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        Videolar
-                      </Typography>
-                    </Box>
-                  </Box>
-
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{ mb: 3 }}
+                    sx={{ mb: 2 }}
                   >
-                    Tanker dorsenizi videoyla tanıtın (En fazla 3 video,
-                    maksimum 50MB)
+                    Ana fotoğraf olarak kullanılacak
                   </Typography>
-
                   <input
-                    type="file"
-                    accept="video/*"
-                    multiple
-                    id="video-upload"
+                    accept="image/*"
                     style={{ display: "none" }}
-                    onChange={handleVideoUpload}
+                    id="showcase-photo"
+                    type="file"
+                    onChange={(e) => handlePhotoUpload(e, true)}
                   />
-                  <label htmlFor="video-upload">
-                    <Button
-                      component="span"
-                      variant="contained"
-                      startIcon={<Videocam />}
-                      disabled={formData.videos.length >= 3}
-                      sx={{
-                        background:
-                          "linear-gradient(45deg, #ff6b35 30%, #f7931e 90%)",
-                        "&:hover": {
-                          background:
-                            "linear-gradient(45deg, #e55a2b 30%, #e8891e 90%)",
-                        },
-                      }}
-                    >
-                      Video Ekle ({formData.videos.length}/3)
+                  <label htmlFor="showcase-photo">
+                    <Button variant="outlined" component="span" fullWidth>
+                      Fotoğraf Seç
                     </Button>
                   </label>
 
-                  {videoPreviews.length > 0 && (
+                  {/* Vitrin fotoğrafı önizlemesi */}
+                  {showcasePreview && (
+                    <Box sx={{ mt: 3 }}>
+                      <Box
+                        sx={{
+                          position: "relative",
+                          display: "inline-block",
+                          borderRadius: 2,
+                          overflow: "hidden",
+                          boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                        }}
+                      >
+                        <img
+                          src={showcasePreview}
+                          alt="Vitrin fotoğrafı önizleme"
+                          style={{
+                            width: "200px",
+                            height: "150px",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            background: "rgba(0,0,0,0.7)",
+                            borderRadius: "50%",
+                            p: 0.5,
+                            cursor: "pointer",
+                            "&:hover": { background: "rgba(0,0,0,0.9)" },
+                          }}
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              showcasePhoto: null,
+                            }));
+                            setShowcasePreview(null);
+                          }}
+                        >
+                          <Typography sx={{ color: "white", fontSize: 16 }}>
+                            ×
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  )}
+                </Card>
+
+                {/* Diğer Fotoğraflar */}
+                <Card variant="outlined" sx={{ p: 3 }}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ mb: 2, fontWeight: 600 }}
+                  >
+                    Diğer Fotoğraflar ({formData.photos.length}/15)
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 2 }}
+                  >
+                    Ek fotoğraflar ekleyin
+                  </Typography>
+                  <input
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    id="other-photos"
+                    type="file"
+                    multiple
+                    onChange={(e) => handlePhotoUpload(e, false)}
+                  />
+                  <label htmlFor="other-photos">
+                    <Button variant="outlined" component="span" fullWidth>
+                      Fotoğraf Ekle
+                    </Button>
+                  </label>
+
+                  {/* Diğer fotoğraflar önizlemesi */}
+                  {photoPreviews.length > 0 && (
                     <Box
                       sx={{
-                        display: "grid",
-                        gridTemplateColumns:
-                          "repeat(auto-fit, minmax(200px, 1fr))",
+                        display: "flex",
+                        flexWrap: "wrap",
                         gap: 2,
                         mt: 3,
+                        justifyContent: "center",
                       }}
                     >
-                      {videoPreviews.map((videoUrl, index) => (
+                      {photoPreviews.map((preview, index) => (
                         <Box
                           key={index}
                           sx={{
@@ -1416,67 +941,150 @@ const TankerForm: React.FC = () => {
                             boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
                           }}
                         >
-                          <video
-                            src={videoUrl}
+                          <img
+                            src={preview}
+                            alt={`Fotoğraf ${index + 1}`}
                             style={{
-                              width: "100%",
-                              height: "120px",
+                              width: "80px",
+                              height: "60px",
                               objectFit: "cover",
+                              display: "block",
                             }}
-                            controls={false}
                           />
                           <Box
                             sx={{
                               position: "absolute",
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              background: "rgba(0,0,0,0.3)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => openVideoModal(index)}
-                          >
-                            <PlayArrow sx={{ fontSize: 48, color: "white" }} />
-                          </Box>
-                          <IconButton
-                            sx={{
-                              position: "absolute",
-                              top: 8,
-                              right: 8,
-                              background: "rgba(255,255,255,0.9)",
-                              "&:hover": { background: "rgba(255,255,255,1)" },
-                            }}
-                            size="small"
-                            onClick={() => removeVideo(index)}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                          <Typography
-                            sx={{
-                              position: "absolute",
-                              bottom: 8,
-                              left: 8,
+                              top: 4,
+                              right: 4,
                               background: "rgba(0,0,0,0.7)",
-                              color: "white",
-                              px: 1,
-                              py: 0.5,
-                              borderRadius: 1,
-                              fontSize: 12,
+                              borderRadius: "50%",
+                              p: 0.3,
+                              cursor: "pointer",
+                              "&:hover": { background: "rgba(0,0,0,0.9)" },
                             }}
+                            onClick={() => removePhoto(index)}
                           >
-                            Video {index + 1}
-                          </Typography>
+                            <Typography sx={{ color: "white", fontSize: 12 }}>
+                              ×
+                            </Typography>
+                          </Box>
                         </Box>
                       ))}
                     </Box>
                   )}
+                </Card>
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 4 }} />
+
+            {/* Videolar */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Videolar (Opsiyonel)
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                En fazla 3 video (maksimum 50MB)
+              </Typography>
+
+              <input
+                type="file"
+                accept="video/*"
+                multiple
+                id="video-upload"
+                style={{ display: "none" }}
+                onChange={handleVideoUpload}
+              />
+              <label htmlFor="video-upload">
+                <Button
+                  component="span"
+                  variant="outlined"
+                  disabled={formData.videos.length >= 3}
+                >
+                  Video Ekle ({formData.videos.length}/3)
+                </Button>
+              </label>
+
+              {videoPreviews.length > 0 && (
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gap: 2,
+                    mt: 3,
+                  }}
+                >
+                  {videoPreviews.map((videoUrl, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        position: "relative",
+                        borderRadius: 2,
+                        overflow: "hidden",
+                        boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      <video
+                        src={videoUrl}
+                        style={{
+                          width: "100%",
+                          height: "120px",
+                          objectFit: "cover",
+                        }}
+                        controls={false}
+                      />
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          background: "rgba(0,0,0,0.3)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => openVideoModal(index)}
+                      >
+                        <PlayArrow sx={{ fontSize: 48, color: "white" }} />
+                      </Box>
+                      <IconButton
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          background: "rgba(255,255,255,0.9)",
+                          "&:hover": { background: "rgba(255,255,255,1)" },
+                        }}
+                        size="small"
+                        onClick={() => removeVideo(index)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                      <Typography
+                        sx={{
+                          position: "absolute",
+                          bottom: 8,
+                          left: 8,
+                          background: "rgba(0,0,0,0.7)",
+                          color: "white",
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          fontSize: 12,
+                        }}
+                      >
+                        Video {index + 1}
+                      </Typography>
+                    </Box>
+                  ))}
                 </Box>
-              </CardContent>
-            </Card>
+              )}
+            </Box>
+
+            <Divider sx={{ my: 4 }} />
 
             {/* Detaylı Bilgi */}
             <TextField
@@ -1508,15 +1116,6 @@ const TankerForm: React.FC = () => {
                 variant="contained"
                 size="large"
                 disabled={loading}
-                sx={{
-                  px: 6,
-                  background:
-                    "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-                  "&:hover": {
-                    background:
-                      "linear-gradient(45deg, #1565c0 30%, #1976d2 90%)",
-                  },
-                }}
               >
                 {loading ? "İlan Oluşturuluyor..." : "İlanı Yayınla"}
               </Button>
@@ -1532,15 +1131,16 @@ const TankerForm: React.FC = () => {
               variant="h4"
               sx={{ color: "success.main", fontWeight: "bold" }}
             >
-              🎉 Başarılı!
+              Başarılı!
             </Typography>
           </DialogTitle>
           <DialogContent sx={{ textAlign: "center", pb: 1 }}>
             <Typography variant="h6" gutterBottom>
-              Tanker Dorse ilanınız başarıyla oluşturuldu!
+              İlan Başarıyla Oluşturuldu!
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              İlanınız admin onayından sonra yayınlanacaktır.
+              Tanker dorse ilanınız başarıyla oluşturuldu ve yönetici onayı
+              bekliyor. Onaylandıktan sonra yayınlanacaktır.
             </Typography>
           </DialogContent>
           <DialogActions sx={{ justifyContent: "center", gap: 2, p: 3 }}>
@@ -1557,11 +1157,7 @@ const TankerForm: React.FC = () => {
                 onClick={handleViewAd}
                 variant="contained"
                 size="large"
-                sx={{
-                  minWidth: 120,
-                  background:
-                    "linear-gradient(45deg, #1976d2 30%, #42a5f5 90%)",
-                }}
+                sx={{ minWidth: 120 }}
               >
                 İlanı Görüntüle
               </Button>

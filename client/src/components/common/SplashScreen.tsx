@@ -29,12 +29,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
 
   // Eğer splash screen gösteriliyorsa
   if (showSplash) {
-    return (
-      <LoadingScreen
-        message="TrucksBus'a Hoş Geldiniz!"
-        subMessage="Türkiye'nin en büyük ticari araç platformu..."
-      />
-    );
+    return <LoadingScreen message="TrucksBus'a Hoş Geldiniz!" />;
   }
 
   // Normal içeriği göster

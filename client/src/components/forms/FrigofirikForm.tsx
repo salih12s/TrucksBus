@@ -311,14 +311,14 @@ const FrigofirikForm: React.FC = () => {
       formDataToSend.append("price", formData.price);
       formDataToSend.append("year", formData.year.toString());
 
-      // Dorse kategorisi - Frigofirik alt kategorisi
+      // Dorse kategorisi - Frigorifik markası
       formDataToSend.append("categoryId", "6"); // Dorse category ID
-      formDataToSend.append("brandName", "Frigofirik");
-      formDataToSend.append("brandSlug", "frigofirik");
-      formDataToSend.append("modelName", "Frigofirik");
-      formDataToSend.append("modelSlug", "frigofirik");
-      formDataToSend.append("variantName", "Frigofirik");
-      formDataToSend.append("variantSlug", "frigofirik");
+      formDataToSend.append("brandName", "Frigorifik");
+      formDataToSend.append("brandSlug", "frigorifik-frigorifik");
+      formDataToSend.append("modelName", "Frigorifik Model");
+      formDataToSend.append("modelSlug", "frigorifik-frigorifik-model");
+      formDataToSend.append("variantName", "Frigorifik");
+      formDataToSend.append("variantSlug", "frigorifik-frigorifik");
 
       // Teknik özellikler
       formDataToSend.append("uzunluk", formData.uzunluk);
@@ -354,13 +354,24 @@ const FrigofirikForm: React.FC = () => {
       );
       formDataToSend.append("exchange", formData.exchange ? "true" : "false");
 
-      // Fotoğraflar
-      images.forEach((image, index) => {
-        formDataToSend.append("images", image);
-        if (index === showcaseImageIndex) {
-          formDataToSend.append("showcase_image_index", index.toString());
-        }
-      });
+      // Fotoğraflar - showcasePhoto ve photo_ formatında gönder
+      if (images.length > 0) {
+        // Vitrin fotoğrafı
+        formDataToSend.append("showcasePhoto", images[showcaseImageIndex]);
+
+        // Diğer fotoğraflar
+        images.forEach((image, index) => {
+          if (index !== showcaseImageIndex) {
+            formDataToSend.append(`photo_${index}`, image);
+          }
+        });
+
+        console.log(
+          `📷 ${images.length} fotoğraf gönderiliyor (${
+            showcaseImageIndex + 1
+          }. vitrin)`
+        );
+      }
 
       const response = await apiClient.post("/ads/dorse", formDataToSend, {
         headers: {
