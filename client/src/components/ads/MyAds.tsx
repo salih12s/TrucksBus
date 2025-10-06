@@ -174,7 +174,7 @@ const MyAds: React.FC = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case "APPROVED":
-        return "Yayında";
+        return "Onaylandı";
       case "PENDING":
         return "Onay Bekliyor";
       case "REJECTED":
@@ -458,7 +458,7 @@ const MyAds: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <MenuItem value="all">Tümü</MenuItem>
-              <MenuItem value="APPROVED">Yayında</MenuItem>
+              <MenuItem value="APPROVED">Onaylandı</MenuItem>
               <MenuItem value="PENDING">Onay Bekliyor</MenuItem>
               <MenuItem value="REJECTED">Reddedildi</MenuItem>
               <MenuItem value="EXPIRED">Süresi Doldu</MenuItem>

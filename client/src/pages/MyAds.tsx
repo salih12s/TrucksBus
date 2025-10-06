@@ -90,8 +90,10 @@ const MyAds: React.FC = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
+      case "APPROVED":
+        return "Onaylandı";
       case "ACTIVE":
-        return "Yayında";
+        return "Aktif";
       case "PENDING":
         return "Onay Bekliyor";
       case "REJECTED":

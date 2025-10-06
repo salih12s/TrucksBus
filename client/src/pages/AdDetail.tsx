@@ -1235,8 +1235,8 @@ const AdDetail: React.FC = () => {
                             value: (() => {
                               // Tüm olası motor gücü kaynaklarını kontrol et
                               const sources = [
-                                ad.customFields?.motorPower,
                                 ad.customFields?.enginePower,
+                                ad.customFields?.motorPower,
                                 ad.enginePower,
                                 ad.motorPower,
                                 ad.engineHorsepower,
@@ -1251,7 +1251,13 @@ const AdDetail: React.FC = () => {
 
                               for (const source of sources) {
                                 if (source && source.toString().trim() !== "") {
-                                  return source.toString();
+                                  // Sadece sayısal değer ve hp ekini kontrol et
+                                  const value = source.toString().trim();
+                                  // Eğer sadece sayı varsa "hp" ekle
+                                  if (/^\d+$/.test(value)) {
+                                    return `${value} hp`;
+                                  }
+                                  return value;
                                 }
                               }
 
@@ -1294,9 +1300,16 @@ const AdDetail: React.FC = () => {
                             value: (() => {
                               // Önce direkt ad objesi üzerinden kontrol et
                               if (ad.hasAccidentRecord === true) {
-                                return "Evet";
+                                return "Var";
                               } else if (ad.hasAccidentRecord === false) {
-                                return "Hayır";
+                                return "Yok";
+                              }
+
+                              // Çekici için damageRecord kontrol et
+                              if (ad.customFields?.damageRecord) {
+                                return ad.customFields.damageRecord === "evet"
+                                  ? "Var"
+                                  : "Yok";
                               }
 
                               // Fallback olarak customFields'tan kontrol et
@@ -1304,13 +1317,13 @@ const AdDetail: React.FC = () => {
                                 ad.customFields?.hasAccidentRecord === "evet" ||
                                 ad.customFields?.hasAccidentRecord === true
                               ) {
-                                return "Evet";
+                                return "Var";
                               } else if (
                                 ad.customFields?.hasAccidentRecord ===
                                   "hayir" ||
                                 ad.customFields?.hasAccidentRecord === false
                               ) {
-                                return "Hayır";
+                                return "Yok";
                               }
                               return null;
                             })(),
@@ -1320,9 +1333,9 @@ const AdDetail: React.FC = () => {
                             value: (() => {
                               // Önce direkt ad objesi üzerinden kontrol et
                               if (ad.hasTramerRecord === true) {
-                                return "Evet";
+                                return "Var";
                               } else if (ad.hasTramerRecord === false) {
-                                return "Hayır";
+                                return "Yok";
                               }
 
                               // Fallback olarak customFields'tan kontrol et
@@ -1330,12 +1343,12 @@ const AdDetail: React.FC = () => {
                                 ad.customFields?.hasTramerRecord === "evet" ||
                                 ad.customFields?.hasTramerRecord === true
                               ) {
-                                return "Evet";
+                                return "Var";
                               } else if (
                                 ad.customFields?.hasTramerRecord === "hayir" ||
                                 ad.customFields?.hasTramerRecord === false
                               ) {
-                                return "Hayır";
+                                return "Yok";
                               }
                               return null;
                             })(),
@@ -1371,6 +1384,30 @@ const AdDetail: React.FC = () => {
                                 : ad.customFields?.hasDamper === false
                                 ? "Hayır"
                                 : null,
+                          },
+
+                          // Tanker Özel Alanları
+                          {
+                            label: "Hacim",
+                            value: ad.customFields?.hacim
+                              ? `${ad.customFields.hacim} L`
+                              : null,
+                          },
+                          {
+                            label: "Göz Sayısı",
+                            value: ad.customFields?.gozSayisi
+                              ? `${ad.customFields.gozSayisi} adet`
+                              : null,
+                          },
+                          {
+                            label: "Lastik Durumu",
+                            value: ad.customFields?.lastikDurumu
+                              ? `${ad.customFields.lastikDurumu}%`
+                              : null,
+                          },
+                          {
+                            label: "Renk",
+                            value: ad.customFields?.renk || null,
                           },
 
                           // Çekici Özel Alanları
@@ -1410,14 +1447,6 @@ const AdDetail: React.FC = () => {
                               ad.customFields?.tippingDirection ||
                               ad.customFields?.devrilmeYonu ||
                               null,
-                          },
-                          {
-                            label: "Takaslı",
-                            value: ad.customFields?.isExchangeable
-                              ? ad.customFields.isExchangeable === "evet"
-                                ? "Evet"
-                                : "Hayır"
-                              : null,
                           },
 
                           // Otobüs Özel Alanları
@@ -1620,12 +1649,6 @@ const AdDetail: React.FC = () => {
                             value: ad.customFields?.sogutucu || null,
                           },
 
-                          // Ortak Dorse Özellikleri
-                          {
-                            label: "Takaslı",
-                            value: ad.customFields?.takasli || null,
-                          },
-
                           // Oto Kurtarıcı/Taşıyıcı Özel Alanları
                           {
                             label: "Çekici Ekipmanı",
@@ -1803,16 +1826,33 @@ const AdDetail: React.FC = () => {
                           },
                           {
                             label: "Takas",
-                            value:
-                              ad.customFields?.isExchangeable === true
-                                ? "Yapılabilir"
-                                : ad.customFields?.isExchangeable === false
-                                ? "Yapılamaz"
-                                : ad.customFields?.exchange === "true"
-                                ? "Yapılabilir"
-                                : ad.customFields?.exchange === "false"
-                                ? "Yapılamaz"
-                                : ad.customFields?.exchange || ad.takas || null,
+                            value: (() => {
+                              // Önce takasli field'ını kontrol et (Tanker vb için)
+                              if (ad.customFields?.takasli) {
+                                return ad.customFields.takasli === "evet" ||
+                                  ad.customFields.takasli === true
+                                  ? "Evet"
+                                  : "Hayır";
+                              }
+                              // Sonra isExchangeable kontrol et
+                              if (
+                                ad.customFields?.isExchangeable !== undefined
+                              ) {
+                                return ad.customFields.isExchangeable ===
+                                  true ||
+                                  ad.customFields.isExchangeable === "evet"
+                                  ? "Evet"
+                                  : "Hayır";
+                              }
+                              // En son exchange field'ı
+                              if (ad.customFields?.exchange) {
+                                return ad.customFields.exchange === "true" ||
+                                  ad.customFields.exchange === "evet"
+                                  ? "Evet"
+                                  : "Hayır";
+                              }
+                              return ad.takas || null;
+                            })(),
                           },
                           { label: "Hasar Durumu", value: ad.damage || null },
 

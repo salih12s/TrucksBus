@@ -79,6 +79,7 @@ interface FormData {
   tireCondition: string;
   hasAccidentRecord: string; // Hasar kaydı
   hasTramerRecord: string; // Tramer kaydı
+  exchange: string; // Takas
 
   // Özellikler
   features: string[];
@@ -137,6 +138,7 @@ const OtobusAdForm: React.FC = () => {
     tireCondition: "",
     hasAccidentRecord: "",
     hasTramerRecord: "",
+    exchange: "",
     features: [],
     photos: [],
     showcasePhoto: null,
@@ -993,6 +995,9 @@ const OtobusAdForm: React.FC = () => {
       if (formData.hasTramerRecord && formData.hasTramerRecord.trim() !== "") {
         submitData.append("hasTramerRecord", formData.hasTramerRecord);
       }
+      if (formData.exchange && formData.exchange.trim() !== "") {
+        submitData.append("exchange", formData.exchange);
+      }
 
       // Özellikler - JSON olarak gönder
       if (formData.features.length > 0) {
@@ -1554,7 +1559,7 @@ const OtobusAdForm: React.FC = () => {
                   />
                 </Box>
 
-                {/* Hasar Kaydı, Tramer Kaydı */}
+                {/* Hasar Kaydı, Tramer Kaydı, Takas */}
                 <Box
                   sx={{
                     display: "flex",
@@ -1580,8 +1585,8 @@ const OtobusAdForm: React.FC = () => {
                       }
                       label="Hasar Kaydı"
                     >
-                      <MenuItem value="evet">Evet</MenuItem>
-                      <MenuItem value="hayir">Hayır</MenuItem>
+                      <MenuItem value="evet">Var</MenuItem>
+                      <MenuItem value="hayir">Yok</MenuItem>
                     </Select>
                   </FormControl>
                   <FormControl
@@ -1600,6 +1605,27 @@ const OtobusAdForm: React.FC = () => {
                         handleInputChange("hasTramerRecord", e.target.value)
                       }
                       label="Tramer Kaydı"
+                    >
+                      <MenuItem value="evet">Var</MenuItem>
+                      <MenuItem value="hayir">Yok</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControl
+                    sx={{
+                      flex: 1,
+                      minWidth: 200,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 3,
+                      },
+                    }}
+                  >
+                    <InputLabel>Takas</InputLabel>
+                    <Select
+                      value={formData.exchange || ""}
+                      onChange={(e) =>
+                        handleInputChange("exchange", e.target.value)
+                      }
+                      label="Takas"
                     >
                       <MenuItem value="evet">Evet</MenuItem>
                       <MenuItem value="hayir">Hayır</MenuItem>

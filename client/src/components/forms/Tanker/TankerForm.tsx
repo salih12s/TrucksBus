@@ -47,6 +47,26 @@ interface District {
   cityId: number;
 }
 
+interface Brand {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  slug: string;
+  brandId: number;
+}
+
+interface Variant {
+  id: number;
+  name: string;
+  slug: string;
+  modelId: number;
+}
+
 interface TankerFormData {
   title: string;
   description: string;
@@ -350,6 +370,101 @@ const TankerForm: React.FC = () => {
     console.log("📝 Form Data:", formData);
     setLoading(true);
     try {
+      // Backend'den Tanker brand/model/variant ID'lerini çek
+      console.log("🔍 Tanker brand/model/variant bilgileri alınıyor...");
+
+      let tankerBrandId = "";
+      let tankerModelId = "";
+      let tankerVariantId = "";
+
+      try {
+        // Brand çek (Tanker)
+        const brandsResponse = await apiClient.get("/brands");
+        const tankerBrand = (brandsResponse.data as Brand[]).find(
+          (b: Brand) => b.slug === "tanker"
+        );
+
+        if (tankerBrand) {
+          tankerBrandId = tankerBrand.id.toString();
+          console.log(`✅ Tanker Brand ID: ${tankerBrandId}`);
+
+          // Model çek
+          try {
+            console.log(
+              `🔄 Model API çağrısı yapılıyor: /brands/${tankerBrand.id}/models`
+            );
+            const modelsResponse = await apiClient.get(
+              `/brands/${tankerBrand.id}/models`
+            );
+            console.log(
+              `📦 Tanker Brand'in tüm modelleri:`,
+              modelsResponse.data
+            );
+            console.log(
+              `📊 Model sayısı:`,
+              Array.isArray(modelsResponse.data)
+                ? modelsResponse.data.length
+                : "Array değil!"
+            );
+
+            const tankerModel = (modelsResponse.data as Model[]).find(
+              (m: Model) => m.slug === "tanker-tanker"
+            );
+
+            if (tankerModel) {
+              tankerModelId = tankerModel.id.toString();
+              console.log(`✅ Tanker Model ID: ${tankerModelId}`);
+
+              // Variant çek
+              try {
+                console.log(
+                  `🔄 Variant API çağrısı yapılıyor: /models/${tankerModel.id}/variants`
+                );
+                const variantsResponse = await apiClient.get(
+                  `/models/${tankerModel.id}/variants`
+                );
+                console.log(
+                  `📦 Tanker Model'in tüm varyantları:`,
+                  variantsResponse.data
+                );
+                console.log(
+                  `📊 Variant sayısı:`,
+                  Array.isArray(variantsResponse.data)
+                    ? variantsResponse.data.length
+                    : "Array değil!"
+                );
+
+                const tankerVariant = (variantsResponse.data as Variant[]).find(
+                  (v: Variant) => v.slug === "tanker-tanker-tanker"
+                );
+
+                if (tankerVariant) {
+                  tankerVariantId = tankerVariant.id.toString();
+                  console.log(`✅ Tanker Variant ID: ${tankerVariantId}`);
+                } else {
+                  console.error(
+                    `❌ Tanker variant bulunamadı! Aranan slug: "tanker-tanker-tanker"`
+                  );
+                }
+              } catch (variantError) {
+                console.error(`❌ Variant API hatası:`, variantError);
+              }
+            } else {
+              console.error(
+                `❌ Tanker model bulunamadı! Aranan slug: "tanker-tanker"`
+              );
+            }
+          } catch (modelError) {
+            console.error(`❌ Model API hatası:`, modelError);
+          }
+        }
+      } catch (error) {
+        console.error(
+          "❌ Tanker brand/model/variant ID'leri alınamadı:",
+          error
+        );
+      }
+
       const submitData = new FormData();
 
       // Temel bilgiler
@@ -358,14 +473,15 @@ const TankerForm: React.FC = () => {
       submitData.append("year", formData.year.toString());
       submitData.append("price", formData.price);
 
-      // Dorse kategorisi - Tanker markası
+      // Kategori bilgileri (new format için)
+      submitData.append("category", "Dorse");
+      submitData.append("subcategory", "Tanker");
+
+      // Dorse kategorisi - Tanker markası (ID'lerle)
       submitData.append("categoryId", "6"); // Dorse category ID
-      submitData.append("brandName", "Tanker");
-      submitData.append("brandSlug", "tanker");
-      submitData.append("modelName", "Tanker Model");
-      submitData.append("modelSlug", "tanker-model");
-      submitData.append("variantName", "Tanker");
-      submitData.append("variantSlug", "tanker");
+      if (tankerBrandId) submitData.append("brandId", tankerBrandId);
+      if (tankerModelId) submitData.append("modelId", tankerModelId);
+      if (tankerVariantId) submitData.append("variantId", tankerVariantId);
 
       // Tanker özel bilgileri
       submitData.append("hacim", formData.hacim.toString());
@@ -392,6 +508,15 @@ const TankerForm: React.FC = () => {
       submitData.append("warranty", formData.warranty ? "evet" : "hayir");
       submitData.append("negotiable", formData.negotiable ? "evet" : "hayir");
       submitData.append("exchange", formData.exchange ? "evet" : "hayir");
+
+      // Tanker özel alanlarını ekle
+      if (formData.hacim) submitData.append("hacim", formData.hacim);
+      if (formData.gozSayisi)
+        submitData.append("gozSayisi", formData.gozSayisi);
+      if (formData.lastikDurumu)
+        submitData.append("lastikDurumu", formData.lastikDurumu);
+      if (formData.renk) submitData.append("renk", formData.renk);
+      if (formData.takasli) submitData.append("takasli", formData.takasli);
 
       // Detaylı bilgiyi teknik özelliklerle birleştir
       let detailedDescription = formData.detailedInfo;
@@ -756,20 +881,6 @@ const TankerForm: React.FC = () => {
               }}
             >
               <FormControl fullWidth>
-                <InputLabel>Garanti</InputLabel>
-                <Select
-                  value={formData.warranty}
-                  onChange={(e) =>
-                    handleInputChange("warranty", e.target.value)
-                  }
-                  label="Garanti"
-                >
-                  <MenuItem value="evet">Evet</MenuItem>
-                  <MenuItem value="hayir">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
                 <InputLabel>Pazarlık</InputLabel>
                 <Select
                   value={formData.negotiable}
@@ -1085,20 +1196,6 @@ const TankerForm: React.FC = () => {
             </Box>
 
             <Divider sx={{ my: 4 }} />
-
-            {/* Detaylı Bilgi */}
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              label="Detaylı Bilgi"
-              value={formData.detailedInfo}
-              onChange={(e) =>
-                handleInputChange("detailedInfo", e.target.value)
-              }
-              placeholder="Tanker dorseniz hakkında ek bilgiler..."
-              sx={{ mb: 4 }}
-            />
 
             {/* Submit Button */}
             <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>

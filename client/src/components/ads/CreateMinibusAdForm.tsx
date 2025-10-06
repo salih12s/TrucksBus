@@ -1642,8 +1642,8 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Hasar Kaydı"
                     >
-                      <MenuItem value="evet">Evet</MenuItem>
-                      <MenuItem value="hayir">Hayır</MenuItem>
+                      <MenuItem value="evet">Var</MenuItem>
+                      <MenuItem value="hayir">Yok</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -1665,8 +1665,8 @@ const CreateMinibusAdForm: React.FC = () => {
                       }
                       label="Tramer Kaydı"
                     >
-                      <MenuItem value="evet">Evet</MenuItem>
-                      <MenuItem value="hayir">Hayır</MenuItem>
+                      <MenuItem value="evet">Var</MenuItem>
+                      <MenuItem value="hayir">Yok</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>

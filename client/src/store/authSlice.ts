@@ -75,7 +75,7 @@ export const loginUser = createAsyncThunk(
       return response;
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Login failed";
+        error instanceof Error ? error.message : "Giriş başarısız";
       return rejectWithValue(errorMessage);
     }
   }
@@ -117,7 +117,7 @@ export const registerUser = createAsyncThunk(
 
       // Network veya diğer hatalar
       const errorMessage =
-        error instanceof Error ? error.message : "Registration failed";
+        error instanceof Error ? error.message : "Kayıt işlemi başarısız";
       return rejectWithValue(errorMessage);
     }
   }
@@ -130,7 +130,7 @@ export const logoutUser = createAsyncThunk(
       await authApi.logout();
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Logout failed";
+        error instanceof Error ? error.message : "Çıkış başarısız";
       return rejectWithValue(errorMessage);
     }
   }
@@ -145,14 +145,16 @@ export const getCurrentUser = createAsyncThunk(
       const token = state.auth.token;
 
       if (!token) {
-        return rejectWithValue("No token found");
+        return rejectWithValue("Token bulunamadı");
       }
 
       const response = await getCurrentUserAPI();
       return response;
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to get current user";
+        error instanceof Error
+          ? error.message
+          : "Kullanıcı bilgileri alınamadı";
       const apiError = error as { response?: { data?: { message?: string } } };
       return rejectWithValue(apiError?.response?.data?.message || errorMessage);
     }

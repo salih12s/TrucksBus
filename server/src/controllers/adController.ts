@@ -750,6 +750,14 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
     }
 
     const files = req.files as Express.Multer.File[];
+
+    // Debug: Log all received data
+    console.log("📥 Received brandId:", req.body.brandId);
+    console.log("📥 Received modelId:", req.body.modelId);
+    console.log("📥 Received variantId:", req.body.variantId);
+    console.log("📥 Received category:", req.body.category);
+    console.log("📥 Received subcategory:", req.body.subcategory);
+
     const {
       // Basic fields
       title,
@@ -793,6 +801,11 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       // Tenteli specific fields
       catiPerdeSistemi,
       tenteliType,
+
+      // Tanker specific fields
+      hacim,
+      gozSayisi,
+      renk,
 
       // Legacy fields
       categoryId,
@@ -894,6 +907,11 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
         // Tenteli specific data
         catiPerdeSistemi: catiPerdeSistemi || null,
         tenteliType: tenteliType || null,
+
+        // Tanker specific data
+        hacim: hacim || null,
+        gozSayisi: gozSayisi || null,
+        renk: renk || null,
       };
     }
     // Handle legacy format and direct Kuruyük submissions
@@ -960,6 +978,8 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
         brand: true,
         model: true,
         variant: true,
+        city: true,
+        district: true,
       },
     });
 
@@ -2637,6 +2657,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       color,
       fuelType,
       transmission,
+      enginePower,
       passengerCapacity,
       seatLayout,
       seatBackScreen,
@@ -2786,6 +2807,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
           color: color || null,
           fuelType: fuelType || null,
           transmission: transmission || null,
+          enginePower: enginePower || null,
           passengerCapacity: passengerCapacity || null,
           seatLayout: seatLayout || null,
           seatBackScreen: seatBackScreen || null,

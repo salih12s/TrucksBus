@@ -384,7 +384,7 @@ const KamyonRomorkForm: React.FC = () => {
               </Box>
 
               <FormControl component="fieldset">
-                <FormLabel component="legend">Takaslı</FormLabel>
+                <FormLabel component="legend">Takas</FormLabel>
                 <RadioGroup
                   value={formData.exchangeable}
                   onChange={(e) =>

@@ -1515,7 +1515,7 @@ const KamyonAdForm: React.FC = () => {
                   </FormControl>
                 </Box>
 
-                {/* Yakıt Tipi ve Takaslı */}
+                {/* Yakıt Tipi ve Takas */}
                 <Box
                   sx={{
                     display: "grid",
@@ -1568,13 +1568,13 @@ const KamyonAdForm: React.FC = () => {
                       },
                     }}
                   >
-                    <InputLabel>Takaslı</InputLabel>
+                    <InputLabel>Takas</InputLabel>
                     <Select
                       value={formData.exchange}
                       onChange={(e) =>
                         handleInputChange("exchange", e.target.value)
                       }
-                      label="Takaslı"
+                      label="Takas"
                     >
                       <MenuItem value="evet">
                         <Box
@@ -1615,14 +1615,14 @@ const KamyonAdForm: React.FC = () => {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          Evet
+                          Var
                         </Box>
                       </MenuItem>
                       <MenuItem value="hayir">
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          Hayır
+                          Yok
                         </Box>
                       </MenuItem>
                     </Select>
@@ -1650,14 +1650,14 @@ const KamyonAdForm: React.FC = () => {
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          Evet
+                          Var
                         </Box>
                       </MenuItem>
                       <MenuItem value="hayir">
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          Hayır
+                          Yok
                         </Box>
                       </MenuItem>
                     </Select>
