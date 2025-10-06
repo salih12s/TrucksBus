@@ -942,20 +942,6 @@ const HafriyatTipiForm: React.FC = () => {
               }}
             >
               <FormControl fullWidth>
-                <InputLabel>Pazarlık</InputLabel>
-                <Select
-                  value={formData.negotiable}
-                  onChange={(e) =>
-                    handleInputChange("negotiable", e.target.value)
-                  }
-                  label="Pazarlık"
-                >
-                  <MenuItem value="evet">Evet</MenuItem>
-                  <MenuItem value="hayir">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
                 <InputLabel>Takas</InputLabel>
                 <Select
                   value={formData.exchange}

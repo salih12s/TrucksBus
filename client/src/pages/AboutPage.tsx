@@ -42,7 +42,7 @@ const AboutPage: React.FC = () => {
           color="text.secondary"
           sx={{ fontSize: { xs: "1rem", md: "1.25rem" } }}
         >
-          Türkiye'nin En Güvenilir Ticari Araç Platformu
+          Ticari Araç Platformu
         </Typography>
       </Box>
 
@@ -135,7 +135,7 @@ const AboutPage: React.FC = () => {
               fontSize: { xs: "1.25rem", md: "1.5rem" },
             }}
           >
-            Neden TruckBus.com.tr?
+            Neden TrucksBus.com.tr?
           </Typography>{" "}
           <Box sx={{ mt: 2 }}>
             <Typography

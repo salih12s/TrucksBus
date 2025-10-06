@@ -176,6 +176,20 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     }
   };
 
+  const getNotificationTypeLabel = (type: Notification["type"]) => {
+    switch (type) {
+      case "SUCCESS":
+        return "Başarılı";
+      case "WARNING":
+        return "Uyarı";
+      case "ERROR":
+        return "Hata";
+      case "INFO":
+      default:
+        return "Bilgi";
+    }
+  };
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -341,7 +355,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                             }}
                           >
                             <Chip
-                              label={notification.type}
+                              label={getNotificationTypeLabel(
+                                notification.type
+                              )}
                               size="small"
                               color={
                                 getNotificationColor(notification.type) as

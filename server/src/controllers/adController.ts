@@ -3694,7 +3694,10 @@ export const createOtoKurtariciTekliAd = async (
       features,
       cekiciEkipmani,
       ekEkipmanlar,
+      vehicleBrandName, // Kullanıcının seçtiği araç markası (Ford, Mercedes-Benz vb.)
     } = req.body;
+
+    console.log("🚗 Seçilen araç markası:", vehicleBrandName);
 
     // Fuel type enum mapping
     const fuelTypeMap: Record<string, string> = {
@@ -3733,27 +3736,81 @@ export const createOtoKurtariciTekliAd = async (
         .json({ error: "Oto Kurtarıcı kategorisi bulunamadı" });
     }
 
-    // Brand/Model/Variant'ları bul veya oluştur
-    const result = await ensureBrandModelVariant(
-      otoKurtariciCategory.id, // Oto Kurtarıcı kategorisi
-      req.body.brandSlug,
-      req.body.brandName,
-      req.body.modelSlug,
-      req.body.modelName,
-      req.body.variantSlug,
-      req.body.variantName,
-      undefined, // brandId
-      undefined, // modelId
-      undefined // variantId
-    );
+    // "Tekli Araç" markasını bul veya oluştur
+    let tekliAracBrand = await prisma.brand.findFirst({
+      where: {
+        name: "Tekli Araç",
+      },
+    });
+
+    if (!tekliAracBrand) {
+      console.log("🏷️ 'Tekli Araç' markası oluşturuluyor...");
+      tekliAracBrand = await prisma.brand.create({
+        data: {
+          name: "Tekli Araç",
+          slug: "tekli-arac",
+          isActive: true,
+        },
+      });
+      console.log(
+        "✅ 'Tekli Araç' markası oluşturuldu, ID:",
+        tekliAracBrand.id
+      );
+    }
+
+    // "Tekli Araç" modelini bul veya oluştur
+    let tekliAracModel = await prisma.model.findFirst({
+      where: {
+        name: "Tekli Araç",
+        brandId: tekliAracBrand.id,
+      },
+    });
+
+    if (!tekliAracModel) {
+      console.log("📦 'Tekli Araç' modeli oluşturuluyor...");
+      tekliAracModel = await prisma.model.create({
+        data: {
+          name: "Tekli Araç",
+          slug: "tekli-arac",
+          brandId: tekliAracBrand.id,
+          categoryId: otoKurtariciCategory.id,
+          isActive: true,
+        },
+      });
+      console.log("✅ 'Tekli Araç' modeli oluşturuldu, ID:", tekliAracModel.id);
+    }
+
+    // "Tekli Araç" varyantını bul veya oluştur
+    let tekliAracVariant = await prisma.variant.findFirst({
+      where: {
+        name: "Tekli Araç",
+        modelId: tekliAracModel.id,
+      },
+    });
+
+    if (!tekliAracVariant) {
+      console.log("🔧 'Tekli Araç' varyantı oluşturuluyor...");
+      tekliAracVariant = await prisma.variant.create({
+        data: {
+          name: "Tekli Araç",
+          slug: "tekli-arac",
+          modelId: tekliAracModel.id,
+          isActive: true,
+        },
+      });
+      console.log(
+        "✅ 'Tekli Araç' varyantı oluşturuldu, ID:",
+        tekliAracVariant.id
+      );
+    }
 
     const ad = await prisma.ad.create({
       data: {
         userId,
         categoryId: otoKurtariciCategory.id,
-        brandId: result.brandId || null,
-        modelId: result.modelId || null,
-        variantId: result.variantId || null,
+        brandId: tekliAracBrand.id,
+        modelId: tekliAracModel.id,
+        variantId: tekliAracVariant.id,
         title,
         description,
         year: year ? parseInt(year) : null,
@@ -3774,10 +3831,29 @@ export const createOtoKurtariciTekliAd = async (
         address,
         detailedInfo,
         customFields: {
+          vehicleBrandName: vehicleBrandName || null, // Kullanıcının seçtiği araç markası
+          engineVolume: req.body.engineVolume || null,
+          maxPower: maxPower || null,
+          maxTorque: maxTorque || null,
+          fuelType: fuelType || null,
+          platformLength: platformLength || null,
+          platformWidth: platformWidth || null,
+          loadCapacity: loadCapacity || null,
+          plateNumber: plateNumber || null,
           exchange: exchange || null,
           address: address || null,
           detailedInfo: detailedInfo || null,
           features: featuresJson || null,
+          cekiciEkipmani: cekiciEkipmani
+            ? typeof cekiciEkipmani === "string"
+              ? JSON.parse(cekiciEkipmani)
+              : cekiciEkipmani
+            : null,
+          ekEkipmanlar: ekEkipmanlar
+            ? typeof ekEkipmanlar === "string"
+              ? JSON.parse(ekEkipmanlar)
+              : ekEkipmanlar
+            : null,
           cityId: cityId ? parseInt(cityId) : null,
           districtId: districtId ? parseInt(districtId) : null,
         },
@@ -3790,6 +3866,10 @@ export const createOtoKurtariciTekliAd = async (
     });
 
     console.log("✅ Oto Kurtarıcı Tekli ilanı oluşturuldu, ID:", ad.id);
+    console.log(
+      "🚗 Seçilen araç markası customFields'a kaydedildi:",
+      vehicleBrandName
+    );
 
     // Resim yükleme işlemi (Base64 formatında)
     const files = req.files as any;

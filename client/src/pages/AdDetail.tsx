@@ -875,7 +875,12 @@ const AdDetail: React.FC = () => {
                 {ad.category?.name || "Minibüs & Midibüs"}
               </Box>
               <Box sx={{ fontSize: "14px", color: "#666" }}>
-                <strong>Marka:</strong> {ad.brand?.name || "Volkswagen"}
+                <strong>Marka:</strong>{" "}
+                {ad.category?.id === 9
+                  ? (ad.customFields?.vehicleBrandName as string) ||
+                    ad.brand?.name ||
+                    "Belirtilmemiş"
+                  : ad.brand?.name || "Volkswagen"}
               </Box>
               <Box sx={{ fontSize: "14px", color: "#666" }}>
                 <strong>Model:</strong> {ad.model?.name || "T Serisi"}
@@ -1176,8 +1181,101 @@ const AdDetail: React.FC = () => {
                             value: ad.viewCount ? `${ad.viewCount}` : null,
                           },
 
-                          // Marka Bilgisi (Model ve Varyant kamyon römork için gösterilmez)
-                          { label: "Marka", value: ad.brand?.name || null },
+                          // Marka Bilgisi (Oto Kurtarıcı için araç markası gösterilir, diğerleri için sistem markası)
+                          {
+                            label: "Marka",
+                            value:
+                              ad.category?.id === 9
+                                ? (ad.customFields
+                                    ?.vehicleBrandName as string) ||
+                                  "Tekli Araç"
+                                : ad.brand?.name || null,
+                          },
+
+                          // Oto Kurtarıcı Özel Alanları (Category ID = 9)
+                          ...(ad.category?.id === 9
+                            ? [
+                                {
+                                  label: "Motor Hacmi",
+                                  value: ad.customFields?.engineVolume
+                                    ? `${ad.customFields.engineVolume} cc`
+                                    : null,
+                                },
+                                {
+                                  label: "Maksimum Güç",
+                                  value: ad.maxPower
+                                    ? `${ad.maxPower} HP`
+                                    : ad.customFields?.maxPower
+                                    ? `${ad.customFields.maxPower} HP`
+                                    : null,
+                                },
+                                {
+                                  label: "Maksimum Tork",
+                                  value:
+                                    ad.maxTorque ||
+                                    ad.customFields?.maxTorque ||
+                                    null,
+                                },
+                                {
+                                  label: "Yakıt Tipi",
+                                  value: (() => {
+                                    const fuelType =
+                                      ad.fuelType || ad.customFields?.fuelType;
+                                    if (!fuelType) return null;
+                                    if (typeof fuelType !== "string")
+                                      return null;
+                                    const fuelMap: Record<string, string> = {
+                                      GASOLINE: "Benzinli",
+                                      GASOLINE_LPG: "Benzinli + LPG",
+                                      DIESEL: "Dizel",
+                                      DIESEL_LPG: "Dizel + LPG",
+                                    };
+                                    return fuelMap[fuelType] || fuelType;
+                                  })(),
+                                },
+                                {
+                                  label: "Platform Uzunluğu",
+                                  value: ad.platformLength
+                                    ? `${ad.platformLength} m`
+                                    : ad.customFields?.platformLength
+                                    ? `${ad.customFields.platformLength} m`
+                                    : null,
+                                },
+                                {
+                                  label: "Platform Genişliği",
+                                  value: ad.platformWidth
+                                    ? `${ad.platformWidth} m`
+                                    : ad.customFields?.platformWidth
+                                    ? `${ad.customFields.platformWidth} m`
+                                    : null,
+                                },
+                                {
+                                  label: "İstiab Haddi",
+                                  value: ad.loadCapacity
+                                    ? `${ad.loadCapacity} t`
+                                    : ad.customFields?.loadCapacity
+                                    ? `${ad.customFields.loadCapacity} t`
+                                    : null,
+                                },
+                                {
+                                  label: "Araç Plakası",
+                                  value:
+                                    ad.plateNumber ||
+                                    ad.customFields?.plateNumber ||
+                                    null,
+                                },
+                                {
+                                  label: "Takas",
+                                  value: (() => {
+                                    if (ad.customFields?.exchange === "evet")
+                                      return "Evet";
+                                    if (ad.customFields?.exchange === "hayir")
+                                      return "Hayır";
+                                    return null;
+                                  })(),
+                                },
+                              ]
+                            : []),
 
                           // Lokasyon Bilgileri
                           {
@@ -1409,6 +1507,10 @@ const AdDetail: React.FC = () => {
                             label: "Renk",
                             value: ad.customFields?.renk || null,
                           },
+                          {
+                            label: "Soğutucu Durumu",
+                            value: ad.customFields?.sogutucu || null,
+                          },
 
                           // Çekici Özel Alanları
                           {
@@ -1619,34 +1721,10 @@ const AdDetail: React.FC = () => {
                             value: ad.customFields?.catiPerdeSistemi || null,
                           },
 
-                          // Tanker Özel Alanları
-                          {
-                            label: "Hacim",
-                            value: ad.customFields?.hacim
-                              ? `${ad.customFields.hacim} m³`
-                              : null,
-                          },
-                          {
-                            label: "Göz Sayısı",
-                            value: ad.customFields?.gozSayisi || null,
-                          },
-
                           // Silobas Özel Alanları
                           {
                             label: "Silobas Türü",
                             value: ad.customFields?.silobasTuru || null,
-                          },
-
-                          // Frigofirik Özel Alanları
-                          {
-                            label: "Lastik Durumu",
-                            value: ad.customFields?.lastikDurumu
-                              ? `${ad.customFields.lastikDurumu}%`
-                              : null,
-                          },
-                          {
-                            label: "Soğutucu Durumu",
-                            value: ad.customFields?.sogutucu || null,
                           },
 
                           // Oto Kurtarıcı/Taşıyıcı Özel Alanları
@@ -2336,7 +2414,12 @@ const AdDetail: React.FC = () => {
               {((ad.customFields?.features &&
                 typeof ad.customFields.features === "object") ||
                 (ad.customFields?.detailFeatures &&
-                  typeof ad.customFields.detailFeatures === "object")) && (
+                  typeof ad.customFields.detailFeatures === "object") ||
+                (ad.category?.id === 9 &&
+                  ((ad.customFields?.cekiciEkipmani &&
+                    typeof ad.customFields.cekiciEkipmani === "object") ||
+                    (ad.customFields?.ekEkipmanlar &&
+                      typeof ad.customFields.ekEkipmanlar === "object")))) && (
                 <Box
                   sx={{
                     backgroundColor: "white",
@@ -2359,7 +2442,9 @@ const AdDetail: React.FC = () => {
                         color: "#333",
                       }}
                     >
-                      Araç Özellikleri
+                      {ad.category?.id === 9
+                        ? "Araç Özellikleri ve Ekipmanlar"
+                        : "Araç Özellikleri"}
                     </Typography>
                   </Box>
 
@@ -2416,6 +2501,76 @@ const AdDetail: React.FC = () => {
                           .map(([key]) => (
                             <Box
                               key={`detail-${key}`}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                fontSize: "13px",
+                                color: "#333",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  color: "#4caf50",
+                                  fontWeight: "bold",
+                                  fontSize: "14px",
+                                }}
+                              >
+                                ✓
+                              </Box>
+                              {formatFeatureName(key)}
+                            </Box>
+                          ))}
+
+                      {/* Oto Kurtarıcı Çekici Ekipmanları */}
+                      {ad.category?.id === 9 &&
+                        ad.customFields?.cekiciEkipmani &&
+                        typeof ad.customFields.cekiciEkipmani === "object" &&
+                        Object.entries(
+                          ad.customFields.cekiciEkipmani as Record<
+                            string,
+                            boolean
+                          >
+                        )
+                          .filter(([, value]) => value === true)
+                          .map(([key]) => (
+                            <Box
+                              key={`cekici-${key}`}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                fontSize: "13px",
+                                color: "#333",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  color: "#4caf50",
+                                  fontWeight: "bold",
+                                  fontSize: "14px",
+                                }}
+                              >
+                                ✓
+                              </Box>
+                              {formatFeatureName(key)}
+                            </Box>
+                          ))}
+
+                      {/* Oto Kurtarıcı Ek Ekipmanlar */}
+                      {ad.category?.id === 9 &&
+                        ad.customFields?.ekEkipmanlar &&
+                        typeof ad.customFields.ekEkipmanlar === "object" &&
+                        Object.entries(
+                          ad.customFields.ekEkipmanlar as Record<
+                            string,
+                            boolean
+                          >
+                        )
+                          .filter(([, value]) => value === true)
+                          .map(([key]) => (
+                            <Box
+                              key={`ekekipman-${key}`}
                               sx={{
                                 display: "flex",
                                 alignItems: "center",

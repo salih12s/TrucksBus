@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Container, Typography, Link } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { Phone, Email } from "@mui/icons-material";
+import FeedbackModal from "../modals/FeedbackModal";
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
 
   const handleLinkClick = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -293,6 +295,41 @@ const Footer: React.FC = () => {
 
           {/* Yasal Metin */}
           <Box sx={{ mt: 2, pt: 1.5, borderTop: "1px solid #dee2e6" }}>
+            {/* Geri Bildirim Bölümü - Küçük */}
+            <Box
+              sx={{
+                mb: 2,
+                textAlign: "center",
+              }}
+            >
+              <Typography
+                sx={{
+                  color: "#666",
+                  fontSize: "12px",
+                  mb: 0.5,
+                }}
+              >
+                Görüşlerin bizim için önemli! Hata, öneri ya da fikirlerini{" "}
+                <Link
+                  component="button"
+                  onClick={() => setFeedbackModalOpen(true)}
+                  sx={{
+                    color: "#1976d2",
+                    textDecoration: "underline",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#1565c0",
+                    },
+                  }}
+                >
+                  buradan paylaş
+                </Link>
+                .
+              </Typography>
+            </Box>
+
             <Typography
               sx={{
                 color: "#666",
@@ -325,6 +362,12 @@ const Footer: React.FC = () => {
           </Box>
         </Container>
       </Box>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        open={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+      />
     </Box>
   );
 };

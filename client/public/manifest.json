@@ -2,7 +2,7 @@
   "name": "TrucksBus - Ticari Araç Platformu",
   "short_name": "TrucksBus",
   "description": "Türkiye'nin en büyük ticari araç alım satım platformu",
-  "theme_color": "#1976d2",
+  "theme_color": "#ffffff",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait-primary",
