@@ -197,6 +197,7 @@ const CreateMinivanPanelvanForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
@@ -797,6 +798,12 @@ const CreateMinivanPanelvanForm: React.FC = () => {
     setShowDetailDialog(false);
   };
 
+  // Success modal kapatma
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    navigate("/");
+  };
+
   // Handle form submit
   const handleSubmit = async () => {
     // Validation
@@ -932,11 +939,9 @@ const CreateMinivanPanelvanForm: React.FC = () => {
 
       console.log("✅ İlan başarıyla oluşturuldu:", response.data);
       setSuccess(true);
+      setShowSuccessModal(true);
 
-      // Navigate to home page after success
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
+      // Navigate to home page after success (removed auto navigation)
     } catch (error: unknown) {
       console.error("Error creating ad:", error);
       const errorMessage =
@@ -2295,6 +2300,38 @@ const CreateMinivanPanelvanForm: React.FC = () => {
             </Box>
           </CardContent>
         </Card>
+
+        {/* Success Dialog */}
+        <Dialog open={showSuccessModal} onClose={handleCloseSuccessModal}>
+          <DialogTitle sx={{ textAlign: "center" }}>
+            <CheckCircle sx={{ fontSize: 60, color: "green", mb: 2 }} />
+            <Typography variant="h4">İlan Başarıyla Gönderildi!</Typography>
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ textAlign: "center", mb: 2 }}>
+              İlanınız başarıyla oluşturuldu.
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                textAlign: "center",
+                color: "warning.main",
+                fontWeight: "bold",
+              }}
+            >
+              ⚠️ İlanınız henüz yayında değil! Admin onayı bekliyor.
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: "center", pb: 3 }}>
+            <Button
+              onClick={handleCloseSuccessModal}
+              variant="contained"
+              color="primary"
+            >
+              Ana Sayfaya Dön
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </>
   );

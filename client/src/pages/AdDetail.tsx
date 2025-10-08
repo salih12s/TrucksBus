@@ -1405,6 +1405,44 @@ const AdDetail: React.FC = () => {
                             label: "Kabin",
                             value: ad.customFields?.cabin || null,
                           },
+
+                          // Minivan & Panelvan Özel Alanları (Category ID: 10)
+                          {
+                            label: "Kasa Tipi",
+                            value:
+                              ad.category?.id === 10
+                                ? ad.customFields?.bodyType || null
+                                : null,
+                          },
+                          {
+                            label: "Ruhsat",
+                            value:
+                              ad.category?.id === 10
+                                ? ad.customFields?.licenseType || null
+                                : null,
+                          },
+                          {
+                            label: "Plaka / Uyruk",
+                            value:
+                              ad.category?.id === 10
+                                ? ad.customFields?.plateType || null
+                                : null,
+                          },
+                          {
+                            label: "Plaka Numarası",
+                            value:
+                              ad.category?.id === 10
+                                ? ad.customFields?.plateNumber || null
+                                : null,
+                          },
+                          {
+                            label: "Takas",
+                            value:
+                              ad.category?.id === 10
+                                ? ad.customFields?.exchange || null
+                                : null,
+                          },
+
                           {
                             label: "Hasar Kaydı",
                             value: (() => {
@@ -2431,7 +2469,10 @@ const AdDetail: React.FC = () => {
                   ((ad.customFields?.cekiciEkipmani &&
                     typeof ad.customFields.cekiciEkipmani === "object") ||
                     (ad.customFields?.ekEkipmanlar &&
-                      typeof ad.customFields.ekEkipmanlar === "object")))) && (
+                      typeof ad.customFields.ekEkipmanlar === "object"))) ||
+                (ad.category?.id === 10 &&
+                  ad.customFields?.detailFeatures &&
+                  typeof ad.customFields.detailFeatures === "object")) && (
                 <Box
                   sx={{
                     backgroundColor: "white",
@@ -2456,6 +2497,8 @@ const AdDetail: React.FC = () => {
                     >
                       {ad.category?.id === 9
                         ? "Araç Özellikleri ve Ekipmanlar"
+                        : ad.category?.id === 10
+                        ? "Donanım Bilgisi"
                         : "Araç Özellikleri"}
                     </Typography>
                   </Box>
@@ -2500,17 +2543,98 @@ const AdDetail: React.FC = () => {
                             </Box>
                           ))}
 
-                      {/* DetailFeatures'dan gelen özellikler */}
+                      {/* DetailFeatures'dan gelen özellikler (Minivan için) */}
                       {ad.customFields?.detailFeatures &&
                         typeof ad.customFields.detailFeatures === "object" &&
-                        Object.entries(
-                          ad.customFields.detailFeatures as Record<
+                        (() => {
+                          const detailFeatures = ad.customFields
+                            .detailFeatures as Record<
                             string,
-                            boolean
-                          >
-                        )
-                          .filter(([, value]) => value === true)
-                          .map(([key]) => (
+                            Record<string, boolean> | boolean
+                          >;
+                          const allFeatures: string[] = [];
+
+                          // safetyFeatures, interiorFeatures, exteriorFeatures, multimediaFeatures'ı birleştir
+                          if (detailFeatures.safetyFeatures) {
+                            Object.entries(
+                              detailFeatures.safetyFeatures as Record<
+                                string,
+                                boolean
+                              >
+                            )
+                              .filter(([, value]) => value === true)
+                              .forEach(([key]) => allFeatures.push(key));
+                          }
+                          if (detailFeatures.interiorFeatures) {
+                            Object.entries(
+                              detailFeatures.interiorFeatures as Record<
+                                string,
+                                boolean
+                              >
+                            )
+                              .filter(([, value]) => value === true)
+                              .forEach(([key]) => allFeatures.push(key));
+                          }
+                          if (detailFeatures.exteriorFeatures) {
+                            Object.entries(
+                              detailFeatures.exteriorFeatures as Record<
+                                string,
+                                boolean
+                              >
+                            )
+                              .filter(([, value]) => value === true)
+                              .forEach(([key]) => allFeatures.push(key));
+                          }
+                          if (detailFeatures.multimediaFeatures) {
+                            Object.entries(
+                              detailFeatures.multimediaFeatures as Record<
+                                string,
+                                boolean
+                              >
+                            )
+                              .filter(([, value]) => value === true)
+                              .forEach(([key]) => allFeatures.push(key));
+                          }
+
+                          // Eğer nested değilse (eski format), direkt göster
+                          if (
+                            allFeatures.length === 0 &&
+                            !detailFeatures.safetyFeatures &&
+                            !detailFeatures.interiorFeatures &&
+                            !detailFeatures.exteriorFeatures &&
+                            !detailFeatures.multimediaFeatures
+                          ) {
+                            return Object.entries(
+                              detailFeatures as Record<string, boolean>
+                            )
+                              .filter(([, value]) => value === true)
+                              .map(([key]) => (
+                                <Box
+                                  key={`detail-${key}`}
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    fontSize: "13px",
+                                    color: "#333",
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      color: "#4caf50",
+                                      fontWeight: "bold",
+                                      fontSize: "14px",
+                                    }}
+                                  >
+                                    ✓
+                                  </Box>
+                                  {formatFeatureName(key)}
+                                </Box>
+                              ));
+                          }
+
+                          // Nested format için tüm özellikleri göster
+                          return allFeatures.map((key) => (
                             <Box
                               key={`detail-${key}`}
                               sx={{
@@ -2532,7 +2656,8 @@ const AdDetail: React.FC = () => {
                               </Box>
                               {formatFeatureName(key)}
                             </Box>
-                          ))}
+                          ));
+                        })()}
 
                       {/* Oto Kurtarıcı Çekici Ekipmanları */}
                       {ad.category?.id === 9 &&
