@@ -51,6 +51,9 @@ const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
 const CreateMinibusAdForm = React.lazy(
   () => import("./components/ads/CreateMinibusAdForm")
 );
+const CreateMinivanPanelvanForm = React.lazy(
+  () => import("./components/forms/MinivanPanelvan/CreateMinivanPanelvanForm")
+);
 const OtobusAdForm = React.lazy(
   () => import("./components/forms/OtobusAdForm")
 );
@@ -554,6 +557,16 @@ function App() {
                                   );
                                   return <CreateMinibusAdForm />;
                                 })()}
+                              </ProtectedRoute>
+                            }
+                          />
+
+                          {/* Minivan & Panelvan Form Routes */}
+                          <Route
+                            path="/categories/minivan-panelvan/brands/:brandSlug/models/:modelSlug/variants/:variantSlug/create-ad"
+                            element={
+                              <ProtectedRoute>
+                                <CreateMinivanPanelvanForm />
                               </ProtectedRoute>
                             }
                           />

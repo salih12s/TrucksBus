@@ -4964,3 +4964,279 @@ export const deleteVideo = async (req: Request, res: Response) => {
     });
   }
 };
+
+// İlan oluştur (Minivan & Panelvan)
+export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
+  try {
+    console.log("🚐 Minivan & Panelvan İlanı API'ye istek geldi");
+    console.log("📦 Request body:", req.body);
+
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Kullanıcı girişi gerekli" });
+    }
+
+    const {
+      title,
+      description,
+      year,
+      price,
+      mileage,
+      condition,
+      fuelType,
+      transmission,
+      bodyType,
+      chassis,
+      motorPower,
+      engineVolume,
+      drivetrain,
+      seatCount,
+      color,
+      licenseType,
+      hasAccidentRecord,
+      plateNumber,
+      exchange,
+      plateType,
+      cityId,
+      districtId,
+      categoryId,
+      brandId,
+      modelId,
+      variantId,
+      features,
+    } = req.body;
+
+    console.log("✅ Form Data (Minivan & Panelvan):");
+    console.log("  - Title:", title);
+    console.log("  - Body Type:", bodyType);
+    console.log("  - Motor Power:", motorPower);
+    console.log("  - Engine Volume:", engineVolume);
+
+    // Detay özelliklerini JSON olarak hazırla
+    let detailFeaturesJson = null;
+    if (features) {
+      try {
+        detailFeaturesJson =
+          typeof features === "string" ? JSON.parse(features) : features;
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        detailFeaturesJson = features;
+      }
+    }
+
+    // Minivan & Panelvan kategorisini bul
+    const minivanCategory = await prisma.category.findFirst({
+      where: {
+        OR: [{ slug: "minivan-panelvan" }, { name: { contains: "Minivan" } }],
+      },
+    });
+
+    if (!minivanCategory) {
+      return res
+        .status(400)
+        .json({ error: "Minivan & Panelvan kategorisi bulunamadı" });
+    }
+
+    const ad = await prisma.ad.create({
+      data: {
+        userId,
+        categoryId: categoryId ? parseInt(categoryId) : minivanCategory.id,
+        brandId: brandId ? parseInt(brandId) : null,
+        modelId: modelId ? parseInt(modelId) : null,
+        variantId: variantId ? parseInt(variantId) : null,
+        title,
+        description,
+        year: year ? parseInt(year) : null,
+        price: price ? parseFloat(price) : null,
+        mileage: mileage ? parseInt(mileage) : null,
+        cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
+        districtId:
+          districtId && districtId !== "" ? parseInt(districtId) : null,
+        customFields: {
+          condition: condition || null,
+          fuelType: fuelType || null,
+          transmission: transmission || null,
+          bodyType: bodyType || null,
+          chassis: chassis || null,
+          motorPower: motorPower || null,
+          engineVolume: engineVolume || null,
+          drivetrain: drivetrain || null,
+          seatCount: seatCount || null,
+          color: color || null,
+          licenseType: licenseType || null,
+          hasAccidentRecord: hasAccidentRecord || null,
+          plateNumber: plateNumber || null,
+          exchange: exchange || null,
+          plateType: plateType || null,
+          mileage: mileage || null,
+          detailFeatures: detailFeaturesJson || null,
+          categoryId: categoryId ? parseInt(categoryId) : null,
+          brandId: brandId ? parseInt(brandId) : null,
+          modelId: modelId ? parseInt(modelId) : null,
+          variantId: variantId ? parseInt(variantId) : null,
+          cityId: cityId ? parseInt(cityId) : null,
+          districtId: districtId ? parseInt(districtId) : null,
+        },
+        status: "PENDING",
+      },
+    });
+
+    // Resim yükleme işlemi (Base64 formatında)
+    const files = req.files as any;
+    if (files && files.length > 0) {
+      console.log(
+        "📷 Resimler base64 formatında kaydediliyor:",
+        files.map((f: any) => f.fieldname)
+      );
+
+      const imagePromises = [];
+      let displayOrder = 0;
+
+      // Vitrin resmini bul ve işle
+      const showcaseFile = files.find(
+        (f: any) => f.fieldname === "showcasePhoto"
+      );
+      if (showcaseFile) {
+        const base64Image = `data:${
+          showcaseFile.mimetype
+        };base64,${showcaseFile.buffer.toString("base64")}`;
+
+        console.log("📷 Vitrin resmi base64 formatında kaydediliyor");
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: true,
+              displayOrder: 0,
+              altText: `${title} - Vitrin Resmi`,
+            },
+          })
+        );
+        displayOrder = 1;
+      }
+
+      // Diğer resimleri işle
+      const photoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("photo_")
+      );
+      for (const file of photoFiles) {
+        const base64Image = `data:${
+          file.mimetype
+        };base64,${file.buffer.toString("base64")}`;
+
+        console.log(`📷 Resim ${displayOrder} base64 formatında kaydediliyor`);
+
+        imagePromises.push(
+          prisma.adImage.create({
+            data: {
+              adId: ad.id,
+              imageUrl: base64Image,
+              isPrimary: false,
+              displayOrder,
+              altText: `${title} - Resim ${displayOrder}`,
+            },
+          })
+        );
+        displayOrder++;
+      }
+
+      if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+        console.log(
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+        );
+      }
+
+      // Video yükleme işlemi (Base64 formatında)
+      const videoFiles = files.filter((f: any) =>
+        f.fieldname.startsWith("video_")
+      );
+      if (videoFiles.length > 0) {
+        console.log(
+          "🎬 Videolar base64 formatında kaydediliyor:",
+          videoFiles.map((f: any) => f.fieldname)
+        );
+
+        const videoPromises = [];
+        let videoDisplayOrder = 1;
+
+        for (const file of videoFiles) {
+          // Base64 formatına çevir
+          const base64Video = `data:${
+            file.mimetype
+          };base64,${file.buffer.toString("base64")}`;
+
+          console.log(
+            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
+          );
+
+          videoPromises.push(
+            prisma.adVideo.create({
+              data: {
+                adId: ad.id,
+                videoUrl: base64Video,
+                mimeType: file.mimetype,
+                fileSize: file.size,
+                displayOrder: videoDisplayOrder,
+                description: `${title} - Video ${videoDisplayOrder}`,
+              },
+            })
+          );
+          videoDisplayOrder++;
+        }
+
+        // Tüm videoları veritabanına kaydet
+        if (videoPromises.length > 0) {
+          await Promise.all(videoPromises);
+          console.log(
+            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+          );
+        }
+      }
+    }
+
+    // Oluşturulan ilanı resimler ve videolarla birlikte getir
+    const createdAd = await prisma.ad.findUnique({
+      where: { id: ad.id },
+      include: {
+        category: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        images: {
+          orderBy: { displayOrder: "asc" },
+        },
+        videos: {
+          orderBy: { displayOrder: "asc" },
+        },
+      },
+    });
+
+    return res.status(201).json({
+      message:
+        "Minivan & Panelvan ilanı başarıyla oluşturuldu ve onay bekliyor",
+      ad: createdAd,
+      id: createdAd?.id,
+    });
+  } catch (error: any) {
+    console.error("İlan oluşturma hatası detayı:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      requestBody: req.body,
+    });
+    return res.status(500).json({
+      error: "İlan oluşturulurken hata oluştu",
+      details: error.message,
+    });
+  }
+};

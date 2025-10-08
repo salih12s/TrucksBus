@@ -68,7 +68,8 @@
     "cekici": "Tractor",
     "karoser-ust-yapi": "Bodywork & Superstructure",
     "romork": "Semi-trailer",
-    "oto-kurtarici-tasiyici": "Tow Truck & Carrier"
+    "oto-kurtarici-tasiyici": "Tow Truck & Carrier",
+    "minivan-panelvan": "Minivan & Panel Van"
   },
   "filters": {
     "title": "Filters",

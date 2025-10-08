@@ -278,7 +278,6 @@ const CategorySelection: React.FC = () => {
                     sx={{
                       fontWeight: 700,
                       color: "white",
-                      mb: 0.5,
                       fontSize: { xs: "0.9rem", sm: "1rem", md: "1.1rem" },
                       transition: "all 0.3s ease",
                       lineHeight: 1.2,
@@ -287,23 +286,6 @@ const CategorySelection: React.FC = () => {
                   >
                     {category.name}
                   </Typography>
-
-                  {category.description && (
-                    <Typography
-                      className="category-description"
-                      variant="caption"
-                      sx={{
-                        color: "rgba(255,255,255,0.9)",
-                        fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.8rem" },
-                        transition: "all 0.3s ease",
-                        lineHeight: 1.3,
-                        textShadow: "0 1px 4px rgba(0,0,0,0.7)",
-                        display: { xs: "none", sm: "block" }, // Mobilde description gizle
-                      }}
-                    >
-                      {category.description}
-                    </Typography>
-                  )}
                 </Box>
               </CardActionArea>
             </Card>

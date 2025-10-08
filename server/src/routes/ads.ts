@@ -59,6 +59,14 @@ router.post(
   adController.createMinibusAd
 );
 
+// Minivan & Panelvan ilan oluşturma (multipart/form-data desteği ile)
+router.post(
+  "/minivan-panelvan",
+  authenticateToken,
+  upload.any(),
+  adController.createMinivanPanelvanAd
+);
+
 // Çekici ilan oluşturma (multipart/form-data desteği ile)
 router.post(
   "/cekici",

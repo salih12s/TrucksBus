@@ -69,6 +69,11 @@ export const getCategoryById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Category not found" });
     }
 
+    // Filter out any brands that are null
+    if (category.brands) {
+      category.brands = category.brands.filter((cb) => cb.brand !== null);
+    }
+
     return res.json(category);
   } catch (error) {
     console.error("Error fetching category:", error);
@@ -187,7 +192,19 @@ export const getVariantsByModel = async (req: Request, res: Response) => {
     console.log("  - brandSlug:", brandSlug);
     console.log("  - modelSlug:", modelSlug);
 
-    // Find the brand and model
+    // Find the category first
+    const category = await prisma.category.findUnique({
+      where: { slug: categorySlug },
+    });
+
+    if (!category) {
+      console.log("❌ Category bulunamadı:", categorySlug);
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    console.log("✅ Category bulundu:", category.name, "ID:", category.id);
+
+    // Find the brand
     const brand = await prisma.brand.findUnique({
       where: { slug: brandSlug },
     });
@@ -199,19 +216,35 @@ export const getVariantsByModel = async (req: Request, res: Response) => {
 
     console.log("✅ Brand bulundu:", brand.name);
 
+    // Find the model - MUST be in the specified category
     const model = await prisma.model.findFirst({
       where: {
         slug: modelSlug,
         brandId: brand.id,
+        categoryId: category.id, // ✅ Kategoriye göre filtrele
       },
     });
 
     if (!model) {
-      console.log("❌ Model bulunamadı:", modelSlug, "brandId:", brand.id);
-      return res.status(404).json({ error: "Model not found" });
+      console.log(
+        "❌ Model bulunamadı:",
+        modelSlug,
+        "brandId:",
+        brand.id,
+        "categoryId:",
+        category.id
+      );
+      return res
+        .status(404)
+        .json({ error: "Model not found in this category" });
     }
 
-    console.log("✅ Model bulundu:", model.name);
+    console.log(
+      "✅ Model bulundu:",
+      model.name,
+      "categoryId:",
+      model.categoryId
+    );
 
     const variants = await prisma.variant.findMany({
       where: { modelId: model.id },
@@ -219,6 +252,8 @@ export const getVariantsByModel = async (req: Request, res: Response) => {
         name: "asc",
       },
     });
+
+    console.log(`✅ ${variants.length} varyant bulundu`);
 
     return res.json(variants);
   } catch (error) {

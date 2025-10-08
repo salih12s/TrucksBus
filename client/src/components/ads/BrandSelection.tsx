@@ -46,22 +46,26 @@ const BrandImage: React.FC<{
         sx={{
           width: "100%",
           height: "100%",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "#ffffff",
           borderRadius: 2,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          padding: 2,
+          border: "1px solid #e0e0e0",
         }}
       >
         <Typography
-          variant="h2"
+          variant="h6"
           sx={{
-            color: "white",
+            color: "#000000",
             fontWeight: "bold",
-            textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+            textAlign: "center",
+            fontSize: { xs: "0.9rem", sm: "1rem", md: "1.1rem" },
+            lineHeight: 1.2,
           }}
         >
-          {brand.name.charAt(0).toUpperCase()}
+          {brand.name}
         </Typography>
       </Box>
     );
