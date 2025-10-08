@@ -5005,6 +5005,8 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
       modelId,
       variantId,
       features,
+      hasExpertiseInfo,
+      expertiseInfo,
     } = req.body;
 
     console.log("✅ Form Data (Minivan & Panelvan):");
@@ -5022,6 +5024,20 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
       } catch (parseError) {
         console.error("JSON parse error:", parseError);
         detailFeaturesJson = features;
+      }
+    }
+
+    // Ekspertiz bilgilerini JSON olarak hazırla
+    let expertiseInfoJson = null;
+    if (expertiseInfo) {
+      try {
+        expertiseInfoJson =
+          typeof expertiseInfo === "string"
+            ? JSON.parse(expertiseInfo)
+            : expertiseInfo;
+      } catch (parseError) {
+        console.error("Expertise info parse error:", parseError);
+        expertiseInfoJson = expertiseInfo;
       }
     }
 
@@ -5071,6 +5087,9 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
           plateType: plateType || null,
           mileage: mileage || null,
           detailFeatures: detailFeaturesJson || null,
+          hasExpertiseInfo:
+            hasExpertiseInfo === "true" || hasExpertiseInfo === true,
+          expertiseInfo: expertiseInfoJson || null,
           categoryId: categoryId ? parseInt(categoryId) : null,
           brandId: brandId ? parseInt(brandId) : null,
           modelId: modelId ? parseInt(modelId) : null,
@@ -5195,6 +5214,42 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
             `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
           );
         }
+      }
+
+      // Ekspertiz raporu yükleme işlemi (Base64 formatında)
+      const expertiseReportFile = files.find(
+        (f: any) => f.fieldname === "expertiseReport"
+      );
+      if (expertiseReportFile) {
+        console.log("📄 Ekspertiz raporu base64 formatında kaydediliyor");
+
+        // Base64 formatına çevir
+        const base64Report = `data:${
+          expertiseReportFile.mimetype
+        };base64,${expertiseReportFile.buffer.toString("base64")}`;
+
+        // Ekspertiz raporunu customFields içine kaydet
+        const currentCustomFields =
+          typeof ad.customFields === "string"
+            ? JSON.parse(ad.customFields)
+            : ad.customFields || {};
+
+        await prisma.ad.update({
+          where: { id: ad.id },
+          data: {
+            customFields: JSON.stringify({
+              ...currentCustomFields,
+              expertiseReportFile: {
+                url: base64Report,
+                mimeType: expertiseReportFile.mimetype,
+                fileSize: expertiseReportFile.size,
+                uploadedAt: new Date().toISOString(),
+              },
+            }),
+          },
+        });
+
+        console.log("✅ Ekspertiz raporu başarıyla kaydedildi");
       }
     }
 

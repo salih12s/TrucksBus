@@ -17,6 +17,20 @@ import {
   Checkbox,
   IconButton,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Radio,
+  RadioGroup,
+  FormLabel,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import {
   PhotoCamera,
@@ -24,6 +38,8 @@ import {
   Close,
   Videocam,
   PlayArrow,
+  PictureAsPdf,
+  Add,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../layout/Header";
@@ -67,6 +83,23 @@ interface Variant {
   slug: string;
 }
 
+type PartStatus = "Orijinal" | "Lokal Boyalı" | "Boyalı" | "Değişen";
+
+interface PartDetail {
+  type: string;
+  description?: string;
+  color?: string;
+}
+
+interface PartInfo {
+  status: PartStatus | null;
+  details: PartDetail[];
+}
+
+interface ExpertiseInfo {
+  [key: string]: PartInfo;
+}
+
 interface FormData {
   categoryId: string;
   brandId: string;
@@ -101,6 +134,9 @@ interface FormData {
   interiorFeatures: { [key: string]: boolean };
   exteriorFeatures: { [key: string]: boolean };
   multimediaFeatures: { [key: string]: boolean };
+  expertiseInfo: ExpertiseInfo;
+  expertiseReport: File | null;
+  hasExpertiseInfo: boolean;
 }
 
 const CreateMinivanPanelvanForm: React.FC = () => {
@@ -147,6 +183,9 @@ const CreateMinivanPanelvanForm: React.FC = () => {
     interiorFeatures: {},
     exteriorFeatures: {},
     multimediaFeatures: {},
+    expertiseInfo: {},
+    expertiseReport: null,
+    hasExpertiseInfo: false,
   });
 
   const [category, setCategory] = useState<Category | null>(null);
@@ -161,6 +200,11 @@ const CreateMinivanPanelvanForm: React.FC = () => {
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [expertiseReportPreview, setExpertiseReportPreview] = useState<
+    string | null
+  >(null);
+  const [selectedPart, setSelectedPart] = useState<string | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
 
   console.log("URL Parametreleri:", {
     categorySlug,
@@ -168,6 +212,42 @@ const CreateMinivanPanelvanForm: React.FC = () => {
     modelSlug,
     variantSlug,
   });
+
+  // Araç parçaları tanımlamaları - SVG koordinatları (1500x1000 viewBox için)
+  const CAR_PARTS = [
+    { id: "onTampon", name: "Ön Tampon", x: 500, y: 1200 },
+    { id: "motorKaputu", name: "Motor Kaputu", x: 500, y: 1070 },
+    { id: "tavan", name: "Tavan", x: 500, y: 650 },
+    { id: "sagOnCamurluk", name: "Sağ Ön Çamurluk", x: 650, y: 1070 },
+    { id: "sagOnKapi", name: "Sağ Ön Kapı", x: 650, y: 750 },
+    { id: "sagArkaKapi", name: "Sağ Arka Kapı", x: 650, y: 520 },
+    { id: "sagArkaCamurluk", name: "Sağ Arka Çamurluk", x: 650, y: 380 },
+    { id: "solOnCamurluk", name: "Sol Ön Çamurluk", x: 350, y: 1070 },
+    { id: "solOnKapi", name: "Sol Ön Kapı", x: 350, y: 750 },
+    { id: "solArkaKapi", name: "Sol Arka Kapı", x: 350, y: 520 },
+    { id: "solArkaCamurluk", name: "Sol Arka Çamurluk", x: 350, y: 380 },
+    { id: "bagajKapagi", name: "Bagaj Kapağı", x: 500, y: 400 },
+    { id: "arkaTampon", name: "Arka Tampon", x: 500, y: 320 },
+  ];
+
+  // Detay tipleri
+  const DETAIL_TYPES = [
+    "Hafif Çizik",
+    "Derin Çizik",
+    "Hafif Ezik",
+    "Dolu Eziği",
+    "Sürtme",
+    "Taş İzi",
+    "Göçük",
+    "Kırık / Çatlak",
+    "Yırtık",
+    "Çıkmayan Leke – Kuş, Ağaç Pisliği",
+    "Renk Solması",
+    "Güneş Yanığı",
+    "Paslanma / Oksitlenme",
+    "Mini Onarım / Tamir",
+    "Boyasız Göçük Düzeltme",
+  ];
 
   // Dropdown Options
   const FUEL_TYPES = [
@@ -582,6 +662,123 @@ const CreateMinivanPanelvanForm: React.FC = () => {
     });
   };
 
+  // Ekspertiz raporu yükleme
+  const handleExpertiseReportUpload = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // PDF format kontrolü
+    if (file.type !== "application/pdf") {
+      alert("⚠️ Sadece PDF dosyaları yükleyebilirsiniz");
+      return;
+    }
+
+    // 25MB limit kontrolü
+    if (file.size > 25 * 1024 * 1024) {
+      alert("⚠️ Dosya boyutu en fazla 25 MB olabilir");
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      expertiseReport: file,
+    }));
+
+    // PDF önizlemesi için URL oluştur
+    const url = URL.createObjectURL(file);
+    setExpertiseReportPreview(url);
+  };
+
+  // Ekspertiz raporu kaldırma
+  const handleRemoveExpertiseReport = () => {
+    setFormData((prev) => ({
+      ...prev,
+      expertiseReport: null,
+    }));
+    if (expertiseReportPreview) {
+      URL.revokeObjectURL(expertiseReportPreview);
+    }
+    setExpertiseReportPreview(null);
+  };
+
+  // Parça durumu değiştirme
+  const handlePartStatusChange = (partId: string, status: PartStatus) => {
+    setFormData((prev) => ({
+      ...prev,
+      expertiseInfo: {
+        ...prev.expertiseInfo,
+        [partId]: {
+          status,
+          details: prev.expertiseInfo[partId]?.details || [],
+        },
+      },
+    }));
+  };
+
+  // Parça detayı ekleme (sadece 1 detay, yeni detay eskinin yerini alır)
+  const handleAddPartDetail = (
+    partId: string,
+    detailType: string,
+    description: string = ""
+  ) => {
+    setFormData((prev) => {
+      const status = prev.expertiseInfo[partId]?.status;
+
+      // Status'e göre renk belirle
+      let color = "#9E9E9E"; // Orijinal (gri)
+      if (status === "Lokal Boyalı") {
+        color = "#FFA500"; // Turuncu
+      } else if (status === "Boyalı") {
+        color = "#2196F3"; // Mavi
+      } else if (status === "Değişen") {
+        color = "#F44336"; // Kırmızı
+      }
+
+      return {
+        ...prev,
+        expertiseInfo: {
+          ...prev.expertiseInfo,
+          [partId]: {
+            status: status || null,
+            // Her zaman tek bir detay - yeni detay eskinin yerini alır
+            details: [{ type: detailType, description, color }],
+          },
+        },
+      };
+    });
+  };
+
+  // Parça detayı kaldırma
+  const handleRemovePartDetail = (partId: string, detailIndex: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      expertiseInfo: {
+        ...prev.expertiseInfo,
+        [partId]: {
+          status: prev.expertiseInfo[partId]?.status || null,
+          details:
+            prev.expertiseInfo[partId]?.details.filter(
+              (_, i) => i !== detailIndex
+            ) || [],
+        },
+      },
+    }));
+  };
+
+  // Parça detay dialog açma
+  const handleOpenDetailDialog = (partId: string) => {
+    setSelectedPart(partId);
+    setShowDetailDialog(true);
+  };
+
+  // Parça detay dialog kapatma
+  const handleCloseDetailDialog = () => {
+    setSelectedPart(null);
+    setShowDetailDialog(false);
+  };
+
   // Handle form submit
   const handleSubmit = async () => {
     // Validation
@@ -670,6 +867,19 @@ const CreateMinivanPanelvanForm: React.FC = () => {
       };
       submitData.append("features", JSON.stringify(detailFeatures));
 
+      // Add expertise info
+      submitData.append(
+        "hasExpertiseInfo",
+        formData.hasExpertiseInfo.toString()
+      );
+      if (!formData.hasExpertiseInfo) {
+        // hasExpertiseInfo FALSE ise expertiseInfo'yu gönder (boyalı/değişen parça VAR)
+        submitData.append(
+          "expertiseInfo",
+          JSON.stringify(formData.expertiseInfo)
+        );
+      }
+
       // Add showcase photo first
       if (formData.showcasePhoto) {
         submitData.append("showcasePhoto", formData.showcasePhoto);
@@ -684,6 +894,11 @@ const CreateMinivanPanelvanForm: React.FC = () => {
       formData.videos.forEach((video, index) => {
         submitData.append(`video_${index}`, video);
       });
+
+      // Add expertise report if exists
+      if (formData.expertiseReport) {
+        submitData.append("expertiseReport", formData.expertiseReport);
+      }
 
       // Submit to API
       const response = await apiClient.post(
@@ -1386,6 +1601,530 @@ const CreateMinivanPanelvanForm: React.FC = () => {
                     </Box>
                   ))}
                 </Box>
+              )}
+            </Box>
+
+            {/* Boya, Değişen ve Ekspertiz Bilgisi */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
+                Boya, Değişen ve Ekspertiz Bilgisi
+              </Typography>
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.hasExpertiseInfo}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        hasExpertiseInfo: e.target.checked,
+                      }))
+                    }
+                  />
+                }
+                label="Boyalı veya Değişen Parça Yok"
+              />
+
+              {!formData.hasExpertiseInfo && (
+                <>
+                  {/* Araç Şeması ve Tablo Yan Yana */}
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: { xs: "1fr", md: "350px 1fr" },
+                      gap: 3,
+                      my: 3,
+                      alignItems: "start",
+                    }}
+                  >
+                    {/* Sol Taraf - Araç Şeması */}
+                    <Box
+                      sx={{
+                        p: 2,
+                        border: "1px solid #e0e0e0",
+                        borderRadius: 2,
+                        backgroundColor: "#f9f9f9",
+                        position: "relative",
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ mb: 2, fontWeight: "bold", textAlign: "center" }}
+                      >
+                        Boyalı veya Değişen Parça
+                      </Typography>
+
+                      {/* Renk Açıklamaları */}
+                      <Box
+                        sx={{
+                          mb: 2,
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 1,
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Chip
+                          label="Orijinal"
+                          sx={{ backgroundColor: "#9E9E9E", color: "white" }}
+                          size="small"
+                        />
+                        <Chip
+                          label="Lokal Boyalı"
+                          sx={{ backgroundColor: "#FFA500", color: "white" }}
+                          size="small"
+                        />
+                        <Chip
+                          label="Boyalı"
+                          sx={{ backgroundColor: "#2196F3", color: "white" }}
+                          size="small"
+                        />
+                        <Chip
+                          label="Değişen"
+                          sx={{ backgroundColor: "#F44336", color: "white" }}
+                          size="small"
+                        />
+                      </Box>
+
+                      {/* Araç SVG Görseli - DİKEY */}
+                      <Box
+                        sx={{
+                          position: "relative",
+                          width: "100%",
+                          maxWidth: "400px",
+                          height: "auto",
+                          mx: "auto",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <img
+                          src="/src/components/forms/MinivanPanelvan/gtp001e-5-e03-mainpreview-cdf669d19b5de61de1ec2442a1cc59d36d8a89d56fded5016453dcf6db0fc64f.svg"
+                          alt="Araç Şeması"
+                          style={{
+                            width: "100%",
+                            height: "auto",
+                            display: "block",
+                            transform: "rotate(90deg)",
+                            transformOrigin: "center center",
+                            margin: "150px 0",
+                          }}
+                        />
+
+                        {/* Interaktif Noktalar - SVG Üzerine Overlay */}
+                        <svg
+                          viewBox="0 0 1000 1500"
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            pointerEvents: "none",
+                          }}
+                        >
+                          {CAR_PARTS.map((part) => {
+                            const partInfo = formData.expertiseInfo[part.id];
+                            let fillColor = "rgba(232, 232, 232, 0.8)"; // Orijinal (default)
+
+                            if (partInfo?.status === "Lokal Boyalı") {
+                              fillColor = "rgba(255, 165, 0, 0.85)"; // Turuncu
+                            } else if (partInfo?.status === "Boyalı") {
+                              fillColor = "rgba(33, 150, 243, 0.85)"; // Mavi
+                            } else if (partInfo?.status === "Değişen") {
+                              fillColor = "rgba(244, 67, 54, 0.85)"; // Kırmızı
+                            } else if (partInfo?.status === "Orijinal") {
+                              fillColor = "rgba(158, 158, 158, 0.75)"; // Gri
+                            }
+
+                            return (
+                              <g
+                                key={part.id}
+                                style={{ pointerEvents: "auto" }}
+                              >
+                                <circle
+                                  cx={part.x}
+                                  cy={part.y}
+                                  r="45"
+                                  fill={fillColor}
+                                  stroke="#333"
+                                  strokeWidth="3"
+                                  style={{ cursor: "pointer" }}
+                                  onClick={() =>
+                                    handleOpenDetailDialog(part.id)
+                                  }
+                                />
+                                <circle
+                                  cx={part.x}
+                                  cy={part.y}
+                                  r="30"
+                                  fill="white"
+                                  fillOpacity="0.9"
+                                  style={{
+                                    cursor: "pointer",
+                                    pointerEvents: "none",
+                                  }}
+                                >
+                                  <title>{part.name}</title>
+                                </circle>
+                                <text
+                                  x={part.x}
+                                  y={part.y + 8}
+                                  textAnchor="middle"
+                                  fontSize="40"
+                                  fontWeight="bold"
+                                  fill="#333"
+                                  style={{
+                                    cursor: "pointer",
+                                    pointerEvents: "none",
+                                  }}
+                                >
+                                  +
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </Box>
+                    </Box>
+
+                    {/* Sağ Taraf - Parça Durumları Tablosu */}
+                    <TableContainer component={Paper} sx={{ maxHeight: 600 }}>
+                      <Table size="small" stickyHeader>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell
+                              sx={{ fontWeight: "bold", minWidth: 140 }}
+                            >
+                              Parça
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ fontWeight: "bold", minWidth: 80 }}
+                            >
+                              Orijinal
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ fontWeight: "bold", minWidth: 100 }}
+                            >
+                              Lokal Boyalı
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ fontWeight: "bold", minWidth: 80 }}
+                            >
+                              Boyalı
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ fontWeight: "bold", minWidth: 80 }}
+                            >
+                              Değişen
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ fontWeight: "bold", minWidth: 70 }}
+                            >
+                              Detay
+                            </TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {CAR_PARTS.map((part) => {
+                            const partInfo = formData.expertiseInfo[part.id];
+                            const status = partInfo?.status || "";
+
+                            return (
+                              <TableRow key={part.id}>
+                                <TableCell>{part.name}</TableCell>
+                                <TableCell align="center">
+                                  <Radio
+                                    checked={status === "Orijinal"}
+                                    onChange={() =>
+                                      handlePartStatusChange(
+                                        part.id,
+                                        "Orijinal"
+                                      )
+                                    }
+                                    size="small"
+                                  />
+                                </TableCell>
+                                <TableCell align="center">
+                                  <Radio
+                                    checked={status === "Lokal Boyalı"}
+                                    onChange={() =>
+                                      handlePartStatusChange(
+                                        part.id,
+                                        "Lokal Boyalı"
+                                      )
+                                    }
+                                    size="small"
+                                  />
+                                </TableCell>
+                                <TableCell align="center">
+                                  <Radio
+                                    checked={status === "Boyalı"}
+                                    onChange={() =>
+                                      handlePartStatusChange(part.id, "Boyalı")
+                                    }
+                                    size="small"
+                                  />
+                                </TableCell>
+                                <TableCell align="center">
+                                  <Radio
+                                    checked={status === "Değişen"}
+                                    onChange={() =>
+                                      handlePartStatusChange(part.id, "Değişen")
+                                    }
+                                    size="small"
+                                  />
+                                </TableCell>
+                                <TableCell align="center">
+                                  {partInfo?.details &&
+                                  partInfo.details.length > 0 ? (
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        gap: 0.5,
+                                        justifyContent: "center",
+                                      }}
+                                    >
+                                      {partInfo.details.map((detail, idx) => (
+                                        <Chip
+                                          key={idx}
+                                          label={detail.type}
+                                          size="small"
+                                          sx={{
+                                            backgroundColor: detail.color,
+                                            color: "white",
+                                            fontSize: "0.7rem",
+                                            height: 20,
+                                          }}
+                                          onClick={() =>
+                                            handleOpenDetailDialog(part.id)
+                                          }
+                                        />
+                                      ))}
+                                    </Box>
+                                  ) : (
+                                    <IconButton
+                                      size="small"
+                                      onClick={() =>
+                                        handleOpenDetailDialog(part.id)
+                                      }
+                                      disabled={!status}
+                                    >
+                                      🖊️
+                                    </IconButton>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+
+                  {/* Parça Detay Dialog */}
+                  <Dialog
+                    open={showDetailDialog}
+                    onClose={handleCloseDetailDialog}
+                    maxWidth="sm"
+                    fullWidth
+                  >
+                    <DialogTitle>
+                      {selectedPart &&
+                        CAR_PARTS.find((p) => p.id === selectedPart)?.name}
+                    </DialogTitle>
+                    <DialogContent>
+                      <FormControl component="fieldset" sx={{ mb: 2 }}>
+                        <FormLabel component="legend">Durum</FormLabel>
+                        <RadioGroup
+                          value={
+                            selectedPart
+                              ? formData.expertiseInfo[selectedPart]?.status ||
+                                ""
+                              : ""
+                          }
+                          onChange={(e) => {
+                            if (selectedPart) {
+                              handlePartStatusChange(
+                                selectedPart,
+                                e.target.value as PartStatus
+                              );
+                            }
+                          }}
+                        >
+                          <FormControlLabel
+                            value="Orijinal"
+                            control={<Radio />}
+                            label="Orijinal"
+                          />
+                          <FormControlLabel
+                            value="Lokal Boyalı"
+                            control={<Radio />}
+                            label="Lokal Boyalı"
+                          />
+                          <FormControlLabel
+                            value="Boyalı"
+                            control={<Radio />}
+                            label="Boyalı"
+                          />
+                          <FormControlLabel
+                            value="Değişen"
+                            control={<Radio />}
+                            label="Değişen"
+                          />
+                        </RadioGroup>
+                      </FormControl>
+
+                      {/* Detay Seçimi */}
+                      {selectedPart &&
+                        formData.expertiseInfo[selectedPart]?.status && (
+                          <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                              Detay (Opsiyonel)
+                            </Typography>
+                            <FormControl fullWidth sx={{ mb: 2 }}>
+                              <InputLabel>Detay Tipi Seçiniz</InputLabel>
+                              <Select
+                                label="Detay Tipi Seçiniz"
+                                value={
+                                  formData.expertiseInfo[selectedPart]
+                                    ?.details[0]?.type || ""
+                                }
+                                onChange={(e) => {
+                                  if (selectedPart && e.target.value) {
+                                    handleAddPartDetail(
+                                      selectedPart,
+                                      e.target.value
+                                    );
+                                  }
+                                }}
+                              >
+                                {DETAIL_TYPES.map((type) => (
+                                  <MenuItem key={type} value={type}>
+                                    {type}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+
+                            {/* Seçili Detay Gösterimi */}
+                            {formData.expertiseInfo[selectedPart]?.details.map(
+                              (detail, index) => (
+                                <Chip
+                                  key={index}
+                                  label={detail.type}
+                                  onDelete={() =>
+                                    handleRemovePartDetail(selectedPart, index)
+                                  }
+                                  sx={{
+                                    mr: 1,
+                                    mb: 1,
+                                    backgroundColor: detail.color || "#e0e0e0",
+                                    color: "white",
+                                  }}
+                                />
+                              )
+                            )}
+                          </Box>
+                        )}
+                    </DialogContent>
+                    <DialogActions>
+                      <Button onClick={handleCloseDetailDialog} color="inherit">
+                        Kapat
+                      </Button>
+                      {selectedPart &&
+                        formData.expertiseInfo[selectedPart]?.status && (
+                          <Button
+                            onClick={handleCloseDetailDialog}
+                            variant="contained"
+                            color="primary"
+                          >
+                            Kaydet
+                          </Button>
+                        )}
+                    </DialogActions>
+                  </Dialog>
+                </>
+              )}
+            </Box>
+
+            {/* Ekspertiz Raporu */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold" }}>
+                Ekspertiz Raporu
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ mb: 2, color: "text.secondary" }}
+              >
+                Aracınıza ait sahibinden.com anlaşmalı ekspertiz firmaları
+                tarafından yapılan <strong>ekspertiz raporu</strong> varsa
+                seçebilir veya bilgisayarınızdan dosya ekleyebilirsiniz.
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ mb: 2, color: "text.secondary" }}
+              >
+                Ekleyeceğiniz ekspertiz dosyası <strong>pdf formatında</strong>{" "}
+                olmalıdır. Dosyanın boyutu en fazla <strong>25 MB</strong>{" "}
+                olabilir.
+              </Typography>
+
+              <input
+                accept="application/pdf"
+                style={{ display: "none" }}
+                id="expertise-report-upload"
+                type="file"
+                onChange={handleExpertiseReportUpload}
+              />
+              <label htmlFor="expertise-report-upload">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<Add />}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                >
+                  Dosya Ekle ya da sürükle bırak
+                </Button>
+              </label>
+
+              {/* PDF Preview */}
+              {formData.expertiseReport && (
+                <Card sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <PictureAsPdf sx={{ fontSize: 40, color: "#d32f2f" }} />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" fontWeight="bold">
+                          {formData.expertiseReport.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {(
+                            formData.expertiseReport.size /
+                            1024 /
+                            1024
+                          ).toFixed(2)}{" "}
+                          MB
+                        </Typography>
+                      </Box>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={handleRemoveExpertiseReport}
+                      >
+                        <Close />
+                      </IconButton>
+                    </Box>
+                  </CardContent>
+                </Card>
               )}
             </Box>
 
