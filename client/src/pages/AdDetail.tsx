@@ -11,6 +11,13 @@ import {
   IconButton,
   Card,
   CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import {
   LocationOn,
@@ -20,6 +27,7 @@ import {
   FavoriteBorder,
   Favorite,
   LocalShipping,
+  PictureAsPdf,
 } from "@mui/icons-material";
 import { API_BASE_URL } from "../api/client";
 import { useSelector } from "react-redux";
@@ -383,7 +391,11 @@ const AdDetail: React.FC = () => {
   }, [id]);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("tr-TR").format(price) + " TL";
+    return new Intl.NumberFormat("tr-TR").format(price);
+  };
+
+  const formatMileage = (mileage: number) => {
+    return new Intl.NumberFormat("tr-TR").format(mileage);
   };
 
   const getImageUrl = (
@@ -923,7 +935,7 @@ const AdDetail: React.FC = () => {
                     color: "#dc3545",
                   }}
                 >
-                  {formatPrice(ad.price)}
+                  {formatPrice(ad.price)} TL
                 </Typography>
                 <Chip
                   label="🔄"
@@ -1163,7 +1175,7 @@ const AdDetail: React.FC = () => {
                           {
                             label: "Fiyat",
                             value: ad.price
-                              ? `${Number(ad.price).toLocaleString("tr-TR")} TL`
+                              ? `${formatPrice(ad.price)} TL`
                               : null,
                           },
                           {
@@ -1173,7 +1185,7 @@ const AdDetail: React.FC = () => {
                           {
                             label: "KM",
                             value: ad.mileage
-                              ? `${ad.mileage.toLocaleString("tr-TR")}`
+                              ? `${formatMileage(ad.mileage)} km`
                               : null,
                           },
                           {
@@ -2847,6 +2859,454 @@ const AdDetail: React.FC = () => {
                   </Box>
                 </Box>
               )}
+
+              {/* Boya, Değişen ve Ekspertiz Bilgisi */}
+              {ad.customFields?.expertiseInfo &&
+                typeof ad.customFields.expertiseInfo === "object" &&
+                Object.keys(
+                  ad.customFields.expertiseInfo as Record<string, unknown>
+                ).length > 0 && (
+                  <Box
+                    sx={{
+                      backgroundColor: "white",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 1,
+                      mt: 2,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        backgroundColor: "#f8f9fa",
+                        px: 1.5,
+                        py: 1,
+                        borderBottom: "1px solid #e0e0e0",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "13px",
+                          fontWeight: "bold",
+                          color: "#333",
+                        }}
+                      >
+                        Boya, Değişen ve Ekspertiz Bilgisi
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ p: 1.5 }}>
+                      {/* Araç Şeması ve Tablo Yan Yana */}
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: { xs: "1fr", md: "350px 1fr" },
+                          gap: 3,
+                        }}
+                      >
+                        {/* Sol Taraf - Araç Şeması */}
+                        <Box
+                          sx={{
+                            p: 2,
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 2,
+                            backgroundColor: "#f9f9f9",
+                          }}
+                        >
+                          {/* Renk Açıklamaları */}
+                          <Box
+                            sx={{
+                              mb: 2,
+                              display: "flex",
+                              flexWrap: "wrap",
+                              gap: 1,
+                              justifyContent: "center",
+                            }}
+                          >
+                            <Chip
+                              label="Orijinal"
+                              sx={{
+                                backgroundColor: "#9E9E9E",
+                                color: "white",
+                              }}
+                              size="small"
+                            />
+                            <Chip
+                              label="Lokal Boyalı"
+                              sx={{
+                                backgroundColor: "#FFA500",
+                                color: "white",
+                              }}
+                              size="small"
+                            />
+                            <Chip
+                              label="Boyalı"
+                              sx={{
+                                backgroundColor: "#2196F3",
+                                color: "white",
+                              }}
+                              size="small"
+                            />
+                            <Chip
+                              label="Değişen"
+                              sx={{
+                                backgroundColor: "#F44336",
+                                color: "white",
+                              }}
+                              size="small"
+                            />
+                          </Box>
+
+                          {/* SVG Araç Şeması */}
+                          <Box
+                            sx={{
+                              position: "relative",
+                              width: "100%",
+                              maxWidth: 350,
+                              mx: "auto",
+                            }}
+                          >
+                            {/* Ana SVG */}
+                            <img
+                              src="/car-diagram.svg"
+                              alt="Vehicle Diagram"
+                              style={{
+                                width: "100%",
+                                height: "auto",
+                                display: "block",
+                              }}
+                            />
+
+                            {/* Overlay SVG with parts */}
+                            <svg
+                              viewBox="0 0 1000 1500"
+                              style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                pointerEvents: "none",
+                              }}
+                            >
+                              {(() => {
+                                const CAR_PARTS = [
+                                  {
+                                    id: "onTampon",
+                                    name: "Ön Tampon",
+                                    x: 50,
+                                    y: 8,
+                                  },
+                                  {
+                                    id: "motorKaputu",
+                                    name: "Motor Kaputu",
+                                    x: 50,
+                                    y: 17,
+                                  },
+                                  { id: "tavan", name: "Tavan", x: 50, y: 50 },
+                                  {
+                                    id: "sagOnCamurluk",
+                                    name: "Sağ Ön Çamurluk",
+                                    x: 72,
+                                    y: 17,
+                                  },
+                                  {
+                                    id: "sagOnKapi",
+                                    name: "Sağ Ön Kapı",
+                                    x: 77,
+                                    y: 37,
+                                  },
+                                  {
+                                    id: "sagArkaKapi",
+                                    name: "Sağ Arka Kapı",
+                                    x: 77,
+                                    y: 60,
+                                  },
+                                  {
+                                    id: "sagArkaCamurluk",
+                                    name: "Sağ Arka Çamurluk",
+                                    x: 77,
+                                    y: 80,
+                                  },
+                                  {
+                                    id: "solOnCamurluk",
+                                    name: "Sol Ön Çamurluk",
+                                    x: 28,
+                                    y: 17,
+                                  },
+                                  {
+                                    id: "solOnKapi",
+                                    name: "Sol Ön Kapı",
+                                    x: 23,
+                                    y: 37,
+                                  },
+                                  {
+                                    id: "solArkaKapi",
+                                    name: "Sol Arka Kapı",
+                                    x: 23,
+                                    y: 60,
+                                  },
+                                  {
+                                    id: "solArkaCamurluk",
+                                    name: "Sol Arka Çamurluk",
+                                    x: 23,
+                                    y: 80,
+                                  },
+                                  {
+                                    id: "bagajKapagi",
+                                    name: "Bagaj Kapağı",
+                                    x: 50,
+                                    y: 90,
+                                  },
+                                  {
+                                    id: "arkaTampon",
+                                    name: "Arka Tampon",
+                                    x: 50,
+                                    y: 95,
+                                  },
+                                ];
+
+                                const expertiseInfo = ad.customFields
+                                  ?.expertiseInfo as Record<
+                                  string,
+                                  {
+                                    status: string;
+                                    details: Array<{
+                                      type: string;
+                                      color: string;
+                                    }>;
+                                  }
+                                >;
+
+                                return CAR_PARTS.map((part) => {
+                                  const partInfo = expertiseInfo?.[part.id];
+                                  let fillColor = "#e8e8e8"; // Default
+
+                                  if (partInfo?.status === "Lokal Boyalı") {
+                                    fillColor = "#FFA500"; // Turuncu
+                                  } else if (partInfo?.status === "Boyalı") {
+                                    fillColor = "#2196F3"; // Mavi
+                                  } else if (partInfo?.status === "Değişen") {
+                                    fillColor = "#F44336"; // Kırmızı
+                                  } else if (partInfo?.status === "Orijinal") {
+                                    fillColor = "#9E9E9E"; // Gri
+                                  }
+
+                                  return (
+                                    <g key={part.id}>
+                                      <circle
+                                        cx={(part.x / 100) * 1000}
+                                        cy={(part.y / 100) * 1500}
+                                        r="28"
+                                        fill={fillColor}
+                                        stroke="#555"
+                                        strokeWidth="2"
+                                      />
+                                      <circle
+                                        cx={(part.x / 100) * 1000}
+                                        cy={(part.y / 100) * 1500}
+                                        r="18"
+                                        fill="white"
+                                      >
+                                        <title>{part.name}</title>
+                                      </circle>
+                                    </g>
+                                  );
+                                });
+                              })()}
+                            </svg>
+                          </Box>
+                        </Box>
+
+                        {/* Sağ Taraf - Parça Durumları Tablosu */}
+                        <TableContainer
+                          component={Paper}
+                          sx={{ maxHeight: 600 }}
+                        >
+                          <Table size="small" stickyHeader>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell
+                                  sx={{ fontWeight: "bold", minWidth: 140 }}
+                                >
+                                  Parça
+                                </TableCell>
+                                <TableCell
+                                  sx={{ fontWeight: "bold", minWidth: 100 }}
+                                >
+                                  Durum
+                                </TableCell>
+                                <TableCell
+                                  sx={{ fontWeight: "bold", minWidth: 150 }}
+                                >
+                                  Detay
+                                </TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {(() => {
+                                const CAR_PARTS = [
+                                  { id: "onTampon", name: "Ön Tampon" },
+                                  { id: "motorKaputu", name: "Motor Kaputu" },
+                                  { id: "tavan", name: "Tavan" },
+                                  {
+                                    id: "sagOnCamurluk",
+                                    name: "Sağ Ön Çamurluk",
+                                  },
+                                  { id: "sagOnKapi", name: "Sağ Ön Kapı" },
+                                  { id: "sagArkaKapi", name: "Sağ Arka Kapı" },
+                                  {
+                                    id: "sagArkaCamurluk",
+                                    name: "Sağ Arka Çamurluk",
+                                  },
+                                  {
+                                    id: "solOnCamurluk",
+                                    name: "Sol Ön Çamurluk",
+                                  },
+                                  { id: "solOnKapi", name: "Sol Ön Kapı" },
+                                  { id: "solArkaKapi", name: "Sol Arka Kapı" },
+                                  {
+                                    id: "solArkaCamurluk",
+                                    name: "Sol Arka Çamurluk",
+                                  },
+                                  { id: "bagajKapagi", name: "Bagaj Kapağı" },
+                                  { id: "arkaTampon", name: "Arka Tampon" },
+                                ];
+
+                                const expertiseInfo = ad.customFields
+                                  ?.expertiseInfo as Record<
+                                  string,
+                                  {
+                                    status: string;
+                                    details: Array<{
+                                      type: string;
+                                      color: string;
+                                    }>;
+                                  }
+                                >;
+
+                                return CAR_PARTS.map((part) => {
+                                  const partInfo = expertiseInfo?.[part.id];
+                                  const status = partInfo?.status || "-";
+                                  const detail =
+                                    partInfo?.details &&
+                                    partInfo.details.length > 0
+                                      ? partInfo.details[0].type
+                                      : "-";
+
+                                  let statusColor = "#666";
+                                  if (status === "Lokal Boyalı")
+                                    statusColor = "#FFA500";
+                                  else if (status === "Boyalı")
+                                    statusColor = "#2196F3";
+                                  else if (status === "Değişen")
+                                    statusColor = "#F44336";
+                                  else if (status === "Orijinal")
+                                    statusColor = "#9E9E9E";
+
+                                  return (
+                                    <TableRow key={part.id}>
+                                      <TableCell>{part.name}</TableCell>
+                                      <TableCell>
+                                        <Chip
+                                          label={status}
+                                          size="small"
+                                          sx={{
+                                            backgroundColor: statusColor,
+                                            color: "white",
+                                            fontWeight: "bold",
+                                          }}
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        <Typography
+                                          variant="body2"
+                                          sx={{ fontSize: "12px" }}
+                                        >
+                                          {detail}
+                                        </Typography>
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                });
+                              })()}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </Box>
+                    </Box>
+                  </Box>
+                )}
+
+              {/* Ekspertiz Raporu */}
+              {ad.customFields?.expertiseReport &&
+                typeof ad.customFields.expertiseReport === "string" && (
+                  <Box
+                    sx={{
+                      backgroundColor: "white",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 1,
+                      mt: 2,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        backgroundColor: "#f8f9fa",
+                        px: 1.5,
+                        py: 1,
+                        borderBottom: "1px solid #e0e0e0",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "13px",
+                          fontWeight: "bold",
+                          color: "#333",
+                        }}
+                      >
+                        Ekspertiz Raporu
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ p: 1.5 }}>
+                      <Card
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                          p: 2,
+                        }}
+                      >
+                        <PictureAsPdf sx={{ fontSize: 48, color: "#d32f2f" }} />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body2" fontWeight="bold">
+                            Ekspertiz Raporu
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            PDF Dosyası
+                          </Typography>
+                        </Box>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            // PDF'i yeni sekmede aç
+                            const pdfData = ad.customFields
+                              ?.expertiseReport as string;
+                            if (pdfData.startsWith("data:")) {
+                              // Data URL ise direkt aç
+                              window.open(pdfData, "_blank");
+                            } else {
+                              // Base64 ise data URL oluştur
+                              const dataUrl = `data:application/pdf;base64,${pdfData}`;
+                              window.open(dataUrl, "_blank");
+                            }
+                          }}
+                        >
+                          Görüntüle
+                        </Button>
+                      </Card>
+                    </Box>
+                  </Box>
+                )}
             </Box>
           </Box>
         </Container>

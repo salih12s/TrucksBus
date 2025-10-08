@@ -506,6 +506,24 @@ const CreateMinivanPanelvanForm: React.FC = () => {
     loadDistricts();
   }, [formData.cityId]);
 
+  // Format price with thousand separators
+  const formatPrice = (value: string): string => {
+    // Remove non-numeric characters
+    const numericValue = value.replace(/\D/g, "");
+    if (!numericValue) return "";
+    // Add thousand separators
+    return parseInt(numericValue).toLocaleString("tr-TR");
+  };
+
+  // Format mileage with thousand separators
+  const formatMileage = (value: string): string => {
+    // Remove non-numeric characters
+    const numericValue = value.replace(/\D/g, "");
+    if (!numericValue) return "";
+    // Add thousand separators
+    return parseInt(numericValue).toLocaleString("tr-TR");
+  };
+
   // Handle input change
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -1009,10 +1027,20 @@ const CreateMinivanPanelvanForm: React.FC = () => {
                 <TextField
                   label="Fiyat"
                   required
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange("price", e.target.value)}
-                  InputProps={{ endAdornment: "TL" }}
+                  type="text"
+                  value={formatPrice(formData.price)}
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/\D/g, "");
+                    handleInputChange("price", numericValue);
+                  }}
+                  InputProps={{
+                    endAdornment: (
+                      <Box component="span" sx={{ ml: 1 }}>
+                        TL
+                      </Box>
+                    ),
+                  }}
+                  placeholder="0"
                 />
               </Box>
             </Box>
@@ -1080,9 +1108,20 @@ const CreateMinivanPanelvanForm: React.FC = () => {
               <TextField
                 label="KM"
                 required
-                type="number"
-                value={formData.mileage}
-                onChange={(e) => handleInputChange("mileage", e.target.value)}
+                type="text"
+                value={formatMileage(formData.mileage)}
+                onChange={(e) => {
+                  const numericValue = e.target.value.replace(/\D/g, "");
+                  handleInputChange("mileage", numericValue);
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <Box component="span" sx={{ ml: 1 }}>
+                      km
+                    </Box>
+                  ),
+                }}
+                placeholder="0"
               />
 
               <FormControl fullWidth required>
@@ -1700,7 +1739,7 @@ const CreateMinivanPanelvanForm: React.FC = () => {
                         }}
                       >
                         <img
-                          src="/src/components/forms/MinivanPanelvan/gtp001e-5-e03-mainpreview-cdf669d19b5de61de1ec2442a1cc59d36d8a89d56fded5016453dcf6db0fc64f.svg"
+                          src="/car-diagram.svg"
                           alt="Araç Şeması"
                           style={{
                             width: "100%",
