@@ -368,7 +368,7 @@ const KAPAKLI_TIP_MARKALARI = [
   "Zafer Treyler",
   "Zak-San Trailer",
   "Özel Üretim",
-  "Diğer"
+  "Diğer",
 ];
 
 const KapakliTipForm: React.FC = () => {

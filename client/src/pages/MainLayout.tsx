@@ -102,6 +102,11 @@ interface Ad {
   };
   category?: {
     name: string;
+    slug?: string;
+  };
+  subCategory?: {
+    name: string;
+    slug?: string;
   };
   brand?: {
     id: number;
@@ -178,6 +183,7 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const params = useParams();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [categoryBrands, setCategoryBrands] = useState<Brand[]>([]);
@@ -189,6 +195,9 @@ const MainLayout: React.FC = () => {
     []
   );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(
+    null
+  );
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [priceMin, setPriceMin] = useState("");
@@ -265,9 +274,25 @@ const MainLayout: React.FC = () => {
   // Category navigation handler
   const handleCategoryClick = (categorySlug: string | null) => {
     setSelectedCategory(categorySlug);
+    setSelectedSubCategory(null); // Reset subcategory when category changes
     setSelectedBrand(null); // Reset brand when category changes
     setCurrentPage(1); // Reset to first page
-    loadAdsLazy(1); // Load first page
+  };
+
+  // Subcategory handler - for filtering within same page
+  const handleSubCategoryClick = (subCategorySlug: string | null) => {
+    setSelectedCategory("dorse"); // Always set to dorse for subcategories
+    setSelectedSubCategory(subCategorySlug);
+    setSelectedBrand(null); // Reset brand when subcategory changes
+    setCurrentPage(1); // Reset to first page
+  };
+
+  // Brand handler - for filtering by brand within dorse category
+  const handleDorseBrandClick = (brandName: string | null) => {
+    setSelectedCategory("dorse"); // Always set to dorse for brand filtering
+    setSelectedSubCategory(null); // Reset subcategory
+    setSelectedBrand(brandName);
+    setCurrentPage(1); // Reset to first page
   };
 
   // Brand navigation handler
@@ -1619,6 +1644,107 @@ const MainLayout: React.FC = () => {
     fetchBookmarks();
   }, [isBookmarksPage, user, token]);
 
+  // Filtreleme useEffect - kategori/subcategory/brand değiştiğinde ilanları filtrele
+  useEffect(() => {
+    let filtered = ads;
+
+    // Kategori filtresi
+    if (selectedCategory && selectedCategory !== "Tüm İlanlar") {
+      filtered = filtered.filter((ad) => {
+        return (
+          ad.category?.name?.toLowerCase() === selectedCategory.toLowerCase()
+        );
+      });
+    }
+
+    // Brand filtresi - Ferhat Dorse gibi markalar için
+    if (selectedBrand) {
+      filtered = filtered.filter((ad) => {
+        // customFields içindeki dorseBrand alanını kontrol et
+        const customFields = ad.customFields as Record<string, unknown>;
+        const adDorseBrand = customFields?.dorseBrand as string;
+
+        // Eğer customFields'da dorseBrand varsa onu kullan, yoksa normal brand'ı kontrol et
+        if (adDorseBrand) {
+          return adDorseBrand
+            .toLowerCase()
+            .includes(selectedBrand.toLowerCase());
+        }
+
+        // Normal brand kontrolü de ekle
+        const adBrandName = ad.brand?.name?.toLowerCase() || "";
+        return adBrandName.includes(selectedBrand.toLowerCase());
+      });
+    }
+
+    // Subcategory filtresi - damperli için (brand seçili değilse)
+    if (selectedSubCategory && !selectedBrand) {
+      filtered = filtered.filter((ad) => {
+        const adBrand = ad.brand?.name?.toLowerCase() || "";
+
+        // Alt kategori eşleştirmesi
+        let matchesSubCategory = false;
+
+        if (selectedSubCategory === "damperli") {
+          matchesSubCategory =
+            adBrand === "damperli" || adBrand.includes("damperli");
+        } else if (selectedSubCategory === "lowbed") {
+          matchesSubCategory =
+            adBrand === "lowbed" || adBrand.includes("lowbed");
+        } else if (selectedSubCategory === "silobas") {
+          const subcategoryFromCustom =
+            (
+              (ad.customFields as Record<string, unknown>)
+                ?.subcategory as string
+            )?.toLowerCase() || "";
+          matchesSubCategory =
+            adBrand === "silobas" ||
+            adBrand.includes("silobas") ||
+            subcategoryFromCustom === "silobas";
+        } else if (selectedSubCategory === "kuruyuk") {
+          matchesSubCategory =
+            adBrand === "kuru yuk" ||
+            adBrand.includes("kuru") ||
+            adBrand.includes("yuk");
+        } else if (selectedSubCategory === "frigofirik") {
+          matchesSubCategory =
+            adBrand === "frigoriifik" || adBrand.includes("frigo");
+        } else if (selectedSubCategory === "tenteli") {
+          matchesSubCategory =
+            adBrand === "tenteli" || adBrand.includes("tenteli");
+        } else if (selectedSubCategory === "tanker") {
+          matchesSubCategory =
+            adBrand === "tanker" || adBrand.includes("tanker");
+        } else if (selectedSubCategory === "tekstil") {
+          matchesSubCategory =
+            adBrand === "tekstil" || adBrand.includes("tekstil");
+        }
+
+        return matchesSubCategory;
+      });
+    }
+
+    // Arama filtresi - search term boşsa tüm filtreler sıfırlanır
+    if (searchTerm.trim() === "") {
+      // Arama boşsa normal filtreleme devam eder
+    } else {
+      // Arama varsa hem filtrelenmiş sonuçlar hem de arama sonuçları gösterilir
+      filtered = filtered.filter((ad) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          ad.title?.toLowerCase().includes(searchLower) ||
+          ad.description?.toLowerCase().includes(searchLower) ||
+          ad.brand?.name?.toLowerCase().includes(searchLower) ||
+          ad.model?.name?.toLowerCase().includes(searchLower) ||
+          ad.city?.name?.toLowerCase().includes(searchLower) ||
+          ad.district?.name?.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    setFilteredAds(filtered);
+  }, [ads, selectedCategory, selectedSubCategory, selectedBrand, searchTerm]);
+
   // Category count helper function - dinamik olarak ads verilerinden hesaplar
   const getCategoryCount = (slug: string | null) => {
     if (slug === null) {
@@ -1895,11 +2021,16 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 <Typography
+                  onClick={() => handleSubCategoryClick("damperli")}
                   sx={{
                     color: "#333",
                     fontSize: "13px",
                     fontWeight: 600,
                     mb: 0.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#dc3545",
+                    },
                   }}
                 >
                   Damperli
@@ -2236,11 +2367,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/ads?category=dorse&subCategory=damperli&type=kapakli-tip&dorseBrand=${encodeURIComponent(brand)}`
-                                  )
-                                }
+                                onClick={() => handleDorseBrandClick(brand)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -2490,11 +2617,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/ads?category=dorse&subCategory=damperli&type=hafriyat-tipi&dorseBrand=${encodeURIComponent(brand)}`
-                                  )
-                                }
+                                onClick={() => handleDorseBrandClick(brand)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -2833,11 +2956,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/ads?category=dorse&subCategory=damperli&type=havuz-hardox-tipi&dorseBrand=${encodeURIComponent(brand)}`
-                                  )
-                                }
+                                onClick={() => handleDorseBrandClick(brand)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -3076,11 +3195,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/ads?category=dorse&subCategory=damperli&type=kaya-tipi&dorseBrand=${encodeURIComponent(brand)}`
-                                  )
-                                }
+                                onClick={() => handleDorseBrandClick(brand)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -3118,11 +3233,16 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 <Typography
+                  onClick={() => handleSubCategoryClick("lowbed")}
                   sx={{
                     color: "#333",
                     fontSize: "13px",
                     fontWeight: 600,
                     mb: 0.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#dc3545",
+                    },
                   }}
                 >
                   Lowbed
@@ -3644,11 +3764,16 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 <Typography
+                  onClick={() => handleSubCategoryClick("kuruyuk")}
                   sx={{
                     color: "#333",
                     fontSize: "13px",
                     fontWeight: 600,
                     mb: 0.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#dc3545",
+                    },
                   }}
                 >
                   Kuruyük
@@ -4524,11 +4649,16 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 <Typography
+                  onClick={() => handleSubCategoryClick("tenteli")}
                   sx={{
                     color: "#333",
                     fontSize: "13px",
                     fontWeight: 600,
                     mb: 0.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#dc3545",
+                    },
                   }}
                 >
                   Tenteli
@@ -5306,11 +5436,16 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 <Typography
+                  onClick={() => handleSubCategoryClick("frigofirik")}
                   sx={{
                     color: "#333",
                     fontSize: "13px",
                     fontWeight: 600,
                     mb: 0.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#dc3545",
+                    },
                   }}
                 >
                   Frigofirik
@@ -5559,11 +5694,16 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 <Typography
+                  onClick={() => handleSubCategoryClick("tanker")}
                   sx={{
                     color: "#333",
                     fontSize: "13px",
                     fontWeight: 600,
                     mb: 0.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#dc3545",
+                    },
                   }}
                 >
                   Tanker
@@ -5865,11 +6005,16 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 <Typography
+                  onClick={() => handleSubCategoryClick("silobas")}
                   sx={{
                     color: "#333",
                     fontSize: "13px",
                     fontWeight: 600,
                     mb: 0.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#dc3545",
+                    },
                   }}
                 >
                   Silobas
@@ -6121,11 +6266,16 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 <Typography
+                  onClick={() => handleSubCategoryClick("tekstil")}
                   sx={{
                     color: "#333",
                     fontSize: "13px",
                     fontWeight: 600,
                     mb: 0.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#dc3545",
+                    },
                   }}
                 >
                   Tekstil
@@ -6339,11 +6489,20 @@ const MainLayout: React.FC = () => {
                 }}
               >
                 <Typography
+                  onClick={() =>
+                    navigate(
+                      "/ads?category=dorse&subCategory=konteyner-tasiyici-sasi"
+                    )
+                  }
                   sx={{
                     color: "#333",
                     fontSize: "13px",
                     fontWeight: 600,
                     mb: 0.5,
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "#dc3545",
+                    },
                   }}
                 >
                   Konteyner Taşıyıcı & Şasi
@@ -8223,7 +8382,14 @@ const MainLayout: React.FC = () => {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {selectedCategory && selectedCategory !== "Tüm İlanlar"
+                      {selectedBrand
+                        ? `${selectedBrand} Dorse İlanları`
+                        : selectedSubCategory
+                        ? `${
+                            selectedSubCategory.charAt(0).toUpperCase() +
+                            selectedSubCategory.slice(1)
+                          } İlanları`
+                        : selectedCategory && selectedCategory !== "Tüm İlanlar"
                         ? categories.find(
                             (cat) => cat.slug === selectedCategory
                           )?.name || selectedCategory
@@ -8235,7 +8401,17 @@ const MainLayout: React.FC = () => {
                       size="small"
                       placeholder={t("homePage.searchBarPlaceholder")}
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => {
+                        const newValue = e.target.value;
+                        setSearchTerm(newValue);
+
+                        // Eğer arama kutusu boşaltılırsa tüm filtreleri sıfırla
+                        if (newValue.trim() === "") {
+                          setSelectedCategory(null);
+                          setSelectedSubCategory(null);
+                          setSelectedBrand(null);
+                        }
+                      }}
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">

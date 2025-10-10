@@ -893,8 +893,14 @@ const AdDetail: React.FC = () => {
                 {ad.category?.name || "Minibüs & Midibüs"}
               </Box>
               <Box sx={{ fontSize: "14px", color: "#666" }}>
-                <strong>Marka:</strong>{" "}
-                {ad.category?.id === 9
+                <strong>
+                  {ad.category?.name?.toLowerCase() === "dorse"
+                    ? "Dorse Markası:"
+                    : "Marka:"}
+                </strong>{" "}
+                {ad.category?.name?.toLowerCase() === "dorse"
+                  ? (ad.customFields?.dorseBrand as string) || "Belirtilmemiş"
+                  : ad.category?.id === 9
                   ? (ad.customFields?.vehicleBrandName as string) ||
                     ad.brand?.name ||
                     "Belirtilmemiş"
@@ -1882,11 +1888,15 @@ const AdDetail: React.FC = () => {
 
                           // Şasi/Römork Genel Özellikleri
 
-                          // Dorse Markası
-                          {
-                            label: "Dorse Markası",
-                            value: ad.customFields?.dorseBrand || null,
-                          },
+                          // Dorse Markası (sadece dorse kategorisi için)
+                          ...(ad.category?.name?.toLowerCase() === "dorse"
+                            ? [
+                                {
+                                  label: "Dorse Markası",
+                                  value: ad.customFields?.dorseBrand || null,
+                                },
+                              ]
+                            : []),
 
                           // Kuruyük Özel Alanları
                           {

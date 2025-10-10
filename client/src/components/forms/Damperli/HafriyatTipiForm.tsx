@@ -263,7 +263,7 @@ const HAFRIYAT_TIPI_MARKALARI = [
   "Zafer Treyler",
   "Zak-San Trailer",
   "Özel Üretim",
-  "Diğer"
+  "Diğer",
 ];
 
 const HafriyatTipiForm: React.FC = () => {
