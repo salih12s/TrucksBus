@@ -55,6 +55,124 @@ const CATI_PERDE_SISTEMLERI = [
   "Tavana Sabit Yana Kayar Perde",
 ];
 
+// Yarımidilli Dorse Markaları - MainLayout'tan alındı
+const YARIMIDILLI_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Acar Treyler",
+  "Adem Usta Proohauss",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "Alamen",
+  "Alp-Kar",
+  "Alpsan",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Aydeniz",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Carrier Trailer",
+  "Caselli",
+  "Çavdaroğlu",
+  "Doğuş Treyler",
+  "Doruk Treyler",
+  "EFK Treyler",
+  "ELM Treysan Trailer",
+  "Esatech Trailer",
+  "Fors Treyler",
+  "Fruehauf",
+  "Global City",
+  "Global City Treyler",
+  "Gökhanlar",
+  "Gülistan",
+  "Güreoğlu Dorse",
+  "Güven",
+  "Hürsan Dorse",
+  "Iskar Treyler",
+  "İhsan Treyler",
+  "İkiKardeş Dorse",
+  "İkon Treyler",
+  "İNC Seçkinler",
+  "Kalkan Treyler",
+  "Karalar Treyler",
+  "Kassbohrer",
+  "King",
+  "Koluman",
+  "Konza Trailer",
+  "Kögel",
+  "Krone",
+  "M. Seymak Treyler",
+  "Margaritelli",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Maxtır Trailer",
+  "MAZ",
+  "Mehsan Treyler",
+  "Merve",
+  "Meusburger",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Neka Treyler",
+  "Nuri Usta Treyler",
+  "Nursan Trailer",
+  "Nükte Trailer",
+  "Ok Kardeşler",
+  "Oktar Treyler",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Orthaus Treyler",
+  "OtoÇinler",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Özçevik Treyler",
+  "Öztfn Treyler",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Sancak Treyler",
+  "Schmitz Cargobull",
+  "Schwarzmüller",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Serval Dorse Makine",
+  "Serval Makine",
+  "Set Treyler",
+  "Seyit Usta",
+  "Simboxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Sommer",
+  "Star Yağcılar",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Temsa",
+  "Tırsan",
+  "Traco",
+  "Transfer Treyler",
+  "Warkas",
+  "Wielton",
+  "Yalımsan Treyler",
+  "Yeksan Treyler",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Yıldız Treyler",
+  "Yiğitsan",
+  "Zafer Treyler",
+  "Özel Üretim",
+  "Diğer",
+];
+
 interface Brand {
   id: number;
   name: string;
@@ -81,6 +199,7 @@ interface YariMidilliFormData {
   description: string;
   year: number;
   price: string;
+  dorseBrand: string; // Dorse markası
 
   // Brand/Model/Variant
   categoryId: string;
@@ -174,6 +293,7 @@ const YariMidilliForm: React.FC = () => {
     description: "",
     year: new Date().getFullYear(),
     price: "",
+    dorseBrand: "Seçiniz",
     categoryId: "6", // Dorse category ID
     brandId: "",
     modelId: "",
@@ -700,6 +820,11 @@ const YariMidilliForm: React.FC = () => {
       if (variantSlug && !selectedVariant)
         submitData.append("variantSlug", variantSlug);
 
+      // Dorse Brand (dorseBrand olarak customFields'a eklenecek)
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Year field'ı ekle
       submitData.append("year", formData.year.toString());
 
@@ -888,6 +1013,25 @@ const YariMidilliForm: React.FC = () => {
                 required
               />
             </Box>
+
+            {/* Dorse Markası */}
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                value={formData.dorseBrand}
+                onChange={(e) =>
+                  handleInputChange("dorseBrand", e.target.value)
+                }
+                label="Dorse Markası"
+                required
+              >
+                {YARIMIDILLI_BRANDS.map((brand) => (
+                  <MenuItem key={brand} value={brand}>
+                    {brand}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
