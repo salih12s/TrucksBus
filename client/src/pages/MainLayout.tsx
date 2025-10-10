@@ -3666,35 +3666,859 @@ const MainLayout: React.FC = () => {
                   Kuruyük
                 </Typography>
                 <Box sx={{ pl: 1, width: "100%" }}>
-                  {["Kapaklı", "Kapaklı(Kaya Tipi)", "Kapaksız(Platform)"].map(
-                    (item) => (
-                      <Typography
-                        key={item}
-                        onClick={() =>
-                          navigate(
-                            `/categories/dorse/brands/kuruyuk/models/${item
-                              .toLowerCase()
-                              .replace(/[()]/g, "")
-                              .replace(/\s+/g, "-")}/variants/create-ad`
-                          )
-                        }
-                        sx={{
-                          color: "#666",
-                          fontSize: "12px",
-                          py: 0.3,
-                          cursor: "pointer",
-                          "&:hover": {
-                            color: "#1976d2",
-                            backgroundColor: "#e3f2fd",
-                          },
-                          borderRadius: "2px",
-                          px: 0.5,
-                        }}
-                      >
-                        • {item}
-                      </Typography>
-                    )
-                  )}
+                  {/* Kapaklı - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "kuruyuk-kapaklı"
+                            ? null
+                            : "kuruyuk-kapaklı"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Kapaklı</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "kuruyuk-kapaklı"
+                          ? "▼"
+                          : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Kapaklı Markaları */}
+                    {expandedDorseSubCategory === "kuruyuk-kapaklı" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Acar Treyler",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "Adil Sert",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "AKY",
+                            "Akyel Treyler",
+                            "Alamen",
+                            "Aldor Treyler",
+                            "Alfa Treyler",
+                            "Alim Dorse",
+                            "Ali Rıza Usta",
+                            "Alka Group",
+                            "Alkan Treyler",
+                            "Alpaslan Treyler",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Altınel Dorse",
+                            "Altınışık",
+                            "Altınordu",
+                            "Andıç",
+                            "Arslan",
+                            "ART Trailer",
+                            "Asil Treyler",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aybaba Dorse",
+                            "Aydeniz",
+                            "Aydeniz Dorse",
+                            "Aydın Treyler",
+                            "Baran Dorse",
+                            "Barış Dorse",
+                            "Berkefe Treyler",
+                            "Beyfem Dorse",
+                            "Beysan Treyler",
+                            "Bio Treyler",
+                            "Bozlar",
+                            "Can Damper Karoser",
+                            "Cangüller Treyler",
+                            "Cangül Treyler",
+                            "Can Treyler",
+                            "Carrier Trailer",
+                            "Caselli",
+                            "CastroMax Trailers",
+                            "Ceylan Treyler",
+                            "Ceytreyler",
+                            "CNC Dorse",
+                            "Coşkun",
+                            "Coşkunlar",
+                            "Çakır Dorse",
+                            "Çarşan",
+                            "Çavdaroğlu",
+                            "Çavuşoğlu Damper",
+                            "Çinler",
+                            "Çinler Treyler",
+                            "Çoşgun Dorse",
+                            "Çuhadar Treyler",
+                            "Dark Tech Treyler",
+                            "Dekor Damper",
+                            "Demircan Treyler",
+                            "Dentir Dorse",
+                            "Dere Dorse",
+                            "Dereli Hüseyin",
+                            "Doğan",
+                            "Doğuş Treyler",
+                            "Doruk Treyler",
+                            "Efe Treyler",
+                            "EFK Treyler",
+                            "Ekincİ",
+                            "Ekol Dorse",
+                            "Ekrem Treyler",
+                            "ELM Treysan Trailer",
+                            "EMK Treyler",
+                            "Erbaran Treyler",
+                            "Eren Dorse",
+                            "Erkan",
+                            "Erkonsan",
+                            "Erol İnce Treyler",
+                            "Esatech Trailer",
+                            "Eşmeliler",
+                            "Ferhat Dorse",
+                            "Fesan Makina",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "FSM",
+                            "Gani Şahan Treyler",
+                            "Global City",
+                            "Global City Treyler",
+                            "Gökhanlar",
+                            "Gökmenoğlu Karoser",
+                            "Groenewegen",
+                            "Gülistan",
+                            "Gümüş Damper",
+                            "Güneş",
+                            "Güneyşan Treyler Dorse",
+                            "Güreloğlu Dorse",
+                            "Güveneller",
+                            "Güven TIR",
+                            "Hacı Ceylan",
+                            "Han Trailer",
+                            "Hastrailer",
+                            "Hürsan",
+                            "Iskar Treyler",
+                            "İhsan Treyler",
+                            "İKA Treyler",
+                            "İkikardeş",
+                            "İkon Treyler",
+                            "İldis",
+                            "İNC Seçkinler",
+                            "İşkar Dorse",
+                            "Kalkan",
+                            "Kalkan Treyler",
+                            "Karalar Treyler",
+                            "Kartallar",
+                            "Kässbohrer",
+                            "KKT Trailer",
+                            "Koluman",
+                            "Kondekor",
+                            "Koneksan",
+                            "Konseymak Treyler",
+                            "Kontir Dorse",
+                            "Kontürkşan Dorse",
+                            "Konza",
+                            "Konza Trailer",
+                            "Kögel",
+                            "Krone",
+                            "Kuşçuoğlu",
+                            "Lider Dorse",
+                            "LTF Treyler",
+                            "M. Seymak Treyler",
+                            "Makinsan",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "MAS Treyler",
+                            "MaxTır Treyler",
+                            "MAZ",
+                            "MEC",
+                            "Mehmet Aydın Treyler",
+                            "Mehsan Treyler",
+                            "Meral",
+                            "Merve",
+                            "Meshaus Trailer",
+                            "Meshaus Treyler",
+                            "Metalsan Dorse",
+                            "Metsan Treyler",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "Muratsan Treyler",
+                            "Narin",
+                            "Nedex",
+                            "Neka",
+                            "NEV",
+                            "Nevkarsan",
+                            "Nevtirsan",
+                            "Nevzat Çelik",
+                            "Nurak Treyler",
+                            "Nursan Trailer",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Omeksan",
+                            "Optimak Treyler",
+                            "Ormanlı Treyler",
+                            "Orthaus Treyler",
+                            "Oruçlar",
+                            "Osmanlı",
+                            "OtoÇinler",
+                            "Otokar",
+                            "Otto Trailer",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Ö.M.T.",
+                            "Öm-san",
+                            "Önder",
+                            "Özbay Damper",
+                            "Özçevik Treyler",
+                            "Özelsan",
+                            "Özenir",
+                            "Özenir Dorse",
+                            "Özgaranti",
+                            "Özgül Treyler",
+                            "Özmen Damper & Dorse",
+                            "Öztfn Treyler",
+                            "Öztreyler",
+                            "Öztürk Treyler",
+                            "Pacton",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Payas",
+                            "Piroğlu Dorse",
+                            "Polat",
+                            "Polifton",
+                            "Poslu Trailer",
+                            "Poyraz",
+                            "Ram-Kar, Ram Treyler",
+                            "Reis",
+                            "Reis Treyler",
+                            "Roms",
+                            "Sağlam-İş Damper",
+                            "Sancak Treyler",
+                            "Sarılmaz",
+                            "Schmitz",
+                            "Schwarzmüller",
+                            "Scorpion Trailer",
+                            "SDS Sönmez Dorse",
+                            "Seçen",
+                            "Seçkinler",
+                            "Seçsan Treyler",
+                            "SEG",
+                            "Self Frigo",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Seren Treyler",
+                            "Serin Treyler",
+                            "Serpin Dorse",
+                            "Serra Treyler",
+                            "Sert Makina",
+                            "Serval Makine",
+                            "Set Treyler",
+                            "Sevinç Treyler",
+                            "Seyit Usta",
+                            "Sey-Mak Dorse",
+                            "Simboхx",
+                            "Simboхx Treyler",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Starboard",
+                            "Star Yağcılar",
+                            "Şahan Dorse",
+                            "Şahin",
+                            "Şahsan",
+                            "Şah Treyler",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Taşkın",
+                            "Taşkır Dorse",
+                            "Tecnotır Dorse",
+                            "Tekbirsan",
+                            "Tirkon",
+                            "Tırsan",
+                            "Tırser",
+                            "Töngeloğlu",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Treymak",
+                            "Tuğsan Treyler",
+                            "Tuncay İş",
+                            "Tursan",
+                            "Türmaksан",
+                            "Umut Damper",
+                            "Usta Treyler",
+                            "Valohr",
+                            "Warkas",
+                            "Wielton",
+                            "Yalçın",
+                            "Yalımsan Treyler",
+                            "Yasin Ateş",
+                            "Yavuz Treyler",
+                            "Yeksan",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Yıldız Treyler",
+                            "Yiğitsan Treyler",
+                            "Zafer Treyler",
+                            "Zak-San Trailer",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/kuruyuk/models/kapaklı/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Kapaklı(Kaya Tipi) - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory ===
+                            "kuruyuk-kapaklı-kaya-tipi"
+                            ? null
+                            : "kuruyuk-kapaklı-kaya-tipi"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Kapaklı(Kaya Tipi)</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory ===
+                        "kuruyuk-kapaklı-kaya-tipi"
+                          ? "▼"
+                          : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Kapaklı(Kaya Tipi) Markaları */}
+                    {expandedDorseSubCategory ===
+                      "kuruyuk-kapaklı-kaya-tipi" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akın",
+                            "Akmanlar Damper",
+                            "Alamen",
+                            "Aldor Treyler",
+                            "Alim Dorse",
+                            "Alpaslan Treyler",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Altınel Dorse",
+                            "Altınordu",
+                            "ART Trailer",
+                            "ASY Treyler",
+                            "Aydeniz",
+                            "Aydeniz Dorse",
+                            "Barış Dorse",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangüller Treyler",
+                            "Cangül Treyler",
+                            "Carrier Trailer",
+                            "Caselli",
+                            "CastroMax Trailers",
+                            "Ceylan Treyler",
+                            "Coşkunlar",
+                            "Çakır Karoser",
+                            "Çarşan",
+                            "Çavdaroğlu",
+                            "Çinler Dorse",
+                            "Çoşgun Dorse",
+                            "Dere Dorse",
+                            "Doğan",
+                            "Doruk Treyler",
+                            "Efe Treyler",
+                            "EFK Treyler",
+                            "Ekol Dorse",
+                            "ELM Treysan Trailer",
+                            "EMK Treyler",
+                            "Erkonsan",
+                            "Esatech Trailer",
+                            "Eşmeliler Treyler",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "FSM Treyler",
+                            "Global City",
+                            "Global City Treyler",
+                            "Gökhanlar",
+                            "Gülistan",
+                            "Güneş",
+                            "Güneyşan Treyler Dorse",
+                            "Güreloğlu Dorse",
+                            "Güveneller Dorse",
+                            "Hacı Ceylan Treyler",
+                            "Hürsan Treyler",
+                            "Iskar Treyler",
+                            "İhsan Treyler",
+                            "İkikardeş",
+                            "İkon Treyler",
+                            "İskar Dorse",
+                            "Kalkan Treyler",
+                            "Karalar Treyler",
+                            "Kässbohrer",
+                            "KKT Trailer",
+                            "Koluman",
+                            "Konza Trailer",
+                            "Kögel",
+                            "Krone",
+                            "Lider Dorse",
+                            "M. Seymak Treyler",
+                            "Makinsan",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Maxtır Trailer",
+                            "Mehsan Treyler",
+                            "Meshaus Treyler",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Neka Treyler",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Omeksan",
+                            "Optimak Treyler",
+                            "Ormanlı Treyler",
+                            "Orthaus Treyler",
+                            "OtoÇinler",
+                            "Otokar",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Özçevik Treyler",
+                            "Özenir Dorse",
+                            "Özgül Treyler",
+                            "Özmen Damper & Dorse",
+                            "ÖZ Nevkarşan",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Sarıılmaz Makina",
+                            "Schmitz",
+                            "Seçkinler",
+                            "Self Frigo",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Serra Treyler",
+                            "Sert Makina",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Sey-Mak Dorse",
+                            "Simboxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Şahan",
+                            "Şahin",
+                            "Şen-San",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Taşkır Dorse",
+                            "Tırsan",
+                            "Tirkon",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Tuğsan Treyler",
+                            "Warkas",
+                            "Wielton",
+                            "Yalımsan Treyler",
+                            "Yeksan",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Yıldız Treyler",
+                            "Zafer",
+                            "Zafer Treyler",
+                            "Zak-San Trailer",
+                            "Zarslan",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/kuruyuk/models/kapaklı-kaya-tipi/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Kapaksız(Platform) - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory ===
+                            "kuruyuk-kapaksız-platform"
+                            ? null
+                            : "kuruyuk-kapaksız-platform"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Kapaksız(Platform)</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory ===
+                        "kuruyuk-kapaksız-platform"
+                          ? "▼"
+                          : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Kapaksız(Platform) Markaları */}
+                    {expandedDorseSubCategory ===
+                      "kuruyuk-kapaksız-platform" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Alamen",
+                            "Alim Dorse",
+                            "Ali Rıza Usta",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Altınel",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aydeniz Dorse",
+                            "Bartoletti",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangül",
+                            "Cangüller Treyler",
+                            "Carrier Trailer",
+                            "Caselli",
+                            "CastroMax Trailers",
+                            "Coşkunlar",
+                            "Çarşan",
+                            "Çavdaroğlu",
+                            "Doğuş Treyler",
+                            "Doruk Treyler",
+                            "Efe Treyler",
+                            "EFK Treyler",
+                            "Ekol",
+                            "ELM Treysan Trailer",
+                            "EMK Treyler",
+                            "Esatech Trailer",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "Global City",
+                            "Oymak Träger",
+                            "Ö.M.T.",
+                            "Önder Treyler",
+                            "Özenir Treyler",
+                            "Özgül Treyler",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Payas",
+                            "Poslu",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Sanmak",
+                            "Schmitz",
+                            "Self Frigo",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serra Treyler",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Simboxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Tirkon",
+                            "Tırsan",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Warkas",
+                            "Wielton",
+                            "Yalımsan Treyler",
+                            "Yelsan Treyler",
+                            "YES Treyler",
+                            "Yıldızlar Damper",
+                            "Zafer Treyler",
+                            "Zak-San Trailer",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/kuruyuk/models/kapaksız-platform/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
                 </Box>
               </ListItem>
 
@@ -3722,12 +4546,14 @@ const MainLayout: React.FC = () => {
                   Tenteli
                 </Typography>
                 <Box sx={{ pl: 1, width: "100%" }}>
-                  {["Pilot", "Midilli", "Yarımidilli"].map((item) => (
+                  {/* Pilot - Genişletilebilir */}
+                  <Box>
                     <Typography
-                      key={item}
                       onClick={() =>
-                        navigate(
-                          `/categories/dorse/brands/tenteli/models/${item.toLowerCase()}/variants/create-ad`
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "tenteli-pilot"
+                            ? null
+                            : "tenteli-pilot"
                         )
                       }
                       sx={{
@@ -3741,11 +4567,740 @@ const MainLayout: React.FC = () => {
                         },
                         borderRadius: "2px",
                         px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
                     >
-                      • {item}
+                      <span>• Pilot</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "tenteli-pilot"
+                          ? "▼"
+                          : "▶"}
+                      </span>
                     </Typography>
-                  ))}
+
+                    {/* Pilot Markaları */}
+                    {expandedDorseSubCategory === "tenteli-pilot" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Acar Treyler",
+                            "Adacan",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "ADT",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akın Dorse",
+                            "Akmanlar Damper",
+                            "Akyel",
+                            "Alamen",
+                            "Alim",
+                            "Ali Rıza Usta",
+                            "Alpaslan Dorse",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Altınel",
+                            "Altınordu",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Ata Treyler",
+                            "Aydeniz",
+                            "Bepal",
+                            "Beyfem Dorse",
+                            "Beysan Treyler",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangül",
+                            "Cangüller Treyler",
+                            "Carrier Trailer",
+                            "Caselli",
+                            "CastroMax Trailers",
+                            "CMK Treyler",
+                            "Coşkun",
+                            "Çarşan",
+                            "Çavdaroğlu",
+                            "Çavuşoğlu Damper",
+                            "Çinler Dorse",
+                            "Çuhadar Treyler",
+                            "Doğan",
+                            "Doğuş Dorse",
+                            "Dorsesan",
+                            "Doruk Treyler",
+                            "DTS Dorse",
+                            "EFK Treyler",
+                            "Ekol Dorse",
+                            "ELM Treysan Trailer",
+                            "Erbaran Dorse",
+                            "Erdem",
+                            "Erd Treyler",
+                            "Erkonsan",
+                            "Esatech Trailer",
+                            "Eşmeliler",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "FSM",
+                            "Global City",
+                            "Global City Treyler",
+                            "Gökhanlar",
+                            "Gülistan",
+                            "Güneş",
+                            "Güneyşan",
+                            "Gürel Dorse",
+                            "Hastrailer",
+                            "Hatsan",
+                            "Hicri Ercili",
+                            "Humbaur",
+                            "Hürsan",
+                            "Iskar Treyler",
+                            "İhsan Treyler",
+                            "İkiKardeş Dorse",
+                            "İkon Treyler",
+                            "İNC Seçkinler",
+                            "Kalkan Treyler",
+                            "Kama Dorse",
+                            "Karalar Treyler",
+                            "Kassbohrer",
+                            "Kelberg",
+                            "King",
+                            "King Treyler",
+                            "Koluman",
+                            "Kontir",
+                            "Konza Trailer",
+                            "Kögel",
+                            "Krone",
+                            "Kuşçuoğlu",
+                            "Lider",
+                            "M. Seymak Treyler",
+                            "Makinsan",
+                            "Margaritelli",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "MaxTır Trailer",
+                            "MAZ",
+                            "Mehsan Treyler",
+                            "Meral Kasa",
+                            "Metsan",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Narin",
+                            "Nedex",
+                            "Neka Treyler",
+                            "Nursan",
+                            "Nükte Trailer",
+                            "OCK",
+                            "OK Kardeşler",
+                            "Oktar Treyler",
+                            "Omeksan",
+                            "Optimak Treyler",
+                            "Ormanlı Treyler",
+                            "Orthaus Treyler",
+                            "Oruçlar Dorse",
+                            "OtoÇinler",
+                            "Otokar",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Özelsan Treyler",
+                            "Özenir",
+                            "Özenir Dorse",
+                            "Özgül",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Payas",
+                            "Pilot",
+                            "Poslu Treyler",
+                            "Rakhsh",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Sarıılmaz",
+                            "Schmitz",
+                            "Schmitz Cargobull",
+                            "Seçen",
+                            "Seçkinler",
+                            "Self Frigo",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Serra Treyler",
+                            "Sert",
+                            "Serval Dorse Makine",
+                            "Serval Makine",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Seymak",
+                            "Simboxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Sönmez",
+                            "Starboard",
+                            "Star Yağcılar",
+                            "Şahin",
+                            "Şenşan",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Taşkır",
+                            "Temsa",
+                            "Tirkon",
+                            "Tırsan",
+                            "Tırser",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Treysan",
+                            "Tuncay İş",
+                            "Van Hool",
+                            "Warkas",
+                            "Wielton",
+                            "Yalçın Dorse",
+                            "Yalımsan Treyler",
+                            "Yeksan Treyler",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Yıldız Treyler",
+                            "Yılteks",
+                            "Yiğitsan",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/tenteli/models/pilot/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Midilli - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "tenteli-midilli"
+                            ? null
+                            : "tenteli-midilli"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Midilli</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "tenteli-midilli"
+                          ? "▼"
+                          : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Midilli Markaları */}
+                    {expandedDorseSubCategory === "tenteli-midilli" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Ağaçlı Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Alamen",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Altınordu",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangüller Treyler",
+                            "Carrier Trailer",
+                            "Caselli",
+                            "Coşgun Dorse",
+                            "Çavdaroğlu",
+                            "Doruk Treyler",
+                            "EFK Treyler",
+                            "ELM Treysan Trailer",
+                            "Esatech Trailer",
+                            "Fliegl",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "Global City",
+                            "Global City Treyler",
+                            "Gökhanlar",
+                            "Gülistan",
+                            "Gürel Dorse",
+                            "Güreoğlu Dorse",
+                            "Iskar Treyler",
+                            "İhsan Treyler",
+                            "İkiKardeş Dorse",
+                            "İkon Treyler",
+                            "İNC Seçkinler",
+                            "Kalkan Treyler",
+                            "Karalar Treyler",
+                            "Kassbohrer",
+                            "King",
+                            "Koluman",
+                            "Konza Trailer",
+                            "Kögel",
+                            "Krone",
+                            "M. Seymak Treyler",
+                            "Margaritelli",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Maxtır Trailer",
+                            "Mehsan Treyler",
+                            "Merttaş Dorse",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Neka Treyler",
+                            "Nett",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Ormanlı Treyler",
+                            "Orthaus Treyler",
+                            "OtoÇinler",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Schmitz",
+                            "Self Frigo",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Serra Treyler",
+                            "Serpin",
+                            "Serval Dorse Makine",
+                            "Serval Makine",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Simboxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Sommer",
+                            "Star Yağcılar",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Taşkır",
+                            "Temsa",
+                            "Tirkon",
+                            "Tırsan",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Warkas",
+                            "Wielton",
+                            "Yalımsan Treyler",
+                            "Yeksan Treyler",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Yıldız Treyler",
+                            "Yiğitsan",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/tenteli/models/midilli/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Yarımidilli - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "tenteli-yarımidilli"
+                            ? null
+                            : "tenteli-yarımidilli"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Yarımidilli</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "tenteli-yarımidilli"
+                          ? "▼"
+                          : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Yarımidilli Markaları */}
+                    {expandedDorseSubCategory === "tenteli-yarımidilli" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Acar Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Alamen",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aydeniz",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangüller Treyler",
+                            "Carrier Trailer",
+                            "Caselli",
+                            "Çavdaroğlu",
+                            "Doğuş Treyler",
+                            "Doruk Treyler",
+                            "EFK Treyler",
+                            "ELM Treysan Trailer",
+                            "Esatech Trailer",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "Global City",
+                            "Global City Treyler",
+                            "Gökhanlar",
+                            "Gülistan",
+                            "Güreoğlu Dorse",
+                            "Güven",
+                            "Hürsan Dorse",
+                            "Iskar Treyler",
+                            "İhsan Treyler",
+                            "İkiKardeş Dorse",
+                            "İkon Treyler",
+                            "İNC Seçkinler",
+                            "Kalkan Treyler",
+                            "Karalar Treyler",
+                            "Kassbohrer",
+                            "King",
+                            "Koluman",
+                            "Konza Trailer",
+                            "Kögel",
+                            "Krone",
+                            "M. Seymak Treyler",
+                            "Margaritelli",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Maxtır Trailer",
+                            "MAZ",
+                            "Mehsan Treyler",
+                            "Merve",
+                            "Meusburger",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Neka Treyler",
+                            "Nuri Usta Treyler",
+                            "Nursan Trailer",
+                            "Nükte Trailer",
+                            "Ok Kardeşler",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Ormanlı Treyler",
+                            "Orthaus Treyler",
+                            "OtoÇinler",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Özçevik Treyler",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Schmitz Cargobull",
+                            "Schwarzmüller",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Serra Treyler",
+                            "Serval Dorse Makine",
+                            "Serval Makine",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Simboxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Sommer",
+                            "Star Yağcılar",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Temsa",
+                            "Tırsan",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Warkas",
+                            "Wielton",
+                            "Yalımsan Treyler",
+                            "Yeksan Treyler",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Yıldız Treyler",
+                            "Yiğitsan",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/tenteli/models/yarımidilli/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
                 </Box>
               </ListItem>
 
@@ -3773,14 +5328,14 @@ const MainLayout: React.FC = () => {
                   Frigofirik
                 </Typography>
                 <Box sx={{ pl: 1, width: "100%" }}>
-                  {["Frigofirik Dorse"].map((item) => (
+                  {/* Frigofirik Dorse - Genişletilebilir */}
+                  <Box>
                     <Typography
-                      key={item}
                       onClick={() =>
-                        navigate(
-                          `/categories/dorse/brands/frigofirik/models/${item
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "frigofirik-dorse"
+                            ? null
+                            : "frigofirik-dorse"
                         )
                       }
                       sx={{
@@ -3794,11 +5349,211 @@ const MainLayout: React.FC = () => {
                         },
                         borderRadius: "2px",
                         px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
                     >
-                      • {item}
+                      <span>• Frigofirik Dorse</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "frigofirik-dorse"
+                          ? "▼"
+                          : "▶"}
+                      </span>
                     </Typography>
-                  ))}
+
+                    {/* Frigofirik Dorse Markaları */}
+                    {expandedDorseSubCategory === "frigofirik-dorse" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adem Usta Proohauss",
+                            "AFE Frigo",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Alamen",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Ariş Dorse",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Belgeman",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "BRF Treyler",
+                            "Can Damper Karoser",
+                            "Cangüller Treyler",
+                            "Carrier",
+                            "Caselli",
+                            "CastroMax Trailers",
+                            "Chereau",
+                            "Çavdaroğlu",
+                            "Çinler Dorse",
+                            "Doruk Treyler",
+                            "Ecofrigo",
+                            "EFK Treyler",
+                            "ELM Treysan Trailer",
+                            "Emre Frigo",
+                            "Esatech Trailer",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "Gencer Kasa",
+                            "Global City",
+                            "Great Dane Trailer",
+                            "Gülistan",
+                            "Hastrailer",
+                            "Horuzoğlu",
+                            "Iskar Treyler",
+                            "İkon Treyler",
+                            "Kalkan Treyler",
+                            "Karalar Treyler",
+                            "Karaoğlan",
+                            "Kassbohrer",
+                            "KKT Trailer",
+                            "Koluman",
+                            "Kögel Trailer",
+                            "Krone",
+                            "Lamberet",
+                            "Lecinena",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Maxtır Trailer",
+                            "Mehsan Treyler",
+                            "Mert",
+                            "Meusburger",
+                            "Mobil Treyler",
+                            "Modern Karoseri",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Ormanlı Treyler",
+                            "Orthaus Treyler",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Safkar",
+                            "Sam Frigo",
+                            "Sancak Treyler",
+                            "Schmitz",
+                            "Schmitz Cargobull",
+                            "Schwarzmüller",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Serra Treyler",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Seymak",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Sommer",
+                            "Star Yağcılar",
+                            "Takdir Dorse",
+                            "Talson",
+                            "Tanı Tır",
+                            "Thermo King",
+                            "Tırsan",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Transfrigo Kasa",
+                            "Van Hool",
+                            "Warkas",
+                            "Wielton",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Yıldız Treyler",
+                            "Yiğitsan",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/frigofirik/models/frigofirik-dorse/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
                 </Box>
               </ListItem>
 
@@ -3826,14 +5581,14 @@ const MainLayout: React.FC = () => {
                   Tanker
                 </Typography>
                 <Box sx={{ pl: 1, width: "100%" }}>
-                  {["Tanker Dorse"].map((item) => (
+                  {/* Tanker Dorse - Genişletilebilir */}
+                  <Box>
                     <Typography
-                      key={item}
                       onClick={() =>
-                        navigate(
-                          `/categories/dorse/brands/tanker/models/${item
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "tanker-dorse"
+                            ? null
+                            : "tanker-dorse"
                         )
                       }
                       sx={{
@@ -3847,11 +5602,264 @@ const MainLayout: React.FC = () => {
                         },
                         borderRadius: "2px",
                         px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
                     >
-                      • {item}
+                      <span>• Tanker Dorse</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "tanker-dorse"
+                          ? "▼"
+                          : "▶"}
+                      </span>
                     </Typography>
-                  ))}
+
+                    {/* Tanker Dorse Markaları */}
+                    {expandedDorseSubCategory === "tanker-dorse" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Ak Çelik",
+                            "Akmanlar Damper",
+                            "Akyel",
+                            "Akyel Treyler",
+                            "Alamen",
+                            "Alim Treyler",
+                            "Ali Rıza Usta Tanker",
+                            "Alpaslan Dorse",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Alpsan Treyler",
+                            "Altınel",
+                            "Altınordu",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aydeniz",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangüller Treyler",
+                            "Caselli",
+                            "CastroMax Trailers",
+                            "Ceylan Treyler",
+                            "Çavuşoğlu",
+                            "Çetin Kardeşler",
+                            "Çinler Dorse",
+                            "Çuhadar",
+                            "Demkar Tanker",
+                            "Dentır",
+                            "Doğan Yıldız",
+                            "Doğru İş",
+                            "Doğusan Tanker",
+                            "Doruk Treyler",
+                            "EFK Treyler",
+                            "Ekol",
+                            "Emas",
+                            "Erbaran",
+                            "Erdoğan Öz",
+                            "Esatech Trailer",
+                            "Ettgas",
+                            "Flaş Treyler",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "Global City",
+                            "Global City Treyler",
+                            "Gülistan",
+                            "Güneysan",
+                            "Hendricks",
+                            "Hicri Ercili",
+                            "Hürsan",
+                            "Isısan",
+                            "Iskar Treyler",
+                            "İhsan Treyler",
+                            "İka Trailer",
+                            "İkon Treyler",
+                            "İzmit Tanker",
+                            "Kalkan Treyler",
+                            "Karalar Treyler",
+                            "Katmerciler",
+                            "Kayalar",
+                            "Kässbohrer",
+                            "KKT Trailer",
+                            "Koluman",
+                            "Kontir",
+                            "KonturkSan",
+                            "Kontürkşan",
+                            "Konza Trailer",
+                            "Kögel",
+                            "Krone",
+                            "LTF Treyler",
+                            "Makinsan",
+                            "Marrka Treyler",
+                            "Maskon Treyler",
+                            "MAS Trailer",
+                            "Maxtır Trailer",
+                            "Mehsan Treyler",
+                            "Merceron",
+                            "MimMak",
+                            "Mobil Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Nevkarsan",
+                            "Norvega",
+                            "Nursan Trailer",
+                            "Nükte Trailer",
+                            "Odabaşı Makina",
+                            "Oktar Treyler",
+                            "OKT Trailer",
+                            "OMT",
+                            "Optimak Treyler",
+                            "Ormanlı Treyler",
+                            "Otokar",
+                            "Oymak Cargomaster",
+                            "Oymak Makina",
+                            "Oymak Träger",
+                            "Özcan",
+                            "Özçevik Dorse",
+                            "Özelsan",
+                            "Özgül Treyler",
+                            "Özlem Dorse",
+                            "Özmaksan",
+                            "Öztfn Treyler",
+                            "Öztreyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Pios Mühendislik",
+                            "Pişirgen",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Rhino Tank",
+                            "Rohr",
+                            "Sancak Treyler",
+                            "Sarılmaz",
+                            "SDS Sönmez Dorse",
+                            "Seçen Dorse",
+                            "Seçkinler",
+                            "Self Frigo",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Serra Treyler",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Seymak",
+                            "Simak",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sinan",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Şahin Tanker",
+                            "Takdir Dorse",
+                            "Tansan",
+                            "Taşkır",
+                            "Teknik Tanker",
+                            "Tırsan",
+                            "Tirkon",
+                            "Tokay",
+                            "Töke Makina",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Tuncay İş",
+                            "Uğur Damper",
+                            "Ünal",
+                            "Ünsal",
+                            "Van Hool",
+                            "Warkas",
+                            "Wielton",
+                            "Wolf",
+                            "Yasin Ateş Treyler",
+                            "Yeksan",
+                            "Yelsan Treyler",
+                            "Yunus Tanker",
+                            "Yüksel Dorse & Damper",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/tanker/models/tanker-dorse/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
                 </Box>
               </ListItem>
 
@@ -3879,14 +5887,14 @@ const MainLayout: React.FC = () => {
                   Silobas
                 </Typography>
                 <Box sx={{ pl: 1, width: "100%" }}>
-                  {["Silobas Dorse"].map((item) => (
+                  {/* Silobas Dorse - Genişletilebilir */}
+                  <Box>
                     <Typography
-                      key={item}
                       onClick={() =>
-                        navigate(
-                          `/categories/dorse/brands/silobas/models/${item
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "silobas-dorse"
+                            ? null
+                            : "silobas-dorse"
                         )
                       }
                       sx={{
@@ -3900,11 +5908,214 @@ const MainLayout: React.FC = () => {
                         },
                         borderRadius: "2px",
                         px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
                     >
-                      • {item}
+                      <span>• Silobas Dorse</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "silobas-dorse"
+                          ? "▼"
+                          : "▶"}
+                      </span>
                     </Typography>
-                  ))}
+
+                    {/* Silobas Dorse Markaları */}
+                    {expandedDorseSubCategory === "silobas-dorse" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Alamen",
+                            "Alim",
+                            "Ali Rıza Usta",
+                            "Alpsan",
+                            "Altınel",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Atılım",
+                            "Barlas",
+                            "Bepal",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangüller Treyler",
+                            "Caselli",
+                            "CastroMax Trailers",
+                            "Çarsan Treyler",
+                            "Çinler Dorse",
+                            "ÇTS",
+                            "Çuhadar Treyler",
+                            "Doğsan",
+                            "Dorsan",
+                            "Doruk Treyler",
+                            "Dosa Treyler",
+                            "EFK Treyler",
+                            "Efsan Treyler",
+                            "Emirhan Treyler",
+                            "Emirsan Trailer",
+                            "EMK Treyler",
+                            "Esatech Trailer",
+                            "Etem Haşimoğlu",
+                            "Expert Trailer",
+                            "Fatih Treyler",
+                            "Fors Treyler",
+                            "Global City",
+                            "Gülistan",
+                            "Güven Makina",
+                            "H&B",
+                            "Haşimoğlu Dorse",
+                            "Haştarmak Sliobas",
+                            "Hesa",
+                            "Iskar Treyler",
+                            "İhsan Treyler",
+                            "İkon Treyler",
+                            "Kalkan Treyler",
+                            "Karalar Treyler",
+                            "Kässbohrer",
+                            "KKT Trailer",
+                            "Konza Trailer",
+                            "Kögel Trailer",
+                            "Krone",
+                            "Kuşçuoğlu",
+                            "Marrka Treyler",
+                            "Maskon Treyler",
+                            "MAS Trailer",
+                            "MAS Treyler",
+                            "Mehsan Treyler",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Ormanlı Treyler",
+                            "Orthaus Treyler",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Öztfn Treyler",
+                            "Öztreyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Schmitz",
+                            "Seçsan Treyler",
+                            "Self Frigo",
+                            "Selimhan Silobas",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Serra Treyler",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sinanlı Trailers",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Şen-San",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Taşkın",
+                            "Tırsan",
+                            "Tirkon",
+                            "Töke Makina",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Tuerk Makina",
+                            "Warkas",
+                            "Wielton",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/silobas/models/silobas-dorse/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
                 </Box>
               </ListItem>
 
@@ -3932,14 +6143,14 @@ const MainLayout: React.FC = () => {
                   Tekstil
                 </Typography>
                 <Box sx={{ pl: 1, width: "100%" }}>
-                  {["Tekstil Dorse"].map((item) => (
+                  {/* Tekstil Dorse - Genişletilebilir */}
+                  <Box>
                     <Typography
-                      key={item}
                       onClick={() =>
-                        navigate(
-                          `/categories/dorse/brands/tekstil/models/${item
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "tekstil-dorse"
+                            ? null
+                            : "tekstil-dorse"
                         )
                       }
                       sx={{
@@ -3953,11 +6164,176 @@ const MainLayout: React.FC = () => {
                         },
                         borderRadius: "2px",
                         px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
                     >
-                      • {item}
+                      <span>• Tekstil Dorse</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "tekstil-dorse"
+                          ? "▼"
+                          : "▶"}
+                      </span>
                     </Typography>
-                  ))}
+
+                    {/* Tekstil Dorse Markaları */}
+                    {expandedDorseSubCategory === "tekstil-dorse" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adem Usta Proohauss",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Alamen",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Ariş Dorse",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Bio Treyler",
+                            "BRF Treyler",
+                            "Can Damper Karoser",
+                            "Cangüller Treyler",
+                            "Caselli",
+                            "CastroMax Trailers",
+                            "Çavdaroğlu",
+                            "Doruk Treyler",
+                            "Esatech Trailer",
+                            "Fruehauf",
+                            "Global City",
+                            "Gülistan",
+                            "Iskar Treyler",
+                            "İkon Treyler",
+                            "Kalkan Treyler",
+                            "Karaoğlan",
+                            "Kögel Trailer",
+                            "Krone",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Mehsan Treyler",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Ormanlı Treyler",
+                            "Orthaus Treyler",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Schmitz",
+                            "Seçsan Treyler",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Serra Treyler",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Takdir Dorse",
+                            "Talson",
+                            "Tanı Tır",
+                            "Tırsan",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Transfrigo Kasa",
+                            "Warkas",
+                            "Wielton",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Zafer",
+                            "Zafer Dorse",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/tekstil/models/tekstil-dorse/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
                 </Box>
               </ListItem>
 
@@ -3985,22 +6361,14 @@ const MainLayout: React.FC = () => {
                   Konteyner Taşıyıcı & Şasi
                 </Typography>
                 <Box sx={{ pl: 1, width: "100%" }}>
-                  {[
-                    "Damper Şasi",
-                    "Kılçık Şasi",
-                    "Platform Şasi",
-                    "Römork Konvantörü(Dolli)",
-                    "Tanker Şasi",
-                    "Uzayabilir Şasi",
-                  ].map((item) => (
+                  {/* Damper Şasi - Genişletilebilir */}
+                  <Box>
                     <Typography
-                      key={item}
                       onClick={() =>
-                        navigate(
-                          `/categories/dorse/brands/konteyner-tasiyici-sasi/models/${item
-                            .toLowerCase()
-                            .replace(/[()]/g, "")
-                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "damper-şasi"
+                            ? null
+                            : "damper-şasi"
                         )
                       }
                       sx={{
@@ -4014,11 +6382,1219 @@ const MainLayout: React.FC = () => {
                         },
                         borderRadius: "2px",
                         px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
                     >
-                      • {item}
+                      <span>• Damper Şasi</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "damper-şasi" ? "▼" : "▶"}
+                      </span>
                     </Typography>
-                  ))}
+
+                    {/* Damper Şasi Markaları */}
+                    {expandedDorseSubCategory === "damper-şasi" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Alamen",
+                            "Alim",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aydeniz Dorse",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "CastroMax Trailers",
+                            "Doruk Treyler",
+                            "ELM Treysan Trailer",
+                            "EMK Treyler",
+                            "Esatech Trailer",
+                            "Fors Treyler",
+                            "Global City",
+                            "Gülistan",
+                            "Güneyşan",
+                            "Hürsan Treyler",
+                            "Iskar Treyler",
+                            "İki Kardeş",
+                            "İkon Treyler",
+                            "Kalkan Treyler",
+                            "Karaoğlan",
+                            "Kögel Trailer",
+                            "Konza Trailer",
+                            "Makinsan",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Mas Treyler",
+                            "Maxtır Trailer",
+                            "Mehsan Treyler",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Neka",
+                            "Nükte Trailer",
+                            "OKT",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Orthaus Treyler",
+                            "OtoÇinler",
+                            "Oymak",
+                            "Özenir",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Schmitz Cargobull",
+                            "Self Frigo",
+                            "Semitürk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Tırsan",
+                            "Töke Makina",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Warkas",
+                            "Wielton",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/damper-şasi/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Kılçık Şasi - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "kılçık-şasi"
+                            ? null
+                            : "kılçık-şasi"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Kılçık Şasi</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "kılçık-şasi" ? "▼" : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Kılçık Şasi Markaları */}
+                    {expandedDorseSubCategory === "kılçık-şasi" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adakon",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Akyel Treyler",
+                            "Alamen",
+                            "Alemdaroğlu",
+                            "Alim",
+                            "Alkan",
+                            "Alpaslan",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Altın El",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aydeniz Dorse",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangüll Treyler",
+                            "Caselli Treyler",
+                            "CastroMax Trailers",
+                            "Ceytech",
+                            "Coşkun",
+                            "Doğuş Dorse",
+                            "Doruk Treyler",
+                            "ELM Treysan Trailer",
+                            "EMK Treyler",
+                            "Esatech Trailer",
+                            "Eşmeliler",
+                            "Fesan Makina",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "FSM",
+                            "Global City",
+                            "Global City Trailer",
+                            "Gülistan",
+                            "Güneş",
+                            "Güneyşan",
+                            "Güreoğlu",
+                            "Gürleşenyl Treyler",
+                            "Güveneller",
+                            "Has Treyler",
+                            "Hürsan",
+                            "Iskar Treyler",
+                            "İhsan Treyler",
+                            "İki Kardeş",
+                            "İkon Treyler",
+                            "Kalkan Treyler",
+                            "Kardeşler",
+                            "Kartallar",
+                            "Konza Trailer",
+                            "Kögel Trailer",
+                            "Krone",
+                            "LTF Treyler",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Mas Treyler",
+                            "Maxtır Trailer",
+                            "Mehsan Treyler",
+                            "Meral Dorse",
+                            "Meshaus Dorse",
+                            "Metsan",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Neka",
+                            "Nevkarsan",
+                            "Nuri Usta Treyler",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "OKT Trailer",
+                            "Optimak Treyler",
+                            "Orthaus Treyler",
+                            "OtoÇinler",
+                            "Otokar",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Özenir Dorse",
+                            "Özgül Treyler",
+                            "Öztfn Treyler",
+                            "Öztreyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Payas Dorse",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Schmitz Cargobull",
+                            "Seçsan Treyler",
+                            "Self Frigo",
+                            "Semiturk",
+                            "Sena Treyler",
+                            "Serin Dorse",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Şen–San",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Tırsan",
+                            "Tirkon",
+                            "Töke Makina",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Tuncay İş",
+                            "Warkas",
+                            "Wielton",
+                            "Yalçın Dorse",
+                            "Yeksan",
+                            "Yelsan Treyler",
+                            "Yıldız",
+                            "Yıldızlar Damper",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/kılçık-şasi/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,–]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Platform Şasi - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "platform-şasi"
+                            ? null
+                            : "platform-şasi"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Platform Şasi</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "platform-şasi"
+                          ? "▼"
+                          : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Platform Şasi Markaları */}
+                    {expandedDorseSubCategory === "platform-şasi" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Alim",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aydeniz Dorse",
+                            "Barış Dorse",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangül Treyler",
+                            "CastroMax Trailers",
+                            "Cey Treyler",
+                            "Çavuşoğlu",
+                            "Doruk Treyler",
+                            "Ekol",
+                            "ELM Treysan Trailer",
+                            "EMK Treyler",
+                            "Esatech Trailer",
+                            "Eşmeliler",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "Global City",
+                            "Gülistan",
+                            "Gürleşenyl Treyler",
+                            "Hacı Ceylan Treyler",
+                            "Iskar Treyler",
+                            "İki Kardeş",
+                            "İkon Treyler",
+                            "Kalkan Treyler",
+                            "Konza Trailer",
+                            "Kögel Trailer",
+                            "Maral Trailer",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Mas Treyler",
+                            "Maxtır Trailer",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Orthaus Treyler",
+                            "OtoÇinler",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Schmitz Cargobull",
+                            "Self Frigo",
+                            "Semiturk",
+                            "Sena Treyler",
+                            "Serin Treyler",
+                            "Set Treyler",
+                            "Seyit Usta",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Taşkır",
+                            "Tırsan",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Warkas",
+                            "Wielton",
+                            "YEKSAN",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/platform-şasi/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Römork Konvantörü(Dolli) - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "romork-konvantoru-dolli"
+                            ? null
+                            : "romork-konvantoru-dolli"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Römork Konvantörü(Dolli)</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "romork-konvantoru-dolli"
+                          ? "▼"
+                          : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Römork Konvantörü(Dolli) Markaları */}
+                    {expandedDorseSubCategory === "romork-konvantoru-dolli" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Alamen",
+                            "Alim",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aydeniz Dorse",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "CastroMax Trailers",
+                            "Doruk Treyler",
+                            "ELM Treysan Trailer",
+                            "Esatech Trailer",
+                            "Fors Treyler",
+                            "Global City",
+                            "Güveneller",
+                            "Gülistan",
+                            "Iskar Treyler",
+                            "İki Kardeş",
+                            "İkon Treyler",
+                            "Kalkan Treyler",
+                            "Konza Trailer",
+                            "Kögel Trailer",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Mas Treyler",
+                            "Maxtır Trailer",
+                            "Mehsan Treyler",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Orthaus Treyler",
+                            "OtoÇinler",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Schmitz Cargobull",
+                            "Self Frigo",
+                            "Semiturk",
+                            "Sena Treyler",
+                            "Set Treyler",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Sommer",
+                            "Star Yağcılar",
+                            "Şahin Dorse",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Töke Makina",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Warkas",
+                            "Wielton",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/romork-konvantoru-dolli/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Tanker Şasi - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "tanker-sasi"
+                            ? null
+                            : "tanker-sasi"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Tanker Şasi</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "tanker-sasi" ? "▼" : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Tanker Şasi Markaları */}
+                    {expandedDorseSubCategory === "tanker-sasi" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Alamen",
+                            "Alim",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aydeniz Dorse",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "CastroMax Trailers",
+                            "Doruk Treyler",
+                            "Ekol",
+                            "Esatech Trailer",
+                            "Eşmeliler Treyler",
+                            "Fors Treyler",
+                            "Fruehauf",
+                            "Global City",
+                            "Gülistan",
+                            "Iskar Treyler",
+                            "İki Kardeş",
+                            "İkon Treyler",
+                            "Kalkan Treyler",
+                            "Konza Trailer",
+                            "Kögel Trailer",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Mas Treyler",
+                            "Maxtır Trailer",
+                            "Mehsan Treyler",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Orthaus Treyler",
+                            "OtoÇinler",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Sancak Treyler",
+                            "Schmitz Cargobull",
+                            "Self Frigo",
+                            "Semiturk",
+                            "Sena Treyler",
+                            "Set Treyler",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Şahin Dorse",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Tırsan",
+                            "Töke Makina",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Warkas",
+                            "Wielton",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/tanker-sasi/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Uzayabilir Şasi - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() =>
+                        setExpandedDorseSubCategory(
+                          expandedDorseSubCategory === "uzayabilir-sasi"
+                            ? null
+                            : "uzayabilir-sasi"
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Uzayabilir Şasi</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "uzayabilir-sasi"
+                          ? "▼"
+                          : "▶"}
+                      </span>
+                    </Typography>
+
+                    {/* Uzayabilir Şasi Markaları */}
+                    {expandedDorseSubCategory === "uzayabilir-sasi" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) =>
+                            setDorseBrandSearchQuery(e.target.value)
+                          }
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon
+                                  sx={{ color: "#666", fontSize: "16px" }}
+                                />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                            "Seçiniz",
+                            "Abd Treyler",
+                            "Adakon Treyler",
+                            "Adem Usta Proohauss",
+                            "AGS Treyler",
+                            "Akar Cihat",
+                            "Akmanlar Damper",
+                            "Akyel Treyler",
+                            "Alamen",
+                            "Alim Dorse",
+                            "Alp-Kar",
+                            "Alpsan",
+                            "Altınel",
+                            "ART Trailer",
+                            "Askan Treyler",
+                            "ASY Treyler",
+                            "Aydeniz Dorse",
+                            "Beyfem Dorse",
+                            "Bio Treyler",
+                            "Can Damper Karoser",
+                            "Cangül Treyler",
+                            "CastroMax Trailers",
+                            "Derya Treyler",
+                            "Doruk Treyler",
+                            "ELM Treysan Trailer",
+                            "EMK Treyler",
+                            "Esatech Trailer",
+                            "Eşmeliler Treyler",
+                            "Fors Treyler",
+                            "Global City",
+                            "Gülistan",
+                            "Güneş Treyler",
+                            "Güneyşan",
+                            "Güveneller Dorse",
+                            "Hürsan",
+                            "Iskar Treyler",
+                            "İki Kardeş",
+                            "İkon Treyler",
+                            "Kalkan Treyler",
+                            "Konza Trailer",
+                            "Kögel Trailer",
+                            "Makinsan Treyler",
+                            "Marrka Treyler",
+                            "MAS Trailer",
+                            "Mas Treyler",
+                            "Maxtır Trailer",
+                            "Mehsan Treyler",
+                            "Mobil Treyler",
+                            "MRC Treyler",
+                            "MS Muratsan Treyler",
+                            "Nedex",
+                            "Nükte Trailer",
+                            "Oktar Treyler",
+                            "Optimak Treyler",
+                            "Orthaus Treyler",
+                            "OtoÇinler",
+                            "Otokar",
+                            "Oymak Cargomaster",
+                            "Oymak Träger",
+                            "Özenir",
+                            "Özenir Dorse",
+                            "Özgül Treyler",
+                            "Öztfn Treyler",
+                            "Paşalar Mehmet Treyler",
+                            "Paşalar Treyler",
+                            "Paşaoğlu Dorse Treyler",
+                            "Ram-Kar",
+                            "Ram Treyler",
+                            "Reis Treyler",
+                            "Renders",
+                            "Sancak Treyler",
+                            "Schmitz Cargobull",
+                            "Seyit Usta",
+                            "Simbоxx",
+                            "Sim Treyler",
+                            "Sistem Damper Treyler",
+                            "Star Yağcılar",
+                            "Takdir Dorse",
+                            "Tanı Tır",
+                            "Tırsan Treyler",
+                            "Töke Makina",
+                            "Traco",
+                            "Transfer Treyler",
+                            "Warkas",
+                            "Wielton",
+                            "Yelsan Treyler",
+                            "Yıldızlar Damper",
+                            "Zafer Treyler",
+                            "Özel Üretim",
+                            "Diğer",
+                          ]
+                            .filter((brand) =>
+                              brand
+                                .toLowerCase()
+                                .includes(dorseBrandSearchQuery.toLowerCase())
+                            )
+                            .map((brand) => (
+                              <Typography
+                                key={brand}
+                                onClick={() =>
+                                  navigate(
+                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/uzayabilir-sasi/variants/${brand
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[.()&,]/g, "")}/create-ad`
+                                  )
+                                }
+                                sx={{
+                                  color: "#555",
+                                  fontSize: "11px",
+                                  py: 0.2,
+                                  cursor: "pointer",
+                                  "&:hover": {
+                                    color: "#1976d2",
+                                    backgroundColor: "#e8f4f8",
+                                  },
+                                  borderRadius: "2px",
+                                  px: 0.5,
+                                }}
+                              >
+                                ◦ {brand}
+                              </Typography>
+                            ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
                 </Box>
               </ListItem>
             </List>
