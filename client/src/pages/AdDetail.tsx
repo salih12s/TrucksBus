@@ -145,6 +145,12 @@ const AdDetail: React.FC = () => {
   const [videoBlobUrls, setVideoBlobUrls] = useState<Map<number, string>>(
     new Map()
   );
+  const [tooltipData, setTooltipData] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    content: string;
+  }>({ visible: false, x: 0, y: 0, content: "" });
 
   // Get current user from Redux store
   const currentUser = useSelector((state: RootState) => state.auth.user);
@@ -3080,27 +3086,32 @@ const AdDetail: React.FC = () => {
                             />
                           </Box>
 
-                          {/* SVG Araç Şeması */}
+                          {/* SVG Araç Şeması - DİKEY */}
                           <Box
                             sx={{
                               position: "relative",
                               width: "100%",
-                              maxWidth: 350,
+                              maxWidth: "400px",
+                              height: "auto",
                               mx: "auto",
+                              overflow: "hidden",
                             }}
                           >
-                            {/* Ana SVG */}
+                            {/* Ana SVG - Dikey Konumda */}
                             <img
                               src="/car-diagram.svg"
-                              alt="Vehicle Diagram"
+                              alt="Araç Şeması"
                               style={{
                                 width: "100%",
                                 height: "auto",
                                 display: "block",
+                                transform: "rotate(90deg)",
+                                transformOrigin: "center center",
+                                margin: "150px 0",
                               }}
                             />
 
-                            {/* Overlay SVG with parts */}
+                            {/* Overlay SVG with parts - Dikey Koordinatlar */}
                             <svg
                               viewBox="0 0 1000 1500"
                               style={{
@@ -3109,7 +3120,7 @@ const AdDetail: React.FC = () => {
                                 left: 0,
                                 width: "100%",
                                 height: "100%",
-                                pointerEvents: "none",
+                                pointerEvents: "all",
                               }}
                             >
                               {(() => {
@@ -3117,75 +3128,80 @@ const AdDetail: React.FC = () => {
                                   {
                                     id: "onTampon",
                                     name: "Ön Tampon",
-                                    x: 50,
-                                    y: 8,
+                                    x: 500,
+                                    y: 1200,
                                   },
                                   {
                                     id: "motorKaputu",
                                     name: "Motor Kaputu",
-                                    x: 50,
-                                    y: 17,
+                                    x: 500,
+                                    y: 1070,
                                   },
-                                  { id: "tavan", name: "Tavan", x: 50, y: 50 },
+                                  {
+                                    id: "tavan",
+                                    name: "Tavan",
+                                    x: 500,
+                                    y: 650,
+                                  },
                                   {
                                     id: "sagOnCamurluk",
                                     name: "Sağ Ön Çamurluk",
-                                    x: 72,
-                                    y: 17,
+                                    x: 650,
+                                    y: 1070,
                                   },
                                   {
                                     id: "sagOnKapi",
                                     name: "Sağ Ön Kapı",
-                                    x: 77,
-                                    y: 37,
+                                    x: 650,
+                                    y: 750,
                                   },
                                   {
                                     id: "sagArkaKapi",
                                     name: "Sağ Arka Kapı",
-                                    x: 77,
-                                    y: 60,
+                                    x: 650,
+                                    y: 520,
                                   },
                                   {
                                     id: "sagArkaCamurluk",
                                     name: "Sağ Arka Çamurluk",
-                                    x: 77,
-                                    y: 80,
+                                    x: 650,
+                                    y: 380,
                                   },
                                   {
                                     id: "solOnCamurluk",
                                     name: "Sol Ön Çamurluk",
-                                    x: 28,
-                                    y: 17,
+                                    x: 350,
+                                    y: 1070,
                                   },
                                   {
                                     id: "solOnKapi",
                                     name: "Sol Ön Kapı",
-                                    x: 23,
-                                    y: 37,
+                                    x: 350,
+                                    y: 750,
                                   },
                                   {
                                     id: "solArkaKapi",
                                     name: "Sol Arka Kapı",
-                                    x: 23,
-                                    y: 60,
+                                    x: 350,
+                                    y: 520,
                                   },
                                   {
                                     id: "solArkaCamurluk",
                                     name: "Sol Arka Çamurluk",
-                                    x: 23,
-                                    y: 80,
+                                    x: 350,
+                                    y: 380,
                                   },
                                   {
                                     id: "bagajKapagi",
                                     name: "Bagaj Kapağı",
-                                    x: 50,
-                                    y: 90,
+                                    x: 500,
+                                    y: 390,
                                   },
                                   {
                                     id: "arkaTampon",
                                     name: "Arka Tampon",
-                                    x: 50,
-                                    y: 95,
+                                    x: 500,
+                                    y: 300,
                                   },
                                 ];
 
@@ -3215,29 +3231,138 @@ const AdDetail: React.FC = () => {
                                     fillColor = "#9E9E9E"; // Gri
                                   }
 
+                                  const getTooltipText = () => {
+                                    if (!partInfo)
+                                      return `${part.name}: Bilgi Yok`;
+                                    const status =
+                                      partInfo.status || "Belirtilmemiş";
+                                    const detail =
+                                      partInfo.details &&
+                                      partInfo.details.length > 0
+                                        ? ` - ${partInfo.details[0].type}`
+                                        : "";
+                                    return `${part.name}: ${status}${detail}`;
+                                  };
+
                                   return (
-                                    <g key={part.id}>
+                                    <g
+                                      key={part.id}
+                                      style={{ cursor: "pointer" }}
+                                    >
                                       <circle
-                                        cx={(part.x / 100) * 1000}
-                                        cy={(part.y / 100) * 1500}
-                                        r="28"
+                                        cx={part.x}
+                                        cy={part.y}
+                                        r="35"
                                         fill={fillColor}
-                                        stroke="#555"
-                                        strokeWidth="2"
-                                      />
-                                      <circle
-                                        cx={(part.x / 100) * 1000}
-                                        cy={(part.y / 100) * 1500}
-                                        r="18"
-                                        fill="white"
+                                        stroke="#333"
+                                        strokeWidth="3"
+                                        opacity="0.9"
+                                        style={{
+                                          transition: "all 0.3s ease",
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          const target =
+                                            e.target as SVGCircleElement;
+                                          target.setAttribute("r", "40");
+                                          target.setAttribute("opacity", "1");
+                                          target.setAttribute(
+                                            "stroke-width",
+                                            "4"
+                                          );
+
+                                          const rect =
+                                            target.getBoundingClientRect();
+                                          setTooltipData({
+                                            visible: true,
+                                            x: rect.left + rect.width / 2,
+                                            y: rect.top - 10,
+                                            content: getTooltipText(),
+                                          });
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          const target =
+                                            e.target as SVGCircleElement;
+                                          target.setAttribute("r", "35");
+                                          target.setAttribute("opacity", "0.9");
+                                          target.setAttribute(
+                                            "stroke-width",
+                                            "3"
+                                          );
+
+                                          setTooltipData((prev) => ({
+                                            ...prev,
+                                            visible: false,
+                                          }));
+                                        }}
                                       >
-                                        <title>{part.name}</title>
+                                        <title>{getTooltipText()}</title>
                                       </circle>
+                                      <circle
+                                        cx={part.x}
+                                        cy={part.y}
+                                        r="25"
+                                        fill="white"
+                                        fillOpacity="0.9"
+                                        style={{
+                                          pointerEvents: "none",
+                                          transition: "all 0.3s ease",
+                                        }}
+                                      >
+                                        <title>{getTooltipText()}</title>
+                                      </circle>
+                                      <text
+                                        x={part.x}
+                                        y={part.y + 8}
+                                        textAnchor="middle"
+                                        fontSize="28"
+                                        fontWeight="bold"
+                                        fill="#333"
+                                        style={{
+                                          pointerEvents: "none",
+                                          transition: "all 0.3s ease",
+                                        }}
+                                      >
+                                        ●
+                                      </text>
                                     </g>
                                   );
                                 });
                               })()}
                             </svg>
+
+                            {/* Tooltip */}
+                            {tooltipData.visible && (
+                              <Box
+                                sx={{
+                                  position: "fixed",
+                                  left: tooltipData.x,
+                                  top: tooltipData.y,
+                                  transform:
+                                    "translateX(-50%) translateY(-100%)",
+                                  backgroundColor: "rgba(0, 0, 0, 0.9)",
+                                  color: "white",
+                                  padding: "8px 12px",
+                                  borderRadius: "6px",
+                                  fontSize: "14px",
+                                  fontWeight: "medium",
+                                  whiteSpace: "nowrap",
+                                  zIndex: 1000,
+                                  pointerEvents: "none",
+                                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                                  "&::after": {
+                                    content: '""',
+                                    position: "absolute",
+                                    top: "100%",
+                                    left: "50%",
+                                    transform: "translateX(-50%)",
+                                    border: "6px solid transparent",
+                                    borderTopColor: "rgba(0, 0, 0, 0.9)",
+                                  },
+                                }}
+                              >
+                                {tooltipData.content}
+                              </Box>
+                            )}
                           </Box>
                         </Box>
 
@@ -3328,8 +3453,18 @@ const AdDetail: React.FC = () => {
                                     statusColor = "#9E9E9E";
 
                                   return (
-                                    <TableRow key={part.id}>
-                                      <TableCell>{part.name}</TableCell>
+                                    <TableRow
+                                      key={part.id}
+                                      sx={{
+                                        "&:hover": {
+                                          backgroundColor:
+                                            "rgba(0, 0, 0, 0.04)",
+                                        },
+                                      }}
+                                    >
+                                      <TableCell sx={{ fontWeight: "medium" }}>
+                                        {part.name}
+                                      </TableCell>
                                       <TableCell>
                                         <Chip
                                           label={status}
@@ -3338,13 +3473,27 @@ const AdDetail: React.FC = () => {
                                             backgroundColor: statusColor,
                                             color: "white",
                                             fontWeight: "bold",
+                                            fontSize: "12px",
+                                            height: "28px",
+                                            minWidth: "80px",
+                                            "& .MuiChip-label": {
+                                              px: 1.5,
+                                            },
                                           }}
                                         />
                                       </TableCell>
                                       <TableCell>
                                         <Typography
                                           variant="body2"
-                                          sx={{ fontSize: "12px" }}
+                                          sx={{
+                                            fontSize: "12px",
+                                            color:
+                                              detail === "-" ? "#999" : "#333",
+                                            fontStyle:
+                                              detail === "-"
+                                                ? "italic"
+                                                : "normal",
+                                          }}
                                         >
                                           {detail}
                                         </Typography>
