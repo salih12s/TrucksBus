@@ -73,6 +73,7 @@ interface TankerFormData {
   year: number;
   productionYear: number;
   price: string;
+  dorseBrand: string; // Dorse markası
 
   // Brand/Model/Variant IDs
   categoryId: string;
@@ -127,6 +128,175 @@ const TANKER_COLORS = [
   "Diğer",
 ];
 
+// Tanker Dorse Markaları - MainLayout'tan alındı
+const TANKER_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Adem Usta Proohauss",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Ak Çelik",
+  "Akmanlar Damper",
+  "Akyel",
+  "Akyel Treyler",
+  "Alamen",
+  "Alim Treyler",
+  "Ali Rıza Usta Tanker",
+  "Alpaslan Dorse",
+  "Alp-Kar",
+  "Alpsan",
+  "Alpsan Treyler",
+  "Altınel",
+  "Altınordu",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Aydeniz",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Caselli",
+  "CastroMax Trailers",
+  "Ceylan Treyler",
+  "Çavuşoğlu",
+  "Çetin Kardeşler",
+  "Çinler Dorse",
+  "Çuhadar",
+  "Demkar Tanker",
+  "Dentır",
+  "Doğan Yıldız",
+  "Doğru İş",
+  "Doğusan Tanker",
+  "Doruk Treyler",
+  "EFK Treyler",
+  "Ekol",
+  "Emas",
+  "Erbaran",
+  "Erdoğan Öz",
+  "Esatech Trailer",
+  "Ettgas",
+  "Flaş Treyler",
+  "Fors Treyler",
+  "Fruehauf",
+  "Global City",
+  "Global City Treyler",
+  "Gülistan",
+  "Güneysan",
+  "Hendricks",
+  "Hicri Ercili",
+  "Hürsan",
+  "Isısan",
+  "Iskar Treyler",
+  "İhsan Treyler",
+  "İka Trailer",
+  "İkon Treyler",
+  "İzmit Tanker",
+  "Kalkan Treyler",
+  "Karalar Treyler",
+  "Katmerciler",
+  "Kayalar",
+  "Kässbohrer",
+  "KKT Trailer",
+  "Koluman",
+  "Kontir",
+  "KonturkSan",
+  "Kontürkşan",
+  "Konza Trailer",
+  "Kögel",
+  "Krone",
+  "LTF Treyler",
+  "Makinsan",
+  "Marrka Treyler",
+  "Maskon Treyler",
+  "MAS Trailer",
+  "Maxtır Trailer",
+  "Mehsan Treyler",
+  "Merceron",
+  "MimMak",
+  "Mobil Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Nevkarsan",
+  "Norvega",
+  "Nursan Trailer",
+  "Nükte Trailer",
+  "Odabaşı Makina",
+  "Oktar Treyler",
+  "OKT Trailer",
+  "OMT",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Otokar",
+  "Oymak Cargomaster",
+  "Oymak Makina",
+  "Oymak Träger",
+  "Özcan",
+  "Özçevik Dorse",
+  "Özelsan",
+  "Özgül Treyler",
+  "Özlem Dorse",
+  "Özmaksan",
+  "Öztfn Treyler",
+  "Öztreyler",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Pios Mühendislik",
+  "Pişirgen",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Rhino Tank",
+  "Rohr",
+  "Sancak Treyler",
+  "Sarılmaz",
+  "SDS Sönmez Dorse",
+  "Seçen Dorse",
+  "Seçkinler",
+  "Self Frigo",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Set Treyler",
+  "Seyit Usta",
+  "Seymak",
+  "Simak",
+  "Simbоxx",
+  "Sim Treyler",
+  "Sinan",
+  "Sistem Damper Treyler",
+  "Star Yağcılar",
+  "Şahin Tanker",
+  "Takdir Dorse",
+  "Tansan",
+  "Taşkır",
+  "Teknik Tanker",
+  "Tırsan",
+  "Tirkon",
+  "Tokay",
+  "Töke Makina",
+  "Traco",
+  "Transfer Treyler",
+  "Tuncay İş",
+  "Uğur Damper",
+  "Ünal",
+  "Ünsal",
+  "Van Hool",
+  "Warkas",
+  "Wielton",
+  "Wolf",
+  "Yasin Ateş Treyler",
+  "Yeksan",
+  "Yelsan Treyler",
+  "Yunus Tanker",
+  "Yüksel Dorse & Damper",
+  "Zafer Treyler",
+  "Özel Üretim",
+  "Diğer",
+];
+
 const TankerForm: React.FC = () => {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
@@ -166,6 +336,7 @@ const TankerForm: React.FC = () => {
     year: new Date().getFullYear(),
     productionYear: new Date().getFullYear(),
     price: "",
+    dorseBrand: "Seçiniz",
 
     // Brand/Model/Variant IDs
     categoryId: "6", // Dorse category ID
@@ -482,6 +653,11 @@ const TankerForm: React.FC = () => {
       submitData.append("modelSlug", "tanker-tanker");
       submitData.append("variantSlug", "tanker-tanker-tanker");
 
+      // Dorse Brand (dorseBrand olarak customFields'a eklenecek)
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Dorse kategorisi - Tanker markası (ID'lerle)
       submitData.append("categoryId", "6"); // Dorse category ID
       if (tankerBrandId) submitData.append("brandId", tankerBrandId);
@@ -721,6 +897,24 @@ const TankerForm: React.FC = () => {
                   required
                 />
               </Box>
+
+              {/* Marka Seçimi */}
+              <FormControl fullWidth required>
+                <InputLabel>Dorse Markası</InputLabel>
+                <Select
+                  value={formData.dorseBrand}
+                  label="Dorse Markası"
+                  onChange={(e) =>
+                    handleInputChange("dorseBrand", e.target.value)
+                  }
+                >
+                  {TANKER_BRANDS.map((brand) => (
+                    <MenuItem key={brand} value={brand}>
+                      {brand}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Box>
 
             <Divider sx={{ my: 4 }} />

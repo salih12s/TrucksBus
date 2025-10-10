@@ -51,6 +51,122 @@ const CATI_PERDE_SISTEMLERI = [
   "Tavana Sabit Yana Kayar Perde",
 ];
 
+// Midilli Dorse Markaları - MainLayout'tan alındı
+const MIDILLI_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Adem Usta Proohauss",
+  "AGS Treyler",
+  "Ağaçlı Treyler",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "Alamen",
+  "Alp-Kar",
+  "Alpsan",
+  "Altınordu",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Carrier Trailer",
+  "Caselli",
+  "Coşgun Dorse",
+  "Çavdaroğlu",
+  "Doruk Treyler",
+  "EFK Treyler",
+  "ELM Treysan Trailer",
+  "Esatech Trailer",
+  "Fliegl",
+  "Fors Treyler",
+  "Fruehauf",
+  "Global City",
+  "Global City Treyler",
+  "Gökhanlar",
+  "Gülistan",
+  "Gürel Dorse",
+  "Güreoğlu Dorse",
+  "Iskar Treyler",
+  "İhsan Treyler",
+  "İkiKardeş Dorse",
+  "İkon Treyler",
+  "İNC Seçkinler",
+  "Kalkan Treyler",
+  "Karalar Treyler",
+  "Kassbohrer",
+  "King",
+  "Koluman",
+  "Konza Trailer",
+  "Kögel",
+  "Krone",
+  "M. Seymak Treyler",
+  "Margaritelli",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Maxtır Trailer",
+  "Mehsan Treyler",
+  "Merttaş Dorse",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Neka Treyler",
+  "Nett",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Orthaus Treyler",
+  "OtoÇinler",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Öztfn Treyler",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Sancak Treyler",
+  "Schmitz",
+  "Self Frigo",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Serpin",
+  "Serval Dorse Makine",
+  "Serval Makine",
+  "Set Treyler",
+  "Seyit Usta",
+  "Simboxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Sommer",
+  "Star Yağcılar",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Taşkır",
+  "Temsa",
+  "Tirkon",
+  "Tırsan",
+  "Traco",
+  "Transfer Treyler",
+  "Warkas",
+  "Wielton",
+  "Yalımsan Treyler",
+  "Yeksan Treyler",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Yıldız Treyler",
+  "Yiğitsan",
+  "Zafer Treyler",
+  "Özel Üretim",
+  "Diğer",
+];
+
 interface City {
   id: number;
   name: string;
@@ -89,6 +205,7 @@ interface MidilliFormData {
   description: string;
   year: number;
   price: string;
+  dorseBrand: string; // Dorse markası
 
   // Brand/Model/Variant
   categoryId: string;
@@ -167,6 +284,7 @@ const MidilliForm: React.FC = () => {
     description: "",
     year: 0,
     price: "",
+    dorseBrand: "Seçiniz",
     categoryId: "",
     brandId: "",
     modelId: "",
@@ -673,6 +791,11 @@ const MidilliForm: React.FC = () => {
       submitData.append("description", formData.description);
       submitData.append("productionYear", formData.year.toString());
 
+      // Dorse Brand (dorseBrand olarak customFields'a eklenecek)
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Category/Brand/Model/Variant ID'lerini ekle
       submitData.append("categoryId", formData.categoryId);
       submitData.append("brandId", formData.brandId);
@@ -925,6 +1048,24 @@ const MidilliForm: React.FC = () => {
                 required
               />
             </Box>
+
+            {/* Marka Seçimi */}
+            <FormControl fullWidth sx={{ mt: 2 }} required>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                value={formData.dorseBrand}
+                label="Dorse Markası"
+                onChange={(e) =>
+                  handleInputChange("dorseBrand", e.target.value)
+                }
+              >
+                {MIDILLI_BRANDS.map((brand) => (
+                  <MenuItem key={brand} value={brand}>
+                    {brand}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}

@@ -55,12 +55,205 @@ const CATI_PERDE_SISTEMLERI = [
   "Tavana Sabit Yana Kayar Perde",
 ];
 
+// Pilot Dorse Markaları - MainLayout'tan alındı
+const PILOT_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Acar Treyler",
+  "Adacan",
+  "Adakon Treyler",
+  "Adem Usta Proohauss",
+  "ADT",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Akın Dorse",
+  "Akmanlar Damper",
+  "Akyel",
+  "Alamen",
+  "Alim",
+  "Ali Rıza Usta",
+  "Alpaslan Dorse",
+  "Alp-Kar",
+  "Alpsan",
+  "Altınel",
+  "Altınordu",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Ata Treyler",
+  "Aydeniz",
+  "Bepal",
+  "Beyfem Dorse",
+  "Beysan Treyler",
+  "Bio Treyler",
+  "Bodur Treyler",
+  "Boydak",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Carrier Trailer",
+  "Caselli",
+  "Coşgun Dorse",
+  "Çarşan",
+  "Çavdaroğlu",
+  "Çavuşoğlu",
+  "Çeliksan",
+  "Çinler Dorse",
+  "Damper-El",
+  "Dark Tech Treyler",
+  "Dentur",
+  "Doğan Yıldız",
+  "Doğusan",
+  "Dorsan",
+  "Doruk Treyler",
+  "Dosa Treyler",
+  "Efkar Treyler",
+  "EFK Treyler",
+  "Ekol Dorse",
+  "ELM Treysan Trailer",
+  "Erbaran Dorse",
+  "Erdem",
+  "Erd Treyler",
+  "Erkonsan",
+  "Esatech Trailer",
+  "Eşmeliler",
+  "Fors Treyler",
+  "Fruehauf",
+  "FSM",
+  "Global City",
+  "Global City Treyler",
+  "Gökhanlar",
+  "Gülistan",
+  "Güneş",
+  "Güneyşan",
+  "Gürel Dorse",
+  "Hastrailer",
+  "Hatsan",
+  "Hicri Ercili",
+  "Humbaur",
+  "Hürsan",
+  "Iskar Treyler",
+  "İhsan Treyler",
+  "İkiKardeş Dorse",
+  "İkon Treyler",
+  "İNC Seçkinler",
+  "Kalkan Treyler",
+  "Kama Dorse",
+  "Karalar Treyler",
+  "Kassbohrer",
+  "Kelberg",
+  "King",
+  "King Treyler",
+  "Koluman",
+  "Kontir",
+  "Konza Trailer",
+  "Kögel",
+  "Krone",
+  "Kuşçuoğlu",
+  "Lider",
+  "M. Seymak Treyler",
+  "Makinsan",
+  "Margaritelli",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "MaxTır Trailer",
+  "MAZ",
+  "Mehsan Treyler",
+  "Meral Kasa",
+  "Metsan",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Narin",
+  "Nedex",
+  "Neka Treyler",
+  "Nursan",
+  "Nükte Trailer",
+  "OCK",
+  "OK Kardeşler",
+  "Oktar Treyler",
+  "Omeksan",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Orthaus Treyler",
+  "Oruçlar Dorse",
+  "OtoÇinler",
+  "Otokar",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Özelsan Treyler",
+  "Özenir",
+  "Özenir Dorse",
+  "Özgül",
+  "Öztfn Treyler",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Payas",
+  "Pilot",
+  "Poslu Treyler",
+  "Rakhsh",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Sancak Treyler",
+  "Sarıılmaz",
+  "Schmitz",
+  "Schmitz Cargobull",
+  "Seçen",
+  "Seçkinler",
+  "Self Frigo",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Sert",
+  "Serval Dorse Makine",
+  "Serval Makine",
+  "Set Treyler",
+  "Seyit Usta",
+  "Seymak",
+  "Simboxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Sönmez",
+  "Starboard",
+  "Star Yağcılar",
+  "Şahin",
+  "Şenşan",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Taşkır",
+  "Temsa",
+  "Tirkon",
+  "Tırsan",
+  "Tırser",
+  "Traco",
+  "Transfer Treyler",
+  "Treysan",
+  "Tuncay İş",
+  "Van Hool",
+  "Warkas",
+  "Wielton",
+  "Yalçın Dorse",
+  "Yalımsan Treyler",
+  "Yeksan Treyler",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Yıldız Treyler",
+  "Yılteks",
+  "Yiğitsan",
+  "Zafer Treyler",
+  "Özel Üretim",
+  "Diğer",
+];
+
 interface PilotFormData {
   // Genel Bilgiler
   title: string;
   description: string;
   year: number;
   price: string;
+  dorseBrand: string; // Dorse markası
 
   // Brand/Model/Variant
   categoryId: string;
@@ -173,6 +366,7 @@ const PilotForm: React.FC = () => {
     description: "",
     year: new Date().getFullYear(),
     price: "",
+    dorseBrand: "Seçiniz",
     categoryId: "6", // Dorse category ID
     brandId: "",
     modelId: "",
@@ -587,6 +781,11 @@ const PilotForm: React.FC = () => {
       if (variantSlug && !selectedVariant)
         submitData.append("variantSlug", variantSlug);
 
+      // Dorse Brand (dorseBrand olarak customFields'a eklenecek)
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Year field'ı ekle
       submitData.append("year", formData.year.toString());
 
@@ -795,6 +994,25 @@ const PilotForm: React.FC = () => {
                 required
               />
             </Box>
+
+            {/* Dorse Markası */}
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                value={formData.dorseBrand}
+                onChange={(e) =>
+                  handleInputChange("dorseBrand", e.target.value)
+                }
+                label="Dorse Markası"
+                required
+              >
+                {PILOT_BRANDS.map((brand) => (
+                  <MenuItem key={brand} value={brand}>
+                    {brand}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}

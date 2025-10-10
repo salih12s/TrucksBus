@@ -39,6 +39,7 @@ interface FormData {
   description: string;
   productionYear: string;
   price: string;
+  dorseBrand: string; // Dorse markası
 
   // Silobas Özel Bilgileri
   hacim: string;
@@ -99,6 +100,125 @@ const SILOBAS_TYPES = [
   "Diğer",
 ];
 
+// Silobas Dorse Markaları - MainLayout'tan alındı
+const SILOBAS_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Adem Usta Proohauss",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "Alamen",
+  "Alim",
+  "Ali Rıza Usta",
+  "Alpsan",
+  "Altınel",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Atılım",
+  "Barlas",
+  "Bepal",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Caselli",
+  "CastroMax Trailers",
+  "Çarsan Treyler",
+  "Çinler Dorse",
+  "ÇTS",
+  "Çuhadar Treyler",
+  "Doğsan",
+  "Dorsan",
+  "Doruk Treyler",
+  "Dosa Treyler",
+  "EFK Treyler",
+  "Efsan Treyler",
+  "Emirhan Treyler",
+  "Emirsan Trailer",
+  "EMK Treyler",
+  "Esatech Trailer",
+  "Etem Haşimoğlu",
+  "Expert Trailer",
+  "Fatih Treyler",
+  "Fors Treyler",
+  "Global City",
+  "Gülistan",
+  "Güven Makina",
+  "H&B",
+  "Haşimoğlu Dorse",
+  "Haştarmak Sliobas",
+  "Hesa",
+  "Iskar Treyler",
+  "İhsan Treyler",
+  "İkon Treyler",
+  "Kalkan Treyler",
+  "Karalar Treyler",
+  "Kässbohrer",
+  "KKT Trailer",
+  "Konza Trailer",
+  "Kögel Trailer",
+  "Krone",
+  "Kuşçuoğlu",
+  "Marrka Treyler",
+  "Maskon Treyler",
+  "MAS Trailer",
+  "MAS Treyler",
+  "Mehsan Treyler",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Orthaus Treyler",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Öztfn Treyler",
+  "Öztreyler",
+  "Paşalar Mehmet Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Sancak Treyler",
+  "Schmitz",
+  "Seçsan Treyler",
+  "Self Frigo",
+  "Selimhan Silobas",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Set Treyler",
+  "Seyit Usta",
+  "Simbоxx",
+  "Sim Treyler",
+  "Sinanlı Trailers",
+  "Sistem Damper Treyler",
+  "Star Yağcılar",
+  "Şen-San",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Taşkın",
+  "Tırsan",
+  "Tirkon",
+  "Töke Makina",
+  "Traco",
+  "Transfer Treyler",
+  "Tuerk Makina",
+  "Warkas",
+  "Wielton",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Zafer Treyler",
+  "Özel Üretim",
+  "Diğer",
+];
+
 const SilobasForm: React.FC = () => {
   const navigate = useNavigate();
 
@@ -107,6 +227,7 @@ const SilobasForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    dorseBrand: "Seçiniz",
     hacim: "",
     dingilSayisi: "",
     lastikDurumu: "",
@@ -272,6 +393,11 @@ const SilobasForm: React.FC = () => {
       submitData.append("modelSlug", "silobas-silobas");
       submitData.append("variantSlug", "silobas-silobas-silobas");
 
+      // Dorse Brand (dorseBrand olarak customFields'a eklenecek)
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Konum bilgileri - hem ID hem de isim
       const selectedCity = cities.find(
         (c) => c.id.toString() === formData.cityId
@@ -422,6 +548,25 @@ const SilobasForm: React.FC = () => {
                 required
               />
             </Box>
+
+            {/* Marka Seçimi */}
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                value={formData.dorseBrand}
+                onChange={(e) =>
+                  handleInputChange("dorseBrand", e.target.value)
+                }
+                label="Dorse Markası"
+                required
+              >
+                {SILOBAS_BRANDS.map((brand) => (
+                  <MenuItem key={brand} value={brand}>
+                    {brand}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             {/* Silobas Özel Bilgileri */}
             <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
@@ -882,33 +1027,9 @@ const SilobasForm: React.FC = () => {
             </Typography>
 
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <FormControl fullWidth>
-                <InputLabel>Garanti</InputLabel>
-                <Select
-                  value={formData.warranty}
-                  onChange={(e) =>
-                    handleInputChange("warranty", e.target.value)
-                  }
-                  label="Garanti"
-                >
-                  <MenuItem value="var">Var</MenuItem>
-                  <MenuItem value="yok">Yok</MenuItem>
-                </Select>
-              </FormControl>
+              
 
-              <FormControl fullWidth>
-                <InputLabel>Pazarlık</InputLabel>
-                <Select
-                  value={formData.negotiable}
-                  onChange={(e) =>
-                    handleInputChange("negotiable", e.target.value)
-                  }
-                  label="Pazarlık"
-                >
-                  <MenuItem value="evet">Evet</MenuItem>
-                  <MenuItem value="hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
+             
 
               <FormControl fullWidth>
                 <InputLabel>Takas</InputLabel>
@@ -925,18 +1046,7 @@ const SilobasForm: React.FC = () => {
               </FormControl>
             </Box>
 
-            <TextField
-              fullWidth
-              label="Detaylı Bilgi"
-              value={formData.detailedInfo}
-              onChange={(e) =>
-                handleInputChange("detailedInfo", e.target.value)
-              }
-              margin="normal"
-              multiline
-              rows={3}
-            />
-
+          
             {/* Submit Button */}
             <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
               <Button
