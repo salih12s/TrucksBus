@@ -313,6 +313,7 @@ const FrigofirikForm: React.FC = () => {
 
       // Dorse kategorisi - Frigorifik markası
       formDataToSend.append("categoryId", "6"); // Dorse category ID
+      formDataToSend.append("categorySlug", "dorse");
       formDataToSend.append("brandName", "Frigorifik");
       formDataToSend.append("brandSlug", "frigorifik-frigorifik");
       formDataToSend.append("modelName", "Frigorifik Model");

@@ -638,7 +638,9 @@ const HavuzHardoxTipiForm: React.FC = () => {
           : techSpecsText;
       }
 
-      submitData.append("detailedInfo", detailedDescription);
+      if (detailedDescription) {
+        submitData.append("description", detailedDescription);
+      }
 
       // Fotoğrafları ekle
       if (formData.showcasePhoto) {

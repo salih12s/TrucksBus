@@ -477,6 +477,11 @@ const TankerForm: React.FC = () => {
       submitData.append("category", "Dorse");
       submitData.append("subcategory", "Tanker");
 
+      // Tanker için model ve variant slug'larını ekle
+      submitData.append("categorySlug", "dorse");
+      submitData.append("modelSlug", "tanker-tanker");
+      submitData.append("variantSlug", "tanker-tanker-tanker");
+
       // Dorse kategorisi - Tanker markası (ID'lerle)
       submitData.append("categoryId", "6"); // Dorse category ID
       if (tankerBrandId) submitData.append("brandId", tankerBrandId);
@@ -539,7 +544,9 @@ const TankerForm: React.FC = () => {
           : techSpecsText;
       }
 
-      submitData.append("detailedInfo", detailedDescription);
+      if (detailedDescription) {
+        submitData.append("description", detailedDescription);
+      }
 
       // Fotoğrafları ekle - showcasePhoto ve photo_ formatında
       if (formData.showcasePhoto) {

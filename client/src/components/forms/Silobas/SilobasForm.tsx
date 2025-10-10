@@ -267,6 +267,11 @@ const SilobasForm: React.FC = () => {
       submitData.append("category", "Dorse");
       submitData.append("subcategory", "Silobas");
 
+      // Silobas için model ve variant slug'larını ekle
+      submitData.append("categorySlug", "dorse");
+      submitData.append("modelSlug", "silobas-silobas");
+      submitData.append("variantSlug", "silobas-silobas-silobas");
+
       // Konum bilgileri - hem ID hem de isim
       const selectedCity = cities.find(
         (c) => c.id.toString() === formData.cityId
@@ -293,18 +298,12 @@ const SilobasForm: React.FC = () => {
       submitData.append("takasli", formData.takasli);
       submitData.append("silobasTuru", formData.silobasTuru);
 
-      // Ekstra bilgiler
-      submitData.append("warranty", formData.warranty);
-      submitData.append("negotiable", formData.negotiable);
-      submitData.append("exchange", formData.exchange);
-      submitData.append("detailedInfo", formData.detailedInfo);
-
       // Fotoğraflar
       if (formData.showcasePhoto) {
         submitData.append("showcasePhoto", formData.showcasePhoto);
       }
-      formData.photos.forEach((photo) => {
-        submitData.append(`photos`, photo);
+      formData.photos.forEach((photo, index) => {
+        submitData.append(`photo_${index}`, photo);
       });
 
       const response = await apiClient.post("/listings", submitData, {

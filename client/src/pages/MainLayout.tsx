@@ -1142,11 +1142,28 @@ const MainLayout: React.FC = () => {
           (cat) => cat.slug === selectedCategory
         )?.name;
         if (selectedCategoryName) {
+          // Türkçe karakter desteği için normalize etme
+          const normalizeString = (str: string) => {
+            return str
+              .toLowerCase()
+              .replace(/ç/g, "c")
+              .replace(/ğ/g, "g")
+              .replace(/ı/g, "i")
+              .replace(/ö/g, "o")
+              .replace(/ş/g, "s")
+              .replace(/ü/g, "u")
+              .replace(/\s*&\s*/g, "-") // " & " -> "-"
+              .replace(/\s+/g, "-") // spaces -> "-"
+              .replace(/-+/g, "-"); // multiple "-" -> single "-"
+          };
+
           filtered = filtered.filter((ad) => {
-            const categoryMatch =
-              ad.category?.name?.toLowerCase() ===
-              selectedCategoryName.toLowerCase();
-            return categoryMatch;
+            const adCategoryNormalized = normalizeString(
+              ad.category?.name || ""
+            );
+            const selectedCategoryNormalized =
+              normalizeString(selectedCategoryName);
+            return adCategoryNormalized === selectedCategoryNormalized;
           });
           console.log(
             "After category filter:",
@@ -1651,77 +1668,291 @@ const MainLayout: React.FC = () => {
     // Kategori filtresi
     if (selectedCategory && selectedCategory !== "Tüm İlanlar") {
       filtered = filtered.filter((ad) => {
-        return (
-          ad.category?.name?.toLowerCase() === selectedCategory.toLowerCase()
-        );
+        // Türkçe karakter desteği için normalize etme
+        const normalizeString = (str: string) => {
+          return str
+            .toLowerCase()
+            .replace(/ç/g, "c")
+            .replace(/ğ/g, "g")
+            .replace(/ı/g, "i")
+            .replace(/ö/g, "o")
+            .replace(/ş/g, "s")
+            .replace(/ü/g, "u")
+            .replace(/\s*&\s*/g, "-") // " & " -> "-"
+            .replace(/\s+/g, "-") // spaces -> "-"
+            .replace(/-+/g, "-"); // multiple "-" -> single "-"
+        };
+
+        const adCategoryName = ad.category?.name || "";
+        const adCategoryNormalized = normalizeString(adCategoryName);
+        const selectedCategoryNormalized = normalizeString(selectedCategory);
+
+        return adCategoryNormalized === selectedCategoryNormalized;
       });
     }
 
-    // Brand filtresi - Ferhat Dorse gibi markalar için
+    // Brand filtresi - tüm kategoriler için
     if (selectedBrand) {
+      // selectedBrand slug'ından brand name'ini bul
+      const brandObject = brands.find((b) => b.slug === selectedBrand);
+      const brandName =
+        brandObject?.name?.toLowerCase() || selectedBrand.toLowerCase();
+
       filtered = filtered.filter((ad) => {
-        // customFields içindeki dorseBrand alanını kontrol et
         const customFields = ad.customFields as Record<string, unknown>;
         const adDorseBrand = customFields?.dorseBrand as string;
-
-        // Eğer customFields'da dorseBrand varsa onu kullan, yoksa normal brand'ı kontrol et
-        if (adDorseBrand) {
-          return adDorseBrand
-            .toLowerCase()
-            .includes(selectedBrand.toLowerCase());
-        }
-
-        // Normal brand kontrolü de ekle
         const adBrandName = ad.brand?.name?.toLowerCase() || "";
-        return adBrandName.includes(selectedBrand.toLowerCase());
+
+        // Hem normal brand hem de dorseBrand'ı kontrol et
+        const matchesNormalBrand = adBrandName.includes(brandName);
+        const matchesDorseBrand =
+          adDorseBrand && adDorseBrand.toLowerCase().includes(brandName);
+
+        return matchesNormalBrand || matchesDorseBrand;
       });
     }
 
     // Subcategory filtresi - damperli için (brand seçili değilse)
     if (selectedSubCategory && !selectedBrand) {
+      console.log("🔍 === SUBCATEGORY FILTERING DEBUG START ===");
+      console.log("selectedSubCategory:", selectedSubCategory);
+      console.log("Ads before subcategory filter:", filtered.length);
+
+      // Önce tüm dorse ilanlarının slug'larını listele
+      console.log("\n📋 ALL DORSE ADS SLUG PATTERNS:");
+      filtered.forEach((ad, index) => {
+        const customFields = ad.customFields as Record<string, unknown>;
+        console.log(`Ad ${index + 1}: "${ad.title}"`, {
+          categorySlug: customFields?.categorySlug,
+          modelSlug: customFields?.modelSlug,
+          variantSlug: customFields?.variantSlug,
+          dorseBrand: customFields?.dorseBrand,
+        });
+      });
+      console.log("📋 END SLUG PATTERNS\n");
+
       filtered = filtered.filter((ad) => {
         const adBrand = ad.brand?.name?.toLowerCase() || "";
 
         // Alt kategori eşleştirmesi
         let matchesSubCategory = false;
 
+        // Alt kategori için spesifik kontrol - customFields'daki slug'lara bak
+        const subcategoryFromCustom =
+          (
+            (ad.customFields as Record<string, unknown>)?.subcategory as string
+          )?.toLowerCase() || "";
+
+        // Alt kategori için spesifik kontrol - customFields'daki categorySlug veya modelSlug'a bak
+        const categorySlugFromCustom =
+          (
+            (ad.customFields as Record<string, unknown>)?.categorySlug as string
+          )?.toLowerCase() || "";
+        const modelSlugFromCustom =
+          (
+            (ad.customFields as Record<string, unknown>)?.modelSlug as string
+          )?.toLowerCase() || "";
+        const variantSlugFromCustom =
+          (
+            (ad.customFields as Record<string, unknown>)?.variantSlug as string
+          )?.toLowerCase() || "";
+        const dorseBrandFromCustom =
+          (
+            (ad.customFields as Record<string, unknown>)?.dorseBrand as string
+          )?.toLowerCase() || "";
+
+        console.log(`\n🔎 Checking Ad ${ad.id} - "${ad.title}"`);
+        console.log("  adBrand:", adBrand);
+        console.log("  dorseBrand:", dorseBrandFromCustom);
+        console.log("  categorySlug:", categorySlugFromCustom);
+        console.log("  modelSlug:", modelSlugFromCustom);
+        console.log("  variantSlug:", variantSlugFromCustom);
+        console.log("  subcategory:", subcategoryFromCustom);
+
         if (selectedSubCategory === "damperli") {
-          matchesSubCategory =
+          const brandMatch =
             adBrand === "damperli" || adBrand.includes("damperli");
+          const categoryMatch = categorySlugFromCustom === "damperli";
+          const modelMatch = modelSlugFromCustom === "damperli";
+          const variantMatch = variantSlugFromCustom.includes("damperli");
+
+          matchesSubCategory =
+            brandMatch || categoryMatch || modelMatch || variantMatch;
+
+          console.log("  🟦 DAMPERLI checks:");
+          console.log("    brandMatch:", brandMatch);
+          console.log("    categoryMatch:", categoryMatch);
+          console.log("    modelMatch:", modelMatch);
+          console.log("    variantMatch:", variantMatch);
+          console.log("    FINAL MATCH:", matchesSubCategory);
         } else if (selectedSubCategory === "lowbed") {
+          const brandMatch = adBrand === "lowbed" || adBrand.includes("lowbed");
+          const categoryMatch = categorySlugFromCustom === "lowbed";
+          const modelMatch = modelSlugFromCustom === "lowbed";
+          const variantLowbedMatch = variantSlugFromCustom.includes("lowbed");
+          const variantHavuzluMatch = variantSlugFromCustom.includes("havuzlu");
+          const variantOndekirmaMatch =
+            variantSlugFromCustom.includes("ondekirma");
+
+          // Başlık kontrolü ekle - eğer slug'lar boşsa başlığa bak
+          const titleLower = ad.title?.toLowerCase() || "";
+          const titleHavuzluMatch =
+            titleLower.includes("havuzlu") || titleLower.includes("havuz");
+          const titleOndekirmaMatch =
+            titleLower.includes("önden kırmalı") ||
+            titleLower.includes("ondekirma");
+          const titleLowbedMatch =
+            titleLower.includes("lowbed") || titleLower.includes("low bed");
+
           matchesSubCategory =
-            adBrand === "lowbed" || adBrand.includes("lowbed");
+            brandMatch ||
+            categoryMatch ||
+            modelMatch ||
+            variantLowbedMatch ||
+            variantHavuzluMatch ||
+            variantOndekirmaMatch ||
+            titleHavuzluMatch ||
+            titleOndekirmaMatch ||
+            titleLowbedMatch;
+
+          console.log("  🟩 LOWBED checks:");
+          console.log("    brandMatch:", brandMatch);
+          console.log("    categoryMatch:", categoryMatch);
+          console.log("    modelMatch:", modelMatch);
+          console.log("    variantLowbedMatch:", variantLowbedMatch);
+          console.log("    variantHavuzluMatch:", variantHavuzluMatch);
+          console.log("    variantOndekirmaMatch:", variantOndekirmaMatch);
+          console.log("    titleHavuzluMatch:", titleHavuzluMatch);
+          console.log("    titleOndekirmaMatch:", titleOndekirmaMatch);
+          console.log("    titleLowbedMatch:", titleLowbedMatch);
+          console.log("    FINAL MATCH:", matchesSubCategory);
         } else if (selectedSubCategory === "silobas") {
-          const subcategoryFromCustom =
-            (
-              (ad.customFields as Record<string, unknown>)
-                ?.subcategory as string
-            )?.toLowerCase() || "";
+          const brandMatch =
+            adBrand === "silobas" || adBrand.includes("silobas");
+          const subcategoryMatch = subcategoryFromCustom === "silobas";
+          const categoryMatch = categorySlugFromCustom === "silobas";
+          const modelMatch = modelSlugFromCustom === "silobas";
+          const variantMatch = variantSlugFromCustom.includes("silobas");
+
           matchesSubCategory =
-            adBrand === "silobas" ||
-            adBrand.includes("silobas") ||
-            subcategoryFromCustom === "silobas";
+            brandMatch ||
+            subcategoryMatch ||
+            categoryMatch ||
+            modelMatch ||
+            variantMatch;
+
+          console.log("  🟨 SILOBAS checks:");
+          console.log("    brandMatch:", brandMatch);
+          console.log("    subcategoryMatch:", subcategoryMatch);
+          console.log("    categoryMatch:", categoryMatch);
+          console.log("    modelMatch:", modelMatch);
+          console.log("    variantMatch:", variantMatch);
+          console.log("    FINAL MATCH:", matchesSubCategory);
         } else if (selectedSubCategory === "kuruyuk") {
-          matchesSubCategory =
+          const brandMatch =
             adBrand === "kuru yuk" ||
             adBrand.includes("kuru") ||
             adBrand.includes("yuk");
+          const categoryMatch = categorySlugFromCustom === "kuruyuk";
+          const modelMatch = modelSlugFromCustom === "kuruyuk";
+          const variantKuruyukMatch = variantSlugFromCustom.includes("kuruyuk");
+          const variantKapakliMatch = variantSlugFromCustom.includes("kapakli");
+          const variantKapaksizMatch =
+            variantSlugFromCustom.includes("kapaksiz");
+
+          matchesSubCategory =
+            brandMatch ||
+            categoryMatch ||
+            modelMatch ||
+            variantKuruyukMatch ||
+            variantKapakliMatch ||
+            variantKapaksizMatch;
+
+          console.log("  🟪 KURUYUK checks:");
+          console.log("    brandMatch:", brandMatch);
+          console.log("    categoryMatch:", categoryMatch);
+          console.log("    modelMatch:", modelMatch);
+          console.log("    variantKuruyukMatch:", variantKuruyukMatch);
+          console.log("    variantKapakliMatch:", variantKapakliMatch);
+          console.log("    variantKapaksizMatch:", variantKapaksizMatch);
+          console.log("    FINAL MATCH:", matchesSubCategory);
         } else if (selectedSubCategory === "frigofirik") {
-          matchesSubCategory =
+          const brandMatch =
             adBrand === "frigoriifik" || adBrand.includes("frigo");
+          const categoryMatch = categorySlugFromCustom === "frigofirik";
+          const modelMatch = modelSlugFromCustom === "frigofirik";
+          const variantMatch = variantSlugFromCustom.includes("frigo");
+
+          matchesSubCategory =
+            brandMatch || categoryMatch || modelMatch || variantMatch;
+
+          console.log("  🟧 FRIGOFIRIK checks:");
+          console.log("    brandMatch:", brandMatch);
+          console.log("    categoryMatch:", categoryMatch);
+          console.log("    modelMatch:", modelMatch);
+          console.log("    variantMatch:", variantMatch);
+          console.log("    FINAL MATCH:", matchesSubCategory);
         } else if (selectedSubCategory === "tenteli") {
-          matchesSubCategory =
+          const brandMatch =
             adBrand === "tenteli" || adBrand.includes("tenteli");
+          const categoryMatch = categorySlugFromCustom === "tenteli";
+          const modelMatch = modelSlugFromCustom === "tenteli";
+          const variantMatch = variantSlugFromCustom.includes("tenteli");
+
+          matchesSubCategory =
+            brandMatch || categoryMatch || modelMatch || variantMatch;
+
+          console.log("  🟫 TENTELI checks:");
+          console.log("    brandMatch:", brandMatch);
+          console.log("    categoryMatch:", categoryMatch);
+          console.log("    modelMatch:", modelMatch);
+          console.log("    variantMatch:", variantMatch);
+          console.log("    FINAL MATCH:", matchesSubCategory);
         } else if (selectedSubCategory === "tanker") {
+          const brandMatch = adBrand === "tanker" || adBrand.includes("tanker");
+          const categoryMatch = categorySlugFromCustom === "tanker";
+          const modelMatch = modelSlugFromCustom === "tanker";
+          const variantMatch = variantSlugFromCustom.includes("tanker");
+
           matchesSubCategory =
-            adBrand === "tanker" || adBrand.includes("tanker");
+            brandMatch || categoryMatch || modelMatch || variantMatch;
+
+          console.log("  ⬜ TANKER checks:");
+          console.log("    brandMatch:", brandMatch);
+          console.log("    categoryMatch:", categoryMatch);
+          console.log("    modelMatch:", modelMatch);
+          console.log("    variantMatch:", variantMatch);
+          console.log("    FINAL MATCH:", matchesSubCategory);
         } else if (selectedSubCategory === "tekstil") {
-          matchesSubCategory =
+          const brandMatch =
             adBrand === "tekstil" || adBrand.includes("tekstil");
+          const categoryMatch = categorySlugFromCustom === "tekstil";
+          const modelMatch = modelSlugFromCustom === "tekstil";
+          const variantMatch = variantSlugFromCustom.includes("tekstil");
+
+          matchesSubCategory =
+            brandMatch || categoryMatch || modelMatch || variantMatch;
+
+          console.log("  ⬛ TEKSTIL checks:");
+          console.log("    brandMatch:", brandMatch);
+          console.log("    categoryMatch:", categoryMatch);
+          console.log("    modelMatch:", modelMatch);
+          console.log("    variantMatch:", variantMatch);
+          console.log("    FINAL MATCH:", matchesSubCategory);
+        }
+
+        if (matchesSubCategory) {
+          console.log("  ✅ AD INCLUDED");
+        } else {
+          console.log("  ❌ AD EXCLUDED");
         }
 
         return matchesSubCategory;
       });
+
+      console.log("\n🎯 SUBCATEGORY FILTER RESULTS:");
+      console.log("Ads after subcategory filter:", filtered.length);
+      console.log("🔍 === SUBCATEGORY FILTERING DEBUG END ===\n");
     }
 
     // Arama filtresi - search term boşsa tüm filtreler sıfırlanır
@@ -1743,7 +1974,14 @@ const MainLayout: React.FC = () => {
     }
 
     setFilteredAds(filtered);
-  }, [ads, selectedCategory, selectedSubCategory, selectedBrand, searchTerm]);
+  }, [
+    ads,
+    selectedCategory,
+    selectedSubCategory,
+    selectedBrand,
+    searchTerm,
+    brands,
+  ]);
 
   // Category count helper function - dinamik olarak ads verilerinden hesaplar
   const getCategoryCount = (slug: string | null) => {
@@ -1752,11 +1990,33 @@ const MainLayout: React.FC = () => {
       return ads.length.toLocaleString();
     }
 
+    // Türkçe karakter desteği için normalize etme
+    const normalizeString = (str: string) => {
+      return str
+        .toLowerCase()
+        .replace(/ç/g, "c")
+        .replace(/ğ/g, "g")
+        .replace(/ı/g, "i")
+        .replace(/ö/g, "o")
+        .replace(/ş/g, "s")
+        .replace(/ü/g, "u")
+        .replace(/\s*&\s*/g, "-") // " & " -> "-"
+        .replace(/\s+/g, "-") // spaces -> "-"
+        .replace(/-+/g, "-"); // multiple "-" -> single "-"
+    };
+
     // Belirli kategori için sayı
     const categoryAds = ads.filter((ad) => {
-      // Category'nin slug'ına göre filtreleme
-      const category = categories.find((cat) => cat.name === ad.category?.name);
-      return category?.slug === slug;
+      // Kategori adını normalize et ve karşılaştır
+      const adCategoryName = ad.category?.name || "";
+      const targetCategory = categories.find((cat) => cat.slug === slug);
+
+      if (!targetCategory) return false;
+
+      const adCategoryNormalized = normalizeString(adCategoryName);
+      const targetCategoryNormalized = normalizeString(targetCategory.name);
+
+      return adCategoryNormalized === targetCategoryNormalized;
     });
 
     return categoryAds.length.toLocaleString();
@@ -1804,14 +2064,45 @@ const MainLayout: React.FC = () => {
 
     if (!selectedCategoryName) return "0";
 
+    // Brand name'i bul
+    const brandName = brands.find((b) => b.slug === brandSlug)?.name;
+    if (!brandName) return "0";
+
     // Bu kategorideki bu markaya ait ilanları say
     const count = ads.filter((ad) => {
-      const categoryMatch =
-        ad.category?.name?.toLowerCase() ===
-        selectedCategoryName?.toLowerCase();
-      const brandMatch =
-        ad.brand?.name === brands.find((b) => b.slug === brandSlug)?.name;
-      return categoryMatch && brandMatch;
+      // Türkçe karakter desteği için normalize etme
+      const normalizeString = (str: string) => {
+        return str
+          .toLowerCase()
+          .replace(/ç/g, "c")
+          .replace(/ğ/g, "g")
+          .replace(/ı/g, "i")
+          .replace(/ö/g, "o")
+          .replace(/ş/g, "s")
+          .replace(/ü/g, "u")
+          .replace(/\s*&\s*/g, "-") // " & " -> "-"
+          .replace(/\s+/g, "-") // spaces -> "-"
+          .replace(/-+/g, "-"); // multiple "-" -> single "-"
+      };
+
+      const adCategoryNormalized = normalizeString(ad.category?.name || "");
+      const selectedCategoryNormalized = normalizeString(selectedCategoryName);
+
+      const categoryMatch = adCategoryNormalized === selectedCategoryNormalized;
+
+      if (!categoryMatch) return false;
+
+      // Brand eşleştirmesi - hem normal brand hem dorseBrand kontrol et
+      const customFields = ad.customFields as Record<string, unknown>;
+      const adDorseBrand = customFields?.dorseBrand as string;
+      const adBrandName = ad.brand?.name?.toLowerCase() || "";
+      const brandNameLower = brandName.toLowerCase();
+
+      const matchesNormalBrand = adBrandName.includes(brandNameLower);
+      const matchesDorseBrand =
+        adDorseBrand && adDorseBrand.toLowerCase().includes(brandNameLower);
+
+      return matchesNormalBrand || matchesDorseBrand;
     }).length;
 
     console.log(
@@ -2077,9 +2368,15 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+
+                            // Eğer marka arama kutusu boşaltılırsa sadece marka filtresini sıfırla, dorse kategorisinde kal
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -2432,9 +2729,15 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+
+                            // Eğer marka arama kutusu boşaltılırsa sadece marka filtresini sıfırla, dorse kategorisinde kal
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -3326,9 +3629,12 @@ const MainLayout: React.FC = () => {
                         <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
                           {[
                             "Seçiniz",
+                            "Acl Semitreyler",
                             "Adem Usta Proohauss",
+                            "Afa Treyler",
                             "AGS Treyler",
                             "Akar Cihat",
+                            "Akar Treyiler",
                             "Akmanlar Damper",
                             "Akyel Treyler",
                             "Alamen",
@@ -3338,17 +3644,27 @@ const MainLayout: React.FC = () => {
                             "Alpsan",
                             "Altınel",
                             "Altınordu Treyler",
+                            "Arca Treyler",
                             "ART Trailer",
                             "Askan Treyler",
                             "ASY Treyler",
+                            "Ataşehir Treyler",
                             "Aydeniz Dorse",
+                            "Balıkesir Maksan",
+                            "Balıkesir Maksan Lowbed",
                             "Barış Dorse",
                             "Başkent Dorse",
+                            "Bayrak Treyler",
                             "Belgeman",
+                            "Bersan Dorse",
                             "Beyfem Dorse",
+                            "Bilsan Makina",
                             "Bio Treyler",
+                            "Bodur Treyler",
                             "Borankay",
+                            "Breg Treyler",
                             "Budakoğlu",
+                            "Bulten Dorse",
                             "Burak Treyler",
                             "Can Damper Karoser",
                             "Cangüller Treyler",
@@ -3362,22 +3678,29 @@ const MainLayout: React.FC = () => {
                             "Çavuşoğlu",
                             "Çetin Sac",
                             "Çuhadar",
+                            "Desan Treyler",
+                            "Doğan Makina",
                             "Dorsan",
+                            "Dorsan Dorse",
                             "Doruk Treyler",
                             "EFK Treyler",
+                            "Ekol Dorse",
                             "ELM Treysan Trailer",
                             "Emirsan Trailer",
                             "EMK Treyler",
+                            "Emre Treyler",
                             "Erc Treyler",
                             "Ertuğ",
                             "Esatech Trailer",
                             "Faymonville",
+                            "Ferhat Dorse",
                             "Fesan",
                             "Fors Treyler",
                             "Fruehauf",
                             "FSM",
                             "Global City",
                             "Global City Treyler",
+                            "Gözde Treyler",
                             "Gülistan",
                             "Güneyşan Treyler Dorse",
                             "Gürler",
@@ -3385,37 +3708,55 @@ const MainLayout: React.FC = () => {
                             "Gvn Trailer",
                             "Hacı Ceylan Treyler",
                             "Hafızoğlu",
+                            "Hamza Celik Dorse",
                             "HMS",
                             "Hürsan Treyler",
+                            "Irmak Dorse",
                             "Iskar Treyler",
                             "Iveco",
                             "İhsan Treyler",
                             "İkon Treyler",
                             "İKT Treyler",
                             "İNC Seçkinler",
+                            "İzmir Dorse",
                             "Kalkan Treyler",
                             "Karalar Treyler",
+                            "Karaman Dorse",
+                            "Karayayla Dorse",
                             "Kassbohrer",
+                            "Kitrsan Treyler",
                             "KKT Trailer",
                             "Komodo",
                             "Konza Trailer",
                             "Kögel Trailer",
+                            "Kumru Dorse",
+                            "Kurtsan Treyler",
+                            "Logitrailers",
                             "M. Seymak Treyler",
                             "Makinsan",
+                            "Maksan Lowbed",
+                            "Mandalsan Dorse",
+                            "Marmara Dorse",
                             "Marrka Treyler",
                             "MAS Trailer",
                             "Maxtır Trailer",
                             "Mehsan Treyler",
+                            "Meksan Dorse",
+                            "Mersan Dorse",
                             "Mert Treyler",
                             "Meshaus Treyler",
+                            "Metinler Dorse",
                             "Metsan",
+                            "Meydan Dorse",
                             "Mobil Treyler",
                             "MRC Treyler",
                             "MS Muratsan Treyler",
                             "Muratsan Treyler",
                             "Murspeed",
+                            "Musabeyli Tırsan",
                             "My Trailer",
                             "Nedex",
+                            "Nehir Dorse",
                             "Neka",
                             "NKT Trailer",
                             "Nursan",
@@ -3429,27 +3770,35 @@ const MainLayout: React.FC = () => {
                             "Önder",
                             "Özçevik Dorse",
                             "Özdemirsan",
+                            "Özdersan Dorse",
                             "Özelsan Treyler",
                             "Özen İş Dorse",
                             "Özgül Treyler",
+                            "Özkan Treyler",
                             "Özmaksan",
                             "Özsan",
                             "Öztfn Treyler",
                             "Öztürk Treyler",
                             "Özünlü",
+                            "Palmiye Treyler",
+                            "Pars Treyler",
                             "Paşalar Mehmet Treyler",
                             "Paşalar Treyler",
                             "Paşaoğlu Dorse Treyler",
+                            "Prohauass",
                             "Ram-Kar",
                             "Ram Treyler",
                             "Reis Treyler",
+                            "Safa Dorse",
                             "Sancak Treyler",
                             "Schmitz",
                             "Scorpion Trailer",
                             "Seçsan Treyler",
+                            "Selim Dorse",
                             "Self Frigo",
                             "Semitürk",
                             "Sena Treyler",
+                            "Serhat Dorse",
                             "Serin Treyler",
                             "Serra Treyler",
                             "Set Treyler",

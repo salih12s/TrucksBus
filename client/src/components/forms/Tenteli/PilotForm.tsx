@@ -636,7 +636,9 @@ const PilotForm: React.FC = () => {
           : techSpecsText;
       }
 
-      submitData.append("detailedInfo", detailedDescription);
+      if (detailedDescription) {
+        submitData.append("description", detailedDescription);
+      }
 
       // Fotoğraflar
       if (images[showcaseImageIndex]) {

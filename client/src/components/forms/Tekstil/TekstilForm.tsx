@@ -505,6 +505,11 @@ const TekstilForm: React.FC = () => {
       formDataToSend.append("subcategory", "Tekstil");
       formDataToSend.append("variant_slug", variantSlug || "");
 
+      // Tekstil için model ve variant slug'larını ekle
+      formDataToSend.append("categorySlug", "dorse");
+      formDataToSend.append("modelSlug", "tekstil-tekstil");
+      formDataToSend.append("variantSlug", "tekstil-tekstil-tekstil");
+
       // Brand/Model/Variant IDs
       formDataToSend.append("categoryId", formData.categoryId || "1"); // Dorse category ID
       formDataToSend.append("brandId", formData.brandId);

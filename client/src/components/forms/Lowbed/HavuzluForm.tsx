@@ -45,25 +45,7 @@ interface District {
   cityId: number;
 }
 
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Model {
-  id: number;
-  name: string;
-  slug: string;
-  brandId: number;
-}
-
-interface Variant {
-  id: number;
-  name: string;
-  slug: string;
-  modelId: number;
-}
+// Brand interfaces removed - using constants instead
 
 interface FormData {
   title: string;
@@ -71,11 +53,11 @@ interface FormData {
   productionYear: string;
   price: string;
 
-  // Brand/Model/Variant
+  // Category
   categoryId: string;
-  brandId: string;
-  modelId: string;
-  variantId: string;
+
+  // Dorse Markası
+  dorseBrand: string;
 
   // Havuzlu Özel Bilgileri
   havuzDerinligi: string;
@@ -113,7 +95,7 @@ const RAMPA_MEKANIZMASI = ["Hidrolik", "Pnömatik", "Manuel"];
 
 const HavuzluForm: React.FC = () => {
   const navigate = useNavigate();
-  const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
+  const { categorySlug } = useParams();
 
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -122,13 +104,211 @@ const HavuzluForm: React.FC = () => {
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
-  // Brand/Model/Variant states
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [, setLoadingBrands] = useState(false);
-  const [, setLoadingModels] = useState(false);
-  const [, setLoadingVariants] = useState(false);
+  // Havuzlu Dorse Markaları - MainLayout'tan alındı
+  const HAVUZLU_BRANDS = [
+    "Seçiniz",
+    "Acl Semitreyler",
+    "Adem Usta Proohauss",
+    "Afa Treyler",
+    "AGS Treyler",
+    "Akar Cihat",
+    "Akar Treyiler",
+    "Akmanlar Damper",
+    "Akyel Treyler",
+    "Alamen",
+    "Alim",
+    "Alim Dorse",
+    "Alp-Kar",
+    "Alpsan",
+    "Altınel",
+    "Altınordu Treyler",
+    "Arca Treyler",
+    "ART Trailer",
+    "Askan Treyler",
+    "ASY Treyler",
+    "Ataşehir Treyler",
+    "Aydeniz Dorse",
+    "Balıkesir Maksan",
+    "Balıkesir Maksan Lowbed",
+    "Barış Dorse",
+    "Başkent Dorse",
+    "Bayrak Treyler",
+    "Belgeman",
+    "Bersan Dorse",
+    "Beyfem Dorse",
+    "Bilsan Makina",
+    "Bio Treyler",
+    "Bodur Treyler",
+    "Borankay",
+    "Breg Treyler",
+    "Budakoğlu",
+    "Bulten Dorse",
+    "Burak Treyler",
+    "Can Damper Karoser",
+    "Cangüller Treyler",
+    "Carrier Trailer",
+    "Caselli",
+    "CastroMax Trailers",
+    "Ceylan Treyler",
+    "CMK",
+    "Coşkun",
+    "Çavdaroğlu",
+    "Çavuşoğlu",
+    "Çetin Sac",
+    "Çuhadar",
+    "Desan Treyler",
+    "Doğan Makina",
+    "Dorsan",
+    "Dorsan Dorse",
+    "Doruk Treyler",
+    "EFK Treyler",
+    "Ekol Dorse",
+    "ELM Treysan Trailer",
+    "Emirsan Trailer",
+    "EMK Treyler",
+    "Emre Treyler",
+    "Erc Treyler",
+    "Ertuğ",
+    "Esatech Trailer",
+    "Faymonville",
+    "Ferhat Dorse",
+    "Fesan",
+    "Fors Treyler",
+    "Fruehauf",
+    "FSM",
+    "Global City",
+    "Global City Treyler",
+    "Gözde Treyler",
+    "Gülistan",
+    "Güneyşan Treyler Dorse",
+    "Gürler",
+    "Gürleşen Yıl Treyler",
+    "Gvn Trailer",
+    "Hacı Ceylan Treyler",
+    "Hafızoğlu",
+    "Hamza Celik Dorse",
+    "HMS",
+    "Hürsan Treyler",
+    "Irmak Dorse",
+    "Iskar Treyler",
+    "Iveco",
+    "İhsan Treyler",
+    "İkon Treyler",
+    "İKT Treyler",
+    "İNC Seçkinler",
+    "İzmir Dorse",
+    "Kalkan Treyler",
+    "Karalar Treyler",
+    "Karaman Dorse",
+    "Karayayla Dorse",
+    "Kassbohrer",
+    "Kitrsan Treyler",
+    "KKT Trailer",
+    "Komodo",
+    "Konza Trailer",
+    "Kögel Trailer",
+    "Kumru Dorse",
+    "Kurtsan Treyler",
+    "Logitrailers",
+    "M. Seymak Treyler",
+    "Makinsan",
+    "Maksan Lowbed",
+    "Mandalsan Dorse",
+    "Marmara Dorse",
+    "Marrka Treyler",
+    "MAS Trailer",
+    "Maxtır Trailer",
+    "Mehsan Treyler",
+    "Meksan Dorse",
+    "Mersan Dorse",
+    "Mert Treyler",
+    "Meshaus Treyler",
+    "Metinler Dorse",
+    "Metsan",
+    "Meydan Dorse",
+    "Mobil Treyler",
+    "MRC Treyler",
+    "MS Muratsan Treyler",
+    "Muratsan Treyler",
+    "Murspeed",
+    "Musabeyli Tırsan",
+    "My Trailer",
+    "Nedex",
+    "Nehir Dorse",
+    "Neka",
+    "NKT Trailer",
+    "Nursan",
+    "Nükte Trailer",
+    "Oktar Treyler",
+    "Optimak Treyler",
+    "Ormanlı Treyler",
+    "OtoÇinler",
+    "Oymak Cargomaster",
+    "Oymak Träger",
+    "Önder",
+    "Özçevik Dorse",
+    "Özdemirsan",
+    "Özdersan Dorse",
+    "Özelsan Treyler",
+    "Özen İş Dorse",
+    "Özgül Treyler",
+    "Özkan Treyler",
+    "Özmaksan",
+    "Özsan",
+    "Öztfn Treyler",
+    "Öztürk Treyler",
+    "Özünlü",
+    "Palmiye Treyler",
+    "Pars Treyler",
+    "Paşalar Mehmet Treyler",
+    "Paşalar Treyler",
+    "Paşaoğlu Dorse Treyler",
+    "Prohauass",
+    "Ram-Kar",
+    "Ram Treyler",
+    "Reis Treyler",
+    "Safa Dorse",
+    "Sancak Treyler",
+    "Schmitz",
+    "Scorpion Trailer",
+    "Seçsan Treyler",
+    "Selim Dorse",
+    "Self Frigo",
+    "Semitürk",
+    "Sena Treyler",
+    "Serhat Dorse",
+    "Serin Treyler",
+    "Serra Treyler",
+    "Set Treyler",
+    "Seyit Usta",
+    "SimbOxx",
+    "Sim Treyler",
+    "Sistem Damper Treyler",
+    "SMH",
+    "Star Yağcılar",
+    "Şahin Damper",
+    "Şahsan",
+    "Takdir Dorse",
+    "Tanı Tır",
+    "Tırkon Treyler",
+    "Tırsan",
+    "Töke Makina",
+    "Traco",
+    "Transfer Treyler",
+    "Tuncay İş Dorse",
+    "Warkas",
+    "Wielton",
+    "Yalçın Dorse",
+    "Yalımsan Treyler",
+    "Yelsan Treyler",
+    "Yeşil Yol Treyler",
+    "Yıldızlar Damper",
+    "Yılmaz",
+    "Yüksel Dorse",
+    "Zak-San Trailer",
+    "Özel Üretim",
+    "Diğer",
+  ];
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -136,9 +316,7 @@ const HavuzluForm: React.FC = () => {
     productionYear: "",
     price: "",
     categoryId: "6", // Dorse category ID
-    brandId: "",
-    modelId: "",
-    variantId: "",
+    dorseBrand: "",
     havuzDerinligi: "",
     havuzGenisligi: "",
     havuzUzunlugu: "",
@@ -157,138 +335,9 @@ const HavuzluForm: React.FC = () => {
     detailedInfo: "",
   });
 
-  // Load brands on component mount
-  useEffect(() => {
-    const loadBrands = async () => {
-      console.log("🔄 Loading brands...");
-      setLoadingBrands(true);
-      try {
-        const response = await apiClient.get("/brands");
-        const brandsData = response.data as Brand[];
-        setBrands(brandsData);
-        console.log(`✅ ${brandsData.length} marka yüklendi`);
-      } catch (error) {
-        console.error("❌ Brands loading error:", error);
-      } finally {
-        setLoadingBrands(false);
-      }
-    };
+  // Brands are now loaded from constants - no need for API call
 
-    loadBrands();
-  }, []);
-
-  // Auto-load brand/model/variant from URL parameters
-  useEffect(() => {
-    const loadVariantDetails = async () => {
-      console.log("🔍 [HAVUZLU] variantSlug from URL:", variantSlug);
-      console.log("🔍 [HAVUZLU] brandSlug from URL:", brandSlug);
-      console.log("🔍 [HAVUZLU] modelSlug from URL:", modelSlug);
-
-      if (variantSlug && brandSlug && modelSlug && brands.length > 0) {
-        console.log("✅ [HAVUZLU] Loading variant details for slugs:", {
-          brandSlug,
-          modelSlug,
-          variantSlug,
-        });
-
-        try {
-          // Find brand by slug
-          const brand = brands.find((b) => b.slug === brandSlug);
-          if (brand) {
-            console.log("✅ [HAVUZLU] Brand found:", brand);
-
-            // Load models for this brand
-            const modelsResponse = await apiClient.get(
-              `/brands/${brand.id}/models`
-            );
-            const modelsList = modelsResponse.data as Model[];
-            setModels(modelsList);
-            console.log("✅ [HAVUZLU] Models loaded:", modelsList.length);
-
-            // Find model by slug
-            const model = modelsList.find((m) => m.slug === modelSlug);
-            if (model) {
-              console.log("✅ [HAVUZLU] Model found:", model);
-
-              // Load variants for this model
-              const variantsResponse = await apiClient.get(
-                `/models/${model.id}/variants`
-              );
-              const variantsList = variantsResponse.data as Variant[];
-              setVariants(variantsList);
-              console.log("✅ [HAVUZLU] Variants loaded:", variantsList.length);
-
-              // Find variant by slug
-              const variant = variantsList.find((v) => v.slug === variantSlug);
-              if (variant) {
-                console.log("✅ [HAVUZLU] Variant found:", variant);
-
-                // Set form data
-                setFormData((prev) => ({
-                  ...prev,
-                  brandId: brand.id.toString(),
-                  modelId: model.id.toString(),
-                  variantId: variant.id.toString(),
-                }));
-              }
-            }
-          }
-        } catch (error) {
-          console.error("❌ [HAVUZLU] Error loading variant details:", error);
-        }
-      }
-    };
-
-    loadVariantDetails();
-  }, [variantSlug, brandSlug, modelSlug, brands]);
-
-  // Load models when brand changes
-  useEffect(() => {
-    if (formData.brandId) {
-      const loadModels = async () => {
-        try {
-          setLoadingModels(true);
-          const response = await apiClient.get(
-            `/brands/${formData.brandId}/models`
-          );
-          setModels((response.data as Model[]) || []);
-        } catch (error) {
-          console.error("Error loading models:", error);
-        } finally {
-          setLoadingModels(false);
-        }
-      };
-
-      loadModels();
-    } else {
-      setModels([]);
-      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
-    }
-  }, [formData.brandId]);
-
-  // Load variants when model changes
-  useEffect(() => {
-    if (formData.modelId) {
-      const loadVariants = async () => {
-        try {
-          setLoadingVariants(true);
-          const response = await apiClient.get(
-            `/models/${formData.modelId}/variants`
-          );
-          setVariants((response.data as Variant[]) || []);
-        } catch (error) {
-          console.error("Error loading variants:", error);
-        } finally {
-          setLoadingVariants(false);
-        }
-      };
-
-      loadVariants();
-    } else {
-      setVariants([]);
-      setFormData((prev) => ({ ...prev, variantId: "" }));
-    }
-  }, [formData.modelId]);
+  // No need for brand/model/variant loading from API - using constants
 
   // Şehirleri yükle
   useEffect(() => {
@@ -421,54 +470,31 @@ const HavuzluForm: React.FC = () => {
 
       // Category/Brand/Model/Variant ID'lerini ekle
       submitData.append("categoryId", formData.categoryId);
-      submitData.append("brandId", formData.brandId);
-      submitData.append("modelId", formData.modelId);
-      submitData.append("variantId", formData.variantId || "");
-
-      // Brand/Model/Variant name'lerini ekle (ensureBrandModelVariant için gerekli)
-      const selectedBrand = brands.find(
-        (b) => b.id.toString() === formData.brandId
-      );
-      const selectedModel = models.find(
-        (m) => m.id.toString() === formData.modelId
-      );
-      const selectedVariant = variants.find(
-        (v) => v.id.toString() === formData.variantId
-      );
-
-      if (selectedBrand) {
-        submitData.append("brandName", selectedBrand.name);
-        submitData.append("brandSlug", selectedBrand.slug);
-      }
-      if (selectedModel) {
-        submitData.append("modelName", selectedModel.name);
-        submitData.append("modelSlug", selectedModel.slug);
-      }
-      if (selectedVariant) {
-        submitData.append("variantName", selectedVariant.name);
-        submitData.append("variantSlug", selectedVariant.slug);
+      // Dorse Markası
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+        // Create slug from brand name
+        const brandSlug = formData.dorseBrand
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+        submitData.append("brandSlug", brandSlug);
       }
 
       // URL params'tan gelen slug'ları da ekle
       if (categorySlug) submitData.append("categorySlug", categorySlug);
-      if (brandSlug && !selectedBrand)
-        submitData.append("brandSlug", brandSlug);
-      if (modelSlug && !selectedModel)
-        submitData.append("modelSlug", modelSlug);
-      if (variantSlug && !selectedVariant)
-        submitData.append("variantSlug", variantSlug);
+
+      // Lowbed için model ve variant slug'larını ekle
+      submitData.append("modelSlug", "lowbed-lowbed");
+      submitData.append("variantSlug", "lowbed-lowbed-havuzlu");
 
       // Year field'ı ekle
       submitData.append("year", formData.productionYear);
 
-      console.log("✅ Dorse Category/Brand/Model/Variant IDs:", {
+      console.log("✅ Dorse Category/Brand Info:", {
         categoryId: formData.categoryId,
-        brandId: formData.brandId,
-        modelId: formData.modelId,
-        variantId: formData.variantId,
-        brandName: selectedBrand?.name,
-        modelName: selectedModel?.name,
-        variantName: selectedVariant?.name,
+        dorseBrand: formData.dorseBrand,
       });
 
       // Havuzlu özel bilgileri
@@ -616,6 +642,24 @@ const HavuzluForm: React.FC = () => {
                 sx={{ flex: 1 }}
               />
             </Box>
+
+            {/* Dorse Markası Seçimi */}
+            <FormControl fullWidth required>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                value={formData.dorseBrand}
+                onChange={(e) =>
+                  setFormData({ ...formData, dorseBrand: e.target.value })
+                }
+                label="Dorse Markası"
+              >
+                {HAVUZLU_BRANDS.map((brand, index) => (
+                  <MenuItem key={index} value={brand}>
+                    {brand}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </Paper>
 

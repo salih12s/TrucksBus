@@ -43,25 +43,7 @@ interface District {
   cityId: number;
 }
 
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Model {
-  id: number;
-  name: string;
-  slug: string;
-  brandId: number;
-}
-
-interface Variant {
-  id: number;
-  name: string;
-  slug: string;
-  modelId: number;
-}
+// Brand interfaces removed - using constants instead
 
 interface FormData {
   title: string;
@@ -69,11 +51,11 @@ interface FormData {
   productionYear: string;
   price: string;
 
-  // Brand/Model/Variant
+  // Category
   categoryId: string;
-  brandId: string;
-  modelId: string;
-  variantId: string;
+
+  // Dorse Markası
+  dorseBrand: string;
 
   // Öndekirmalı Özel Bilgileri
   havuzDerinligi: string;
@@ -111,7 +93,7 @@ const RAMPA_MEKANIZMASI = ["Hidrolik", "Pnömatik", "Manuel"];
 
 const OndekirmalıForm: React.FC = () => {
   const navigate = useNavigate();
-  const { categorySlug, brandSlug, modelSlug, variantSlug } = useParams();
+  const { categorySlug } = useParams();
 
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -120,13 +102,123 @@ const OndekirmalıForm: React.FC = () => {
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
-  // Brand/Model/Variant states
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [, setLoadingBrands] = useState(false);
-  const [, setLoadingModels] = useState(false);
-  const [, setLoadingVariants] = useState(false);
+  // Önden Kırmalı Dorse Markaları - MainLayout'tan alındı
+  const ONDEKIRMA_BRANDS = [
+    "Seçiniz",
+    "Abd Treyler",
+    "Adem Usta Proohauss",
+    "AGS Treyler",
+    "Akar Cihat",
+    "Akmanlar Damper",
+    "Akyel Treyler",
+    "Alamen",
+    "Alim Dorse",
+    "ALM Damper",
+    "Alp-Kar",
+    "Alpsan",
+    "Altınel Dorse",
+    "Altınordu",
+    "ART Trailer",
+    "Askan Treyler",
+    "ASY Treyler",
+    "Aydeniz Dorse",
+    "Başkent Dorse",
+    "Beyfem Dorse",
+    "Bio Treyler",
+    "Can Damper Karoser",
+    "Cangüller Treyler",
+    "Carrier Trailer",
+    "Caselli",
+    "CastroMax Trailers",
+    "Çavdaroğlu",
+    "Çavuşoğlu",
+    "Çuhadar Treyler",
+    "Doruk Treyler",
+    "EFK Treyler",
+    "ELM Treysan Trailer",
+    "Emirsan Treyler",
+    "EMK Treyler",
+    "Esatech Trailer",
+    "Fors Treyler",
+    "Fruehauf",
+    "Global City",
+    "Global City Treyler",
+    "Gülistan",
+    "Gürleşen Yıl Treyler",
+    "Hürsan Treyler",
+    "Iskar Treyler",
+    "İkon Treyler",
+    "İNC Seçkinler",
+    "Kalkan Treyler",
+    "Karalar Treyler",
+    "KKT Trailer",
+    "Komodo",
+    "Konza Trailer",
+    "Kögel Trailer",
+    "M. Seymak Treyler",
+    "Makinsan",
+    "Marrka Treyler",
+    "MAS Trailer",
+    "Maxtır Trailer",
+    "Mehsan Treyler",
+    "Meshaus Treyler",
+    "Metsan Treyler",
+    "Mobil Treyler",
+    "MRC Treyler",
+    "MS Muratsan Treyler",
+    "Narin Dorse",
+    "Nedex",
+    "Nükte Trailer",
+    "Oktar Treyler",
+    "Optimak Treyler",
+    "Ormanlı Treyler",
+    "OtoÇinler",
+    "Oymak Cargomaster",
+    "Oymak Träger",
+    "Özdemirsan Treyler",
+    "Özelsan Treyler",
+    "Özgül Treyler",
+    "Özsan Treyler",
+    "Öztfn Treyler",
+    "Öztürk Treyler",
+    "Paşalar Mehmet Treyler",
+    "Paşalar Treyler",
+    "Paşaoğlu Dorse Treyler",
+    "Ram-Kar",
+    "Ram Treyler",
+    "Reis Treyler",
+    "Sancak Treyler",
+    "Self Frigo",
+    "Semitürk",
+    "Sena Treyler",
+    "Serra Treyler",
+    "Serin Treyler",
+    "Set Treyler",
+    "Seyit Usta",
+    "SimbOxx",
+    "Sim Treyler",
+    "Sistem Damper Treyler",
+    "Star Yağcılar",
+    "Şahin Damper",
+    "Takdir Dorse",
+    "Tanı Tır",
+    "Tırsan",
+    "Töke Makina",
+    "Traco",
+    "Transfer Treyler",
+    "Tuğ-San",
+    "Warkas",
+    "Wielton",
+    "Yalçın Dorse",
+    "Yalımsan Treyler",
+    "Yelsan Treyler",
+    "Yıldızlar Damper",
+    "Yol Bak",
+    "Yüksel Dorse",
+    "Zak-San Trailer",
+    "Özel Üretim",
+    "Diğer",
+  ];
 
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -134,9 +226,7 @@ const OndekirmalıForm: React.FC = () => {
     productionYear: "",
     price: "",
     categoryId: "6", // Dorse category ID
-    brandId: "",
-    modelId: "",
-    variantId: "",
+    dorseBrand: "",
     havuzDerinligi: "",
     havuzGenisligi: "",
     havuzUzunlugu: "",
@@ -155,141 +245,9 @@ const OndekirmalıForm: React.FC = () => {
     detailedInfo: "",
   });
 
-  // Load brands on component mount
-  useEffect(() => {
-    const loadBrands = async () => {
-      console.log("🔄 Loading brands...");
-      setLoadingBrands(true);
-      try {
-        const response = await apiClient.get("/brands");
-        const brandsData = response.data as Brand[];
-        setBrands(brandsData);
-        console.log(`✅ ${brandsData.length} marka yüklendi`);
-      } catch (error) {
-        console.error("❌ Brands loading error:", error);
-      } finally {
-        setLoadingBrands(false);
-      }
-    };
+  // Brands are now loaded from constants - no need for API call
 
-    loadBrands();
-  }, []);
-
-  // Auto-load brand/model/variant from URL parameters
-  useEffect(() => {
-    const loadVariantDetails = async () => {
-      console.log("🔍 [ÖNDEKIRMA] variantSlug from URL:", variantSlug);
-      console.log("🔍 [ÖNDEKIRMA] brandSlug from URL:", brandSlug);
-      console.log("🔍 [ÖNDEKIRMA] modelSlug from URL:", modelSlug);
-
-      if (variantSlug && brandSlug && modelSlug && brands.length > 0) {
-        console.log("✅ [ÖNDEKIRMA] Loading variant details for slugs:", {
-          brandSlug,
-          modelSlug,
-          variantSlug,
-        });
-
-        try {
-          // Find brand by slug
-          const brand = brands.find((b) => b.slug === brandSlug);
-          if (brand) {
-            console.log("✅ [ÖNDEKIRMA] Brand found:", brand);
-
-            // Load models for this brand
-            const modelsResponse = await apiClient.get(
-              `/brands/${brand.id}/models`
-            );
-            const modelsList = modelsResponse.data as Model[];
-            setModels(modelsList);
-            console.log("✅ [ÖNDEKIRMA] Models loaded:", modelsList.length);
-
-            // Find model by slug
-            const model = modelsList.find((m) => m.slug === modelSlug);
-            if (model) {
-              console.log("✅ [ÖNDEKIRMA] Model found:", model);
-
-              // Load variants for this model
-              const variantsResponse = await apiClient.get(
-                `/models/${model.id}/variants`
-              );
-              const variantsList = variantsResponse.data as Variant[];
-              setVariants(variantsList);
-              console.log(
-                "✅ [ÖNDEKIRMA] Variants loaded:",
-                variantsList.length
-              );
-
-              // Find variant by slug
-              const variant = variantsList.find((v) => v.slug === variantSlug);
-              if (variant) {
-                console.log("✅ [ÖNDEKIRMA] Variant found:", variant);
-
-                // Set form data
-                setFormData((prev) => ({
-                  ...prev,
-                  brandId: brand.id.toString(),
-                  modelId: model.id.toString(),
-                  variantId: variant.id.toString(),
-                }));
-              }
-            }
-          }
-        } catch (error) {
-          console.error("❌ [ÖNDEKIRMA] Error loading variant details:", error);
-        }
-      }
-    };
-
-    loadVariantDetails();
-  }, [variantSlug, brandSlug, modelSlug, brands]);
-
-  // Load models when brand changes
-  useEffect(() => {
-    if (formData.brandId) {
-      const loadModels = async () => {
-        try {
-          setLoadingModels(true);
-          const response = await apiClient.get(
-            `/brands/${formData.brandId}/models`
-          );
-          setModels((response.data as Model[]) || []);
-        } catch (error) {
-          console.error("Error loading models:", error);
-        } finally {
-          setLoadingModels(false);
-        }
-      };
-
-      loadModels();
-    } else {
-      setModels([]);
-      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
-    }
-  }, [formData.brandId]);
-
-  // Load variants when model changes
-  useEffect(() => {
-    if (formData.modelId) {
-      const loadVariants = async () => {
-        try {
-          setLoadingVariants(true);
-          const response = await apiClient.get(
-            `/models/${formData.modelId}/variants`
-          );
-          setVariants((response.data as Variant[]) || []);
-        } catch (error) {
-          console.error("Error loading variants:", error);
-        } finally {
-          setLoadingVariants(false);
-        }
-      };
-
-      loadVariants();
-    } else {
-      setVariants([]);
-      setFormData((prev) => ({ ...prev, variantId: "" }));
-    }
-  }, [formData.modelId]);
+  // No need for brand/model/variant loading from API - using constants
 
   // Şehirleri yükle
   useEffect(() => {
@@ -429,56 +387,34 @@ const OndekirmalıForm: React.FC = () => {
         submitData.append("price", parsedPrice);
       }
 
-      // Category/Brand/Model/Variant ID'lerini ekle
+      // Category ID'yi ekle
       submitData.append("categoryId", formData.categoryId);
-      submitData.append("brandId", formData.brandId);
-      submitData.append("modelId", formData.modelId);
-      submitData.append("variantId", formData.variantId || "");
 
-      // Brand/Model/Variant name'lerini ekle (ensureBrandModelVariant için gerekli)
-      const selectedBrand = brands.find(
-        (b) => b.id.toString() === formData.brandId
-      );
-      const selectedModel = models.find(
-        (m) => m.id.toString() === formData.modelId
-      );
-      const selectedVariant = variants.find(
-        (v) => v.id.toString() === formData.variantId
-      );
-
-      if (selectedBrand) {
-        submitData.append("brandName", selectedBrand.name);
-        submitData.append("brandSlug", selectedBrand.slug);
-      }
-      if (selectedModel) {
-        submitData.append("modelName", selectedModel.name);
-        submitData.append("modelSlug", selectedModel.slug);
-      }
-      if (selectedVariant) {
-        submitData.append("variantName", selectedVariant.name);
-        submitData.append("variantSlug", selectedVariant.slug);
+      // Dorse Markası
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+        // Create slug from brand name
+        const brandSlug = formData.dorseBrand
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+        submitData.append("brandSlug", brandSlug);
       }
 
       // URL params'tan gelen slug'ları da ekle
       if (categorySlug) submitData.append("categorySlug", categorySlug);
-      if (brandSlug && !selectedBrand)
-        submitData.append("brandSlug", brandSlug);
-      if (modelSlug && !selectedModel)
-        submitData.append("modelSlug", modelSlug);
-      if (variantSlug && !selectedVariant)
-        submitData.append("variantSlug", variantSlug);
+
+      // Lowbed Önden Kırmalı için model ve variant slug'larını ekle
+      submitData.append("modelSlug", "lowbed-lowbed");
+      submitData.append("variantSlug", "lowbed-lowbed-ondekirma");
 
       // Year field'ı ekle
       submitData.append("year", formData.productionYear);
 
-      console.log("✅ Dorse Category/Brand/Model/Variant IDs:", {
+      console.log("✅ Dorse Category/Brand Info:", {
         categoryId: formData.categoryId,
-        brandId: formData.brandId,
-        modelId: formData.modelId,
-        variantId: formData.variantId,
-        brandName: selectedBrand?.name,
-        modelName: selectedModel?.name,
-        variantName: selectedVariant?.name,
+        dorseBrand: formData.dorseBrand,
       });
 
       // Öndekirmalı özel bilgileri
@@ -634,6 +570,24 @@ const OndekirmalıForm: React.FC = () => {
                 sx={{ flex: 1 }}
               />
             </Box>
+
+            {/* Dorse Markası Seçimi */}
+            <FormControl fullWidth required>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                value={formData.dorseBrand}
+                onChange={(e) =>
+                  setFormData({ ...formData, dorseBrand: e.target.value })
+                }
+                label="Dorse Markası"
+              >
+                {ONDEKIRMA_BRANDS.map((brand, index) => (
+                  <MenuItem key={index} value={brand}>
+                    {brand}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </Paper>
 

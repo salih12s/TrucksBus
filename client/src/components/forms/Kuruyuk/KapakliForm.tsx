@@ -47,37 +47,17 @@ interface District {
   cityId: number;
 }
 
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Model {
-  id: number;
-  name: string;
-  slug: string;
-  brandId: number;
-}
-
-interface Variant {
-  id: number;
-  name: string;
-  slug: string;
-  modelId: number;
-}
-
 interface FormData {
   title: string;
   description: string;
   productionYear: string;
   price: string;
 
-  // Brand/Model/Variant
+  // Category
   categoryId: string;
-  brandId: string;
-  modelId: string;
-  variantId: string;
+
+  // Dorse Markası
+  dorseBrand: string;
 
   // Kuruyük Kapaklı Özel Bilgiler
   dingilSayisi: string;
@@ -101,13 +81,6 @@ interface FormData {
   sellerName: string;
   phone: string;
   email: string;
-
-  // Ekstra
-  warranty: string;
-  negotiable: string;
-  exchange: string;
-
-  detailedInfo: string;
 }
 
 // Form seçenekleri
@@ -118,6 +91,281 @@ const PRODUCTION_YEARS = Array.from(
 
 const TIRE_CONDITIONS = ["%90-100", "%75-89", "%50-74", "%25-49", "%0-24"];
 
+// Kuruyük Kapaklı Dorse Markaları - MainLayout'tan alındı
+const KURUYUK_KAPAKLI_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Acar Treyler",
+  "Adakon Treyler",
+  "Adem Usta Proohauss",
+  "Adil Sert",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "AKY",
+  "Akyel Treyler",
+  "Alamen",
+  "Aldor Treyler",
+  "Alfa Treyler",
+  "Alim Dorse",
+  "Ali Rıza Usta",
+  "Alka Group",
+  "Alkan Treyler",
+  "Alpaslan Treyler",
+  "Alp-Kar",
+  "Alpsan",
+  "Altınel Dorse",
+  "Altınışık",
+  "Altınordu",
+  "Andıç",
+  "Arslan",
+  "ART Trailer",
+  "Asil Treyler",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Aybaba Dorse",
+  "Aydeniz",
+  "Aydeniz Dorse",
+  "Aydın Treyler",
+  "Baran Dorse",
+  "Barış Dorse",
+  "Berkefe Treyler",
+  "Beyfem Dorse",
+  "Beysan Treyler",
+  "Bio Treyler",
+  "Bozlar",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Cangül Treyler",
+  "Can Treyler",
+  "Carrier Trailer",
+  "Caselli",
+  "CastroMax Trailers",
+  "Ceylan Treyler",
+  "Ceytreyler",
+  "CNC Dorse",
+  "Coşkun",
+  "Coşkunlar",
+  "Çakır Dorse",
+  "Çarşan",
+  "Çavdaroğlu",
+  "Çavuşoğlu Damper",
+  "Çinler",
+  "Çinler Treyler",
+  "Çoşgun Dorse",
+  "Çuhadar Treyler",
+  "Dark Tech Treyler",
+  "Dekor Damper",
+  "Demircan Treyler",
+  "Dentir Dorse",
+  "Dere Dorse",
+  "Dereli Hüseyin",
+  "Doğan",
+  "Doğuş Treyler",
+  "Doruk Treyler",
+  "Efe Treyler",
+  "EFK Treyler",
+  "Ekincİ",
+  "Ekol Dorse",
+  "Ekrem Treyler",
+  "ELM Treysan Trailer",
+  "EMK Treyler",
+  "Erbaran Treyler",
+  "Eren Dorse",
+  "Erkan",
+  "Erkonsan",
+  "Erol İnce Treyler",
+  "Esatech Trailer",
+  "Eşmeliler",
+  "Ferhat Dorse",
+  "Fesan Makina",
+  "Fors Treyler",
+  "Fruehauf",
+  "FSM",
+  "Gani Şahan Treyler",
+  "Global City",
+  "Global City Treyler",
+  "Gökhanlar",
+  "Gökmenoğlu Karoser",
+  "Groenewegen",
+  "Gülistan",
+  "Gümüş Damper",
+  "Güneş",
+  "Güneyşan Treyler Dorse",
+  "Güreloğlu Dorse",
+  "Güveneller",
+  "Güven TIR",
+  "Hacı Ceylan",
+  "Han Trailer",
+  "Hastrailer",
+  "Hürsan",
+  "Iskar Treyler",
+  "İhsan Treyler",
+  "İKA Treyler",
+  "İkikardeş",
+  "İkon Treyler",
+  "İldis",
+  "İNC Seçkinler",
+  "İşkar Dorse",
+  "Kalkan",
+  "Kalkan Treyler",
+  "Karalar Treyler",
+  "Kartallar",
+  "Kässbohrer",
+  "KKT Trailer",
+  "Koluman",
+  "Kondekor",
+  "Koneksan",
+  "Konseymak Treyler",
+  "Kontir Dorse",
+  "Kontürkşan Dorse",
+  "Konza",
+  "Konza Trailer",
+  "Kögel",
+  "Krone",
+  "Kuşçuoğlu",
+  "Lider Dorse",
+  "LTF Treyler",
+  "M. Seymak Treyler",
+  "Makinsan",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "MAS Treyler",
+  "MaxTır Treyler",
+  "MAZ",
+  "MEC",
+  "Mehmet Aydın Treyler",
+  "Mehsan Treyler",
+  "Meral",
+  "Merve",
+  "Meshaus Trailer",
+  "Meshaus Treyler",
+  "Metalsan Dorse",
+  "Metsan Treyler",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "Muratsan Treyler",
+  "Narin",
+  "Nedex",
+  "Neka",
+  "NEV",
+  "Nevkarsan",
+  "Nevtirsan",
+  "Nevzat Çelik",
+  "Nurak Treyler",
+  "Nursan Trailer",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "Omeksan",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Orthaus Treyler",
+  "Oruçlar",
+  "Osmanlı",
+  "OtoÇinler",
+  "Otokar",
+  "Otto Trailer",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Ö.M.T.",
+  "Öm-san",
+  "Önder",
+  "Özbay Damper",
+  "Özçevik Treyler",
+  "Özelsan",
+  "Özenir",
+  "Özenir Dorse",
+  "Özgaranti",
+  "Özgül Treyler",
+  "Özmen Damper & Dorse",
+  "Öztfn Treyler",
+  "Öztreyler",
+  "Öztürk Treyler",
+  "Pacton",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Payas",
+  "Piroğlu Dorse",
+  "Polat",
+  "Polifton",
+  "Poslu Trailer",
+  "Poyraz",
+  "Ram-Kar, Ram Treyler",
+  "Reis",
+  "Reis Treyler",
+  "Roms",
+  "Sağlam-İş Damper",
+  "Sancak Treyler",
+  "Sarılmaz",
+  "Schmitz",
+  "Schwarzmüller",
+  "Scorpion Trailer",
+  "SDS Sönmez Dorse",
+  "Seçen",
+  "Seçkinler",
+  "Seçsan Treyler",
+  "SEG",
+  "Self Frigo",
+  "Semitürk",
+  "Sena Treyler",
+  "Seren Treyler",
+  "Serin Treyler",
+  "Serpin Dorse",
+  "Serra Treyler",
+  "Sert Makina",
+  "Serval Makine",
+  "Set Treyler",
+  "Sevinç Treyler",
+  "Seyit Usta",
+  "Sey-Mak Dorse",
+  "Simboхx",
+  "Simboхx Treyler",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Starboard",
+  "Star Yağcılar",
+  "Şahan Dorse",
+  "Şahin",
+  "Şahsan",
+  "Şah Treyler",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Taşkın",
+  "Taşkır Dorse",
+  "Tecnotır Dorse",
+  "Tekbirsan",
+  "Tirkon",
+  "Tırsan",
+  "Tırser",
+  "Töngeloğlu",
+  "Traco",
+  "Transfer Treyler",
+  "Treymak",
+  "Tuğsan Treyler",
+  "Tuncay İş",
+  "Tursan",
+  "Türmaksан",
+  "Umut Damper",
+  "Usta Treyler",
+  "Valohr",
+  "Warkas",
+  "Wielton",
+  "Yalçın",
+  "Yalımsan Treyler",
+  "Yasin Ateş",
+  "Yavuz Treyler",
+  "Yeksan",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Yıldız Treyler",
+  "Yiğitsan Treyler",
+  "Zafer Treyler",
+  "Zak-San Trailer",
+  "Özel Üretim",
+  "Diğer",
+];
+
 const KapakliForm: React.FC = () => {
   const navigate = useNavigate();
 
@@ -127,9 +375,7 @@ const KapakliForm: React.FC = () => {
     productionYear: "",
     price: "",
     categoryId: "6", // Dorse category ID
-    brandId: "",
-    modelId: "",
-    variantId: "",
+    dorseBrand: "",
     dingilSayisi: "",
     uzunluk: "",
     genislik: "",
@@ -145,10 +391,6 @@ const KapakliForm: React.FC = () => {
     sellerName: "",
     phone: "",
     email: "",
-    warranty: "yok",
-    negotiable: "hayır",
-    exchange: "hayır",
-    detailedInfo: "",
   });
 
   const [cities, setCities] = useState<City[]>([]);
@@ -161,82 +403,6 @@ const KapakliForm: React.FC = () => {
   // Photo preview states
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
-
-  // Brand/Model/Variant states
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [loadingBrands, setLoadingBrands] = useState(false);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [loadingVariants, setLoadingVariants] = useState(false);
-
-  // Load brands on component mount
-  useEffect(() => {
-    const loadBrands = async () => {
-      console.log("🔄 Loading brands...");
-      setLoadingBrands(true);
-      try {
-        const response = await apiClient.get("/brands");
-        const brandsData = response.data as Brand[];
-        setBrands(brandsData);
-        console.log(`✅ ${brandsData.length} marka yüklendi`);
-      } catch (error) {
-        console.error("❌ Brands loading error:", error);
-      } finally {
-        setLoadingBrands(false);
-      }
-    };
-
-    loadBrands();
-  }, []);
-
-  // Load models when brand changes
-  useEffect(() => {
-    if (formData.brandId) {
-      const loadModels = async () => {
-        try {
-          setLoadingModels(true);
-          const response = await apiClient.get(
-            `/brands/${formData.brandId}/models`
-          );
-          setModels((response.data as Model[]) || []);
-        } catch (error) {
-          console.error("Error loading models:", error);
-        } finally {
-          setLoadingModels(false);
-        }
-      };
-
-      loadModels();
-    } else {
-      setModels([]);
-      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
-    }
-  }, [formData.brandId]);
-
-  // Load variants when model changes
-  useEffect(() => {
-    if (formData.modelId) {
-      const loadVariants = async () => {
-        try {
-          setLoadingVariants(true);
-          const response = await apiClient.get(
-            `/models/${formData.modelId}/variants`
-          );
-          setVariants((response.data as Variant[]) || []);
-        } catch (error) {
-          console.error("Error loading variants:", error);
-        } finally {
-          setLoadingVariants(false);
-        }
-      };
-
-      loadVariants();
-    } else {
-      setVariants([]);
-      setFormData((prev) => ({ ...prev, variantId: "" }));
-    }
-  }, [formData.modelId]);
 
   // Şehirleri yükle
   useEffect(() => {
@@ -378,12 +544,25 @@ const KapakliForm: React.FC = () => {
     try {
       const submitData = new FormData();
 
-      // Legacy format için gerekli alanlar
-      // Category, Brand, Model, Variant
+      // Category ID'yi ekle
       submitData.append("categoryId", formData.categoryId);
-      submitData.append("brandId", formData.brandId);
-      submitData.append("modelId", formData.modelId);
-      submitData.append("variantId", formData.variantId);
+
+      // Dorse Markası
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+        // Create slug from brand name
+        const brandSlug = formData.dorseBrand
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+        submitData.append("brandSlug", brandSlug);
+      }
+
+      // Kuruyük Kapaklı için model ve variant slug'larını ekle
+      submitData.append("categorySlug", "dorse");
+      submitData.append("modelSlug", "kuruyuk-kuruyuk");
+      submitData.append("variantSlug", "kuruyuk-kuruyuk-kapakli");
 
       // Temel bilgiler
       submitData.append("title", formData.title);
@@ -410,41 +589,67 @@ const KapakliForm: React.FC = () => {
       submitData.append("seller_phone", formData.phone);
       submitData.append("seller_email", formData.email);
 
-      // Ekstra
-      submitData.append("warranty", formData.warranty);
-      submitData.append("negotiable", formData.negotiable);
-      submitData.append("exchange", formData.exchange);
-      submitData.append("detailedInfo", formData.detailedInfo);
-
       // Fotoğraflar
       if (formData.showcasePhoto) {
         submitData.append("showcasePhoto", formData.showcasePhoto);
       }
-      formData.photos.forEach((photo) => {
-        submitData.append(`photos`, photo);
+
+      formData.photos.forEach((photo, index) => {
+        submitData.append(`photo_${index}`, photo);
       });
 
-      const response = await apiClient.post("/ads", submitData, {
+      const response = await apiClient.post("/ads/dorse", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      const responseData = response.data as {
-        success: boolean;
-        message?: string;
-        id?: string;
-      };
+      console.log("API Response:", response);
 
-      if (responseData.success) {
-        setCreatedAdId(responseData.id || null);
+      // Response'u kontrol et
+      const responseData: Record<string, unknown> =
+        ((response.data as Record<string, unknown>)?.data as Record<
+          string,
+          unknown
+        >) || (response.data as Record<string, unknown>);
+
+      console.log("Response Data:", responseData);
+
+      if (response.status === 200 || response.status === 201) {
+        const adId = (responseData?.id || responseData?.adId || null) as
+          | string
+          | null;
+        setCreatedAdId(adId);
         setShowSuccessModal(true);
       } else {
-        throw new Error(responseData.message || "İlan oluşturulamadı");
+        throw new Error(
+          (responseData?.message as string) || "İlan oluşturulamadı"
+        );
       }
     } catch (error) {
       console.error("Form gönderilirken hata:", error);
-      setErrors(["İlan gönderilirken bir hata oluştu. Lütfen tekrar deneyin."]);
+
+      const err = error as Record<string, unknown>;
+      const errResponse = err.response as Record<string, unknown>;
+
+      // Eğer response varsa ve başarılıysa, hata olarak gösterme
+      if (errResponse?.status === 200 || errResponse?.status === 201) {
+        const responseData =
+          (errResponse.data as Record<string, unknown>)?.data ||
+          errResponse.data;
+        const adId = ((responseData as Record<string, unknown>)?.id ||
+          (responseData as Record<string, unknown>)?.adId ||
+          null) as string | null;
+        setCreatedAdId(adId);
+        setShowSuccessModal(true);
+      } else {
+        const errData = errResponse?.data as Record<string, unknown>;
+        setErrors([
+          (errData?.message as string) ||
+            (err.message as string) ||
+            "İlan gönderilirken bir hata oluştu. Lütfen tekrar deneyin.",
+        ]);
+      }
     } finally {
       setLoading(false);
     }
@@ -541,77 +746,23 @@ const KapakliForm: React.FC = () => {
               />
             </Box>
 
-            {/* Marka ve Model Seçimi */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              Marka ve Model Seçimi
-            </Typography>
-
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
-            >
-              <FormControl fullWidth required>
-                <InputLabel>Marka</InputLabel>
-                <Select
-                  value={formData.brandId}
-                  label="Marka"
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      brandId: e.target.value,
-                      modelId: "",
-                      variantId: "",
-                    })
-                  }
-                  disabled={loadingBrands}
-                >
-                  {brands.map((brand) => (
-                    <MenuItem key={brand.id} value={brand.id.toString()}>
-                      {brand.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth required disabled={!formData.brandId}>
-                <InputLabel>Model</InputLabel>
-                <Select
-                  value={formData.modelId}
-                  label="Model"
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      modelId: e.target.value,
-                      variantId: "",
-                    })
-                  }
-                  disabled={loadingModels || !formData.brandId}
-                >
-                  {models.map((model) => (
-                    <MenuItem key={model.id} value={model.id.toString()}>
-                      {model.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth required disabled={!formData.modelId}>
-                <InputLabel>Varyant</InputLabel>
-                <Select
-                  value={formData.variantId}
-                  label="Varyant"
-                  onChange={(e) =>
-                    setFormData({ ...formData, variantId: e.target.value })
-                  }
-                  disabled={loadingVariants || !formData.modelId}
-                >
-                  {variants.map((variant) => (
-                    <MenuItem key={variant.id} value={variant.id.toString()}>
-                      {variant.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
+            {/* Dorse Markası Seçimi */}
+            <FormControl fullWidth required>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                value={formData.dorseBrand}
+                onChange={(e) =>
+                  setFormData({ ...formData, dorseBrand: e.target.value })
+                }
+                label="Dorse Markası"
+              >
+                {KURUYUK_KAPAKLI_BRANDS.map((brand, index) => (
+                  <MenuItem key={index} value={brand}>
+                    {brand}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             {/* Kapaklı Özel Bilgileri */}
             <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
@@ -1115,67 +1266,6 @@ const KapakliForm: React.FC = () => {
                 </Box>
               </CardContent>
             </Card>
-
-            {/* Ekstra Bilgiler */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              Ekstra Bilgiler
-            </Typography>
-
-            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <FormControl fullWidth>
-                <InputLabel>Garanti</InputLabel>
-                <Select
-                  value={formData.warranty}
-                  onChange={(e) =>
-                    handleInputChange("warranty", e.target.value)
-                  }
-                  label="Garanti"
-                >
-                  <MenuItem value="var">Var</MenuItem>
-                  <MenuItem value="yok">Yok</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Pazarlık</InputLabel>
-                <Select
-                  value={formData.negotiable}
-                  onChange={(e) =>
-                    handleInputChange("negotiable", e.target.value)
-                  }
-                  label="Pazarlık"
-                >
-                  <MenuItem value="evet">Evet</MenuItem>
-                  <MenuItem value="hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Takas</InputLabel>
-                <Select
-                  value={formData.exchange}
-                  onChange={(e) =>
-                    handleInputChange("exchange", e.target.value)
-                  }
-                  label="Takas"
-                >
-                  <MenuItem value="evet">Evet</MenuItem>
-                  <MenuItem value="hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            <TextField
-              fullWidth
-              label="Detaylı Bilgi"
-              value={formData.detailedInfo}
-              onChange={(e) =>
-                handleInputChange("detailedInfo", e.target.value)
-              }
-              margin="normal"
-              multiline
-              rows={3}
-            />
 
             {/* Submit Button */}
             <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
