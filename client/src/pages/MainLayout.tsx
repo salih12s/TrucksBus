@@ -2238,10 +2238,7 @@ const MainLayout: React.FC = () => {
                                 key={brand}
                                 onClick={() =>
                                   navigate(
-                                    `/categories/dorse/brands/damperli/models/kapakli-tip/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()]/g, "")}/create-ad`
+                                    `/ads?category=dorse&subCategory=damperli&type=kapakli-tip&dorseBrand=${encodeURIComponent(brand)}`
                                   )
                                 }
                                 sx={{
@@ -2495,10 +2492,7 @@ const MainLayout: React.FC = () => {
                                 key={brand}
                                 onClick={() =>
                                   navigate(
-                                    `/categories/dorse/brands/damperli/models/hafriyat-tipi/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()]/g, "")}/create-ad`
+                                    `/ads?category=dorse&subCategory=damperli&type=hafriyat-tipi&dorseBrand=${encodeURIComponent(brand)}`
                                   )
                                 }
                                 sx={{
@@ -2841,10 +2835,7 @@ const MainLayout: React.FC = () => {
                                 key={brand}
                                 onClick={() =>
                                   navigate(
-                                    `/categories/dorse/brands/damperli/models/havuz-hardox-tipi/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()]/g, "")}/create-ad`
+                                    `/ads?category=dorse&subCategory=damperli&type=havuz-hardox-tipi&dorseBrand=${encodeURIComponent(brand)}`
                                   )
                                 }
                                 sx={{
@@ -3087,10 +3078,7 @@ const MainLayout: React.FC = () => {
                                 key={brand}
                                 onClick={() =>
                                   navigate(
-                                    `/categories/dorse/brands/damperli/models/kaya-tipi/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()]/g, "")}/create-ad`
+                                    `/ads?category=dorse&subCategory=damperli&type=kaya-tipi&dorseBrand=${encodeURIComponent(brand)}`
                                   )
                                 }
                                 sx={{

@@ -1882,6 +1882,12 @@ const AdDetail: React.FC = () => {
 
                           // Şasi/Römork Genel Özellikleri
 
+                          // Dorse Markası
+                          {
+                            label: "Dorse Markası",
+                            value: ad.customFields?.dorseBrand || null,
+                          },
+
                           // Kuruyük Özel Alanları
                           {
                             label: "Uzunluk",

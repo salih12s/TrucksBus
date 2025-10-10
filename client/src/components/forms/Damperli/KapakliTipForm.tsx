@@ -81,6 +81,9 @@ interface KapakliFormData {
   modelId: string;
   variantId: string;
 
+  // Dorse Markası (Sidebar'dan alınan markalar)
+  dorseBrand: string;
+
   // Kapaklı Dorse Teknik Özellikler
   genislik: string; // metre
   uzunluk: string; // metre
@@ -115,6 +118,258 @@ interface KapakliFormData {
 
 // Devrilme Yönleri
 const DEVRILME_YONLERI = ["Arkaya", "Sağa", "Sola"];
+
+// Kapaklı Tip Dorse Markaları (MainLayout'tan alınan)
+const KAPAKLI_TIP_MARKALARI = [
+  "Seçiniz",
+  "Acar Treyler",
+  "Adakon Treyler",
+  "ADB Treyler",
+  "Adem Tekin Treyler",
+  "Adem Usta Proohauss",
+  "Adil Sert",
+  "ADS Treyler",
+  "AGS",
+  "AGS Treyler",
+  "Ağır-İş",
+  "Akar Cihat",
+  "Akbaş Treyler",
+  "Akın",
+  "Akmanlar Damper",
+  "Akyel Treyler",
+  "Alamen",
+  "Aldor Trailer",
+  "Alim Dorse",
+  "Ali Rıza Usta",
+  "Alkan Group",
+  "ALM Damper",
+  "Alpaslan Dorse",
+  "Alp-Kar",
+  "Alpsan",
+  "Altınel Dorse",
+  "Altınordu Treyler",
+  "Anıl Damper",
+  "Arslan",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Aydeniz Dorse",
+  "Batu Treyler",
+  "Belgem",
+  "Beyfem Dorse",
+  "Beytır",
+  "Bio Treyler",
+  "Boydak",
+  "Büyük Yüksel Damper",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Cangül Treyler",
+  "Carrier Trailer",
+  "Caselli",
+  "CastroMax Trailers",
+  "Ceylan",
+  "Cey-Treyler",
+  "CNC",
+  "Coşkunlar",
+  "Çakır Dorse",
+  "Çarşan",
+  "Çavdaroğlu",
+  "Çeliksan",
+  "Çimenler",
+  "Çinler Treyler",
+  "Çobanoğlu",
+  "Çuhadar Treyler",
+  "Dark Tech Treyler",
+  "Dekor",
+  "Dentur",
+  "Dereli",
+  "Dereli Hüseyin",
+  "Dorsan",
+  "Doruk Treyler",
+  "Dosa Treyler",
+  "Efe Dorse",
+  "EFK Treyler",
+  "Ekinci Karoser",
+  "Ekol",
+  "Ekrem",
+  "ELM Treysan Trailer",
+  "EMK Treyler",
+  "Erbaran",
+  "Erdal Damper",
+  "Erdoğan-Öz Dorse",
+  "Erhan Ünsal Treyler",
+  "Erkan Karoser",
+  "Erkonsan Treyler",
+  "Esatech Trailer",
+  "Eyüp Coşgun",
+  "Ferhat Dorse",
+  "Fesan",
+  "Fors Treyler",
+  "Fruehauf",
+  "FSM Treyler",
+  "Global City",
+  "Global City Treyler",
+  "Gökhanlar",
+  "Gülüstän",
+  "Gümüş Treyler",
+  "Güneş",
+  "Güneyşan Treyler Dorse",
+  "Gürkon Trailer",
+  "Gürleşenyıl Treyler",
+  "Güven Makina",
+  "Güzelogulları Damper",
+  "Hacı Ceylan",
+  "Has Trailer",
+  "Hidro Çan",
+  "Hidrosin",
+  "Hürsan",
+  "Hürsan Treyler",
+  "Iskar Treyler",
+  "İhsan Treyler",
+  "İkikardeş",
+  "İkon Treyler",
+  "İKT Treyler",
+  "İldiz",
+  "İNÇ Seçkinler",
+  "Kaim Kardeşler",
+  "Kalkan Treyler",
+  "Karalar Treyler",
+  "Karcı",
+  "Kartallar Damper",
+  "KKT Trailer",
+  "Koluman",
+  "Komodo",
+  "Koneksan",
+  "Konlider",
+  "Konseymak",
+  "Kontir",
+  "Kontürksan",
+  "Konza Trailer",
+  "Kögel Trailer",
+  "Kössbohrer",
+  "Krone",
+  "Kuşcuoğlu",
+  "Lider Dekor",
+  "Lider Dorse",
+  "Lider Treyler",
+  "M. Seymak Treyler",
+  "Makinsan",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Mas Treyler",
+  "Maxtır Trailer",
+  "MEC Dorse",
+  "Mehmet Aydın",
+  "Mehsan Treyler",
+  "Mektür",
+  "Merve Dorse",
+  "Meshaus Treyler",
+  "Metsan Treyler",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nasuh Can",
+  "Nedex",
+  "Neka",
+  "Nevkarsan",
+  "Nkt Treyler",
+  "Nuh Damper",
+  "Nurak Treyler",
+  "Nursan Dorse",
+  "Nükte Trailer",
+  "Ok Kardeşler",
+  "Oktar Treyler",
+  "OKT Trailer",
+  "Omeksan",
+  "Optimak Treyler",
+  "Ormanlı",
+  "Orthaüs Treyler",
+  "OtoÇinler",
+  "Otto Trailer",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Ö.M.T.",
+  "Ömsan Treyler",
+  "Önder",
+  "Öz Asil",
+  "Özbay Damper",
+  "Özçevik Treyler",
+  "Özdemir",
+  "Özelsan Treyler",
+  "Özenir Osmanlı",
+  "Özgaranti",
+  "Özgül Treyler",
+  "Özkınalılar Damper",
+  "Özmen Damper",
+  "Özmetal",
+  "Özseç",
+  "Öztfn Treyler",
+  "Öztreyler",
+  "ÖzustaÖzünlü",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Polifton Trailer",
+  "Poslu Treyler",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Rekor",
+  "Roms Treyler",
+  "SAF Treyler",
+  "Sağlamış",
+  "Sancak Treyler",
+  "Sarıılmaz",
+  "Seçen",
+  "Seçkinler",
+  "Self Frigo",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Sert",
+  "Set Treyler",
+  "Sevinç",
+  "Sevinç Karoser",
+  "Seyit Usta",
+  "Sey-Mak Dorse",
+  "Simboxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "SLK Mertcan Treyler",
+  "Snin Trailer",
+  "Sönmezler",
+  "Starboard",
+  "Star Yağcılar",
+  "Şen San",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Taşkır",
+  "Tecno Tır Treyler",
+  "Tekin Treyler",
+  "Tırsan",
+  "Tirkon",
+  "Traco",
+  "Transfer Treyler",
+  "Tunalar",
+  "Tursan",
+  "Warkas",
+  "Wielton",
+  "Yalımsan Treyler",
+  "Yasin Ateş Treyler",
+  "Yavuz Treyler",
+  "Yeksan Treyler",
+  "Yelsan Treyler",
+  "Yeşil Yol Treyler",
+  "Yıldızlar Damper",
+  "Yıldız Treyler",
+  "Yiğitsan Treyler",
+  "Zafer Dorse",
+  "Zafer Treyler",
+  "Zak-San Trailer",
+  "Özel Üretim",
+  "Diğer"
+];
 
 const KapakliTipForm: React.FC = () => {
   const navigate = useNavigate();
@@ -156,6 +411,9 @@ const KapakliTipForm: React.FC = () => {
     brandId: "",
     modelId: "",
     variantId: "",
+
+    // Dorse Markası
+    dorseBrand: "",
 
     // Hafriyat Dorse Teknik Özellikler
     genislik: "",
@@ -625,6 +883,9 @@ const KapakliTipForm: React.FC = () => {
       // Yıl bilgisi
       submitData.append("year", formData.year.toString());
 
+      // Dorse Markası
+      submitData.append("dorseBrand", formData.dorseBrand);
+
       // Kapaklı dorse özel bilgileri
       submitData.append("genislik", formData.genislik);
       submitData.append("uzunluk", formData.uzunluk);
@@ -884,6 +1145,24 @@ const KapakliTipForm: React.FC = () => {
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
+              {/* Dorse Markası */}
+              <FormControl fullWidth required>
+                <InputLabel>Dorse Markası *</InputLabel>
+                <Select
+                  value={formData.dorseBrand}
+                  onChange={(e) =>
+                    handleInputChange("dorseBrand", e.target.value)
+                  }
+                  label="Dorse Markası *"
+                >
+                  {KAPAKLI_TIP_MARKALARI.map((marka) => (
+                    <MenuItem key={marka} value={marka}>
+                      {marka}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               <Box
                 sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
               >

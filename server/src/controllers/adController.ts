@@ -3052,6 +3052,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
       modelSlug,
       variantSlug,
       // Dorse özel alanları
+      dorseBrand,
       genislik,
       uzunluk,
       lastikDurumu,
@@ -3162,6 +3163,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
         cityId: cityId ? parseInt(cityId) : null,
         districtId: districtId ? parseInt(districtId) : null,
         customFields: {
+          dorseBrand: dorseBrand || null,
           genislik: genislik || null,
           uzunluk: uzunluk || null,
           lastikDurumu: lastikDurumu || null,

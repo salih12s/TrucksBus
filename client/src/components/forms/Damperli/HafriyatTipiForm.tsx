@@ -81,6 +81,9 @@ interface HafriyatFormData {
   modelId: string;
   variantId: string;
 
+  // Dorse Markası
+  dorseBrand: string;
+
   // Hafriyat Dorse Teknik Özellikler
   genislik: string; // metre
   uzunluk: string; // metre
@@ -115,6 +118,153 @@ interface HafriyatFormData {
 
 // Devrilme Yönleri
 const DEVRILME_YONLERI = ["Arkaya", "Sağa", "Sola"];
+
+// Hafriyat Tipi Dorse Markaları (MainLayout'tan alınan)
+const HAFRIYAT_TIPI_MARKALARI = [
+  "Seçiniz",
+  "Adakon Treyler",
+  "ADB Treyler",
+  "Adem Usta Proohauss",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "Akyel Treyler",
+  "Alamen",
+  "Alim Dorse",
+  "Alpaslan Dorse",
+  "Alp-Kar",
+  "Alpsan",
+  "Anıl Damper",
+  "Arslan Damper",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Aydeniz Dorse",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Carrier Trailer",
+  "Caselli",
+  "CastroMax Trailers",
+  "Cey Treyler",
+  "Coşkunlar",
+  "Çakır Şase",
+  "Çarşan",
+  "Çavdaroğlu",
+  "Çavuşoğlu",
+  "Çetin",
+  "Çimenler",
+  "Çobanoğlu",
+  "Doruk Treyler",
+  "Dosa Treyler",
+  "EFK Treyler",
+  "Ekinci Damper",
+  "ELM Treysan Trailer",
+  "EMK Treyler",
+  "EMS Erhan Makina",
+  "Esatech Trailer",
+  "Fesan",
+  "Fors Treyler",
+  "FSM Treyler",
+  "Global City",
+  "Global City Treyler",
+  "Gökhanlar",
+  "Gülüstan",
+  "Güneyşan Treyler Dorse",
+  "Haşimoğlu",
+  "Hidro-Has Damper",
+  "Hürsan Treyler",
+  "Iskar Treyler",
+  "İkikardeş",
+  "İkon Treyler",
+  "İNC Seçkinler",
+  "Kaim",
+  "Kalkan Treyler",
+  "KAM",
+  "Karalar Treyler",
+  "KKT Trailer",
+  "Konişmak",
+  "Kontir",
+  "Konza Trailer",
+  "Kögel Trailer",
+  "Langendorf",
+  "M. Seymak Treyler",
+  "Makinsan Treyler",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Mas Treyler",
+  "Maxtır Trailer",
+  "MEC Dorse",
+  "Mehsan Treyler",
+  "Meiller",
+  "Meshaus Treyler",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Neka Treyler",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "OKT Trailer",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Ortaus Treyler",
+  "OtoÇinler",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Öm-San Treyler",
+  "Özçevik Treyler",
+  "Özenir Osmanlı",
+  "Özgül Treyler",
+  "Öztfn Treyler",
+  "Öztreyler",
+  "Özusta",
+  "Özünlü",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Rekor",
+  "Roms Treyler",
+  "SAF Treyler",
+  "Sağlamış",
+  "Sancak Treyler",
+  "Sarıılmaz",
+  "Seçen",
+  "Seçkinler",
+  "Self Frigo",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Sert Treyler",
+  "Set Treyler",
+  "Seyit Usta",
+  "SimbOxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Star Yağcılar",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Tecno Tır Treyler",
+  "Tırsan",
+  "Traco",
+  "Transfer Treyler",
+  "Warkas",
+  "Wielton",
+  "Yalımsan Treyler",
+  "Yasin Ateş Damper",
+  "Yeksan Treyler",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Zafer Treyler",
+  "Zak-San Trailer",
+  "Özel Üretim",
+  "Diğer"
+];
 
 const HafriyatTipiForm: React.FC = () => {
   const navigate = useNavigate();
@@ -156,6 +306,9 @@ const HafriyatTipiForm: React.FC = () => {
     brandId: "",
     modelId: "",
     variantId: "",
+
+    // Dorse Markası
+    dorseBrand: "",
 
     // Hafriyat Dorse Teknik Özellikler
     genislik: "",
@@ -559,6 +712,9 @@ const HafriyatTipiForm: React.FC = () => {
       // Yıl bilgisi
       submitData.append("year", formData.year.toString());
 
+      // Dorse Markası
+      submitData.append("dorseBrand", formData.dorseBrand);
+
       // Hafriyat dorse özel bilgileri
       submitData.append("genislik", formData.genislik);
       submitData.append("uzunluk", formData.uzunluk);
@@ -818,6 +974,24 @@ const HafriyatTipiForm: React.FC = () => {
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
+              {/* Dorse Markası */}
+              <FormControl fullWidth required>
+                <InputLabel>Dorse Markası *</InputLabel>
+                <Select
+                  value={formData.dorseBrand}
+                  onChange={(e) =>
+                    handleInputChange("dorseBrand", e.target.value)
+                  }
+                  label="Dorse Markası *"
+                >
+                  {HAFRIYAT_TIPI_MARKALARI.map((marka) => (
+                    <MenuItem key={marka} value={marka}>
+                      {marka}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               <Box
                 sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
               >
