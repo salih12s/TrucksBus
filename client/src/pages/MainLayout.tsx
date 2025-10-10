@@ -193,6 +193,8 @@ const MainLayout: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
+  const [expandedDorseSubCategory, setExpandedDorseSubCategory] = useState<string | null>(null);
+  const [dorseBrandSearchQuery, setDorseBrandSearchQuery] = useState("");
   const [yearMin, setYearMin] = useState("");
   const [yearMax, setYearMax] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -1861,124 +1863,774 @@ const MainLayout: React.FC = () => {
           </Typography>
         </Box>
 
-        {/* Markalar Başlığı */}
-        <Typography
-          variant="subtitle2"
-          sx={{
-            color: "#333",
-            fontWeight: "bold",
-            fontSize: "14px",
-            mb: 1,
-          }}
-        >
-          {t("homePage.brands")}
-        </Typography>
-
-        {/* Marka Arama */}
-        <TextField
-          placeholder={t("homePage.searchBrand")}
-          variant="outlined"
-          size="small"
-          value={brandSearchQuery}
-          onChange={(e) => setBrandSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ color: "#666", fontSize: "18px" }} />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            mb: 1.5,
-            "& .MuiOutlinedInput-root": {
-              fontSize: "13px",
-              backgroundColor: "#fafafa",
-              "&:hover": {
-                backgroundColor: "#f5f5f5",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "#fff",
-              },
-            },
-            "& .MuiOutlinedInput-input": {
-              padding: "8px 12px",
-            },
-          }}
-        />
-
-        {/* Markalar Listesi - Grid Layout */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 0.5,
-            maxHeight: "300px",
-            overflowY: "auto",
-            pr: 1,
-            "&::-webkit-scrollbar": {
-              width: "4px",
-            },
-            "&::-webkit-scrollbar-track": {
-              backgroundColor: "#f1f1f1",
-              borderRadius: "2px",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              backgroundColor: "#c1c1c1",
-              borderRadius: "2px",
-            },
-          }}
-        >
-          {categoryBrands.map((brand) => (
-            <Box
-              key={brand.id}
-              onClick={() => handleBrandClick(brand.slug)}
+        {/* Dorse kategorisi için özel alt kategoriler */}
+        {selectedCategory === "dorse" ? (
+          <>
+            <Typography
+              variant="subtitle2"
               sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                cursor: "pointer",
-                py: 0.8,
-                px: 1.5,
-                backgroundColor:
-                  selectedBrand === brand.slug ? "#e3f2fd" : "transparent",
-                borderLeft:
-                  selectedBrand === brand.slug
-                    ? "3px solid #1976d2"
-                    : "3px solid transparent",
-                borderRadius: "4px",
-                "&:hover": {
-                  backgroundColor: "#f5f5f5",
-                },
-                transition: "all 0.2s ease",
+                color: "#333",
+                fontWeight: "bold",
+                fontSize: "14px",
+                mb: 1,
               }}
             >
-              <Typography
+              Alt Kategoriler
+            </Typography>
+
+            <List sx={{ p: 0, mb: 2 }}>
+              {/* Damperli */}
+              <ListItem
                 sx={{
-                  color: selectedBrand === brand.slug ? "#1976d2" : "#333",
+                  cursor: "pointer",
+                  py: 0.8,
+                  px: 1.5,
+                  mb: 0.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "4px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                  }}
+                >
+                  Damperli
+                </Typography>
+                <Box sx={{ pl: 1, width: "100%" }}>
+                  {/* Kapaklı Tip - Genişletilebilir */}
+                  <Box>
+                    <Typography
+                      onClick={() => setExpandedDorseSubCategory(
+                        expandedDorseSubCategory === "kapakli-tip" ? null : "kapakli-tip"
+                      )}
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <span>• Kapaklı Tip</span>
+                      <span style={{ fontSize: "10px" }}>
+                        {expandedDorseSubCategory === "kapakli-tip" ? "▼" : "▶"}
+                      </span>
+                    </Typography>
+                    
+                    {/* Kapaklı Tip Markaları */}
+                    {expandedDorseSubCategory === "kapakli-tip" && (
+                      <Box sx={{ pl: 2, mt: 0.5 }}>
+                        {/* Marka Arama Alanı */}
+                        <TextField
+                          placeholder="Marka ara..."
+                          variant="outlined"
+                          size="small"
+                          value={dorseBrandSearchQuery}
+                          onChange={(e) => setDorseBrandSearchQuery(e.target.value)}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon sx={{ color: "#666", fontSize: "16px" }} />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            mb: 1,
+                            width: "100%",
+                            "& .MuiOutlinedInput-root": {
+                              fontSize: "11px",
+                              backgroundColor: "#fafafa",
+                              "&:hover": {
+                                backgroundColor: "#f5f5f5",
+                              },
+                              "&.Mui-focused": {
+                                backgroundColor: "#fff",
+                              },
+                            },
+                            "& .MuiOutlinedInput-input": {
+                              padding: "6px 8px",
+                            },
+                          }}
+                        />
+                        
+                        {/* Marka Listesi */}
+                        <Box sx={{ maxHeight: "180px", overflowY: "auto" }}>
+                          {[
+                          "Acar Treyler", "Adakon Treyler", "ADB Treyler", "Adem Tekin Treyler", "Adem Usta Proohauss",
+                          "Adil Sert", "ADS Treyler", "AGS", "AGS Treyler", "Ağır-İş", "Akar Cihat", "Akbaş Treyler",
+                          "Akın", "Akmanlar Damper", "Akyel Treyler", "Alamen", "Aldor Trailer", "Alim Dorse",
+                          "Ali Rıza Usta", "Alkan Group", "ALM Damper", "Alpaslan Dorse", "Alp-Kar", "Alpsan",
+                          "Altınel Dorse", "Altınordu Treyler", "Anıl Damper", "Arslan", "ART Trailer", "Askan Treyler",
+                          "ASY Treyler", "Aydeniz Dorse", "Batu Treyler", "Belgem", "Beyfem Dorse", "Beytır",
+                          "Bio Treyler", "Boydak", "Büyük Yüksel Damper", "Can Damper Karoser", "Cangüller Treyler",
+                          "Cangül Treyler", "Carrier Trailer", "Caselli", "CastroMax Trailers", "Ceylan", "Cey-Treyler",
+                          "CNC", "Coşkunlar", "Çakır Dorse", "Çarşan", "Çavdaroğlu", "Çeliksan", "Çimenler",
+                          "Çinler Treyler", "Çobanoğlu", "Çuhadar Treyler", "Dark Tech Treyler", "Dekor", "Dentur",
+                          "Dereli", "Dereli Hüseyin", "Dorsan", "Doruk Treyler", "Dosa Treyler", "Efe Dorse",
+                          "EFK Treyler", "Ekinci Karoser", "Ekol", "Ekrem", "ELM Treysan Trailer", "EMK Treyler",
+                          "Erbaran", "Erdal Damper", "Erdoğan-Öz Dorse", "Erhan Ünsal Treyler", "Erkan Karoser",
+                          "Erkonsan Treyler", "Esatech Trailer", "Eyüp Coşgun", "Ferhat Dorse", "Fesan", "Fors Treyler",
+                          "Fruehauf", "FSM Treyler", "Global City", "Global City Treyler", "Gökhanlar", "Gülüstän",
+                          "Gümüş Treyler", "Güneş", "Güneyşan Treyler Dorse", "Gürkon Trailer", "Gürleşenyıl Treyler",
+                          "Güven Makina", "Güzelogulları Damper", "Hacı Ceylan", "Has Trailer", "Hidro Çan", "Hidrosin",
+                          "Hürsan", "Hürsan Treyler", "Iskar Treyler", "İhsan Treyler", "İkikardeş", "İkon Treyler",
+                          "İKT Treyler", "İldiz", "İNÇ Seçkinler", "Kaim Kardeşler", "Kalkan Treyler", "Karalar Treyler",
+                          "Karcı", "Kartallar Damper", "KKT Trailer", "Koluman", "Komodo", "Koneksan", "Konlider",
+                          "Konseymak", "Kontir", "Kontürksan", "Konza Trailer", "Kögel Trailer", "Kössbohrer", "Krone",
+                          "Kuşcuoğlu", "Lider Dekor", "Lider Dorse", "Lider Treyler", "M. Seymak Treyler", "Makinsan",
+                          "Marrka Treyler", "MAS Trailer", "Mas Treyler", "Maxtır Trailer", "MEC Dorse", "Mehmet Aydın",
+                          "Mehsan Treyler", "Mektür", "Merve Dorse", "Meshaus Treyler", "Metsan Treyler", "Mobil Treyler",
+                          "MRC Treyler", "MS Muratsan Treyler", "Nasuh Can", "Nedex", "Neka", "Nevkarsan", "Nkt Treyler",
+                          "Nuh Damper", "Nurak Treyler", "Nursan Dorse", "Nükte Trailer", "Ok Kardeşler", "Oktar Treyler",
+                          "OKT Trailer", "Omeksan", "Optimak Treyler", "Ormanlı", "Orthaüs Treyler", "OtoÇinler",
+                          "Otto Trailer", "Oymak Cargomaster", "Oymak Träger", "Ö.M.T.", "Ömsan Treyler", "Önder",
+                          "Öz Asil", "Özbay Damper", "Özçevik Treyler", "Özdemir", "Özelsan Treyler", "Özenir Osmanlı",
+                          "Özgaranti", "Özgül Treyler", "Özkınalılar Damper", "Özmen Damper", "Özmetal", "Özseç",
+                          "Öztfn Treyler", "Öztreyler", "ÖzustaÖzünlü", "Paşalar Mehmet Treyler", "Paşalar Treyler",
+                          "Paşaoğlu Dorse Treyler", "Polifton Trailer", "Poslu Treyler", "Ram-Kar", "Ram Treyler",
+                          "Reis Treyler", "Rekor", "Roms Treyler", "SAF Treyler", "Sağlamış", "Sancak Treyler",
+                          "Sarıılmaz", "Seçen", "Seçkinler", "Self Frigo", "Semitürk", "Sena Treyler", "Serin Treyler",
+                          "Serra Treyler", "Sert", "Set Treyler", "Sevinç", "Sevinç Karoser", "Seyit Usta",
+                          "Sey-Mak Dorse", "Simboxx", "Sim Treyler", "Sistem Damper Treyler", "SLK Mertcan Treyler",
+                          "Snin Trailer", "Sönmezler", "Starboard", "Star Yağcılar", "Şen San", "Takdir Dorse",
+                          "Tanı Tır", "Taşkır", "Tecno Tır Treyler", "Tekin Treyler", "Tırsan", "Tirkon", "Traco",
+                          "Transfer Treyler", "Tunalar", "Tursan", "Warkas", "Wielton", "Yalımsan Treyler",
+                          "Yasin Ateş Treyler", "Yavuz Treyler", "Yeksan Treyler", "Yelsan Treyler", "Yeşil Yol Treyler",
+                          "Yıldızlar Damper", "Yıldız Treyler", "Yiğitsan Treyler", "Zafer Dorse", "Zafer Treyler",
+                          "Zak-San Trailer", "Özel Üretim", "Diğer"
+                          ].filter((brand) => 
+                            brand.toLowerCase().includes(dorseBrandSearchQuery.toLowerCase())
+                          ).map((brand) => (
+                            <Typography
+                              key={brand}
+                              onClick={() => navigate(`/categories/dorse/brands/damperli/models/kapakli-tip/variants/${brand.toLowerCase().replace(/\s+/g, "-").replace(/[.()]/g, "")}/create-ad`)}
+                              sx={{
+                                color: "#555",
+                                fontSize: "11px",
+                                py: 0.2,
+                                cursor: "pointer",
+                                "&:hover": {
+                                  color: "#1976d2",
+                                  backgroundColor: "#e8f4f8",
+                                },
+                                borderRadius: "2px",
+                                px: 0.5,
+                              }}
+                            >
+                              ◦ {brand}
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Diğer Alt Kategoriler */}
+                  {["Kaya Tipi", "Hafriyat Tipi", "Havuz(Hardox) Tipi"].map((item) => (
+                    <Typography
+                      key={item}
+                      onClick={() =>
+                        navigate(
+                          `/categories/dorse/brands/damperli/models/${item
+                            .toLowerCase()
+                            .replace(/[()]/g, "")
+                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                      }}
+                    >
+                      • {item}
+                    </Typography>
+                  ))}
+                </Box>
+              </ListItem>
+
+              {/* Lowbed */}
+              <ListItem
+                sx={{
+                  cursor: "pointer",
+                  py: 0.8,
+                  px: 1.5,
+                  mb: 0.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "4px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                  }}
+                >
+                  Lowbed
+                </Typography>
+                <Box sx={{ pl: 1, width: "100%" }}>
+                  {["Havuzlu", "Önden Kırmalı"].map((item) => (
+                    <Typography
+                      key={item}
+                      onClick={() =>
+                        navigate(
+                          `/categories/dorse/brands/lowbed/models/${item
+                            .toLowerCase()
+                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                      }}
+                    >
+                      • {item}
+                    </Typography>
+                  ))}
+                </Box>
+              </ListItem>
+
+              {/* Kuruyük */}
+              <ListItem
+                sx={{
+                  cursor: "pointer",
+                  py: 0.8,
+                  px: 1.5,
+                  mb: 0.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "4px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                  }}
+                >
+                  Kuruyük
+                </Typography>
+                <Box sx={{ pl: 1, width: "100%" }}>
+                  {["Kapaklı", "Kapaklı(Kaya Tipi)", "Kapaksız(Platform)"].map(
+                    (item) => (
+                      <Typography
+                        key={item}
+                        onClick={() =>
+                          navigate(
+                            `/categories/dorse/brands/kuruyuk/models/${item
+                              .toLowerCase()
+                              .replace(/[()]/g, "")
+                              .replace(/\s+/g, "-")}/variants/create-ad`
+                          )
+                        }
+                        sx={{
+                          color: "#666",
+                          fontSize: "12px",
+                          py: 0.3,
+                          cursor: "pointer",
+                          "&:hover": {
+                            color: "#1976d2",
+                            backgroundColor: "#e3f2fd",
+                          },
+                          borderRadius: "2px",
+                          px: 0.5,
+                        }}
+                      >
+                        • {item}
+                      </Typography>
+                    )
+                  )}
+                </Box>
+              </ListItem>
+
+              {/* Tenteli */}
+              <ListItem
+                sx={{
+                  cursor: "pointer",
+                  py: 0.8,
+                  px: 1.5,
+                  mb: 0.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "4px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                  }}
+                >
+                  Tenteli
+                </Typography>
+                <Box sx={{ pl: 1, width: "100%" }}>
+                  {["Pilot", "Midilli", "Yarımidilli"].map((item) => (
+                    <Typography
+                      key={item}
+                      onClick={() =>
+                        navigate(
+                          `/categories/dorse/brands/tenteli/models/${item.toLowerCase()}/variants/create-ad`
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                      }}
+                    >
+                      • {item}
+                    </Typography>
+                  ))}
+                </Box>
+              </ListItem>
+
+              {/* Frigofirik */}
+              <ListItem
+                sx={{
+                  cursor: "pointer",
+                  py: 0.8,
+                  px: 1.5,
+                  mb: 0.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "4px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                  }}
+                >
+                  Frigofirik
+                </Typography>
+                <Box sx={{ pl: 1, width: "100%" }}>
+                  {["Frigofirik Dorse"].map((item) => (
+                    <Typography
+                      key={item}
+                      onClick={() =>
+                        navigate(
+                          `/categories/dorse/brands/frigofirik/models/${item
+                            .toLowerCase()
+                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                      }}
+                    >
+                      • {item}
+                    </Typography>
+                  ))}
+                </Box>
+              </ListItem>
+
+              {/* Tanker */}
+              <ListItem
+                sx={{
+                  cursor: "pointer",
+                  py: 0.8,
+                  px: 1.5,
+                  mb: 0.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "4px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                  }}
+                >
+                  Tanker
+                </Typography>
+                <Box sx={{ pl: 1, width: "100%" }}>
+                  {["Tanker Dorse"].map((item) => (
+                    <Typography
+                      key={item}
+                      onClick={() =>
+                        navigate(
+                          `/categories/dorse/brands/tanker/models/${item
+                            .toLowerCase()
+                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                      }}
+                    >
+                      • {item}
+                    </Typography>
+                  ))}
+                </Box>
+              </ListItem>
+
+              {/* Silobas */}
+              <ListItem
+                sx={{
+                  cursor: "pointer",
+                  py: 0.8,
+                  px: 1.5,
+                  mb: 0.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "4px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                  }}
+                >
+                  Silobas
+                </Typography>
+                <Box sx={{ pl: 1, width: "100%" }}>
+                  {["Silobas Dorse"].map((item) => (
+                    <Typography
+                      key={item}
+                      onClick={() =>
+                        navigate(
+                          `/categories/dorse/brands/silobas/models/${item
+                            .toLowerCase()
+                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                      }}
+                    >
+                      • {item}
+                    </Typography>
+                  ))}
+                </Box>
+              </ListItem>
+
+              {/* Tekstil */}
+              <ListItem
+                sx={{
+                  cursor: "pointer",
+                  py: 0.8,
+                  px: 1.5,
+                  mb: 0.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "4px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                  }}
+                >
+                  Tekstil
+                </Typography>
+                <Box sx={{ pl: 1, width: "100%" }}>
+                  {["Tekstil Dorse"].map((item) => (
+                    <Typography
+                      key={item}
+                      onClick={() =>
+                        navigate(
+                          `/categories/dorse/brands/tekstil/models/${item
+                            .toLowerCase()
+                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                      }}
+                    >
+                      • {item}
+                    </Typography>
+                  ))}
+                </Box>
+              </ListItem>
+
+              {/* Konteyner Taşıyıcı ve Şasi Grubu */}
+              <ListItem
+                sx={{
+                  cursor: "pointer",
+                  py: 0.8,
+                  px: 1.5,
+                  mb: 0.5,
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "4px",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Typography
+                  sx={{
+                    color: "#333",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    mb: 0.5,
+                  }}
+                >
+                  Konteyner Taşıyıcı & Şasi
+                </Typography>
+                <Box sx={{ pl: 1, width: "100%" }}>
+                  {[
+                    "Damper Şasi",
+                    "Kılçık Şasi",
+                    "Platform Şasi",
+                    "Römork Konvantörü(Dolli)",
+                    "Tanker Şasi",
+                    "Uzayabilir Şasi",
+                  ].map((item) => (
+                    <Typography
+                      key={item}
+                      onClick={() =>
+                        navigate(
+                          `/categories/dorse/brands/konteyner-tasiyici-sasi/models/${item
+                            .toLowerCase()
+                            .replace(/[()]/g, "")
+                            .replace(/\s+/g, "-")}/variants/create-ad`
+                        )
+                      }
+                      sx={{
+                        color: "#666",
+                        fontSize: "12px",
+                        py: 0.3,
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "#1976d2",
+                          backgroundColor: "#e3f2fd",
+                        },
+                        borderRadius: "2px",
+                        px: 0.5,
+                      }}
+                    >
+                      • {item}
+                    </Typography>
+                  ))}
+                </Box>
+              </ListItem>
+            </List>
+          </>
+        ) : (
+          <>
+            {/* Markalar Başlığı */}
+            <Typography
+              variant="subtitle2"
+              sx={{
+                color: "#333",
+                fontWeight: "bold",
+                fontSize: "14px",
+                mb: 1,
+              }}
+            >
+              {t("homePage.brands")}
+            </Typography>
+          </>
+        )}
+
+        {/* Dorse kategorisi dışındaki kategoriler için marka listesi */}
+        {selectedCategory !== "dorse" && (
+          <>
+            {/* Marka Arama */}
+            <TextField
+              placeholder={t("homePage.searchBrand")}
+              variant="outlined"
+              size="small"
+              value={brandSearchQuery}
+              onChange={(e) => setBrandSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "#666", fontSize: "18px" }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                mb: 1.5,
+                "& .MuiOutlinedInput-root": {
                   fontSize: "13px",
-                  fontWeight: selectedBrand === brand.slug ? 600 : 400,
-                  flex: 1,
-                }}
-              >
-                {brand.name}
-              </Typography>
-              <Typography
-                sx={{
-                  color: "#666",
-                  fontSize: "11px",
-                  backgroundColor: "#f0f0f0",
-                  px: 1,
-                  py: 0.2,
-                  borderRadius: "10px",
-                  minWidth: "20px",
-                  textAlign: "center",
-                }}
-              >
-                {getBrandCount(brand.slug)}
-              </Typography>
+                  backgroundColor: "#fafafa",
+                  "&:hover": {
+                    backgroundColor: "#f5f5f5",
+                  },
+                  "&.Mui-focused": {
+                    backgroundColor: "#fff",
+                  },
+                },
+                "& .MuiOutlinedInput-input": {
+                  padding: "8px 12px",
+                },
+              }}
+            />
+
+            {/* Markalar Listesi - Grid Layout */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 0.5,
+                maxHeight: "300px",
+                overflowY: "auto",
+                pr: 1,
+                "&::-webkit-scrollbar": {
+                  width: "4px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "#f1f1f1",
+                  borderRadius: "2px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#c1c1c1",
+                  borderRadius: "2px",
+                },
+              }}
+            >
+              {categoryBrands.map((brand) => (
+                <Box
+                  key={brand.id}
+                  onClick={() => handleBrandClick(brand.slug)}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    py: 0.8,
+                    px: 1.5,
+                    backgroundColor:
+                      selectedBrand === brand.slug ? "#e3f2fd" : "transparent",
+                    borderLeft:
+                      selectedBrand === brand.slug
+                        ? "3px solid #1976d2"
+                        : "3px solid transparent",
+                    borderRadius: "4px",
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                    },
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      color: selectedBrand === brand.slug ? "#1976d2" : "#333",
+                      fontSize: "13px",
+                      fontWeight: selectedBrand === brand.slug ? 600 : 400,
+                      flex: 1,
+                    }}
+                  >
+                    {brand.name}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "#666",
+                      fontSize: "11px",
+                      backgroundColor: "#f0f0f0",
+                      px: 1,
+                      py: 0.2,
+                      borderRadius: "10px",
+                      minWidth: "20px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {getBrandCount(brand.slug)}
+                  </Typography>
+                </Box>
+              ))}
             </Box>
-          ))}
-        </Box>
+          </>
+        )}
 
         {/* Filtreler Bölümü */}
         <Box sx={{ mt: 3 }}>
