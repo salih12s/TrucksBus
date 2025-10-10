@@ -900,12 +900,17 @@ const AdDetail: React.FC = () => {
                     "Belirtilmemiş"
                   : ad.brand?.name || "Volkswagen"}
               </Box>
-              <Box sx={{ fontSize: "14px", color: "#666" }}>
-                <strong>Model:</strong> {ad.model?.name || "T Serisi"}
-              </Box>
-              <Box sx={{ fontSize: "14px", color: "#666" }}>
-                <strong>Variant:</strong> {ad.variant?.name || "T5"}
-              </Box>
+              {/* Model ve Variant bilgileri sadece Dorse kategorisi DIŞINDA gösterilir */}
+              {ad.category?.name?.toLowerCase() !== "dorse" && (
+                <>
+                  <Box sx={{ fontSize: "14px", color: "#666" }}>
+                    <strong>Model:</strong> {ad.model?.name || "T Serisi"}
+                  </Box>
+                  <Box sx={{ fontSize: "14px", color: "#666" }}>
+                    <strong>Variant:</strong> {ad.variant?.name || "T5"}
+                  </Box>
+                </>
+              )}
             </Box>
 
             {/* Main Title and Price */}
