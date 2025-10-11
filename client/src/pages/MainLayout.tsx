@@ -288,11 +288,21 @@ const MainLayout: React.FC = () => {
   };
 
   // Brand handler - for filtering by brand within dorse category
-  const handleDorseBrandClick = (brandName: string | null) => {
+  const handleDorseBrandClick = (brandName: string | null, event?: React.MouseEvent) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    console.log("🔍 Dorse brand clicked:", brandName);
+    console.log("Current location:", window.location.href);
+    
     setSelectedCategory("dorse"); // Always set to dorse for brand filtering
     setSelectedSubCategory(null); // Reset subcategory
+    // Brand name'i direkt olarak state'e set ediyoruz (dorse için özel)
     setSelectedBrand(brandName);
     setCurrentPage(1); // Reset to first page
+    
+    console.log("After state update - selectedCategory: dorse, selectedBrand:", brandName);
   };
 
   // Brand navigation handler
@@ -1693,22 +1703,36 @@ const MainLayout: React.FC = () => {
 
     // Brand filtresi - tüm kategoriler için
     if (selectedBrand) {
-      // selectedBrand slug'ından brand name'ini bul
-      const brandObject = brands.find((b) => b.slug === selectedBrand);
-      const brandName =
-        brandObject?.name?.toLowerCase() || selectedBrand.toLowerCase();
-
       filtered = filtered.filter((ad) => {
         const customFields = ad.customFields as Record<string, unknown>;
         const adDorseBrand = customFields?.dorseBrand as string;
         const adBrandName = ad.brand?.name?.toLowerCase() || "";
 
-        // Hem normal brand hem de dorseBrand'ı kontrol et
-        const matchesNormalBrand = adBrandName.includes(brandName);
-        const matchesDorseBrand =
-          adDorseBrand && adDorseBrand.toLowerCase().includes(brandName);
+        // Dorse kategorisinde ise sadece dorseBrand ile karşılaştır
+        if (selectedCategory === "dorse") {
+          const brandNameLower = selectedBrand.toLowerCase();
+          const matchesDorseBrand =
+            adDorseBrand &&
+            adDorseBrand.toLowerCase() === brandNameLower;
+          
+          console.log("🔍 Dorse brand filter:", {
+            selectedBrand,
+            adDorseBrand,
+            matchesDorseBrand,
+            adTitle: ad.title
+          });
+          
+          return matchesDorseBrand;
+        }
 
-        return matchesNormalBrand || matchesDorseBrand;
+        // Diğer kategoriler için normal brand eşleştirmesi
+        const brandObject = brands.find((b) => b.slug === selectedBrand);
+        const brandName =
+          brandObject?.name?.toLowerCase() || selectedBrand.toLowerCase();
+
+        const matchesNormalBrand = adBrandName.includes(brandName);
+
+        return matchesNormalBrand;
       });
     }
 
@@ -2092,17 +2116,21 @@ const MainLayout: React.FC = () => {
 
       if (!categoryMatch) return false;
 
-      // Brand eşleştirmesi - hem normal brand hem dorseBrand kontrol et
-      const customFields = ad.customFields as Record<string, unknown>;
-      const adDorseBrand = customFields?.dorseBrand as string;
+      // Dorse kategorisi için özel kontrol
+      if (selectedCategory === "dorse") {
+        const customFields = ad.customFields as Record<string, unknown>;
+        const adDorseBrand = customFields?.dorseBrand as string;
+        const brandNameLower = brandName.toLowerCase();
+        
+        return adDorseBrand && adDorseBrand.toLowerCase() === brandNameLower;
+      }
+
+      // Diğer kategoriler için normal brand eşleştirmesi
       const adBrandName = ad.brand?.name?.toLowerCase() || "";
       const brandNameLower = brandName.toLowerCase();
-
       const matchesNormalBrand = adBrandName.includes(brandNameLower);
-      const matchesDorseBrand =
-        adDorseBrand && adDorseBrand.toLowerCase().includes(brandNameLower);
 
-      return matchesNormalBrand || matchesDorseBrand;
+      return matchesNormalBrand;
     }).length;
 
     console.log(
@@ -2664,7 +2692,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() => handleDorseBrandClick(brand)}
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -2920,7 +2948,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() => handleDorseBrandClick(brand)}
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -2985,9 +3013,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -3322,9 +3348,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -3594,9 +3618,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -3839,14 +3861,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/lowbed/models/havuzlu/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -3911,9 +3926,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -4068,14 +4081,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/lowbed/models/önden-kırmalı/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -4171,9 +4177,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -4485,14 +4489,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/kuruyuk/models/kapaklı/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -4560,9 +4557,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -4752,14 +4747,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/kuruyuk/models/kapaklı-kaya-tipi/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -4827,9 +4815,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -4953,14 +4939,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/kuruyuk/models/kapaksız-platform/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -5056,9 +5035,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -5284,14 +5261,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/tenteli/models/pilot/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -5356,9 +5326,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -5511,14 +5479,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/tenteli/models/midilli/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -5583,9 +5544,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -5740,14 +5699,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/tenteli/models/yarımidilli/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -5843,9 +5795,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -5998,14 +5948,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/frigofirik/models/frigofirik-dorse/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -6101,9 +6044,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -6309,14 +6250,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/tanker/models/tanker-dorse/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -6412,9 +6346,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -6570,14 +6502,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/silobas/models/silobas-dorse/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -6673,9 +6598,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -6793,14 +6716,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/tekstil/models/tekstil-dorse/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -6898,9 +6814,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7027,14 +6941,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/damper-şasi/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -7097,9 +7004,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7267,14 +7172,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/kılçık-şasi/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,–]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -7339,9 +7237,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7471,14 +7367,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/platform-şasi/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -7543,9 +7432,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7665,14 +7552,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/romork-konvantoru-dolli/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -7735,9 +7615,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7858,14 +7736,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/tanker-sasi/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -7930,9 +7801,7 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) =>
-                            setDorseBrandSearchQuery(e.target.value)
-                          }
+                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -8063,14 +7932,7 @@ const MainLayout: React.FC = () => {
                             .map((brand) => (
                               <Typography
                                 key={brand}
-                                onClick={() =>
-                                  navigate(
-                                    `/categories/dorse/brands/konteyner-tasiyici-sasi/models/uzayabilir-sasi/variants/${brand
-                                      .toLowerCase()
-                                      .replace(/\s+/g, "-")
-                                      .replace(/[.()&,]/g, "")}/create-ad`
-                                  )
-                                }
+                                onClick={(e) => handleDorseBrandClick(brand, e)}
                                 sx={{
                                   color: "#555",
                                   fontSize: "11px",
@@ -9656,3 +9518,4 @@ const MainLayout: React.FC = () => {
 };
 
 export default MainLayout;
+

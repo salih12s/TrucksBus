@@ -1027,10 +1027,6 @@ const SilobasForm: React.FC = () => {
             </Typography>
 
             <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              
-
-             
-
               <FormControl fullWidth>
                 <InputLabel>Takas</InputLabel>
                 <Select
@@ -1046,7 +1042,6 @@ const SilobasForm: React.FC = () => {
               </FormControl>
             </Box>
 
-          
             {/* Submit Button */}
             <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
               <Button
