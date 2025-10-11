@@ -39,12 +39,129 @@ import {
 import apiClient from "../../api/client";
 import SuccessModal from "../common/SuccessModal";
 
+// Frigofirik Dorse Markaları (MainLayout'tan alındı)
+const FRIGOFIRIK_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Adem Usta Proohauss",
+  "AFE Frigo",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Alamen",
+  "Alp-Kar",
+  "Alpsan",
+  "Ariş Dorse",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Belgeman",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "BRF Treyler",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Carrier",
+  "Caselli",
+  "CastroMax Trailers",
+  "Chereau",
+  "Çavdaroğlu",
+  "Çinler Dorse",
+  "Doruk Treyler",
+  "Ecofrigo",
+  "EFK Treyler",
+  "ELM Treysan Trailer",
+  "Emre Frigo",
+  "Esatech Trailer",
+  "Fors Treyler",
+  "Fruehauf",
+  "Gencer Kasa",
+  "Global City",
+  "Great Dane Trailer",
+  "Gülistan",
+  "Hastrailer",
+  "Horuzoğlu",
+  "Iskar Treyler",
+  "İkon Treyler",
+  "Kalkan Treyler",
+  "Karalar Treyler",
+  "Karaoğlan",
+  "Kassbohrer",
+  "KKT Trailer",
+  "Koluman",
+  "Kögel Trailer",
+  "Krone",
+  "Lamberet",
+  "Lecinena",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Maxtır Trailer",
+  "Mehsan Treyler",
+  "Mert",
+  "Meusburger",
+  "Mobil Treyler",
+  "Modern Karoseri",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Orthaus Treyler",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Öztfn Treyler",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Safkar",
+  "Sam Frigo",
+  "Sancak Treyler",
+  "Schmitz",
+  "Schmitz Cargobull",
+  "Schwarzmüller",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Set Treyler",
+  "Seyit Usta",
+  "Seymak",
+  "Simbоxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Sommer",
+  "Star Yağcılar",
+  "Takdir Dorse",
+  "Talson",
+  "Tanı Tır",
+  "Thermo King",
+  "Tırsan",
+  "Traco",
+  "Transfer Treyler",
+  "Transfrigo Kasa",
+  "Van Hool",
+  "Warkas",
+  "Wielton",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Yıldız Treyler",
+  "Yiğitsan",
+  "Zafer Treyler",
+  "Özel Üretim",
+  "Diğer",
+];
+
 interface FrigofirikFormData {
   // Temel Bilgiler
   title: string;
   description: string;
   price: string;
   year: number;
+  dorseBrand: string;
 
   // Teknik Özellikler
   uzunluk: string; // metre (text input)
@@ -101,6 +218,7 @@ const FrigofirikForm: React.FC = () => {
     description: "",
     price: "",
     year: new Date().getFullYear(),
+    dorseBrand: "Seçiniz",
     uzunluk: "",
     lastikDurumu: 100,
     sogutucu: "",
@@ -321,6 +439,11 @@ const FrigofirikForm: React.FC = () => {
       formDataToSend.append("variantName", "Frigorifik");
       formDataToSend.append("variantSlug", "frigorifik-frigorifik");
 
+      // Dorse markası
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        formDataToSend.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Teknik özellikler
       formDataToSend.append("uzunluk", formData.uzunluk);
       formDataToSend.append("lastikDurumu", formData.lastikDurumu.toString());
@@ -485,6 +608,23 @@ const FrigofirikForm: React.FC = () => {
                 required
               />
             </Box>
+
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                value={formData.dorseBrand}
+                label="Dorse Markası"
+                onChange={(e) =>
+                  handleInputChange("dorseBrand", e.target.value)
+                }
+              >
+                {FRIGOFIRIK_BRANDS.map((brand) => (
+                  <MenuItem key={brand} value={brand}>
+                    {brand}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             <Box
               sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}

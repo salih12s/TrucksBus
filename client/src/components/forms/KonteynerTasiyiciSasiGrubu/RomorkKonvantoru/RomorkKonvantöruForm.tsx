@@ -25,6 +25,89 @@ import { styled } from "@mui/material/styles";
 import Header from "../../../layout/Header";
 import apiClient from "../../../../api/client";
 
+// Römork Konvantörü (Dolli) Markaları (MainLayout'tan alındı)
+const ROMORK_KONVANTORU_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Adakon Treyler",
+  "Adem Usta Proohauss",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "Alamen",
+  "Alim",
+  "Alp-Kar",
+  "Alpsan",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Aydeniz Dorse",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "Can Damper Karoser",
+  "CastroMax Trailers",
+  "Doruk Treyler",
+  "ELM Treysan Trailer",
+  "Esatech Trailer",
+  "Fors Treyler",
+  "Global City",
+  "Güveneller",
+  "Gülistan",
+  "Iskar Treyler",
+  "İki Kardeş",
+  "İkon Treyler",
+  "Kalkan Treyler",
+  "Konza Trailer",
+  "Kögel Trailer",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Mas Treyler",
+  "Maxtır Trailer",
+  "Mehsan Treyler",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "Optimak Treyler",
+  "Orthaus Treyler",
+  "OtoÇinler",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Öztfn Treyler",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Sancak Treyler",
+  "Schmitz Cargobull",
+  "Self Frigo",
+  "Semiturk",
+  "Sena Treyler",
+  "Set Treyler",
+  "Simbоxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Sommer",
+  "Star Yağcılar",
+  "Şahin Dorse",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Töke Makina",
+  "Traco",
+  "Transfer Treyler",
+  "Warkas",
+  "Wielton",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Zafer Treyler",
+  "Özel Üretim",
+  "Diğer",
+];
+
 // Types
 interface City {
   id: number;
@@ -43,6 +126,7 @@ interface FormData {
   title: string;
   description: string;
   productionYear: string;
+  dorseBrand: string;
   axleCount: string;
   loadCapacity: string;
   conveyorLength: string;
@@ -115,6 +199,7 @@ const RomorkKonvantöruForm: React.FC = () => {
     title: "",
     description: "",
     productionYear: "",
+    dorseBrand: "Seçiniz",
     axleCount: "",
     loadCapacity: "",
     conveyorLength: "",
@@ -353,6 +438,11 @@ const RomorkKonvantöruForm: React.FC = () => {
       submitData.append("tireCondition", formData.tireCondition);
       submitData.append("isExchangeable", formData.isExchangeable);
 
+      // Dorse markası
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Marka, model, varyant bilgileri
       if (selectedBrand) {
         submitData.append("brandId", selectedBrand.id);
@@ -456,6 +546,22 @@ const RomorkKonvantöruForm: React.FC = () => {
                 ).map((year) => (
                   <MenuItem key={year} value={year.toString()}>
                     {year}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                name="dorseBrand"
+                value={formData.dorseBrand}
+                onChange={handleSelectChange}
+                label="Dorse Markası"
+              >
+                {ROMORK_KONVANTORU_BRANDS.map((brand) => (
+                  <MenuItem key={brand} value={brand}>
+                    {brand}
                   </MenuItem>
                 ))}
               </Select>

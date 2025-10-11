@@ -25,6 +25,131 @@ import { styled } from "@mui/material/styles";
 import Header from "../../../layout/Header";
 import apiClient from "../../../../api/client";
 
+// Kılçık Şasi Markaları (MainLayout'tan alındı)
+const KILCIK_SASI_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Adakon Treyler",
+  "Adem Usta Proohauss",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "Alamen",
+  "Alim",
+  "Alp-Kar",
+  "Alpsan",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Aydeniz Dorse",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "Can Damper Karoser",
+  "Cangüll Treyler",
+  "Caselli Treyler",
+  "CastroMax Trailers",
+  "Ceytech",
+  "Coşkun",
+  "Doğuş Dorse",
+  "Doruk Treyler",
+  "ELM Treysan Trailer",
+  "EMK Treyler",
+  "Esatech Trailer",
+  "Eşmeliler",
+  "Fesan Makina",
+  "Fors Treyler",
+  "Fruehauf",
+  "FSM",
+  "Global City",
+  "Global City Trailer",
+  "Gülistan",
+  "Güneş",
+  "Güneyşan",
+  "Güreoğlu",
+  "Gürleşenyl Treyler",
+  "Güveneller",
+  "Has Treyler",
+  "Hürsan",
+  "Iskar Treyler",
+  "İhsan Treyler",
+  "İki Kardeş",
+  "İkon Treyler",
+  "Kalkan Treyler",
+  "Kardeşler",
+  "Kartallar",
+  "Konza Trailer",
+  "Kögel Trailer",
+  "Krone",
+  "LTF Treyler",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Mas Treyler",
+  "Maxtır Trailer",
+  "Mehsan Treyler",
+  "Meral Dorse",
+  "Meshaus Dorse",
+  "Metsan",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Neka",
+  "Nevkarsan",
+  "Nuri Usta Treyler",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "OKT Trailer",
+  "Optimak Treyler",
+  "Orthaus Treyler",
+  "OtoÇinler",
+  "Otokar",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Özenir Dorse",
+  "Özgül Treyler",
+  "Öztfn Treyler",
+  "Öztreyler",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Payas Dorse",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Sancak Treyler",
+  "Schmitz Cargobull",
+  "Seçsan Treyler",
+  "Self Frigo",
+  "Semiturk",
+  "Sena Treyler",
+  "Serin Dorse",
+  "Set Treyler",
+  "Seyit Usta",
+  "Simbоxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Star Yağcılar",
+  "Şen–San",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Tırsan",
+  "Tirkon",
+  "Töke Makina",
+  "Traco",
+  "Transfer Treyler",
+  "Tuncay İş",
+  "Warkas",
+  "Wielton",
+  "Yalçın Dorse",
+  "Yeksan",
+  "Yelsan Treyler",
+  "Yıldız",
+  "Yıldızlar Damper",
+  "Zafer Treyler",
+  "Özel Üretim",
+  "Diğer",
+];
+
 // Types
 interface City {
   id: number;
@@ -43,6 +168,7 @@ interface FormData {
   title: string;
   description: string;
   productionYear: string;
+  dorseBrand: string;
   axleCount: string;
   loadCapacity: string;
   hookType: string;
@@ -115,6 +241,7 @@ const KilcikSasiForm: React.FC = () => {
     title: "",
     description: "",
     productionYear: "",
+    dorseBrand: "Seçiniz",
     axleCount: "",
     loadCapacity: "",
     hookType: "",
@@ -353,6 +480,11 @@ const KilcikSasiForm: React.FC = () => {
       submitData.append("tireCondition", formData.tireCondition);
       submitData.append("isExchangeable", formData.isExchangeable);
 
+      // Dorse markası
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Marka, model, varyant bilgileri
       if (selectedBrand) {
         submitData.append("brandId", selectedBrand.id);
@@ -456,6 +588,22 @@ const KilcikSasiForm: React.FC = () => {
                 ).map((year) => (
                   <MenuItem key={year} value={year.toString()}>
                     {year}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                name="dorseBrand"
+                value={formData.dorseBrand}
+                onChange={handleSelectChange}
+                label="Dorse Markası"
+              >
+                {KILCIK_SASI_BRANDS.map((brand) => (
+                  <MenuItem key={brand} value={brand}>
+                    {brand}
                   </MenuItem>
                 ))}
               </Select>

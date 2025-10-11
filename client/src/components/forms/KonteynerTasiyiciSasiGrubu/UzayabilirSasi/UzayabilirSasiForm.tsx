@@ -32,6 +32,100 @@ import { styled } from "@mui/material/styles";
 import Header from "../../../layout/Header";
 import apiClient from "../../../../api/client";
 
+// Uzayabilir Şasi Markaları (MainLayout'tan alındı)
+const UZAYABILIR_SASI_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Adakon Treyler",
+  "Adem Usta Proohauss",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "Akyel Treyler",
+  "Alamen",
+  "Alim Dorse",
+  "Alp-Kar",
+  "Alpsan",
+  "Altınel",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Aydeniz Dorse",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "Can Damper Karoser",
+  "Cangül Treyler",
+  "CastroMax Trailers",
+  "Derya Treyler",
+  "Doruk Treyler",
+  "ELM Treysan Trailer",
+  "EMK Treyler",
+  "Esatech Trailer",
+  "Eşmeliler Treyler",
+  "Fors Treyler",
+  "Global City",
+  "Gülistan",
+  "Güneş Treyler",
+  "Güneyşan",
+  "Güveneller Dorse",
+  "Hürsan",
+  "Iskar Treyler",
+  "İki Kardeş",
+  "İkon Treyler",
+  "Kalkan Treyler",
+  "Konza Trailer",
+  "Kögel Trailer",
+  "Makinsan Treyler",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Mas Treyler",
+  "Maxtır Trailer",
+  "Mehsan Treyler",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "Optimak Treyler",
+  "Orthaus Treyler",
+  "OtoÇinler",
+  "Otokar",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Özenir",
+  "Özenir Dorse",
+  "Özgül Treyler",
+  "Öztfn Treyler",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Renders",
+  "Sancak Treyler",
+  "Schmitz Cargobull",
+  "Seyit Usta",
+  "Simbоxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Star Yağcılar",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Tırsan Treyler",
+  "Töke Makina",
+  "Traco",
+  "Transfer Treyler",
+  "Warkas",
+  "Wielton",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Zafer Treyler",
+  "Özel Üretim",
+  "Diğer",
+];
+
 // Styled Components
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -78,6 +172,7 @@ interface FormData {
   title: string;
   description: string;
   productionYear: string;
+  dorseBrand: string;
   axleCount: string;
   loadCapacity: string;
   tireCondition: string;
@@ -118,6 +213,7 @@ const UzayabilirSasiForm: React.FC = () => {
     title: "",
     description: "",
     productionYear: "",
+    dorseBrand: "Seçiniz",
     axleCount: "",
     loadCapacity: "",
     tireCondition: "",
@@ -348,6 +444,11 @@ const UzayabilirSasiForm: React.FC = () => {
       submitData.append("tireCondition", formData.tireCondition);
       submitData.append("isExchangeable", formData.isExchangeable);
 
+      // Dorse markası
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Konum ve iletişim
       submitData.append("cityId", formData.cityId);
       submitData.append("districtId", formData.districtId);
@@ -433,6 +534,22 @@ const UzayabilirSasiForm: React.FC = () => {
                 ).map((year) => (
                   <MenuItem key={year} value={year.toString()}>
                     {year}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Dorse Markası</InputLabel>
+              <Select
+                name="dorseBrand"
+                value={formData.dorseBrand}
+                onChange={handleSelectChange}
+                label="Dorse Markası"
+              >
+                {UZAYABILIR_SASI_BRANDS.map((brand) => (
+                  <MenuItem key={brand} value={brand}>
+                    {brand}
                   </MenuItem>
                 ))}
               </Select>
