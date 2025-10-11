@@ -44,12 +44,94 @@ import {
 import apiClient from "../../../api/client";
 import SuccessModal from "../../common/SuccessModal";
 
+// Tekstil Dorse Markaları (MainLayout'tan alındı)
+const TEKSTIL_BRANDS = [
+  "Seçiniz",
+  "Abd Treyler",
+  "Adem Usta Proohauss",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "Alamen",
+  "Alp-Kar",
+  "Alpsan",
+  "Ariş Dorse",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Bio Treyler",
+  "BRF Treyler",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Caselli",
+  "CastroMax Trailers",
+  "Çavdaroğlu",
+  "Doruk Treyler",
+  "Esatech Trailer",
+  "Fruehauf",
+  "Global City",
+  "Gülistan",
+  "Iskar Treyler",
+  "İkon Treyler",
+  "Kalkan Treyler",
+  "Karaoğlan",
+  "Kögel Trailer",
+  "Krone",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Mehsan Treyler",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Orthaus Treyler",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Öztfn Treyler",
+  "Paşalar Mehmet Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Ram-Kar",
+  "Reis Treyler",
+  "Sancak Treyler",
+  "Schmitz",
+  "Seçsan Treyler",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Set Treyler",
+  "Seyit Usta",
+  "Simbоxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Star Yağcılar",
+  "Takdir Dorse",
+  "Talson",
+  "Tanı Tır",
+  "Tırsan",
+  "Traco",
+  "Transfer Treyler",
+  "Transfrigo Kasa",
+  "Warkas",
+  "Wielton",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Zafer",
+  "Zafer Dorse",
+  "Özel Üretim",
+  "Diğer",
+];
+
 interface TekstilFormData {
   // Temel Bilgiler
   title: string;
   description: string;
   price: string;
   year: number;
+  dorseBrand: string;
 
   // Tekstil Özel Bilgiler
   takasli: string; // "Evet" veya "Hayır"
@@ -141,6 +223,7 @@ const TekstilForm: React.FC = () => {
     description: "",
     price: "",
     year: new Date().getFullYear(),
+    dorseBrand: "Seçiniz",
     takasli: "Hayır",
     categoryId: "",
     brandId: "",
@@ -519,6 +602,11 @@ const TekstilForm: React.FC = () => {
       // Teknik özellikler
       formDataToSend.append("takasli", formData.takasli);
 
+      // Dorse Markası
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        formDataToSend.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Konum bilgileri - hem ID hem de isim
       const selectedCity = cities.find(
         (c) => c.id.toString() === formData.cityId
@@ -804,6 +892,27 @@ const TekstilForm: React.FC = () => {
                 required
               />
 
+              <FormControl fullWidth required>
+                <InputLabel>Dorse Markası</InputLabel>
+                <Select
+                  value={formData.dorseBrand}
+                  label="Dorse Markası"
+                  onChange={(e) =>
+                    handleInputChange("dorseBrand", e.target.value)
+                  }
+                >
+                  {TEKSTIL_BRANDS.map((brand) => (
+                    <MenuItem key={brand} value={brand}>
+                      {brand}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Box
+              sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
+            >
               <FormControl fullWidth required>
                 <InputLabel>Takaslı</InputLabel>
                 <Select
