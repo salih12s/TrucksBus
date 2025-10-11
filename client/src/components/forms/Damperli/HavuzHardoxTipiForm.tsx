@@ -82,6 +82,7 @@ interface HavuzHardoxFormData {
   variantId: string;
 
   // Havuz Hardox Dorse Teknik Özellikler
+  dorseBrand: string;
   genislik: string; // metre
   uzunluk: string; // metre
   lastikDurumu: number; // yüzde
@@ -115,6 +116,153 @@ interface HavuzHardoxFormData {
 
 // Devrilme Yönleri
 const DEVRILME_YONLERI = ["Arkaya", "Sağa", "Sola"];
+
+// Havuz Hardox Tipi Dorse Markaları
+const HAVUZ_HARDOX_BRANDS = [
+  "Seçiniz",
+  "Adakon Treyler",
+  "ADB Treyler",
+  "Adem Usta Proohauss",
+  "AGS Treyler",
+  "Akar Cihat",
+  "Akmanlar Damper",
+  "Akyel Treyler",
+  "Alamen",
+  "Alim Dorse",
+  "Alpaslan Dorse",
+  "Alp-Kar",
+  "Alpsan",
+  "Anıl Damper",
+  "Arslan Damper",
+  "ART Trailer",
+  "Askan Treyler",
+  "ASY Treyler",
+  "Aydeniz Dorse",
+  "Beyfem Dorse",
+  "Bio Treyler",
+  "Can Damper Karoser",
+  "Cangüller Treyler",
+  "Carrier Trailer",
+  "Caselli",
+  "CastroMax Trailers",
+  "Cey Treyler",
+  "Coşkunlar",
+  "Çakır Şase",
+  "Çarşan",
+  "Çavdaroğlu",
+  "Çavuşoğlu",
+  "Çetin",
+  "Çimenler",
+  "Çobanoğlu",
+  "Doruk Treyler",
+  "Dosa Treyler",
+  "EFK Treyler",
+  "Ekinci Damper",
+  "ELM Treysan Trailer",
+  "EMK Treyler",
+  "EMS Erhan Makina",
+  "Esatech Trailer",
+  "Fesan",
+  "Fors Treyler",
+  "FSM Treyler",
+  "Global City",
+  "Global City Treyler",
+  "Gökhanlar",
+  "Gülüstan",
+  "Güneyşan Treyler Dorse",
+  "Haşimoğlu",
+  "Hidro-Has Damper",
+  "Hürsan Treyler",
+  "Iskar Treyler",
+  "İkikardeş",
+  "İkon Treyler",
+  "İNC Seçkinler",
+  "Kaim",
+  "Kalkan Treyler",
+  "KAM",
+  "Karalar Treyler",
+  "KKT Trailer",
+  "Konişmak",
+  "Kontir",
+  "Konza Trailer",
+  "Kögel Trailer",
+  "Langendorf",
+  "M. Seymak Treyler",
+  "Makinsan Treyler",
+  "Marrka Treyler",
+  "MAS Trailer",
+  "Mas Treyler",
+  "Maxtır Trailer",
+  "MEC Dorse",
+  "Mehsan Treyler",
+  "Meiller",
+  "Meshaus Treyler",
+  "Mobil Treyler",
+  "MRC Treyler",
+  "MS Muratsan Treyler",
+  "Nedex",
+  "Neka Treyler",
+  "Nükte Trailer",
+  "Oktar Treyler",
+  "OKT Trailer",
+  "Optimak Treyler",
+  "Ormanlı Treyler",
+  "Ortaus Treyler",
+  "OtoÇinler",
+  "Oymak Cargomaster",
+  "Oymak Träger",
+  "Öm-San Treyler",
+  "Özçevik Treyler",
+  "Özenir Osmanlı",
+  "Özgül Treyler",
+  "Öztfn Treyler",
+  "Öztreyler",
+  "Özusta",
+  "Özünlü",
+  "Paşalar Mehmet Treyler",
+  "Paşalar Treyler",
+  "Paşaoğlu Dorse Treyler",
+  "Ram-Kar",
+  "Ram Treyler",
+  "Reis Treyler",
+  "Rekor",
+  "Roms Treyler",
+  "SAF Treyler",
+  "Sağlamış",
+  "Sancak Treyler",
+  "Sarıılmaz",
+  "Seçen",
+  "Seçkinler",
+  "Self Frigo",
+  "Semitürk",
+  "Sena Treyler",
+  "Serin Treyler",
+  "Serra Treyler",
+  "Sert Treyler",
+  "Set Treyler",
+  "Seyit Usta",
+  "SimbOxx",
+  "Sim Treyler",
+  "Sistem Damper Treyler",
+  "Star Yağcılar",
+  "Takdir Dorse",
+  "Tanı Tır",
+  "Tecno Tır Treyler",
+  "Tırsan",
+  "Traco",
+  "Transfer Treyler",
+  "Warkas",
+  "Wielton",
+  "Yalımsan Treyler",
+  "Yasin Ateş Damper",
+  "Yeksan Treyler",
+  "Yelsan Treyler",
+  "Yıldızlar Damper",
+  "Zafer Treyler",
+  "Zak-San Trailer",
+  "Özel Üretim",
+  "Diğer",
+];
 
 const HavuzHardoxTipiForm: React.FC = () => {
   const navigate = useNavigate();
@@ -158,6 +306,7 @@ const HavuzHardoxTipiForm: React.FC = () => {
     variantId: "",
 
     // Hafriyat Dorse Teknik Özellikler
+    dorseBrand: "Seçiniz",
     genislik: "",
     uzunluk: "",
     lastikDurumu: 100,
@@ -605,6 +754,11 @@ const HavuzHardoxTipiForm: React.FC = () => {
       submitData.append("lastikDurumu", formData.lastikDurumu.toString());
       submitData.append("devrilmeYonu", formData.devrilmeYonu);
 
+      // Dorse Markası
+      if (formData.dorseBrand && formData.dorseBrand !== "Seçiniz") {
+        submitData.append("dorseBrand", formData.dorseBrand);
+      }
+
       // Konum
       submitData.append("cityId", formData.cityId);
       submitData.append("districtId", formData.districtId);
@@ -860,6 +1014,24 @@ const HavuzHardoxTipiForm: React.FC = () => {
             </Typography>
 
             <Box sx={{ display: "grid", gap: 3, mb: 4 }}>
+              {/* Dorse Markası */}
+              <FormControl fullWidth required>
+                <InputLabel>Dorse Markası</InputLabel>
+                <Select
+                  value={formData.dorseBrand}
+                  label="Dorse Markası"
+                  onChange={(e) =>
+                    handleInputChange("dorseBrand", e.target.value)
+                  }
+                >
+                  {HAVUZ_HARDOX_BRANDS.map((brand) => (
+                    <MenuItem key={brand} value={brand}>
+                      {brand}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               <Box
                 sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
               >
