@@ -3061,6 +3061,12 @@ export const createDorseAd = async (req: Request, res: Response) => {
       warranty,
       negotiable,
       exchange,
+      // Kuruyük özel alanları
+      kapakYuksekligi,
+      yukseklik,
+      krikoAyak,
+      takasli,
+      kapakSistemi,
       // Lowbed özel alanları
       havuzDerinligi,
       havuzGenisligi,
@@ -3179,6 +3185,12 @@ export const createDorseAd = async (req: Request, res: Response) => {
           brandSlug: brandSlug || null,
           modelSlug: modelSlug || null,
           variantSlug: variantSlug || null,
+          // Kuruyük özel alanları
+          kapakYuksekligi: kapakYuksekligi || null,
+          yukseklik: yukseklik || null,
+          krikoAyak: krikoAyak || null,
+          takasli: takasli || null,
+          kapakSistemi: kapakSistemi || null,
           // Lowbed özel alanları
           havuzDerinligi: havuzDerinligi || null,
           havuzGenisligi: havuzGenisligi || null,

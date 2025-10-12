@@ -220,6 +220,16 @@ const AdDetail: React.FC = () => {
           }
         }
 
+        // 🔍 DEBUG: Log customFields to help debug missing fields
+        console.log("🔍 DEBUG customFields:", data.customFields);
+        console.log(
+          "🔍 All customFields keys:",
+          data.customFields ? Object.keys(data.customFields) : "null"
+        );
+        console.log("🔍 kapakYuksekligi:", data.customFields?.kapakYuksekligi);
+        console.log("🔍 krikoAyak:", data.customFields?.krikoAyak);
+        console.log("🔍 takasli:", data.customFields?.takasli);
+
         // ❗ Set ad data once with all information
         setAd(data);
         setLoading(false);
