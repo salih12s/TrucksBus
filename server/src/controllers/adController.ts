@@ -3128,31 +3128,19 @@ export const createDorseAd = async (req: Request, res: Response) => {
 
     console.log("🎯 Final Dorse categoryId:", categoryId);
 
-    // Brand/Model/Variant'ları bul veya oluştur
+    // ❌ Dorse için Brand/Model/Variant OLUŞTURMA - Sadece dorseBrand string olarak kaydedilecek
+    // Dorse markası customFields içinde string olarak saklanır
+    const brandId = null;
+    const modelId = null;
+    const variantId = null;
 
-    const result = await ensureBrandModelVariant(
-      categoryId, // Dorse kategorisi
-      brandSlug,
-      req.body.brandName,
-      modelSlug,
-      req.body.modelName,
-      variantSlug,
-      req.body.variantName,
-      req.body.brandId ? parseInt(req.body.brandId) : undefined,
-      req.body.modelId ? parseInt(req.body.modelId) : undefined,
-      req.body.variantId ? parseInt(req.body.variantId) : undefined
+    console.log(
+      "🏷️ Dorse - Brand/Model/Variant NULL (dorseBrand customFields'ta):",
+      {
+        categoryId,
+        dorseBrand,
+      }
     );
-
-    const brandId = result.brandId || null;
-    const modelId = result.modelId || null;
-    const variantId = result.variantId || null;
-
-    console.log("🏷️ Final Dorse IDs:", {
-      categoryId,
-      brandId,
-      modelId,
-      variantId,
-    });
 
     const ad = await prisma.ad.create({
       data: {

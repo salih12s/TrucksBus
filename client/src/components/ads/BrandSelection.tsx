@@ -26,12 +26,6 @@ interface Brand {
   };
 }
 
-interface Category {
-  id: number;
-  name: string;
-  slug: string;
-}
-
 // Brand Image Component with fallback
 const BrandImage: React.FC<{
   brand: Brand;
@@ -90,7 +84,6 @@ const BrandSelection: React.FC = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
 
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -100,23 +93,31 @@ const BrandSelection: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching brands for category:", categorySlug);
+      console.log("🔍 Fetching brands for category:", categorySlug);
+      console.log("🔍 API request URL:", `/categories/${categorySlug}/brands`);
 
-      // Fetch category info
-      const categoryResponse = await apiClient.get(
-        `/categories/${categorySlug}`
-      );
-      console.log("Category response:", categoryResponse.data);
-      setCategory(categoryResponse.data as Category);
-
-      // Fetch brands for this category
+      // Fetch brands for this category (category info not needed)
       const brandsResponse = await apiClient.get(
         `/categories/${categorySlug}/brands`
       );
-      console.log("Brands response:", brandsResponse.data);
+      console.log("✅ Brands response received:", brandsResponse);
+      console.log("✅ Brands data:", brandsResponse.data);
+      console.log(
+        "✅ Brands count:",
+        Array.isArray(brandsResponse.data) ? brandsResponse.data.length : 0
+      );
       setBrands(brandsResponse.data as Brand[]);
     } catch (err) {
-      console.error("Error fetching brands:", err);
+      console.error("❌ Error fetching brands:", err);
+      const axiosError = err as {
+        response?: { status?: number; data?: unknown };
+      };
+      console.error("❌ Error details:", {
+        message: err instanceof Error ? err.message : "Unknown",
+        response: axiosError.response,
+        status: axiosError.response?.status,
+        data: axiosError.response?.data,
+      });
       setError(err instanceof Error ? err.message : "Bir hata oluştu");
     } finally {
       setLoading(false);
@@ -313,7 +314,11 @@ const BrandSelection: React.FC = () => {
           >
             Kategoriler
           </Link>
-          <Typography color="text.primary">{category?.name}</Typography>
+          <Typography color="text.primary">
+            {categorySlug
+              ? categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)
+              : ""}
+          </Typography>
           <Typography color="text.primary">Marka Seçimi</Typography>
         </Breadcrumbs>
 
@@ -323,7 +328,9 @@ const BrandSelection: React.FC = () => {
             Marka Seçin
           </Typography>
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            {category?.name}
+            {categorySlug
+              ? categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1)
+              : ""}
           </Typography>
         </Box>
 

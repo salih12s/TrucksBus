@@ -46,35 +46,43 @@ export const getCategoryById = async (req: Request, res: Response) => {
     // Check if id is numeric (ID) or string (slug)
     const isNumeric = /^\d+$/.test(id);
 
+    // ❗ FIX: Sadece category bilgisini çek, brands'i ayrı çek
     const category = await prisma.category.findUnique({
       where: isNumeric ? { id: parseInt(id) } : { slug: id },
-      include: {
-        brands: {
-          include: {
-            brand: {
-              include: {
-                models: {
-                  include: {
-                    variants: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
     });
 
     if (!category) {
       return res.status(404).json({ error: "Category not found" });
     }
 
-    // Filter out any brands that are null
-    if (category.brands) {
-      category.brands = category.brands.filter((cb) => cb.brand !== null);
-    }
+    // Brands'i ayrı çek (silinmiş olanları otomatik filtreler)
+    const brands = await prisma.brand.findMany({
+      where: {
+        categories: {
+          some: {
+            categoryId: category.id,
+          },
+        },
+        isActive: true,
+      },
+      include: {
+        models: {
+          include: {
+            variants: true,
+          },
+        },
+      },
+    });
 
-    return res.json(category);
+    // Response'u eski formatla uyumlu hale getir
+    const response = {
+      ...category,
+      brands: brands.map((brand) => ({
+        brand,
+      })),
+    };
+
+    return res.json(response);
   } catch (error) {
     console.error("Error fetching category:", error);
     return res.status(500).json({ error: "Server error" });
@@ -86,33 +94,48 @@ export const getBrandsByCategory = async (req: Request, res: Response) => {
   try {
     const { categorySlug } = req.params;
 
+    console.log("🔍 getBrandsByCategory called with slug:", categorySlug);
+
     // ❗ CRITICAL: Simplified query for performance
     const category = await prisma.category.findUnique({
       where: { slug: categorySlug },
       select: { id: true },
     });
 
+    console.log("🔍 Category found:", category);
+
     if (!category) {
+      console.log("❌ Category not found for slug:", categorySlug);
       return res.status(404).json({ error: "Category not found" });
     }
 
-    // ❗ CRITICAL: Minimal brand data for fast loading
-    const categoryBrands = await prisma.categoryBrand.findMany({
-      where: { categoryId: category.id },
-      select: {
-        brand: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            logoUrl: true,
-            isActive: true,
+    console.log("🔍 Searching for brands with categoryId:", category.id);
+
+    // ❗ FIX: Direkt brands tablosundan çek, category_brands ile JOIN yap
+    // Bu şekilde silinmiş brand'ler otomatik filtrelenir
+    const brands = await prisma.brand.findMany({
+      where: {
+        categories: {
+          some: {
+            categoryId: category.id,
           },
         },
+        isActive: true, // Sadece aktif markaları getir
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logoUrl: true,
+        isActive: true,
+      },
+      orderBy: {
+        name: "asc",
       },
     });
 
-    const brands = categoryBrands.map((cb: any) => cb.brand);
+    console.log("🔍 Valid brands found:", brands.length);
+    console.log("🔍 First 3 brands:", brands.slice(0, 3));
 
     // ❗ CRITICAL: Cache headers - 15 dakika cache
     res.set({
@@ -122,7 +145,15 @@ export const getBrandsByCategory = async (req: Request, res: Response) => {
 
     return res.json(brands);
   } catch (error) {
-    console.error("Error fetching brands:", error);
+    console.error("❌ ERROR in getBrandsByCategory:", error);
+    console.error(
+      "❌ Error stack:",
+      error instanceof Error ? error.stack : "No stack"
+    );
+    console.error(
+      "❌ Error message:",
+      error instanceof Error ? error.message : error
+    );
     return res.status(500).json({ error: "Server error" });
   }
 };

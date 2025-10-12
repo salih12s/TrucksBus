@@ -288,21 +288,27 @@ const MainLayout: React.FC = () => {
   };
 
   // Brand handler - for filtering by brand within dorse category
-  const handleDorseBrandClick = (brandName: string | null, event?: React.MouseEvent) => {
+  const handleDorseBrandClick = (
+    brandName: string | null,
+    event?: React.MouseEvent
+  ) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
     console.log("🔍 Dorse brand clicked:", brandName);
     console.log("Current location:", window.location.href);
-    
+
     setSelectedCategory("dorse"); // Always set to dorse for brand filtering
     setSelectedSubCategory(null); // Reset subcategory
     // Brand name'i direkt olarak state'e set ediyoruz (dorse için özel)
     setSelectedBrand(brandName);
     setCurrentPage(1); // Reset to first page
-    
-    console.log("After state update - selectedCategory: dorse, selectedBrand:", brandName);
+
+    console.log(
+      "After state update - selectedCategory: dorse, selectedBrand:",
+      brandName
+    );
   };
 
   // Brand navigation handler
@@ -1712,16 +1718,15 @@ const MainLayout: React.FC = () => {
         if (selectedCategory === "dorse") {
           const brandNameLower = selectedBrand.toLowerCase();
           const matchesDorseBrand =
-            adDorseBrand &&
-            adDorseBrand.toLowerCase() === brandNameLower;
-          
+            adDorseBrand && adDorseBrand.toLowerCase() === brandNameLower;
+
           console.log("🔍 Dorse brand filter:", {
             selectedBrand,
             adDorseBrand,
             matchesDorseBrand,
-            adTitle: ad.title
+            adTitle: ad.title,
           });
-          
+
           return matchesDorseBrand;
         }
 
@@ -2121,7 +2126,7 @@ const MainLayout: React.FC = () => {
         const customFields = ad.customFields as Record<string, unknown>;
         const adDorseBrand = customFields?.dorseBrand as string;
         const brandNameLower = brandName.toLowerCase();
-        
+
         return adDorseBrand && adDorseBrand.toLowerCase() === brandNameLower;
       }
 
@@ -3013,7 +3018,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -3348,7 +3359,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -3618,7 +3635,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -3926,7 +3949,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -4177,7 +4206,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -4557,7 +4592,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -4815,7 +4856,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -5035,7 +5082,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -5326,7 +5379,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -5544,7 +5603,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -5795,7 +5860,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -6044,7 +6115,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -6346,7 +6423,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -6598,7 +6681,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -6814,7 +6903,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7004,7 +7099,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7237,7 +7338,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7432,7 +7539,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7615,7 +7728,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -7801,7 +7920,13 @@ const MainLayout: React.FC = () => {
                           variant="outlined"
                           size="small"
                           value={dorseBrandSearchQuery}
-                          onChange={(e) => { const newValue = e.target.value; setDorseBrandSearchQuery(newValue); if (newValue.trim() === "") { setSelectedBrand(null); } }}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            setDorseBrandSearchQuery(newValue);
+                            if (newValue.trim() === "") {
+                              setSelectedBrand(null);
+                            }
+                          }}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -9518,4 +9643,3 @@ const MainLayout: React.FC = () => {
 };
 
 export default MainLayout;
-
