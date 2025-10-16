@@ -382,14 +382,66 @@ const AdminDashboard: React.FC = () => {
         />
       </Box>
 
-      {/* Aktivite Özeti */}
+      {/* Kullanıcı Kayıt İstatistikleri */}
       <Box sx={{ mb: 4 }}>
         <Typography
           variant="h5"
           component="h2"
           sx={{ fontWeight: "bold", mb: 3 }}
         >
-          Aktivite Özeti
+          Kullanıcı Kayıtları
+        </Typography>
+
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(4, 1fr)",
+            },
+            gap: 3,
+          }}
+        >
+          <StatCard
+            title="Bugün Kayıt Olanlar"
+            value={stats?.timeBasedStats.todayUsers || 0}
+            subtitle={`Toplam: ${stats?.totalStats.totalUsers || 0} kullanıcı`}
+            icon={<PeopleIcon />}
+            color="#4caf50"
+          />
+          <StatCard
+            title="Bu Hafta Kayıtlar"
+            value={stats?.timeBasedStats.thisWeekUsers || 0}
+            subtitle={`Aktif: ${stats?.totalStats.activeUsers || 0} kullanıcı`}
+            icon={<TrendingUp />}
+            color="#2196f3"
+          />
+          <StatCard
+            title="Bu Ay Kayıtlar"
+            value={stats?.timeBasedStats.thisMonthUsers || 0}
+            subtitle="Son 30 gün"
+            icon={<PeopleIcon />}
+            color="#ff9800"
+          />
+          <StatCard
+            title="Bu Ay İlanlar"
+            value={stats?.timeBasedStats.thisMonthAds || 0}
+            subtitle="Yeni eklenen"
+            icon={<AssignmentIcon />}
+            color="#9c27b0"
+          />
+        </Box>
+      </Box>
+
+      {/* Sistem Aktivitesi */}
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{ fontWeight: "bold", mb: 3 }}
+        >
+          Sistem Aktivitesi
         </Typography>
 
         <Box
@@ -403,22 +455,29 @@ const AdminDashboard: React.FC = () => {
           }}
         >
           <StatCard
-            title="Bugün Kayıt"
-            value={stats?.timeBasedStats.todayUsers || 0}
-            icon={<PeopleIcon />}
-            color="#4caf50"
-          />
-          <StatCard
-            title="Bu Hafta"
-            value={stats?.timeBasedStats.thisWeekUsers || 0}
-            icon={<TrendingUp />}
-            color="#2196f3"
-          />
-          <StatCard
-            title="Toplam Mesaj"
+            title="Toplam Mesajlar"
             value={stats?.totalStats.totalMessages || 0}
+            subtitle="Tüm konuşmalar"
             icon={<Message />}
-            color="#9c27b0"
+            color="#e91e63"
+          />
+          <StatCard
+            title="Aktif Kullanıcılar"
+            value={stats?.totalStats.activeUsers || 0}
+            subtitle={`${(
+              ((stats?.totalStats.activeUsers || 0) /
+                (stats?.totalStats.totalUsers || 1)) *
+              100
+            ).toFixed(0)}% aktif`}
+            icon={<CheckCircleIcon />}
+            color="#00bcd4"
+          />
+          <StatCard
+            title="Reddedilen İlanlar"
+            value={stats?.totalStats.rejectedAds || 0}
+            subtitle="Onaylanmayan"
+            icon={<WarningIcon />}
+            color="#f44336"
           />
         </Box>
       </Box>

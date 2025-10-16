@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
   Stepper,
@@ -29,6 +28,7 @@ import {
   Close as CloseIcon,
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
+import ConfirmationModal from "../../../modals/ConfirmationModal";
 import Header from "../../../layout/Header";
 import apiClient from "../../../../api/client";
 
@@ -139,21 +139,6 @@ const VisuallyHiddenInput = styled("input")({
   width: 1,
 });
 
-interface User {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  email?: string;
-}
-
-interface AuthState {
-  user: User | null;
-}
-
-interface RootState {
-  auth: AuthState;
-}
-
 // Types
 interface City {
   id: number;
@@ -182,27 +167,27 @@ interface FormData {
   showcasePhoto: File | null;
   uploadedImages: File[];
 
-  // Konum
+  // Konum ve fiyat
   cityId: string;
   districtId: string;
-
-  // İletişim
-  sellerName: string;
-  sellerPhone: string;
-  sellerEmail: string;
-
-  // Fiyat
   price: string;
 }
 
-const steps = ["Araç Bilgileri", "Fotoğraflar", "Konum ve İletişim"];
+const steps = ["Araç Bilgileri", "Fotoğraflar", "Konum & Fiyat"];
 
 const UzayabilirSasiForm: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const location = useLocation();
+
+  // Seçilen marka, model, varyant bilgileri location.state'den gelir
+  const selectedBrand = location.state?.brand;
+  const selectedModel = location.state?.model;
+  const selectedVariant = location.state?.variant;
+  const selectedCategory = location.state?.category;
 
   // States
   const [activeStep, setActiveStep] = useState(0);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
@@ -222,9 +207,6 @@ const UzayabilirSasiForm: React.FC = () => {
     uploadedImages: [],
     cityId: "",
     districtId: "",
-    sellerName: user?.firstName + " " + user?.lastName || "",
-    sellerPhone: user?.phone || "",
-    sellerEmail: user?.email || "",
     price: "",
   });
 
@@ -236,12 +218,8 @@ const UzayabilirSasiForm: React.FC = () => {
 
   // Effects
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
     fetchCities();
-  }, [user, navigate]);
+  }, []);
 
   useEffect(() => {
     if (formData.cityId) {
@@ -255,7 +233,7 @@ const UzayabilirSasiForm: React.FC = () => {
   // API Functions
   const fetchCities = async () => {
     try {
-      const response = await apiClient.get("/location/cities");
+      const response = await apiClient.get("/cities");
       setCities(response.data as City[]);
     } catch (error) {
       console.error("Error fetching cities:", error);
@@ -264,7 +242,7 @@ const UzayabilirSasiForm: React.FC = () => {
 
   const fetchDistricts = async (cityId: number) => {
     try {
-      const response = await apiClient.get(`/location/districts/${cityId}`);
+      const response = await apiClient.get(`/cities/${cityId}/districts`);
       setDistricts(response.data as District[]);
     } catch (error) {
       console.error("Error fetching districts:", error);
@@ -387,22 +365,6 @@ const UzayabilirSasiForm: React.FC = () => {
           });
           return false;
         }
-        if (!formData.sellerName.trim()) {
-          setSnackbar({
-            open: true,
-            message: "Satıcı adı zorunludur",
-            severity: "error",
-          });
-          return false;
-        }
-        if (!formData.sellerPhone.trim()) {
-          setSnackbar({
-            open: true,
-            message: "Telefon numarası zorunludur",
-            severity: "error",
-          });
-          return false;
-        }
         if (!formData.price.trim()) {
           setSnackbar({
             open: true,
@@ -430,6 +392,11 @@ const UzayabilirSasiForm: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validateStep(activeStep)) return;
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirmedSubmit = async () => {
+    setConfirmModalOpen(false);
 
     setLoading(true);
     try {
@@ -449,13 +416,37 @@ const UzayabilirSasiForm: React.FC = () => {
         submitData.append("dorseBrand", formData.dorseBrand);
       }
 
-      // Konum ve iletişim
+      // Marka, model, varyant bilgileri
+      if (selectedBrand) {
+        submitData.append("brandId", selectedBrand.id);
+        submitData.append("brandName", selectedBrand.name);
+      }
+      if (selectedModel) {
+        submitData.append("modelId", selectedModel.id);
+        submitData.append("modelName", selectedModel.name);
+      }
+      if (selectedVariant) {
+        submitData.append("variantId", selectedVariant.id);
+        submitData.append("variantName", selectedVariant.name);
+      }
+
+      // Kategori bilgisi - dinamik olarak location.state'den veya URL'den alınıyor
+      if (selectedCategory?.slug) {
+        submitData.append("category", selectedCategory.slug);
+      } else {
+        // URL'den kategori slug'ını çıkar
+        const pathParts = location.pathname.split("/");
+        const categoryIndex = pathParts.indexOf("categories");
+        if (categoryIndex !== -1 && pathParts[categoryIndex + 1]) {
+          submitData.append("category", pathParts[categoryIndex + 1]);
+        }
+      }
+      submitData.append("subType", "UzayabilirSasi");
+
+      // Konum ve fiyat
       submitData.append("cityId", formData.cityId);
       submitData.append("districtId", formData.districtId);
-      submitData.append("sellerName", formData.sellerName);
-      submitData.append("sellerPhone", formData.sellerPhone);
-      submitData.append("sellerEmail", formData.sellerEmail);
-      submitData.append("price", formData.price);
+      submitData.append("price", formData.price.replace(/\./g, ""));
 
       // Fotoğraflar
       if (formData.showcasePhoto) {
@@ -466,7 +457,7 @@ const UzayabilirSasiForm: React.FC = () => {
         submitData.append(`photos`, file);
       });
 
-      await apiClient.post("/ads/uzayabilir-sasi", submitData, {
+      await apiClient.post("/ads", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -579,21 +570,17 @@ const UzayabilirSasiForm: React.FC = () => {
               placeholder="Örn: 25"
             />
 
-            <FormControl fullWidth>
-              <InputLabel>Lastik Durumu</InputLabel>
-              <Select
-                name="tireCondition"
-                value={formData.tireCondition}
-                onChange={handleSelectChange}
-                label="Lastik Durumu"
-              >
-                <MenuItem value="Yeni">Yeni</MenuItem>
-                <MenuItem value="Çok İyi">Çok İyi</MenuItem>
-                <MenuItem value="İyi">İyi</MenuItem>
-                <MenuItem value="Orta">Orta</MenuItem>
-                <MenuItem value="Değişmeli">Değişmeli</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              fullWidth
+              label="Lastik Durumu (%)"
+              name="tireCondition"
+              type="number"
+              value={formData.tireCondition}
+              onChange={handleInputChange}
+              placeholder="Örn: 80"
+              helperText="Lastik durumunu yüzde olarak girin (0-100)"
+              inputProps={{ min: 0, max: 100 }}
+            />
 
             <FormControl fullWidth>
               <InputLabel>Takas</InputLabel>
@@ -803,7 +790,7 @@ const UzayabilirSasiForm: React.FC = () => {
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <Typography variant="h6" sx={{ color: "#1976d2", fontWeight: 600 }}>
-              Konum ve İletişim Bilgileri
+              Konum ve Fiyat Bilgileri
             </Typography>
 
             {/* Konum Seçimi */}
@@ -923,136 +910,6 @@ const UzayabilirSasiForm: React.FC = () => {
               </Box>
             </Box>
 
-            {/* İletişim Bilgileri */}
-            <Box
-              sx={{
-                p: 3,
-                border: "2px solid #e8f5e8",
-                borderRadius: 3,
-                bgcolor: "#fafffe",
-                position: "relative",
-                overflow: "hidden",
-                "&::before": {
-                  content: '""',
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 4,
-                  bgcolor: "success.main",
-                },
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{ mb: 3, fontWeight: 600, color: "#2e7d32" }}
-              >
-                İletişim Bilgileri
-              </Typography>
-
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", md: "row" },
-                    gap: 3,
-                  }}
-                >
-                  <Box sx={{ flex: 1 }}>
-                    <TextField
-                      fullWidth
-                      required
-                      label="Satıcı Adı"
-                      name="sellerName"
-                      value={formData.sellerName}
-                      onChange={handleInputChange}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          "& fieldset": {
-                            borderColor: "#e8f5e8",
-                            borderWidth: 2,
-                          },
-                          "&:hover fieldset": {
-                            borderColor: "#2e7d32",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#2e7d32",
-                          },
-                        },
-                        "& .MuiInputLabel-root": {
-                          color: "#2e7d32",
-                          fontWeight: 500,
-                          "&.Mui-focused": { color: "#2e7d32" },
-                        },
-                      }}
-                    />
-                  </Box>
-
-                  <Box sx={{ flex: 1 }}>
-                    <TextField
-                      fullWidth
-                      required
-                      label="Telefon Numarası"
-                      name="sellerPhone"
-                      value={formData.sellerPhone}
-                      onChange={handleInputChange}
-                      placeholder="0XXX XXX XX XX"
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          "& fieldset": {
-                            borderColor: "#e8f5e8",
-                            borderWidth: 2,
-                          },
-                          "&:hover fieldset": {
-                            borderColor: "#2e7d32",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#2e7d32",
-                          },
-                        },
-                        "& .MuiInputLabel-root": {
-                          color: "#2e7d32",
-                          fontWeight: 500,
-                          "&.Mui-focused": { color: "#2e7d32" },
-                        },
-                      }}
-                    />
-                  </Box>
-                </Box>
-
-                <Box>
-                  <TextField
-                    fullWidth
-                    label="E-posta (Opsiyonel)"
-                    name="sellerEmail"
-                    type="email"
-                    value={formData.sellerEmail}
-                    onChange={handleInputChange}
-                    placeholder="ornek@email.com"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        "& fieldset": {
-                          borderColor: "#e8f5e8",
-                          borderWidth: 2,
-                        },
-                        "&:hover fieldset": {
-                          borderColor: "#2e7d32",
-                        },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#2e7d32",
-                        },
-                      },
-                      "& .MuiInputLabel-root": {
-                        color: "#2e7d32",
-                        fontWeight: 500,
-                        "&.Mui-focused": { color: "#2e7d32" },
-                      },
-                    }}
-                  />
-                </Box>
-              </Box>
-            </Box>
-
             {/* Fiyat Bilgisi */}
             <Box
               sx={{
@@ -1085,10 +942,14 @@ const UzayabilirSasiForm: React.FC = () => {
                 required
                 label="Fiyat (TL)"
                 name="price"
-                type="number"
                 value={formData.price}
-                onChange={handleInputChange}
-                placeholder="Örn: 150000"
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                  setFormData({ ...formData, price: formatted });
+                }}
+                placeholder="Örn: 1.500.000"
+                helperText="Fiyat binlik ayracı ile otomatik formatlanır"
                 InputProps={{
                   endAdornment: (
                     <Typography
@@ -1286,6 +1147,16 @@ const UzayabilirSasiForm: React.FC = () => {
             {snackbar.message}
           </Alert>
         </Snackbar>
+
+        <ConfirmationModal
+          open={confirmModalOpen}
+          title="İlanı Yayınla"
+          message="İlanınızı yayınlamak istediğinizden emin misiniz? Yayınlandıktan sonra inceleme sürecine girecektir."
+          onConfirm={handleConfirmedSubmit}
+          onCancel={() => setConfirmModalOpen(false)}
+          confirmText="Yayınla"
+          cancelText="İptal"
+        />
       </Box>
     </>
   );

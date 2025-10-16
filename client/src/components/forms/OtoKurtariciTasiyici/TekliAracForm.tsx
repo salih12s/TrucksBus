@@ -45,37 +45,38 @@ interface District {
 
 // Araç markaları için sabit liste
 const VEHICLE_BRAND_NAMES = [
-  "Ford",
-  "Mercedes-Benz",
-  "Renault",
-  "Liebherr",
-  "MAN",
-  "Scania",
-  "Volvo",
-  "DAF",
-  "Iveco",
+  "Seçiniz",
+  "Anadol",
+  "Askam",
+  "Bedford",
   "BMC",
-  "Hyundai",
-  "Isuzu",
-  "Mitsubishi",
-  "Fiat",
-  "Peugeot",
-  "Citroën",
-  "Opel",
-  "Volkswagen",
   "Chevrolet",
-  "Dodge",
   "Chrysler",
-  "Tata",
-  "Mazda",
-  "Kia",
-  "JAC",
-  "Otokar",
+  "Citroën",
+  "DAF",
+  "Dodge",
+  "Fiat",
+  "Ford",
   "Gazelle",
   "Hino",
-  "Bedford",
-  "Askam",
-  "Anadol",
+  "Hyundai",
+  "Isuzu",
+  "Iveco",
+  "JAC",
+  "Kia",
+  "Liebherr",
+  "MAN",
+  "Mazda",
+  "Mercedes-Benz",
+  "Mitsubishi",
+  "Opel",
+  "Otokar",
+  "Peugeot",
+  "Renault",
+  "Scania",
+  "Tata",
+  "Volkswagen",
+  "Volvo",
   "Diğer",
 ];
 
@@ -153,7 +154,7 @@ const TekliAracForm: React.FC = () => {
     year: "",
     price: "",
     categoryId: "8", // Oto Kurtarıcı category ID
-    vehicleBrandName: "", // Araç markası (Ford, Mercedes-Benz vb.)
+    vehicleBrandName: "Seçiniz", // Araç markası (Ford, Mercedes-Benz vb.)
     mileage: "",
     engineVolume: "",
     maxPower: "",
@@ -383,6 +384,11 @@ const TekliAracForm: React.FC = () => {
     setLoading(true);
 
     try {
+      console.log(
+        "📝 Tekli Form Data - vehicleBrandName:",
+        formData.vehicleBrandName
+      );
+
       const submitData = new FormData();
 
       // Temel bilgileri ekle (price ve mileage'ı parse ederek)

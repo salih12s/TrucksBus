@@ -318,9 +318,11 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                             {!notification.isRead && (
                               <IconButton
                                 size="small"
-                                onClick={() =>
-                                  handleMarkAsRead(notification.id)
-                                }
+                                onClick={(e: React.MouseEvent) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  handleMarkAsRead(notification.id);
+                                }}
                                 title="Okundu İşaretle"
                               >
                                 <MarkReadIcon fontSize="small" />
@@ -328,9 +330,11 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                             )}
                             <IconButton
                               size="small"
-                              onClick={() =>
-                                handleDeleteNotification(notification.id)
-                              }
+                              onClick={(e: React.MouseEvent) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                handleDeleteNotification(notification.id);
+                              }}
                               title="Sil"
                             >
                               <DeleteIcon fontSize="small" />

@@ -814,8 +814,7 @@ const KapakliTipForm: React.FC = () => {
 
       // Temel bilgiler
       submitData.append("title", formData.title);
-      submitData.append("description", formData.description);
-      submitData.append("productionYear", formData.year.toString());
+      submitData.append("year", formData.year.toString());
 
       // Category/Brand/Model/Variant ID'lerini ekle
       submitData.append("categoryId", formData.categoryId);
@@ -904,7 +903,8 @@ const KapakliTipForm: React.FC = () => {
       submitData.append("exchange", formData.exchange ? "evet" : "hayir");
 
       // Detaylı bilgiyi teknik özelliklerle birleştir
-      let detailedDescription = formData.detailedInfo;
+      let detailedDescription =
+        formData.description || formData.detailedInfo || "";
 
       // Hafriyat dorse teknik özellikler eklentisi
       const technicalSpecs = [];
@@ -925,8 +925,10 @@ const KapakliTipForm: React.FC = () => {
           : techSpecsText;
       }
 
+      // Description ve detailedInfo'yu ayır
+      submitData.append("description", formData.description || "");
       if (detailedDescription) {
-        submitData.append("description", detailedDescription);
+        submitData.append("detailedInfo", detailedDescription);
       }
 
       // Fotoğrafları ekle

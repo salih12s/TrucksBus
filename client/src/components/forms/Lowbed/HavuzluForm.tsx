@@ -986,28 +986,6 @@ const HavuzluForm: React.FC = () => {
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <FormControl component="fieldset">
-              <FormLabel component="legend">Pazarlık Yapılır</FormLabel>
-              <RadioGroup
-                row
-                value={formData.negotiable}
-                onChange={(e) =>
-                  setFormData({ ...formData, negotiable: e.target.value })
-                }
-              >
-                <FormControlLabel
-                  value="Evet"
-                  control={<Radio />}
-                  label="Evet"
-                />
-                <FormControlLabel
-                  value="Hayır"
-                  control={<Radio />}
-                  label="Hayır"
-                />
-              </RadioGroup>
-            </FormControl>
-
-            <FormControl component="fieldset">
               <FormLabel component="legend">Takas Yapılır</FormLabel>
               <RadioGroup
                 row

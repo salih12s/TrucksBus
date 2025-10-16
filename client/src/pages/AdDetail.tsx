@@ -558,6 +558,30 @@ const AdDetail: React.FC = () => {
       TripComputer: "Seyir Bilgisayarı",
       WindDeflector: "Rüzgar Deflektörü",
       FlexibleReadingLight: "Esnek Okuma Lambası",
+      // Oto Kurtarıcı Özellikleri
+      hidrolikDireksiyon: "Hidrolik Direksiyon",
+      havaYastigi: "Hava Yastığı",
+      tepeLambasi: "Tepe Lambası",
+      takograf: "Takograf",
+      havaliFreni: "Havalı Freni",
+      motorFreni: "Motor Freni",
+      merkeziKilit: "Merkezi Kilit",
+      vinc: "Vinç",
+      kaldirmaPlatformu: "Kaldırma Platformu",
+      hidrolikSistem: "Hidrolik Sistem",
+      uzaktanKumanda: "Uzaktan Kumanda",
+      // Çekici Ekipmanları
+      kayarPlatform: "Kayar Platform",
+      palet: "Palet",
+      rampa: "Rampa",
+      makara: "Makara",
+      ahtapotVinc: "Ahtapot Vinç",
+      gozluk: "Gözlük",
+      hiUp: "Hi-Up",
+      // Ek Ekipmanlar
+      pistonAyak: "Piston Ayak",
+      takoz: "Takoz",
+      sabitlemeHalati: "Sabitleme Halatı",
     };
 
     // Check if we have a direct Turkish translation
@@ -902,31 +926,40 @@ const AdDetail: React.FC = () => {
                 <strong>Kategori:</strong>{" "}
                 {ad.category?.name || "Minibüs & Midibüs"}
               </Box>
+
+              {/* Marka gösterimi - Dorse, Oto Kurtarıcı ve diğer kategoriler için */}
               <Box sx={{ fontSize: "14px", color: "#666" }}>
                 <strong>
                   {ad.category?.name?.toLowerCase() === "dorse"
                     ? "Dorse Markası:"
+                    : ad.category?.name?.includes("Oto Kurtarıcı")
+                    ? "Araç Markası:"
                     : "Marka:"}
                 </strong>{" "}
                 {ad.category?.name?.toLowerCase() === "dorse"
                   ? (ad.customFields?.dorseBrand as string) || "Belirtilmemiş"
-                  : ad.category?.id === 9
+                  : ad.category?.name?.includes("Oto Kurtarıcı")
                   ? (ad.customFields?.vehicleBrandName as string) ||
-                    ad.brand?.name ||
                     "Belirtilmemiş"
                   : ad.brand?.name || "Volkswagen"}
               </Box>
-              {/* Model ve Variant bilgileri sadece Dorse kategorisi DIŞINDA gösterilir */}
-              {ad.category?.name?.toLowerCase() !== "dorse" && (
-                <>
-                  <Box sx={{ fontSize: "14px", color: "#666" }}>
-                    <strong>Model:</strong> {ad.model?.name || "T Serisi"}
-                  </Box>
-                  <Box sx={{ fontSize: "14px", color: "#666" }}>
-                    <strong>Variant:</strong> {ad.variant?.name || "T5"}
-                  </Box>
-                </>
-              )}
+
+              {/* Tipi ve Variant bilgileri sadece Dorse ve Oto Kurtarıcı kategorisi DIŞINDA gösterilir */}
+              {ad.category?.name?.toLowerCase() !== "dorse" &&
+                !ad.category?.name?.includes("Oto Kurtarıcı") && (
+                  <>
+                    {ad.model?.name && (
+                      <Box sx={{ fontSize: "14px", color: "#666" }}>
+                        <strong>Tipi:</strong> {ad.model.name}
+                      </Box>
+                    )}
+                    {ad.variant?.name && (
+                      <Box sx={{ fontSize: "14px", color: "#666" }}>
+                        <strong>Variant:</strong> {ad.variant.name}
+                      </Box>
+                    )}
+                  </>
+                )}
             </Box>
 
             {/* Main Title and Price */}
@@ -1220,20 +1253,15 @@ const AdDetail: React.FC = () => {
                             value: ad.viewCount ? `${ad.viewCount}` : null,
                           },
 
-                          // Marka Bilgisi (Oto Kurtarıcı için araç markası gösterilir, diğerleri için sistem markası)
-                          {
-                            label: "Marka",
-                            value:
-                              ad.category?.id === 9
-                                ? (ad.customFields
-                                    ?.vehicleBrandName as string) ||
-                                  "Tekli Araç"
-                                : ad.brand?.name || null,
-                          },
-
                           // Oto Kurtarıcı Özel Alanları (Category ID = 9)
                           ...(ad.category?.id === 9
                             ? [
+                                {
+                                  label: "Araç Markası",
+                                  value:
+                                    (ad.customFields
+                                      ?.vehicleBrandName as string) || null,
+                                },
                                 {
                                   label: "Motor Hacmi",
                                   value: ad.customFields?.engineVolume
@@ -1287,6 +1315,11 @@ const AdDetail: React.FC = () => {
                                     : ad.customFields?.platformWidth
                                     ? `${ad.customFields.platformWidth} m`
                                     : null,
+                                },
+                                {
+                                  label: "Maksimum Araç Kapasitesi",
+                                  value:
+                                    ad.customFields?.maxVehicleCapacity || null,
                                 },
                                 {
                                   label: "İstiab Haddi",
@@ -1344,10 +1377,6 @@ const AdDetail: React.FC = () => {
                           {
                             label: "Durum",
                             value: ad.customFields?.condition || null,
-                          },
-                          {
-                            label: "Renk",
-                            value: ad.customFields?.color || ad.color || null,
                           },
                           {
                             label: "Yakıt Tipi",
@@ -1470,64 +1499,82 @@ const AdDetail: React.FC = () => {
                                 : null,
                           },
 
-                          {
-                            label: "Hasar Kaydı",
-                            value: (() => {
-                              // Önce direkt ad objesi üzerinden kontrol et
-                              if (ad.hasAccidentRecord === true) {
-                                return "Var";
-                              } else if (ad.hasAccidentRecord === false) {
-                                return "Yok";
-                              }
+                          // Hasar ve Tramer Kaydı (KonteynerTasiyiciSasiGrubu formları hariç)
+                          ...(![
+                            "KilcikSasi",
+                            "DamperSasi",
+                            "TankerSasi",
+                            "PlatformSasi",
+                            "RomorkKonvantoru",
+                            "UzayabilirSasi",
+                          ].includes(ad.customFields?.subType as string)
+                            ? [
+                                {
+                                  label: "Hasar Kaydı",
+                                  value: (() => {
+                                    // Önce direkt ad objesi üzerinden kontrol et
+                                    if (ad.hasAccidentRecord === true) {
+                                      return "Var";
+                                    } else if (ad.hasAccidentRecord === false) {
+                                      return "Yok";
+                                    }
 
-                              // Çekici için damageRecord kontrol et
-                              if (ad.customFields?.damageRecord) {
-                                return ad.customFields.damageRecord === "evet"
-                                  ? "Var"
-                                  : "Yok";
-                              }
+                                    // Çekici için damageRecord kontrol et
+                                    if (ad.customFields?.damageRecord) {
+                                      return ad.customFields.damageRecord ===
+                                        "evet"
+                                        ? "Var"
+                                        : "Yok";
+                                    }
 
-                              // Fallback olarak customFields'tan kontrol et
-                              if (
-                                ad.customFields?.hasAccidentRecord === "evet" ||
-                                ad.customFields?.hasAccidentRecord === true
-                              ) {
-                                return "Var";
-                              } else if (
-                                ad.customFields?.hasAccidentRecord ===
-                                  "hayir" ||
-                                ad.customFields?.hasAccidentRecord === false
-                              ) {
-                                return "Yok";
-                              }
-                              return null;
-                            })(),
-                          },
-                          {
-                            label: "Tramer Kaydı",
-                            value: (() => {
-                              // Önce direkt ad objesi üzerinden kontrol et
-                              if (ad.hasTramerRecord === true) {
-                                return "Var";
-                              } else if (ad.hasTramerRecord === false) {
-                                return "Yok";
-                              }
+                                    // Fallback olarak customFields'tan kontrol et
+                                    if (
+                                      ad.customFields?.hasAccidentRecord ===
+                                        "evet" ||
+                                      ad.customFields?.hasAccidentRecord ===
+                                        true
+                                    ) {
+                                      return "Var";
+                                    } else if (
+                                      ad.customFields?.hasAccidentRecord ===
+                                        "hayir" ||
+                                      ad.customFields?.hasAccidentRecord ===
+                                        false
+                                    ) {
+                                      return "Yok";
+                                    }
+                                    return null;
+                                  })(),
+                                },
+                                {
+                                  label: "Tramer Kaydı",
+                                  value: (() => {
+                                    // Önce direkt ad objesi üzerinden kontrol et
+                                    if (ad.hasTramerRecord === true) {
+                                      return "Var";
+                                    } else if (ad.hasTramerRecord === false) {
+                                      return "Yok";
+                                    }
 
-                              // Fallback olarak customFields'tan kontrol et
-                              if (
-                                ad.customFields?.hasTramerRecord === "evet" ||
-                                ad.customFields?.hasTramerRecord === true
-                              ) {
-                                return "Var";
-                              } else if (
-                                ad.customFields?.hasTramerRecord === "hayir" ||
-                                ad.customFields?.hasTramerRecord === false
-                              ) {
-                                return "Yok";
-                              }
-                              return null;
-                            })(),
-                          },
+                                    // Fallback olarak customFields'tan kontrol et
+                                    if (
+                                      ad.customFields?.hasTramerRecord ===
+                                        "evet" ||
+                                      ad.customFields?.hasTramerRecord === true
+                                    ) {
+                                      return "Var";
+                                    } else if (
+                                      ad.customFields?.hasTramerRecord ===
+                                        "hayir" ||
+                                      ad.customFields?.hasTramerRecord === false
+                                    ) {
+                                      return "Yok";
+                                    }
+                                    return null;
+                                  })(),
+                                },
+                              ]
+                            : []),
 
                           // Kamyon Römork Özel Alanları
                           {
@@ -1573,16 +1620,6 @@ const AdDetail: React.FC = () => {
                             value: ad.customFields?.gozSayisi
                               ? `${ad.customFields.gozSayisi} adet`
                               : null,
-                          },
-                          {
-                            label: "Lastik Durumu",
-                            value: ad.customFields?.lastikDurumu
-                              ? `${ad.customFields.lastikDurumu}%`
-                              : null,
-                          },
-                          {
-                            label: "Renk",
-                            value: ad.customFields?.renk || null,
                           },
                           {
                             label: "Soğutucu Durumu",
@@ -1664,10 +1701,6 @@ const AdDetail: React.FC = () => {
                               ? `${ad.customFields.fuelCapacity} L`
                               : null,
                           },
-                          {
-                            label: "Lastik Durumu",
-                            value: ad.customFields?.tireCondition || null,
-                          },
 
                           // Oto Kurtarıcı Tekli Araç Özel Alanları
                           {
@@ -1719,10 +1752,6 @@ const AdDetail: React.FC = () => {
                               null,
                           },
 
-                          {
-                            label: "Yük Kapasitesi",
-                            value: ad.customFields?.loadCapacity || null,
-                          },
                           {
                             label: "Üst Yapı",
                             value: ad.customFields?.superstructure || null,
@@ -1804,109 +1833,7 @@ const AdDetail: React.FC = () => {
                             value: ad.customFields?.silobasTuru || null,
                           },
 
-                          // Oto Kurtarıcı/Taşıyıcı Özel Alanları
-                          {
-                            label: "Çekici Ekipmanı",
-                            value: ad.customFields?.cekiciEkipmani
-                              ? (() => {
-                                  try {
-                                    const equipment =
-                                      typeof ad.customFields.cekiciEkipmani ===
-                                      "string"
-                                        ? JSON.parse(
-                                            ad.customFields.cekiciEkipmani
-                                          )
-                                        : ad.customFields.cekiciEkipmani;
-
-                                    if (
-                                      typeof equipment === "object" &&
-                                      equipment !== null
-                                    ) {
-                                      const equipmentList = Object.entries(
-                                        equipment
-                                      )
-                                        .filter(([, value]) => value === true)
-                                        .map(([key]) => {
-                                          // Convert camelCase to readable text
-                                          const readableMap: {
-                                            [key: string]: string;
-                                          } = {
-                                            kayarPlatform: "Kayar Platform",
-                                            palet: "Palet",
-                                            rampa: "Rampa",
-                                            makara: "Makara",
-                                            vinc: "Vinç",
-                                            ahtapotVinc: "Ahtapot Vinç",
-                                            gozluk: "Gözlük",
-                                            hiUp: "Hi-Up",
-                                          };
-                                          return readableMap[key] || key;
-                                        });
-                                      return equipmentList.length > 0
-                                        ? equipmentList.join(", ")
-                                        : null;
-                                    }
-                                    return null;
-                                  } catch {
-                                    return null;
-                                  }
-                                })()
-                              : null,
-                          },
-                          {
-                            label: "Ek Ekipmanlar",
-                            value: ad.customFields?.ekEkipmanlar
-                              ? (() => {
-                                  try {
-                                    const equipment =
-                                      typeof ad.customFields.ekEkipmanlar ===
-                                      "string"
-                                        ? JSON.parse(
-                                            ad.customFields.ekEkipmanlar
-                                          )
-                                        : ad.customFields.ekEkipmanlar;
-
-                                    if (
-                                      typeof equipment === "object" &&
-                                      equipment !== null
-                                    ) {
-                                      const equipmentList = Object.entries(
-                                        equipment
-                                      )
-                                        .filter(([, value]) => value === true)
-                                        .map(([key]) => {
-                                          const readableMap: {
-                                            [key: string]: string;
-                                          } = {
-                                            pistonAyak: "Piston Ayak",
-                                            takoz: "Takoz",
-                                            sabitlemeHalati: "Sabitleme Halatı",
-                                          };
-                                          return readableMap[key] || key;
-                                        });
-                                      return equipmentList.length > 0
-                                        ? equipmentList.join(", ")
-                                        : null;
-                                    }
-                                    return null;
-                                  } catch {
-                                    return null;
-                                  }
-                                })()
-                              : null,
-                          },
-
                           // Şasi/Römork Genel Özellikleri
-
-                          // Dorse Markası (sadece dorse kategorisi için)
-                          ...(ad.category?.name?.toLowerCase() === "dorse"
-                            ? [
-                                {
-                                  label: "Dorse Markası",
-                                  value: ad.customFields?.dorseBrand || null,
-                                },
-                              ]
-                            : []),
 
                           // Kuruyük Özel Alanları
                           {
@@ -1964,32 +1891,6 @@ const AdDetail: React.FC = () => {
 
                           // Diğer Bilgiler
                           {
-                            label: "Garanti",
-                            value:
-                              ad.customFields?.hasWarranty === true
-                                ? "Var"
-                                : ad.customFields?.hasWarranty === false
-                                ? "Yok"
-                                : ad.customFields?.warranty === "true"
-                                ? "Var"
-                                : ad.customFields?.warranty === "false"
-                                ? "Yok"
-                                : null,
-                          },
-                          {
-                            label: "Pazarlık",
-                            value:
-                              ad.customFields?.isNegotiable === true
-                                ? "Yapılabilir"
-                                : ad.customFields?.isNegotiable === false
-                                ? "Yapılamaz"
-                                : ad.customFields?.negotiable === "true"
-                                ? "Yapılabilir"
-                                : ad.customFields?.negotiable === "false"
-                                ? "Yapılamaz"
-                                : null,
-                          },
-                          {
                             label: "Takas",
                             value: (() => {
                               // Önce takasli field'ını kontrol et (Tanker vb için)
@@ -2020,6 +1921,283 @@ const AdDetail: React.FC = () => {
                             })(),
                           },
                           { label: "Hasar Durumu", value: ad.damage || null },
+
+                          // KonteynerTasiyiciSasiGrubu - Kılçık Şasi Özel Alanları
+                          ...(ad.customFields?.subType === "KilcikSasi"
+                            ? [
+                                {
+                                  label: "Form Tipi",
+                                  value: "Kılçık Şasi",
+                                },
+                                {
+                                  label: "Dorse Markası",
+                                  value: ad.customFields?.dorseBrand || null,
+                                },
+                                {
+                                  label: "Aks Sayısı",
+                                  value: ad.customFields?.axleCount
+                                    ? `${ad.customFields.axleCount} Aks`
+                                    : null,
+                                },
+                                {
+                                  label: "Yük Kapasitesi",
+                                  value: ad.customFields?.loadCapacity
+                                    ? `${ad.customFields.loadCapacity} ton`
+                                    : null,
+                                },
+                                {
+                                  label: "Kanca Tipi",
+                                  value: ad.customFields?.hookType || null,
+                                },
+                                {
+                                  label: "Hidrolik Sistem",
+                                  value: ad.customFields?.hydraulicSystem
+                                    ? ad.customFields.hydraulicSystem === "evet"
+                                      ? "Var"
+                                      : "Yok"
+                                    : null,
+                                },
+                                {
+                                  label: "Lastik Durumu",
+                                  value: ad.customFields?.tireCondition
+                                    ? `%${ad.customFields.tireCondition}`
+                                    : null,
+                                },
+                              ]
+                            : []),
+
+                          // KonteynerTasiyiciSasiGrubu - Damper Şasi Özel Alanları
+                          ...(ad.customFields?.subType === "DamperSasi"
+                            ? [
+                                {
+                                  label: "Form Tipi",
+                                  value: "Damper Şasi",
+                                },
+                                {
+                                  label: "Dorse Markası",
+                                  value: ad.customFields?.dorseBrand || null,
+                                },
+                                {
+                                  label: "Aks Sayısı",
+                                  value: ad.customFields?.axleCount
+                                    ? `${ad.customFields.axleCount} Aks`
+                                    : null,
+                                },
+                                {
+                                  label: "Yük Kapasitesi",
+                                  value: ad.customFields?.loadCapacity
+                                    ? `${ad.customFields.loadCapacity} ton`
+                                    : null,
+                                },
+                                {
+                                  label: "Damper Kapasitesi",
+                                  value: ad.customFields?.damperCapacity
+                                    ? `${ad.customFields.damperCapacity} m³`
+                                    : null,
+                                },
+                                {
+                                  label: "Hidrolik Sistem",
+                                  value: ad.customFields?.hydraulicSystem
+                                    ? ad.customFields.hydraulicSystem === "evet"
+                                      ? "Var"
+                                      : "Yok"
+                                    : null,
+                                },
+                                {
+                                  label: "Lastik Durumu",
+                                  value: ad.customFields?.tireCondition
+                                    ? `%${ad.customFields.tireCondition}`
+                                    : null,
+                                },
+                              ]
+                            : []),
+
+                          // KonteynerTasiyiciSasiGrubu - Tanker Şasi Özel Alanları
+                          ...(ad.customFields?.subType === "TankerSasi"
+                            ? [
+                                {
+                                  label: "Form Tipi",
+                                  value: "Tanker Şasi",
+                                },
+                                {
+                                  label: "Dorse Markası",
+                                  value: ad.customFields?.dorseBrand || null,
+                                },
+                                {
+                                  label: "Aks Sayısı",
+                                  value: ad.customFields?.axleCount
+                                    ? `${ad.customFields.axleCount} Aks`
+                                    : null,
+                                },
+                                {
+                                  label: "Yük Kapasitesi",
+                                  value: ad.customFields?.loadCapacity
+                                    ? `${ad.customFields.loadCapacity} ton`
+                                    : null,
+                                },
+                                {
+                                  label: "Tank Kapasitesi",
+                                  value: ad.customFields?.tankCapacity
+                                    ? `${ad.customFields.tankCapacity} L`
+                                    : null,
+                                },
+                                {
+                                  label: "Tank Malzemesi",
+                                  value: ad.customFields?.tankMaterial || null,
+                                },
+                                {
+                                  label: "Hidrolik Sistem",
+                                  value: ad.customFields?.hydraulicSystem
+                                    ? ad.customFields.hydraulicSystem === "evet"
+                                      ? "Var"
+                                      : "Yok"
+                                    : null,
+                                },
+                                {
+                                  label: "Lastik Durumu",
+                                  value: ad.customFields?.tireCondition
+                                    ? `%${ad.customFields.tireCondition}`
+                                    : null,
+                                },
+                              ]
+                            : []),
+
+                          // KonteynerTasiyiciSasiGrubu - Platform Şasi Özel Alanları
+                          ...(ad.customFields?.subType === "PlatformSasi"
+                            ? [
+                                {
+                                  label: "Form Tipi",
+                                  value: "Platform Şasi",
+                                },
+                                {
+                                  label: "Dorse Markası",
+                                  value: ad.customFields?.dorseBrand || null,
+                                },
+                                {
+                                  label: "Aks Sayısı",
+                                  value: ad.customFields?.axleCount
+                                    ? `${ad.customFields.axleCount} Aks`
+                                    : null,
+                                },
+                                {
+                                  label: "Yük Kapasitesi",
+                                  value: ad.customFields?.loadCapacity
+                                    ? `${ad.customFields.loadCapacity} ton`
+                                    : null,
+                                },
+                                {
+                                  label: "Platform Uzunluğu",
+                                  value: ad.customFields?.platformLength
+                                    ? `${ad.customFields.platformLength} m`
+                                    : null,
+                                },
+                                {
+                                  label: "Platform Genişliği",
+                                  value: ad.customFields?.platformWidth
+                                    ? `${ad.customFields.platformWidth} m`
+                                    : null,
+                                },
+                                {
+                                  label: "Hidrolik Sistem",
+                                  value: ad.customFields?.hydraulicSystem
+                                    ? ad.customFields.hydraulicSystem === "evet"
+                                      ? "Var"
+                                      : "Yok"
+                                    : null,
+                                },
+                                {
+                                  label: "Lastik Durumu",
+                                  value: ad.customFields?.tireCondition
+                                    ? `%${ad.customFields.tireCondition}`
+                                    : null,
+                                },
+                              ]
+                            : []),
+
+                          // KonteynerTasiyiciSasiGrubu - Römork Konvantörü Özel Alanları
+                          ...(ad.customFields?.subType === "RomorkKonvantoru"
+                            ? [
+                                {
+                                  label: "Form Tipi",
+                                  value: "Römork Konvantörü",
+                                },
+                                {
+                                  label: "Dorse Markası",
+                                  value: ad.customFields?.dorseBrand || null,
+                                },
+                                {
+                                  label: "Aks Sayısı",
+                                  value: ad.customFields?.axleCount
+                                    ? `${ad.customFields.axleCount} Aks`
+                                    : null,
+                                },
+                                {
+                                  label: "Yük Kapasitesi",
+                                  value: ad.customFields?.loadCapacity
+                                    ? `${ad.customFields.loadCapacity} ton`
+                                    : null,
+                                },
+                                {
+                                  label: "Konveyör Uzunluğu",
+                                  value: ad.customFields?.conveyorLength
+                                    ? `${ad.customFields.conveyorLength} m`
+                                    : null,
+                                },
+                                {
+                                  label: "Konveyör Tipi",
+                                  value: ad.customFields?.conveyorType || null,
+                                },
+                                {
+                                  label: "Lastik Durumu",
+                                  value: ad.customFields?.tireCondition
+                                    ? `%${ad.customFields.tireCondition}`
+                                    : null,
+                                },
+                              ]
+                            : []),
+
+                          // KonteynerTasiyiciSasiGrubu - Uzayabilir Şasi Özel Alanları
+                          ...(ad.customFields?.subType === "UzayabilirSasi"
+                            ? [
+                                {
+                                  label: "Form Tipi",
+                                  value: "Uzayabilir Şasi",
+                                },
+                                {
+                                  label: "Dorse Markası",
+                                  value: ad.customFields?.dorseBrand || null,
+                                },
+                                {
+                                  label: "Aks Sayısı",
+                                  value: ad.customFields?.axleCount
+                                    ? `${ad.customFields.axleCount} Aks`
+                                    : null,
+                                },
+                                {
+                                  label: "Yük Kapasitesi",
+                                  value: ad.customFields?.loadCapacity
+                                    ? `${ad.customFields.loadCapacity} ton`
+                                    : null,
+                                },
+                                {
+                                  label: "Uzatma Uzunluğu",
+                                  value: ad.customFields?.extensionLength
+                                    ? `${ad.customFields.extensionLength} m`
+                                    : null,
+                                },
+                                {
+                                  label: "Uzatma Sistemi",
+                                  value:
+                                    ad.customFields?.extensionSystem || null,
+                                },
+                                {
+                                  label: "Lastik Durumu",
+                                  value: ad.customFields?.tireCondition
+                                    ? `%${ad.customFields.tireCondition}`
+                                    : null,
+                                },
+                              ]
+                            : []),
 
                           // Dynamic fields removed for performance
                         ]
@@ -2745,6 +2923,43 @@ const AdDetail: React.FC = () => {
                           .map(([key]) => (
                             <Box
                               key={`ekekipman-${key}`}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                fontSize: "13px",
+                                color: "#333",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  color: "#4caf50",
+                                  fontWeight: "bold",
+                                  fontSize: "14px",
+                                }}
+                              >
+                                ✓
+                              </Box>
+                              {formatFeatureName(key)}
+                            </Box>
+                          ))}
+
+                      {/* Oto Kurtarıcı Detail Features (Çoklu Araç/Tekli Araç formları için) */}
+                      {ad.category?.id === 9 &&
+                        ad.customFields?.detailFeatures &&
+                        typeof ad.customFields.detailFeatures === "object" &&
+                        !ad.customFields?.cekiciEkipmani &&
+                        !ad.customFields?.ekEkipmanlar &&
+                        Object.entries(
+                          ad.customFields.detailFeatures as Record<
+                            string,
+                            boolean
+                          >
+                        )
+                          .filter(([, value]) => value === true)
+                          .map(([key]) => (
+                            <Box
+                              key={`otodetail-${key}`}
                               sx={{
                                 display: "flex",
                                 alignItems: "center",

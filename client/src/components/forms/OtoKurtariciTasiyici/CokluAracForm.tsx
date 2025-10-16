@@ -32,6 +32,32 @@ import {
 import { Header, Footer } from "../../layout";
 import apiClient from "../../../api/client";
 
+// Araç Markaları
+const VEHICLE_BRANDS = [
+  "Seçiniz",
+  "DAF",
+  "Mercedes",
+  "MAN",
+  "Volvo",
+  "Scania",
+  "BMC",
+  "Ford",
+  "Iveco",
+  "Renault",
+  "Mitsubishi",
+  "Hyundai",
+  "Isuzu",
+  "Otokar Atlas",
+  "Özdemirsan",
+  "Tirkon",
+  "Dodge",
+  "Fiat",
+  "Gazelle",
+  "Hino",
+  "Kia",
+  "Diğer",
+];
+
 interface City {
   id: number;
   name: string;
@@ -44,26 +70,6 @@ interface District {
   cityId: number;
 }
 
-interface Brand {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface Model {
-  id: number;
-  name: string;
-  slug: string;
-  brandId: number;
-}
-
-interface Variant {
-  id: number;
-  name: string;
-  slug: string;
-  modelId: number;
-}
-
 interface FormData {
   title: string;
   description: string;
@@ -72,9 +78,7 @@ interface FormData {
 
   // Brand/Model/Variant
   categoryId: string;
-  brandId: string;
-  modelId: string;
-  variantId: string;
+  vehicleBrandName: string;
 
   mileage: string;
   engineVolume: string;
@@ -122,23 +126,13 @@ const CokluAracForm: React.FC = () => {
   const [showcasePreview, setShowcasePreview] = useState<string | null>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
-  // Brand/Model/Variant states
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [models, setModels] = useState<Model[]>([]);
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [loadingBrands, setLoadingBrands] = useState(false);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [loadingVariants, setLoadingVariants] = useState(false);
-
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
     year: "",
     price: "",
     categoryId: "8", // Oto Kurtarıcı category ID
-    brandId: "",
-    modelId: "",
-    variantId: "",
+    vehicleBrandName: "Seçiniz",
     mileage: "",
     engineVolume: "",
     maxPower: "",
@@ -191,74 +185,6 @@ const CokluAracForm: React.FC = () => {
     { value: "evet", label: "Evet" },
     { value: "hayir", label: "Hayır" },
   ];
-
-  // Load brands on component mount
-  useEffect(() => {
-    const loadBrands = async () => {
-      console.log("🔄 Loading brands...");
-      setLoadingBrands(true);
-      try {
-        const response = await apiClient.get("/brands");
-        const brandsData = response.data as Brand[];
-        setBrands(brandsData);
-        console.log(`✅ ${brandsData.length} marka yüklendi`);
-      } catch (error) {
-        console.error("❌ Brands loading error:", error);
-      } finally {
-        setLoadingBrands(false);
-      }
-    };
-
-    loadBrands();
-  }, []);
-
-  // Load models when brand changes
-  useEffect(() => {
-    if (formData.brandId) {
-      const loadModels = async () => {
-        try {
-          setLoadingModels(true);
-          const response = await apiClient.get(
-            `/brands/${formData.brandId}/models`
-          );
-          setModels((response.data as Model[]) || []);
-        } catch (error) {
-          console.error("Error loading models:", error);
-        } finally {
-          setLoadingModels(false);
-        }
-      };
-
-      loadModels();
-    } else {
-      setModels([]);
-      setFormData((prev) => ({ ...prev, modelId: "", variantId: "" }));
-    }
-  }, [formData.brandId]);
-
-  // Load variants when model changes
-  useEffect(() => {
-    if (formData.modelId) {
-      const loadVariants = async () => {
-        try {
-          setLoadingVariants(true);
-          const response = await apiClient.get(
-            `/models/${formData.modelId}/variants`
-          );
-          setVariants((response.data as Variant[]) || []);
-        } catch (error) {
-          console.error("Error loading variants:", error);
-        } finally {
-          setLoadingVariants(false);
-        }
-      };
-
-      loadVariants();
-    } else {
-      setVariants([]);
-      setFormData((prev) => ({ ...prev, variantId: "" }));
-    }
-  }, [formData.modelId]);
 
   // Şehir ve ilçe yükleme
   useEffect(() => {
@@ -405,6 +331,11 @@ const CokluAracForm: React.FC = () => {
     setLoading(true);
 
     try {
+      console.log(
+        "📝 Form Data - vehicleBrandName:",
+        formData.vehicleBrandName
+      );
+
       const submitData = new FormData();
 
       // Temel bilgileri ekle (price ve mileage'ı parse ederek)
@@ -584,75 +515,30 @@ const CokluAracForm: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Marka ve Model Seçimi */}
+            {/* Araç Markası Seçimi */}
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Marka ve Model Seçimi
+                  Araç Markası
                 </Typography>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <FormControl fullWidth required>
-                    <InputLabel>Marka</InputLabel>
+                    <InputLabel>Araç Markası</InputLabel>
                     <Select
-                      value={formData.brandId}
-                      label="Marka"
+                      name="vehicleBrandName"
+                      value={formData.vehicleBrandName}
+                      label="Araç Markası"
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          brandId: e.target.value,
-                          modelId: "",
-                          variantId: "",
+                          vehicleBrandName: e.target.value,
                         })
                       }
-                      disabled={loadingBrands}
                     >
-                      {brands.map((brand) => (
-                        <MenuItem key={brand.id} value={brand.id.toString()}>
-                          {brand.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl fullWidth required disabled={!formData.brandId}>
-                    <InputLabel>Model</InputLabel>
-                    <Select
-                      value={formData.modelId}
-                      label="Model"
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          modelId: e.target.value,
-                          variantId: "",
-                        })
-                      }
-                      disabled={loadingModels || !formData.brandId}
-                    >
-                      {models.map((model) => (
-                        <MenuItem key={model.id} value={model.id.toString()}>
-                          {model.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl fullWidth required disabled={!formData.modelId}>
-                    <InputLabel>Varyant</InputLabel>
-                    <Select
-                      value={formData.variantId}
-                      label="Varyant"
-                      onChange={(e) =>
-                        setFormData({ ...formData, variantId: e.target.value })
-                      }
-                      disabled={loadingVariants || !formData.modelId}
-                    >
-                      {variants.map((variant) => (
-                        <MenuItem
-                          key={variant.id}
-                          value={variant.id.toString()}
-                        >
-                          {variant.name}
+                      {VEHICLE_BRANDS.map((brand) => (
+                        <MenuItem key={brand} value={brand}>
+                          {brand}
                         </MenuItem>
                       ))}
                     </Select>

@@ -110,22 +110,21 @@ const MyAds: React.FC = () => {
   };
 
   const handleDeleteAd = async (adId: number) => {
-    if (window.confirm("Bu ilanı silmek istediğinizden emin misiniz?")) {
-      try {
-        await deleteAd(adId.toString());
-        setAds(ads.filter((ad) => ad.id !== adId));
-        setSnackbar({
-          open: true,
-          message: "İlan başarıyla silindi",
-          severity: "success",
-        });
-      } catch {
-        setSnackbar({
-          open: true,
-          message: "İlan silinirken bir hata oluştu",
-          severity: "error",
-        });
-      }
+    // Direkt sil - alert yok
+    try {
+      await deleteAd(adId.toString());
+      setAds(ads.filter((ad) => ad.id !== adId));
+      setSnackbar({
+        open: true,
+        message: "İlan başarıyla silindi",
+        severity: "success",
+      });
+    } catch {
+      setSnackbar({
+        open: true,
+        message: "İlan silinirken bir hata oluştu",
+        severity: "error",
+      });
     }
   };
 

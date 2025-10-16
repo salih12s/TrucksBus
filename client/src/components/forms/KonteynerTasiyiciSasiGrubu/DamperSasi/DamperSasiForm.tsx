@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
 import {
   Box,
   Stepper,
@@ -24,6 +23,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { styled } from "@mui/material/styles";
 import Header from "../../../layout/Header";
 import apiClient from "../../../../api/client";
+import ConfirmationModal from "../../../modals/ConfirmationModal";
 
 // Damper Şasi Markaları (MainLayout'tan alındı)
 const DAMPER_SASI_BRANDS = [
@@ -145,29 +145,13 @@ interface FormData {
   uploadedImages: File[];
   showcaseImageIndex: number;
 
-  // İletişim ve fiyat bilgileri
+  // Fiyat ve konum bilgileri
   price: string;
-  priceType: string;
-  currency: string;
-  sellerPhone: string;
-  sellerName: string;
-  sellerEmail: string;
   city: string;
   district: string;
 }
 
-interface RootState {
-  auth: {
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      phone: string;
-    } | null;
-  };
-}
-
-const steps = ["İlan Detayları", "Fotoğraflar", "İletişim & Fiyat"];
+const steps = ["İlan Detayları", "Fotoğraflar", "Konum & Fiyat"];
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -184,18 +168,19 @@ const VisuallyHiddenInput = styled("input")({
 const DamperSasiForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = useSelector((state: RootState) => state.auth.user);
 
   // Seçilen marka, model, varyant bilgileri location.state'den gelir
   const selectedBrand = location.state?.brand;
   const selectedModel = location.state?.model;
   const selectedVariant = location.state?.variant;
+  const selectedCategory = location.state?.category;
 
   const [activeStep, setActiveStep] = useState(0);
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -216,11 +201,6 @@ const DamperSasiForm: React.FC = () => {
     uploadedImages: [],
     showcaseImageIndex: 0,
     price: "",
-    priceType: "Sabit",
-    currency: "TRY",
-    sellerPhone: user?.phone || "",
-    sellerName: user?.name || "",
-    sellerEmail: user?.email || "",
     city: "",
     district: "",
   });
@@ -230,7 +210,7 @@ const DamperSasiForm: React.FC = () => {
     const fetchCities = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get("/locations/cities");
+        const response = await apiClient.get("/cities");
         setCities(response.data as City[]);
       } catch (error) {
         console.error("Şehirler yüklenirken hata oluştu:", error);
@@ -257,7 +237,7 @@ const DamperSasiForm: React.FC = () => {
 
       try {
         const response = await apiClient.get(
-          `/locations/districts/${formData.city}`
+          `/cities/${formData.city}/districts`
         );
         setDistricts(response.data as District[]);
       } catch (error) {
@@ -383,22 +363,6 @@ const DamperSasiForm: React.FC = () => {
           });
           return false;
         }
-        if (!formData.sellerName.trim()) {
-          setSnackbar({
-            open: true,
-            message: "Satıcı adı zorunludur",
-            severity: "error",
-          });
-          return false;
-        }
-        if (!formData.sellerPhone.trim()) {
-          setSnackbar({
-            open: true,
-            message: "Telefon numarası zorunludur",
-            severity: "error",
-          });
-          return false;
-        }
         if (!formData.city) {
           setSnackbar({
             open: true,
@@ -423,11 +387,11 @@ const DamperSasiForm: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!validateStep(2)) return;
+    setConfirmModalOpen(true);
+  };
 
-    const confirmed = window.confirm(
-      "İlanınızı yayınlamak istediğinizden emin misiniz?"
-    );
-    if (!confirmed) return;
+  const handleConfirmedSubmit = async () => {
+    setConfirmModalOpen(false);
 
     try {
       setSubmitLoading(true);
@@ -465,18 +429,21 @@ const DamperSasiForm: React.FC = () => {
       }
 
       // Kategori bilgisi
-      submitData.append("category", "KonteynerTasiyiciSasiGrubu");
+      if (selectedCategory?.slug) {
+        submitData.append("category", selectedCategory.slug);
+      } else {
+        const pathParts = location.pathname.split("/");
+        const categoryIndex = pathParts.indexOf("categories");
+        if (categoryIndex !== -1 && pathParts[categoryIndex + 1]) {
+          submitData.append("category", pathParts[categoryIndex + 1]);
+        }
+      }
       submitData.append("subType", "DamperSasi");
 
-      // Fiyat ve iletişim bilgileri
-      submitData.append("price", formData.price);
-      submitData.append("priceType", formData.priceType);
-      submitData.append("currency", formData.currency);
-      submitData.append("sellerName", formData.sellerName);
-      submitData.append("sellerPhone", formData.sellerPhone);
-      submitData.append("sellerEmail", formData.sellerEmail);
-      submitData.append("city", formData.city);
-      submitData.append("district", formData.district);
+      // Fiyat ve konum bilgileri
+      submitData.append("price", formData.price.replace(/\./g, ""));
+      submitData.append("cityId", formData.city);
+      submitData.append("districtId", formData.district);
 
       // Fotoğraflar
       formData.uploadedImages.forEach((file, index) => {
@@ -486,7 +453,7 @@ const DamperSasiForm: React.FC = () => {
         }
       });
 
-      const response = await apiClient.post("/listings", submitData, {
+      const response = await apiClient.post("/ads", submitData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -622,21 +589,17 @@ const DamperSasiForm: React.FC = () => {
               </Select>
             </FormControl>
 
-            <FormControl fullWidth>
-              <InputLabel>Lastik Durumu</InputLabel>
-              <Select
-                name="tireCondition"
-                value={formData.tireCondition}
-                onChange={handleSelectChange}
-                label="Lastik Durumu"
-              >
-                <MenuItem value="Yeni">Yeni</MenuItem>
-                <MenuItem value="Çok İyi">Çok İyi</MenuItem>
-                <MenuItem value="İyi">İyi</MenuItem>
-                <MenuItem value="Orta">Orta</MenuItem>
-                <MenuItem value="Değişmeli">Değişmeli</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              fullWidth
+              label="Lastik Durumu (%)"
+              name="tireCondition"
+              type="number"
+              value={formData.tireCondition}
+              onChange={handleInputChange}
+              placeholder="Örn: 80"
+              helperText="Lastik durumunu yüzde olarak girin (0-100)"
+              inputProps={{ min: 0, max: 100 }}
+            />
 
             <FormControl fullWidth>
               <InputLabel>Takas</InputLabel>
@@ -751,32 +714,7 @@ const DamperSasiForm: React.FC = () => {
       case 2:
         return (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <Typography variant="h6">İletişim Bilgileri</Typography>
-
-            <TextField
-              fullWidth
-              label="Satıcı Adı *"
-              name="sellerName"
-              value={formData.sellerName}
-              onChange={handleInputChange}
-            />
-
-            <TextField
-              fullWidth
-              label="Telefon Numarası *"
-              name="sellerPhone"
-              value={formData.sellerPhone}
-              onChange={handleInputChange}
-            />
-
-            <TextField
-              fullWidth
-              label="E-posta"
-              name="sellerEmail"
-              type="email"
-              value={formData.sellerEmail}
-              onChange={handleInputChange}
-            />
+            <Typography variant="h6">Konum Bilgileri</Typography>
 
             <Box sx={{ display: "flex", gap: 2 }}>
               <FormControl fullWidth>
@@ -814,45 +752,23 @@ const DamperSasiForm: React.FC = () => {
               </FormControl>
             </Box>
 
-            <Typography variant="h6">Fiyat Bilgileri</Typography>
+            <Typography variant="h6" sx={{ mt: 2 }}>
+              Fiyat Bilgileri
+            </Typography>
 
-            <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-              <TextField
-                fullWidth
-                label="Fiyat *"
-                name="price"
-                type="number"
-                value={formData.price}
-                onChange={handleInputChange}
-              />
-
-              <FormControl sx={{ minWidth: 120 }}>
-                <InputLabel>Para Birimi</InputLabel>
-                <Select
-                  name="currency"
-                  value={formData.currency}
-                  onChange={handleSelectChange}
-                  label="Para Birimi"
-                >
-                  <MenuItem value="TRY">TRY</MenuItem>
-                  <MenuItem value="USD">USD</MenuItem>
-                  <MenuItem value="EUR">EUR</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
-            <FormControl fullWidth>
-              <InputLabel>Fiyat Tipi</InputLabel>
-              <Select
-                name="priceType"
-                value={formData.priceType}
-                onChange={handleSelectChange}
-                label="Fiyat Tipi"
-              >
-                <MenuItem value="Sabit">Sabit Fiyat</MenuItem>
-                <MenuItem value="Pazarlık">Pazarlığa Açık</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              fullWidth
+              label="Fiyat (TL) *"
+              name="price"
+              value={formData.price}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                const formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                setFormData({ ...formData, price: formatted });
+              }}
+              placeholder="Örn: 1.500.000"
+              helperText="Fiyatı Türk Lirası (TL) cinsinden giriniz"
+            />
           </Box>
         );
 
@@ -927,6 +843,16 @@ const DamperSasiForm: React.FC = () => {
         >
           <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
         </Snackbar>
+
+        <ConfirmationModal
+          open={confirmModalOpen}
+          title="İlanı Yayınla"
+          message="İlanınızı yayınlamak istediğinizden emin misiniz? Yayınlandıktan sonra inceleme sürecine girecektir."
+          onConfirm={handleConfirmedSubmit}
+          onCancel={() => setConfirmModalOpen(false)}
+          confirmText="Yayınla"
+          cancelText="İptal"
+        />
       </Box>
     </>
   );

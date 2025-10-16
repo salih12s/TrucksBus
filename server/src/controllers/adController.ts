@@ -247,6 +247,7 @@ export const getAds = async (req: Request, res: Response) => {
           c.name as city_name,
           d.name as district_name,
           b.name as brand_name,
+          cat.id as category_id,
           cat.name as category_name,
           img.image_url as image_url,
           u.id as user_id,
@@ -296,7 +297,9 @@ export const getAds = async (req: Request, res: Response) => {
           city: ad.city_name ? { name: ad.city_name } : null,
           district: ad.district_name ? { name: ad.district_name } : null,
           brand: ad.brand_name ? { name: ad.brand_name } : null,
-          category: ad.category_name ? { name: ad.category_name } : null,
+          category: ad.category_name
+            ? { id: ad.category_id, name: ad.category_name }
+            : null,
           images: ad.image_url ? [{ imageUrl: ad.image_url }] : [],
           user: {
             id: ad.user_id,
@@ -456,7 +459,7 @@ export const getAdById = async (req: Request, res: Response) => {
         a.roof_type, a.seat_count, a.transmission_type,
         u.id as user_id, u.first_name, u.last_name, u.company_name, 
         u.phone, u.email, u.user_type, u.created_at as user_created_at, u.is_verified,
-        c.name as category_name, b.name as brand_name, m.name as model_name, 
+        c.id as category_id, c.name as category_name, b.name as brand_name, m.name as model_name, 
         v.name as variant_name, city.name as city_name, dist.name as district_name,
         COALESCE((
           SELECT json_agg(
@@ -585,7 +588,9 @@ export const getAdById = async (req: Request, res: Response) => {
           "Bilinmeyen Satıcı",
         totalAds: ad.user_total_ads || 0,
       },
-      category: ad.category_name ? { name: ad.category_name } : null,
+      category: ad.category_name
+        ? { id: ad.category_id, name: ad.category_name }
+        : null,
       brand: ad.brand_name ? { name: ad.brand_name } : null,
       model: ad.model_name ? { name: ad.model_name } : null,
       variant: ad.variant_name ? { name: ad.variant_name } : null,
@@ -767,6 +772,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       productionYear,
       category,
       subcategory,
+      subType, // KonteynerTasiyiciSasiGrubu forms send subType
       variant_id,
       city,
       district,
@@ -831,13 +837,14 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       hasTramerRecord: hasTramerRecord === "evet" || hasTramerRecord === "true",
     };
 
-    // Handle new format (tenteli forms and Kuruyük forms)
-    if (category && subcategory) {
+    // Handle new format (tenteli forms and Kuruyük forms and KonteynerTasiyiciSasiGrubu forms)
+    if (category && (subcategory || subType)) {
+      const actualSubcategory = subcategory || subType;
       console.log(
         "🎯 Using NEW FORMAT branch - category:",
         category,
         "subcategory:",
-        subcategory
+        actualSubcategory
       );
       console.log("🏷️ Brand/Model/Variant IDs:", {
         brandId,
@@ -876,12 +883,30 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
         : productionYear
         ? parseInt(productionYear)
         : null;
-      adData.location = `${city}, ${district}`;
+
+      // Construct location string from cityId and districtId
+      let locationString = "";
+      if (cityId && districtId) {
+        const cityRecord = await prisma.city.findUnique({
+          where: { id: parseInt(cityId) },
+        });
+        const districtRecord = await prisma.district.findUnique({
+          where: { id: parseInt(districtId) },
+        });
+        if (cityRecord && districtRecord) {
+          locationString = `${cityRecord.name}, ${districtRecord.name}`;
+        }
+      } else if (city && district) {
+        locationString = `${city}, ${district}`;
+      }
+
+      adData.location = locationString;
       adData.cityId = cityId ? parseInt(cityId) : null;
       adData.districtId = districtId ? parseInt(districtId) : null;
 
       // Add seller contact info to custom fields for now
       adData.customFields = {
+        subType: actualSubcategory, // Store subType for filtering
         sellerName: seller_name || sellerName,
         sellerPhone: seller_phone || phone,
         sellerEmail: seller_email || email,
@@ -912,6 +937,9 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
         hacim: hacim || null,
         gozSayisi: gozSayisi || null,
         renk: renk || null,
+
+        // Store all form data from KonteynerTasiyiciSasiGrubu
+        ...req.body,
       };
     }
     // Handle legacy format and direct Kuruyük submissions
@@ -2364,6 +2392,7 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       loadCapacity,
       cabin,
       tireCondition,
+      lastikDurumu,
       superstructure,
       exchange,
       hasAccidentRecord,
@@ -2448,7 +2477,8 @@ export const createKamyonAd = async (req: Request, res: Response) => {
           drivetrain: drivetrain || null,
           loadCapacity: loadCapacity || null,
           cabin: cabin || null,
-          tireCondition: tireCondition || null,
+          tireCondition: tireCondition || lastikDurumu || null,
+          lastikDurumu: lastikDurumu || tireCondition || null,
           superstructure: superstructure || null,
           exchange: exchange || null,
           hasAccidentRecord: hasAccidentRecord || null,
@@ -3141,6 +3171,15 @@ export const createDorseAd = async (req: Request, res: Response) => {
         dorseBrand,
       }
     );
+
+    // Ensure categoryId is a valid number
+    if (!categoryId || isNaN(parseInt(categoryId))) {
+      console.error("❌ Invalid categoryId:", categoryId);
+      return res.status(400).json({
+        error: "Geçersiz kategori ID'si",
+        details: `categoryId: ${categoryId}`,
+      });
+    }
 
     const ad = await prisma.ad.create({
       data: {
@@ -4020,6 +4059,8 @@ export const createOtoKurtariciCokluAd = async (
       address,
       detailedInfo,
       features,
+      vehicleBrandName,
+      engineVolume,
     } = req.body;
 
     // Fuel type enum mapping
@@ -4073,6 +4114,8 @@ export const createOtoKurtariciCokluAd = async (
       undefined // variantId
     );
 
+    console.log("� Çoklu Araç - Seçilen araç markası:", vehicleBrandName);
+
     const ad = await prisma.ad.create({
       data: {
         userId,
@@ -4101,10 +4144,21 @@ export const createOtoKurtariciCokluAd = async (
         address,
         detailedInfo,
         customFields: {
+          vehicleBrandName: vehicleBrandName || null,
+          engineVolume: engineVolume || null,
+          maxPower: maxPower || null,
+          maxTorque: maxTorque || null,
+          fuelType: fuelType || null,
+          platformLength: platformLength || null,
+          platformWidth: platformWidth || null,
+          maxVehicleCapacity: maxVehicleCapacity || null,
+          loadCapacity: loadCapacity || null,
+          plateNumber: plateNumber || null,
           exchange: exchange || null,
           address: address || null,
           detailedInfo: detailedInfo || null,
           features: featuresJson || null,
+          detailFeatures: featuresJson || null,
           cityId: cityId ? parseInt(cityId) : null,
           districtId: districtId ? parseInt(districtId) : null,
         },
@@ -4117,6 +4171,11 @@ export const createOtoKurtariciCokluAd = async (
     });
 
     console.log("✅ Oto Kurtarıcı Çoklu ilanı oluşturuldu, ID:", ad.id);
+    console.log(
+      "🚗 Seçilen araç markası customFields'a kaydedildi:",
+      vehicleBrandName
+    );
+    console.log("📊 CustomFields içeriği:", ad.customFields);
 
     // Resim yükleme işlemi (Base64 formatında)
     const files = req.files as any;

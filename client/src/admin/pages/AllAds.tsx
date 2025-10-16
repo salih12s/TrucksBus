@@ -43,6 +43,12 @@ interface Ad {
   price: number;
   createdAt: string;
   viewCount: number;
+  customFields?: {
+    dorseBrand?: string;
+    sellerPhone?: string;
+    phone?: string;
+    [key: string]: unknown;
+  };
   user: {
     id: number;
     firstName: string;
@@ -298,127 +304,324 @@ const AllAds: React.FC = () => {
 
       {/* Ads Table */}
       <Paper sx={{ overflow: "hidden" }}>
-        <TableContainer>
-          <Table stickyHeader>
+        <TableContainer sx={{ maxHeight: "calc(100vh - 300px)" }}>
+          <Table stickyHeader size="small" sx={{ tableLayout: "fixed" }}>
             <TableHead>
               <TableRow>
-                <TableCell>İlan Başlığı</TableCell>
-                <TableCell>Kategori</TableCell>
-                <TableCell>Marka/Model</TableCell>
-                <TableCell>Satıcı</TableCell>
-                <TableCell>Durum</TableCell>
-                <TableCell>Fiyat</TableCell>
-                <TableCell>Görüntüleme</TableCell>
-                <TableCell>Konum</TableCell>
-                <TableCell>Tarih</TableCell>
-                <TableCell>İşlemler</TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "40px",
+                  }}
+                >
+                  ID
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "150px",
+                  }}
+                >
+                  İlan
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "80px",
+                  }}
+                >
+                  Kategori
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "100px",
+                  }}
+                >
+                  Marka
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "120px",
+                  }}
+                >
+                  Satıcı
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "130px",
+                  }}
+                >
+                  İletişim
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "70px",
+                  }}
+                >
+                  Durum
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "70px",
+                  }}
+                >
+                  Fiyat
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "40px",
+                  }}
+                >
+                  Gör.
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "80px",
+                  }}
+                >
+                  Konum
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "60px",
+                  }}
+                >
+                  Tarih
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    p: 0.5,
+                    width: "70px",
+                  }}
+                >
+                  İşlemler
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
-                    <CircularProgress />
+                  <TableCell colSpan={12} align="center" sx={{ py: 2 }}>
+                    <CircularProgress size={24} />
                   </TableCell>
                 </TableRow>
               ) : ads.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1" color="text.secondary">
+                  <TableCell colSpan={12} align="center" sx={{ py: 2 }}>
+                    <Typography variant="caption" color="text.secondary">
                       İlan bulunamadı
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
                 ads.map((ad) => (
-                  <TableRow key={ad.id} hover>
-                    <TableCell>
-                      <Box>
-                        <Typography
-                          variant="subtitle2"
-                          sx={{ fontWeight: "bold" }}
-                          noWrap
-                        >
-                          {ad.title}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          ID: {ad.id}
-                        </Typography>
-                      </Box>
+                  <TableRow
+                    key={ad.id}
+                    hover
+                    sx={{ "&:hover": { bgcolor: "action.hover" } }}
+                  >
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: "bold", fontSize: "0.7rem" }}
+                      >
+                        #{ad.id}
+                      </Typography>
                     </TableCell>
 
-                    <TableCell>
-                      <Typography variant="body2">
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontWeight: "medium",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          display: "block",
+                          fontSize: "0.7rem",
+                        }}
+                        title={ad.title}
+                      >
+                        {ad.title}
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: "0.65rem" }}
+                      >
                         {ad.category.name}
                       </Typography>
                     </TableCell>
 
-                    <TableCell>
-                      <Typography variant="body2">
-                        {ad.brand?.name || "-"}
-                        {ad.model?.name && ` / ${ad.model.name}`}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell>
+                    <TableCell sx={{ p: 0.5 }}>
                       <Box>
                         <Typography
-                          variant="body2"
-                          sx={{ fontWeight: "medium" }}
+                          variant="caption"
+                          sx={{ display: "block", fontSize: "0.65rem" }}
                         >
-                          {ad.user.companyName ||
-                            `${ad.user.firstName} ${ad.user.lastName}`}
+                          {ad.brand?.name || ad.customFields?.dorseBrand || "-"}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {ad.user.email}
-                        </Typography>
+                        {ad.model?.name && (
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ fontSize: "0.6rem" }}
+                          >
+                            {ad.model.name}
+                          </Typography>
+                        )}
                       </Box>
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontWeight: "medium",
+                          display: "block",
+                          fontSize: "0.65rem",
+                        }}
+                      >
+                        {ad.user.companyName ||
+                          `${ad.user.firstName} ${ad.user.lastName}`}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: "0.6rem" }}
+                      >
+                        ID: {ad.user.id}
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          fontSize: "0.65rem",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                        title={ad.user.email}
+                      >
+                        {ad.user.email}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: "0.6rem" }}
+                      >
+                        {ad.customFields?.sellerPhone ||
+                          ad.customFields?.phone ||
+                          "-"}
+                      </Typography>
+                    </TableCell>
+
+                    <TableCell sx={{ p: 0.5 }}>
                       <Chip
                         label={getStatusText(ad.status)}
                         color={getStatusColor(ad.status)}
                         size="small"
+                        sx={{
+                          height: 18,
+                          fontSize: "0.6rem",
+                          "& .MuiChip-label": { px: 0.5 },
+                        }}
                       />
                     </TableCell>
 
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: "medium" }}>
-                        {ad.price
-                          ? `₺${ad.price.toLocaleString()}`
-                          : "Belirtilmemiş"}
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: "medium", fontSize: "0.65rem" }}
+                      >
+                        {ad.price ? `₺${(ad.price / 1000).toFixed(0)}k` : "-"}
                       </Typography>
                     </TableCell>
 
-                    <TableCell>
-                      <Typography variant="body2">
-                        {ad.viewCount || 0} görüntüleme
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: "0.65rem" }}
+                      >
+                        {ad.viewCount || 0}
                       </Typography>
                     </TableCell>
 
-                    <TableCell>
-                      <Typography variant="body2">
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ display: "block", fontSize: "0.65rem" }}
+                      >
                         {ad.city?.name || "-"}
-                        {ad.district?.name && ` / ${ad.district.name}`}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: "0.6rem" }}
+                      >
+                        {ad.district?.name || "-"}
                       </Typography>
                     </TableCell>
 
-                    <TableCell>
-                      <Typography variant="caption">
-                        {new Date(ad.createdAt).toLocaleDateString("tr-TR")}
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: "0.65rem" }}
+                      >
+                        {new Date(ad.createdAt).toLocaleDateString("tr-TR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                        })}
                       </Typography>
                     </TableCell>
 
-                    <TableCell>
-                      <Box sx={{ display: "flex", gap: 1 }}>
+                    <TableCell sx={{ p: 0.5 }}>
+                      <Box sx={{ display: "flex", gap: 0.25 }}>
                         <IconButton
                           size="small"
                           onClick={() => window.open(`/ad/${ad.id}`, "_blank")}
                           title="İlanı görüntüle"
                           color="primary"
+                          sx={{ p: 0.25 }}
                         >
-                          <VisibilityIcon />
+                          <VisibilityIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                         <IconButton
                           size="small"
@@ -428,8 +631,9 @@ const AllAds: React.FC = () => {
                           }}
                           title="İlanı sil"
                           color="error"
+                          sx={{ p: 0.25 }}
                         >
-                          <DeleteIcon />
+                          <DeleteIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Box>
                     </TableCell>

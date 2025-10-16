@@ -70,6 +70,14 @@ import FrigofirikForm from "./forms/FrigofirikForm";
 import TekliAracForm from "./forms/OtoKurtariciTasiyici/TekliAracForm";
 import CokluAracForm from "./forms/OtoKurtariciTasiyici/CokluAracForm";
 
+// Konteyner Taşıyıcı Şasi Grubu Forms
+import DamperSasiForm from "./forms/KonteynerTasiyiciSasiGrubu/DamperSasi/DamperSasiForm";
+import KilcikSasiForm from "./forms/KonteynerTasiyiciSasiGrubu/KilcikSasi/KilcikSasiForm";
+import PlatformSasiForm from "./forms/KonteynerTasiyiciSasiGrubu/PlatformSasi/PlatformSasiForm";
+import RomorkKonvantöruForm from "./forms/KonteynerTasiyiciSasiGrubu/RomorkKonvantoru/RomorkKonvantöruForm";
+import TankerSasiForm from "./forms/KonteynerTasiyiciSasiGrubu/TankerSasi/TankerSasiForm";
+import UzayabilirSasiForm from "./forms/KonteynerTasiyiciSasiGrubu/UzayabilirSasi/UzayabilirSasiForm";
+
 const VehicleFormSelector: React.FC = () => {
   const { categorySlug, variantSlug, modelSlug } = useParams<{
     categorySlug: string;
@@ -106,8 +114,54 @@ const VehicleFormSelector: React.FC = () => {
     console.log("🎯 DORSE KATEGORİSİ ALGILANDI!");
     console.log("  Checking variant:", variantSlug);
     console.log("  Checking model:", modelSlug);
+
     // Eğer variant var ise, variant'a göre seç
     if (variantSlug) {
+      // Konteyner Taşıyıcı Şasi Grubu - içinde anahtar kelime araması
+      if (variantSlug.includes("damper-sasi")) {
+        console.log(
+          "✅ Damper Şasi formu seçildi (variant contains damper-sasi)"
+        );
+        return <DamperSasiForm />;
+      }
+      if (
+        variantSlug.includes("kilcik-sasi") ||
+        variantSlug.includes("kılçık-sasi")
+      ) {
+        console.log(
+          "✅ Kılçık Şasi formu seçildi (variant contains kilcik-sasi)"
+        );
+        return <KilcikSasiForm />;
+      }
+      if (variantSlug.includes("platform-sasi")) {
+        console.log(
+          "✅ Platform Şasi formu seçildi (variant contains platform-sasi)"
+        );
+        return <PlatformSasiForm />;
+      }
+      if (
+        variantSlug.includes("romork-konvantoru") ||
+        variantSlug.includes("römork-konvantörü")
+      ) {
+        console.log(
+          "✅ Römork Konvantörü formu seçildi (variant contains romork-konvantoru)"
+        );
+        return <RomorkKonvantöruForm />;
+      }
+      if (variantSlug.includes("tanker-sasi")) {
+        console.log(
+          "✅ Tanker Şasi formu seçildi (variant contains tanker-sasi)"
+        );
+        return <TankerSasiForm />;
+      }
+      if (variantSlug.includes("uzayabilir-sasi")) {
+        console.log(
+          "✅ Uzayabilir Şasi formu seçildi (variant contains uzayabilir-sasi)"
+        );
+        return <UzayabilirSasiForm />;
+      }
+
+      // Diğer variant kontrolleri
       switch (variantSlug) {
         case "hafriyat-tipi":
         case "damperli-damperli-hafriyat-tip":
@@ -298,21 +352,82 @@ const VehicleFormSelector: React.FC = () => {
             "✅ Kapaksız Platform Kuruyük Dorse formu seçildi (tam slug)"
           );
           return <KapaksızPlatformForm />;
+        // Konteyner Taşıyıcı Şasi Grubu Models
+        case "damper-sasi":
+          console.log("✅ Damper Şasi formu seçildi (model slug)");
+          return <DamperSasiForm />;
+        case "kilcik-sasi":
+          console.log("✅ Kılçık Şasi formu seçildi (model slug)");
+          return <KilcikSasiForm />;
+        case "platform-sasi":
+          console.log("✅ Platform Şasi formu seçildi (model slug)");
+          return <PlatformSasiForm />;
+        case "romork-konvantoru":
+        case "romork-konvantörü":
+          console.log("✅ Römork Konvantörü formu seçildi (model slug)");
+          return <RomorkKonvantöruForm />;
+        case "tanker-sasi":
+          console.log("✅ Tanker Şasi formu seçildi (model slug)");
+          return <TankerSasiForm />;
+        case "uzayabilir-sasi":
+          console.log("✅ Uzayabilir Şasi formu seçildi (model slug)");
+          return <UzayabilirSasiForm />;
       }
 
       // Eğer tam eşleşme yoksa, içerik kontrolü (fallback)
       const modelLower = modelSlug.toLowerCase();
       console.log("  🔎 Model slug lowercase:", modelLower);
 
-      if (modelLower.includes("hafriyat") || modelLower.includes("kazı")) {
-        console.log("✅ Hafriyat Tipi Dorse formu seçildi (içerik)");
-        return <HafriyatTipiForm />;
+      // Önce daha spesifik kontroller (2 kelime içerenler)
+      if (modelLower.includes("tanker") && modelLower.includes("sasi")) {
+        console.log("✅ Tanker Şasi formu seçildi (içerik)");
+        return <TankerSasiForm />;
+      } else if (modelLower.includes("damper") && modelLower.includes("sasi")) {
+        console.log("✅ Damper Şasi formu seçildi (içerik)");
+        return <DamperSasiForm />;
+      } else if (
+        modelLower.includes("platform") &&
+        modelLower.includes("sasi")
+      ) {
+        console.log("✅ Platform Şasi formu seçildi (içerik)");
+        return <PlatformSasiForm />;
+      } else if (
+        modelLower.includes("platform") &&
+        modelLower.includes("kapaksız")
+      ) {
+        console.log(
+          "✅ Kapaksız Platform Kuruyük Dorse formu seçildi (içerik)"
+        );
+        return <KapaksızPlatformForm />;
       } else if (
         modelLower.includes("havuz") ||
         modelLower.includes("hardox")
       ) {
         console.log("✅ Havuz Hardox Tipi Dorse formu seçildi (içerik)");
         return <HavuzHardoxTipiForm />;
+        // Konteyner Taşıyıcı Şasi Grubu kontrolleri
+      } else if (
+        modelLower.includes("kilcik") ||
+        modelLower.includes("kılçık")
+      ) {
+        console.log("✅ Kılçık Şasi formu seçildi (içerik)");
+        return <KilcikSasiForm />;
+      } else if (
+        modelLower.includes("konvantör") ||
+        modelLower.includes("konvantor")
+      ) {
+        console.log("✅ Römork Konvantörü formu seçildi (içerik)");
+        return <RomorkKonvantöruForm />;
+      } else if (modelLower.includes("uzayabilir")) {
+        console.log("✅ Uzayabilir Şasi formu seçildi (içerik)");
+        return <UzayabilirSasiForm />;
+        // Genel dorse kontrolleri
+      } else if (
+        modelLower.includes("hafriyat") ||
+        modelLower.includes("kazı")
+      ) {
+        console.log("✅ Hafriyat Tipi Dorse formu seçildi (içerik)");
+        return <HafriyatTipiForm />;
       } else if (
         modelLower.includes("kapaklı") ||
         modelLower.includes("kapali")
@@ -350,10 +465,7 @@ const VehicleFormSelector: React.FC = () => {
       ) {
         console.log("✅ Öndekirmalı Lowbed Dorse formu seçildi (içerik)");
         return <OndekirmalıForm />;
-      } else if (
-        modelLower.includes("kuruyuk") ||
-        (modelLower.includes("platform") && modelLower.includes("kapaksız"))
-      ) {
+      } else if (modelLower.includes("kuruyuk")) {
         console.log(
           "✅ Kapaksız Platform Kuruyük Dorse formu seçildi (içerik)"
         );
