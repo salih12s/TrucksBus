@@ -4780,6 +4780,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       description,
       price,
       productionYear,
+      romorkMarkasi, // Yeni alan
       volume,
       length,
       width,
@@ -4811,6 +4812,8 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       category,
       subType,
     } = req.body;
+
+    console.log("🚗 Kamyon Römork - Römork Markası:", romorkMarkasi);
 
     // Slug'lardan ID'leri bul
     let categoryId = null;
@@ -4858,6 +4861,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
 
     // Römork özel alanları - modern form uyumlu
     const customFields = {
+      romorkMarkasi: romorkMarkasi || "", // Römork markası
       volume: volume || "",
       length: length || "",
       width: width || "",

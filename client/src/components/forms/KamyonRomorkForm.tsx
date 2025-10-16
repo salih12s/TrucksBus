@@ -40,11 +40,66 @@ interface District {
   cityId: number;
 }
 
+// Römork Markaları
+const ROMORK_BRANDS = [
+  "Seçiniz",
+  "ACG Römork",
+  "Aksoylu Treyler",
+  "Alim Dorse",
+  "Alpsan",
+  "Altınordu Treyler",
+  "Bey Treyler",
+  "Brosco",
+  "Caselli",
+  "CastroMax Trailers",
+  "Ekol",
+  "Elit Römork",
+  "Ersel Trailer",
+  "Ferhat",
+  "Fesan",
+  "Fruehauf",
+  "Gani Şahan Treyler",
+  "Gündoğdu",
+  "Hürsan Treyler",
+  "Kandil Römork",
+  "Kasasan",
+  "Koluman",
+  "Kontir",
+  "Köseoğlu",
+  "Makinsan",
+  "Meiller",
+  "Meral Kasa",
+  "Merttaş",
+  "Minicargo",
+  "Otto",
+  "Önder Treyler",
+  "Özdemir",
+  "Özen İş",
+  "Özgül Treyler",
+  "Pino Römork",
+  "Poslu",
+  "Schmitz",
+  "Serin Treyler",
+  "Sistem Damper Treyler",
+  "Sommer",
+  "Tirsan",
+  "Topaloğlu Karoser",
+  "Yeksan",
+  "Yenkar",
+  "Yıldız Treyler",
+  "Yükselen Treyler",
+  "Özel İmalat",
+  "Diğer",
+];
+
 interface FormData {
   title: string;
   description: string;
   productionYear: string;
   price: string;
+
+  // Römork Markası
+  romorkMarkasi: string;
 
   // Römork Özellikleri
   length: string; // cm
@@ -86,6 +141,9 @@ const KamyonRomorkForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+
+    // Römork Markası
+    romorkMarkasi: "Seçiniz",
 
     // Römork Özellikleri
     length: "",
@@ -324,6 +382,24 @@ const KamyonRomorkForm: React.FC = () => {
                   placeholder="Örn: 250.000"
                 />
               </Box>
+
+              {/* Römork Markası */}
+              <FormControl fullWidth required>
+                <InputLabel>Römork Markası</InputLabel>
+                <Select
+                  value={formData.romorkMarkasi}
+                  label="Römork Markası"
+                  onChange={(e) =>
+                    handleInputChange("romorkMarkasi", e.target.value)
+                  }
+                >
+                  {ROMORK_BRANDS.map((brand) => (
+                    <MenuItem key={brand} value={brand}>
+                      {brand}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Box>
 
             <Divider sx={{ my: 4 }} />

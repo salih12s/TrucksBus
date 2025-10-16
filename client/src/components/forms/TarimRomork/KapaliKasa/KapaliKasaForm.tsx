@@ -28,6 +28,104 @@ import {
 import apiClient from "../../../../api/client";
 import Header from "../../../layout/Header";
 
+// Tarım Römork Markaları
+const TARIM_ROMORK_BRANDS = [
+  "Seçiniz",
+  "ACG Römork",
+  "Akdoğan",
+  "Aksoylu Treyler",
+  "Alim Dorse",
+  "Alpsan",
+  "Altınordu Treyler",
+  "Aydınlık Kardeşler",
+  "Aysan Römork",
+  "Başaran Römork",
+  "Başarır Römork",
+  "Baysallar",
+  "Bey Treyler",
+  "Biçeroğlu",
+  "Brosco",
+  "Caselli",
+  "CastroMax Trailers",
+  "Cebeci",
+  "Ceytech",
+  "Çarşan Treyler",
+  "Çetiner",
+  "Ekol",
+  "Eliçelik",
+  "Elit Römork",
+  "Emekçiler",
+  "Emekçiler Tarım Makinaları",
+  "Erdallar",
+  "Ersel Trailer",
+  "Eroğlu",
+  "Ferhat",
+  "Fesan",
+  "Fruehauf",
+  "Gani Şahan Treyler",
+  "Goldoni",
+  "Gündoğdu",
+  "Gürler",
+  "Hocaoğlu Römork",
+  "Hürsan Treyler",
+  "İbrahim Örs",
+  "Kabay",
+  "Kandil Römork",
+  "Karalar",
+  "Kasasan",
+  "Keskin",
+  "Koluman",
+  "Kontir",
+  "Köseoğlu",
+  "Makinsan",
+  "Meiller",
+  "Meral Kasa",
+  "Merttaş",
+  "Minicargo",
+  "Mutlusan",
+  "New Holland",
+  "Nil Cargo Römork",
+  "Oktar Makina",
+  "Oruç Karoser",
+  "Otto",
+  "Özalsan",
+  "Özçevik",
+  "Özdemir",
+  "Özen İş",
+  "Özgül Treyler",
+  "Önder Treyler",
+  "Palazoğlu",
+  "Paşaoğlu Dorse Treyler",
+  "Pino Römork",
+  "Poslu",
+  "Schmitz",
+  "Seçilen",
+  "Seçkin",
+  "Serin Treyler",
+  "Sistem Damper Treyler",
+  "Sommer",
+  "Süperaktif",
+  "Şen",
+  "Tako",
+  "Taral",
+  "Tarım Kredi",
+  "Tinaz",
+  "Tirsan",
+  "Topaloğlu Karoser",
+  "TowGo",
+  "Toygar",
+  "Üçel",
+  "Vuraner",
+  "Westfalia",
+  "Yeksan",
+  "Yenkar",
+  "Yıldız Treyler",
+  "Yılmaz",
+  "Yükselen Treyler",
+  "Özel İmalat",
+  "Diğer",
+];
+
 interface City {
   id: number;
   name: string;
@@ -46,6 +144,7 @@ interface FormData {
   description: string;
   productionYear: string;
   price: string;
+  romorkMarkasi: string; // Yeni alan
   volume: string;
   condition: string;
   isExchangeable: string;
@@ -81,6 +180,7 @@ const KapaliKasaForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    romorkMarkasi: "Seçiniz",
     volume: "",
     condition: "ikinci-el",
     isExchangeable: "olabilir",
@@ -438,6 +538,24 @@ const KapaliKasaForm: React.FC = () => {
                       >
                         <MenuItem value="Evet">🚛 Evet</MenuItem>
                         <MenuItem value="Hayır">❌ Hayır</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    {/* Römork Markası */}
+                    <FormControl fullWidth required>
+                      <InputLabel>Römork Markası</InputLabel>
+                      <Select
+                        value={formData.romorkMarkasi}
+                        label="Römork Markası"
+                        onChange={(e) =>
+                          handleInputChange("romorkMarkasi", e.target.value)
+                        }
+                      >
+                        {TARIM_ROMORK_BRANDS.map((brand) => (
+                          <MenuItem key={brand} value={brand}>
+                            {brand}
+                          </MenuItem>
+                        ))}
                       </Select>
                     </FormControl>
 

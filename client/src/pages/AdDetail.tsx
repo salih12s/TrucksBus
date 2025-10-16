@@ -927,25 +927,31 @@ const AdDetail: React.FC = () => {
                 {ad.category?.name || "Minibüs & Midibüs"}
               </Box>
 
-              {/* Marka gösterimi - Dorse, Oto Kurtarıcı ve diğer kategoriler için */}
+              {/* Marka gösterimi - Dorse, Römork, Oto Kurtarıcı ve diğer kategoriler için */}
               <Box sx={{ fontSize: "14px", color: "#666" }}>
                 <strong>
                   {ad.category?.name?.toLowerCase() === "dorse"
                     ? "Dorse Markası:"
+                    : ad.category?.name?.toLowerCase() === "römork"
+                    ? "Römork Markası:"
                     : ad.category?.name?.includes("Oto Kurtarıcı")
                     ? "Araç Markası:"
                     : "Marka:"}
                 </strong>{" "}
                 {ad.category?.name?.toLowerCase() === "dorse"
                   ? (ad.customFields?.dorseBrand as string) || "Belirtilmemiş"
+                  : ad.category?.name?.toLowerCase() === "römork"
+                  ? (ad.customFields?.romorkMarkasi as string) ||
+                    "Belirtilmemiş"
                   : ad.category?.name?.includes("Oto Kurtarıcı")
                   ? (ad.customFields?.vehicleBrandName as string) ||
                     "Belirtilmemiş"
                   : ad.brand?.name || "Volkswagen"}
               </Box>
 
-              {/* Tipi ve Variant bilgileri sadece Dorse ve Oto Kurtarıcı kategorisi DIŞINDA gösterilir */}
+              {/* Tipi ve Variant bilgileri sadece Dorse, Römork ve Oto Kurtarıcı kategorisi DIŞINDA gösterilir */}
               {ad.category?.name?.toLowerCase() !== "dorse" &&
+                ad.category?.name?.toLowerCase() !== "römork" &&
                 !ad.category?.name?.includes("Oto Kurtarıcı") && (
                   <>
                     {ad.model?.name && (
@@ -1576,7 +1582,19 @@ const AdDetail: React.FC = () => {
                               ]
                             : []),
 
-                          // Kamyon Römork Özel Alanları
+                          // Kamyon Römork ve Tarım Römork Özel Alanları
+                          {
+                            label: "Römork Markası",
+                            value:
+                              (ad.customFields?.romorkMarkasi as string) ||
+                              null,
+                          },
+                          {
+                            label: "Hacim (Litre)",
+                            value: ad.customFields?.volume
+                              ? `${ad.customFields.volume} L`
+                              : null,
+                          },
                           {
                             label: "Uzunluk (m)",
                             value: ad.customFields?.length
