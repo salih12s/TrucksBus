@@ -226,6 +226,8 @@ const AdDetail: React.FC = () => {
           "🔍 All customFields keys:",
           data.customFields ? Object.keys(data.customFields) : "null"
         );
+        console.log("🔍 tireCondition:", data.customFields?.tireCondition);
+        console.log("🔍 lastikDurumu:", data.customFields?.lastikDurumu);
         console.log("🔍 kapakYuksekligi:", data.customFields?.kapakYuksekligi);
         console.log("🔍 krikoAyak:", data.customFields?.krikoAyak);
         console.log("🔍 takasli:", data.customFields?.takasli);
@@ -1466,6 +1468,13 @@ const AdDetail: React.FC = () => {
                           {
                             label: "Kabin",
                             value: ad.customFields?.cabin || null,
+                          },
+                          {
+                            label: "Lastik Durumu",
+                            value: (() => {
+                              const tireCondition = ad.customFields?.tireCondition || ad.customFields?.lastikDurumu;
+                              return tireCondition ? `%${tireCondition}` : null;
+                            })(),
                           },
 
                           // Minivan & Panelvan Özel Alanları (Category ID: 10)
