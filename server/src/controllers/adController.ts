@@ -1269,15 +1269,57 @@ export const getUserAds = async (req: Request, res: Response) => {
 
     const ads = await prisma.ad.findMany({
       where,
-      include: {
-        category: true,
-        brand: true,
-        model: true,
-        variant: true,
-        city: true,
-        district: true,
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        price: true,
+        year: true,
+        mileage: true,
+        status: true,
+        viewCount: true,
+        isPromoted: true,
+        promotedUntil: true,
+        createdAt: true,
+        updatedAt: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        brand: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        model: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+        variant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
         images: {
+          select: {
+            id: true,
+            imageUrl: true,
+            isPrimary: true,
+            displayOrder: true,
+            altText: true,
+          },
           orderBy: { displayOrder: "asc" },
+          take: 1, // Sadece ilk resmi al
         },
       },
       orderBy: { createdAt: "desc" },
@@ -1847,6 +1889,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
           exchange: exchange || null,
           hasAccidentRecord: hasAccidentRecord || null,
           hasTramerRecord: hasTramerRecord || null,
+          tramerRecord: hasTramerRecord || null, // Yeni alan: rakam olarak
           cityId: cityId || null,
           districtId: districtId || null,
           detailedInfo: detailedInfo || null,
@@ -2483,6 +2526,7 @@ export const createKamyonAd = async (req: Request, res: Response) => {
           exchange: exchange || null,
           hasAccidentRecord: hasAccidentRecord || null,
           hasTramerRecord: hasTramerRecord || null,
+          tramerRecord: hasTramerRecord || null, // Yeni alan: rakam olarak
           plateType: plateType || null,
           plateNumber: plateNumber || null,
           address: address || null,
@@ -2848,6 +2892,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
           paintChange: paintChange || null,
           hasAccidentRecord: hasAccidentRecord || null,
           hasTramerRecord: hasTramerRecord || null,
+          tramerRecord: hasTramerRecord || null, // Yeni alan: rakam olarak
           plateType: plateType || null,
           plateNumber: plateNumber || null,
           cityId: cityId ? parseInt(cityId) : null,

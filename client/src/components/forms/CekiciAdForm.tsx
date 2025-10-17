@@ -1356,7 +1356,8 @@ const CekiciAdForm: React.FC = () => {
                   mt: 3,
                 }}
               >
-                <FormControl
+                <TextField
+                  fullWidth
                   sx={{
                     flex: 1,
                     minWidth: 200,
@@ -1364,19 +1365,15 @@ const CekiciAdForm: React.FC = () => {
                       borderRadius: 3,
                     },
                   }}
-                >
-                  <InputLabel>Tramer Kaydı</InputLabel>
-                  <Select
-                    value={formData.hasTramerRecord || ""}
-                    onChange={(e) =>
-                      handleInputChange("hasTramerRecord", e.target.value)
-                    }
-                    label="Tramer Kaydı"
-                  >
-                    <MenuItem value="evet">Var</MenuItem>
-                    <MenuItem value="hayir">Yok</MenuItem>
-                  </Select>
-                </FormControl>
+                  label="Tramer Kaydı (TL)"
+                  value={formData.hasTramerRecord || ""}
+                  onChange={(e) =>
+                    handleInputChange("hasTramerRecord", e.target.value)
+                  }
+                  placeholder="Örn: 5000"
+                  type="number"
+                  helperText="Tramer kaydı tutarını TL olarak giriniz"
+                />
               </Box>
             </CardContent>
           </Card>

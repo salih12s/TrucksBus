@@ -96,7 +96,6 @@ interface FormData {
   plateNumber: string;
   cityId: string;
   districtId: string;
-  address: string;
   photos: File[];
   showcasePhoto: File | null;
   videos: File[];
@@ -240,7 +239,6 @@ const CreateMinibusAdForm: React.FC = () => {
     plateNumber: "",
     cityId: "",
     districtId: "",
-    address: "",
     photos: [],
     showcasePhoto: null,
     videos: [],
@@ -1647,28 +1645,24 @@ const CreateMinibusAdForm: React.FC = () => {
                     </Select>
                   </FormControl>
 
-                  <FormControl
+                  <TextField
                     fullWidth
                     variant="outlined"
+                    label="Tramer Kaydı (TL)"
+                    value={formData.hasTramerRecord || ""}
+                    onChange={(e) =>
+                      handleInputChange("hasTramerRecord", e.target.value)
+                    }
+                    placeholder="Örn: 5120"
+                    type="number"
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,
                         "&:hover fieldset": { borderColor: "primary.main" },
                       },
                     }}
-                  >
-                    <InputLabel>Tramer Kaydı</InputLabel>
-                    <Select
-                      value={formData.hasTramerRecord || ""}
-                      onChange={(e) =>
-                        handleInputChange("hasTramerRecord", e.target.value)
-                      }
-                      label="Tramer Kaydı"
-                    >
-                      <MenuItem value="evet">Var</MenuItem>
-                      <MenuItem value="hayir">Yok</MenuItem>
-                    </Select>
-                  </FormControl>
+                    helperText="Tramer kaydı tutarını TL olarak giriniz"
+                  />
                 </Box>
 
                 {/* Plaka Bilgileri */}
@@ -1818,28 +1812,6 @@ const CreateMinibusAdForm: React.FC = () => {
                       ))}
                     </Select>
                   </FormControl>
-                </Box>
-
-                {/* Adres */}
-                <Box sx={{ mb: 3 }}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label="Adres"
-                    value={formData.address}
-                    onChange={(e) =>
-                      handleInputChange("address", e.target.value)
-                    }
-                    placeholder="Mahalle, sokak, cadde bilgilerinizi giriniz..."
-                    variant="outlined"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 3,
-                        "&:hover fieldset": { borderColor: "primary.main" },
-                      },
-                    }}
-                  />
                 </Box>
               </CardContent>
             </Card>

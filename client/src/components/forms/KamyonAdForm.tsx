@@ -191,7 +191,6 @@ interface FormData {
   plateNumber: string;
   cityId: string;
   districtId: string;
-  address: string;
   photos: File[];
   videos: File[];
   showcasePhoto: File | null;
@@ -301,7 +300,6 @@ const KamyonAdForm: React.FC = () => {
     plateNumber: "",
     cityId: "",
     districtId: "",
-    address: "",
     photos: [],
     videos: [],
     showcasePhoto: null,
@@ -1628,40 +1626,24 @@ const KamyonAdForm: React.FC = () => {
                     </Select>
                   </FormControl>
 
-                  <FormControl
+                  <TextField
                     fullWidth
                     variant="outlined"
+                    label="Tramer Kaydı (TL)"
+                    value={formData.hasTramerRecord || ""}
+                    onChange={(e) =>
+                      handleInputChange("hasTramerRecord", e.target.value)
+                    }
+                    placeholder="Örn: 5000"
+                    type="number"
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 3,
                         "&:hover fieldset": { borderColor: "primary.main" },
                       },
                     }}
-                  >
-                    <InputLabel>Tramer Kaydı</InputLabel>
-                    <Select
-                      value={formData.hasTramerRecord || ""}
-                      onChange={(e) =>
-                        handleInputChange("hasTramerRecord", e.target.value)
-                      }
-                      label="Tramer Kaydı"
-                    >
-                      <MenuItem value="evet">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          Var
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="hayir">
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          Yok
-                        </Box>
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
+                    helperText="Tramer kaydı tutarını TL olarak giriniz"
+                  />
                 </Box>
 
                 {/* Plaka/Uyruk ve Araç Plakası */}
@@ -1831,28 +1813,6 @@ const KamyonAdForm: React.FC = () => {
                       ))}
                     </Select>
                   </FormControl>
-                </Box>
-
-                {/* Adres */}
-                <Box sx={{ mb: 3 }}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label="Adres"
-                    value={formData.address}
-                    onChange={(e) =>
-                      handleInputChange("address", e.target.value)
-                    }
-                    placeholder="Mahalle, sokak, cadde bilgilerinizi giriniz..."
-                    variant="outlined"
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 3,
-                        "&:hover fieldset": { borderColor: "primary.main" },
-                      },
-                    }}
-                  />
                 </Box>
               </CardContent>
             </Card>

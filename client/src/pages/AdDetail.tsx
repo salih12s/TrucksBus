@@ -1241,6 +1241,50 @@ const AdDetail: React.FC = () => {
                             value: ad.category?.name || null,
                           },
                           {
+                            label: "Marka",
+                            value: (() => {
+                              // Özel kategoriler için customFields'dan al
+                              if (
+                                ad.category?.name?.toLowerCase() === "dorse"
+                              ) {
+                                return (
+                                  (ad.customFields?.dorseBrand as string) ||
+                                  null
+                                );
+                              } else if (
+                                ad.category?.name?.toLowerCase() === "römork"
+                              ) {
+                                return (
+                                  (ad.customFields?.romorkMarkasi as string) ||
+                                  null
+                                );
+                              } else if (
+                                ad.category?.name?.includes("Oto Kurtarıcı")
+                              ) {
+                                return (
+                                  (ad.customFields
+                                    ?.vehicleBrandName as string) || null
+                                );
+                              }
+                              // Diğer kategoriler için brand ilişkisinden al
+                              return ad.brand?.name || null;
+                            })(),
+                          },
+                          {
+                            label: "Model (Tip)",
+                            value: (() => {
+                              // Dorse, Römork ve Oto Kurtarıcı için model gösterme
+                              if (
+                                ad.category?.name?.toLowerCase() === "dorse" ||
+                                ad.category?.name?.toLowerCase() === "römork" ||
+                                ad.category?.name?.includes("Oto Kurtarıcı")
+                              ) {
+                                return null;
+                              }
+                              return ad.model?.name || null;
+                            })(),
+                          },
+                          {
                             label: "Fiyat",
                             value: ad.price
                               ? `${formatPrice(ad.price)} TL`
@@ -1376,10 +1420,6 @@ const AdDetail: React.FC = () => {
                                 : null) ||
                               null,
                           },
-                          {
-                            label: "Adres",
-                            value: ad.customFields?.address || null,
-                          },
 
                           // Araç Detayları
                           {
@@ -1472,7 +1512,9 @@ const AdDetail: React.FC = () => {
                           {
                             label: "Lastik Durumu",
                             value: (() => {
-                              const tireCondition = ad.customFields?.tireCondition || ad.customFields?.lastikDurumu;
+                              const tireCondition =
+                                ad.customFields?.tireCondition ||
+                                ad.customFields?.lastikDurumu;
                               return tireCondition ? `%${tireCondition}` : null;
                             })(),
                           },
@@ -1564,27 +1606,32 @@ const AdDetail: React.FC = () => {
                                 {
                                   label: "Tramer Kaydı",
                                   value: (() => {
-                                    // Önce direkt ad objesi üzerinden kontrol et
-                                    if (ad.hasTramerRecord === true) {
-                                      return "Var";
-                                    } else if (ad.hasTramerRecord === false) {
-                                      return "Yok";
+                                    // Tramer kaydı artık rakam olarak saklanıyor
+                                    const tramerValue =
+                                      ad.customFields?.tramerRecord ||
+                                      ad.customFields?.hasTramerRecord;
+
+                                    // Eğer rakam ise direkt göster
+                                    if (
+                                      tramerValue &&
+                                      !isNaN(Number(tramerValue))
+                                    ) {
+                                      return `${tramerValue} TL`;
                                     }
 
-                                    // Fallback olarak customFields'tan kontrol et
+                                    // Eski sistemle uyumluluk (Var/Yok değerleri)
                                     if (
-                                      ad.customFields?.hasTramerRecord ===
-                                        "evet" ||
-                                      ad.customFields?.hasTramerRecord === true
+                                      tramerValue === "evet" ||
+                                      tramerValue === true
                                     ) {
                                       return "Var";
                                     } else if (
-                                      ad.customFields?.hasTramerRecord ===
-                                        "hayir" ||
-                                      ad.customFields?.hasTramerRecord === false
+                                      tramerValue === "hayir" ||
+                                      tramerValue === false
                                     ) {
                                       return "Yok";
                                     }
+
                                     return null;
                                   })(),
                                 },
@@ -1661,10 +1708,6 @@ const AdDetail: React.FC = () => {
                           {
                             label: "Yatak Sayısı",
                             value: ad.customFields?.bedCount || null,
-                          },
-                          {
-                            label: "Dorse Mevcut",
-                            value: ad.customFields?.dorseAvailable || null,
                           },
                           {
                             label: "Boyalı",

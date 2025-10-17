@@ -50,7 +50,7 @@ const MyAds: React.FC = () => {
   const loadMyAds = async () => {
     try {
       setLoading(true);
-      const result = await getMyAds();
+      const result = await getMyAds({ limit: 50 }); // Limit artırıldı
       setAds(result.ads);
     } catch (err: unknown) {
       const error = err as { message?: string };

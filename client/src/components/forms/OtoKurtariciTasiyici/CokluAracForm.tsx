@@ -93,7 +93,6 @@ interface FormData {
   exchange: string;
   cityId: string;
   districtId: string;
-  address: string;
   detailedInfo: string;
   photos: File[];
   showcasePhoto: File | null;
@@ -146,7 +145,6 @@ const CokluAracForm: React.FC = () => {
     exchange: "hayir",
     cityId: "",
     districtId: "",
-    address: "",
     detailedInfo: "",
     photos: [],
     showcasePhoto: null,
@@ -772,18 +770,6 @@ const CokluAracForm: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Box>
-
-                <TextField
-                  fullWidth
-                  label="Detaylı Adres"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  multiline
-                  rows={2}
-                  sx={{ mt: 2 }}
-                  placeholder="Mahalle, sokak, bina no vs."
-                />
               </CardContent>
             </Card>
 
