@@ -1166,27 +1166,6 @@ const KapakliKayaTipiForm: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Ekstra Bilgiler */}
-            <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-              Ekstra Bilgiler
-            </Typography>
-
-            <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-              <FormControl fullWidth>
-                <InputLabel>Takas</InputLabel>
-                <Select
-                  value={formData.exchange}
-                  onChange={(e) =>
-                    handleInputChange("exchange", e.target.value)
-                  }
-                  label="Takas"
-                >
-                  <MenuItem value="evet">Evet</MenuItem>
-                  <MenuItem value="hayır">Hayır</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-
             {/* Submit Button */}
             <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
               <Button

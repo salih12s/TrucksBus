@@ -247,8 +247,14 @@ export const getAds = async (req: Request, res: Response) => {
           c.name as city_name,
           d.name as district_name,
           b.name as brand_name,
+          b.slug as brand_slug,
           cat.id as category_id,
           cat.name as category_name,
+          cat.slug as category_slug,
+          m.name as model_name,
+          m.slug as model_slug,
+          v.name as variant_name,
+          v.slug as variant_slug,
           img.image_url as image_url,
           u.id as user_id,
           u.first_name as user_first_name,
@@ -261,6 +267,8 @@ export const getAds = async (req: Request, res: Response) => {
         LEFT JOIN cities c ON a.city_id = c.id
         LEFT JOIN districts d ON a.district_id = d.id
         LEFT JOIN brands b ON a.brand_id = b.id
+        LEFT JOIN models m ON a.model_id = m.id
+        LEFT JOIN variants v ON a.variant_id = v.id
         LEFT JOIN categories cat ON a.category_id = cat.id
         LEFT JOIN users u ON a.user_id = u.id
         LEFT JOIN (
@@ -296,9 +304,21 @@ export const getAds = async (req: Request, res: Response) => {
           customFields: ad.customFields,
           city: ad.city_name ? { name: ad.city_name } : null,
           district: ad.district_name ? { name: ad.district_name } : null,
-          brand: ad.brand_name ? { name: ad.brand_name } : null,
+          brand: ad.brand_name
+            ? { name: ad.brand_name, slug: ad.brand_slug }
+            : null,
+          model: ad.model_name
+            ? { name: ad.model_name, slug: ad.model_slug }
+            : null,
+          variant: ad.variant_name
+            ? { name: ad.variant_name, slug: ad.variant_slug }
+            : null,
           category: ad.category_name
-            ? { id: ad.category_id, name: ad.category_name }
+            ? {
+                id: ad.category_id,
+                name: ad.category_name,
+                slug: ad.category_slug,
+              }
             : null,
           images: ad.image_url ? [{ imageUrl: ad.image_url }] : [],
           user: {
@@ -459,8 +479,11 @@ export const getAdById = async (req: Request, res: Response) => {
         a.roof_type, a.seat_count, a.transmission_type,
         u.id as user_id, u.first_name, u.last_name, u.company_name, 
         u.phone, u.email, u.user_type, u.created_at as user_created_at, u.is_verified,
-        c.id as category_id, c.name as category_name, b.name as brand_name, m.name as model_name, 
-        v.name as variant_name, city.name as city_name, dist.name as district_name,
+        c.id as category_id, c.name as category_name, c.slug as category_slug,
+        b.name as brand_name, b.slug as brand_slug,
+        m.name as model_name, m.slug as model_slug,
+        v.name as variant_name, v.slug as variant_slug,
+        city.name as city_name, dist.name as district_name,
         COALESCE((
           SELECT json_agg(
             json_build_object(
@@ -589,11 +612,17 @@ export const getAdById = async (req: Request, res: Response) => {
         totalAds: ad.user_total_ads || 0,
       },
       category: ad.category_name
-        ? { id: ad.category_id, name: ad.category_name }
+        ? { id: ad.category_id, name: ad.category_name, slug: ad.category_slug }
         : null,
-      brand: ad.brand_name ? { name: ad.brand_name } : null,
-      model: ad.model_name ? { name: ad.model_name } : null,
-      variant: ad.variant_name ? { name: ad.variant_name } : null,
+      brand: ad.brand_name
+        ? { name: ad.brand_name, slug: ad.brand_slug }
+        : null,
+      model: ad.model_name
+        ? { name: ad.model_name, slug: ad.model_slug }
+        : null,
+      variant: ad.variant_name
+        ? { name: ad.variant_name, slug: ad.variant_slug }
+        : null,
       city: ad.city_name ? { name: ad.city_name } : null,
       district: ad.district_name ? { name: ad.district_name } : null,
       images: ad.images_json || [],

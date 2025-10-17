@@ -1640,12 +1640,6 @@ const AdDetail: React.FC = () => {
 
                           // Kamyon Römork ve Tarım Römork Özel Alanları
                           {
-                            label: "Römork Markası",
-                            value:
-                              (ad.customFields?.romorkMarkasi as string) ||
-                              null,
-                          },
-                          {
                             label: "Hacim (Litre)",
                             value: ad.customFields?.volume
                               ? `${ad.customFields.volume} L`
@@ -1787,25 +1781,30 @@ const AdDetail: React.FC = () => {
                           },
                           {
                             label: "Plaka Bilgileri",
-                            value: (() => {
-                              const plateType =
-                                ad.customFields?.plateType || ad.plateType;
-                              const plateNumber =
-                                ad.customFields?.plateNumber || ad.plateNumber;
+                            value:
+                              ad.category?.id === 10
+                                ? null // Minivan için gösterme, çünkü özel alanında var
+                                : (() => {
+                                    const plateType =
+                                      ad.customFields?.plateType ||
+                                      ad.plateType;
+                                    const plateNumber =
+                                      ad.customFields?.plateNumber ||
+                                      ad.plateNumber;
 
-                              if (plateNumber) {
-                                const typeText =
-                                  plateType === "tr-plakali"
-                                    ? "TR Plaka"
-                                    : plateType === "mavi-plakali"
-                                    ? "Mavi Plaka"
-                                    : plateType || "";
-                                return typeText
-                                  ? `${plateNumber} (${typeText})`
-                                  : plateNumber;
-                              }
-                              return null;
-                            })(),
+                                    if (plateNumber) {
+                                      const typeText =
+                                        plateType === "tr-plakali"
+                                          ? "TR Plaka"
+                                          : plateType === "mavi-plakali"
+                                          ? "Mavi Plaka"
+                                          : plateType || "";
+                                      return typeText
+                                        ? `${plateNumber} (${typeText})`
+                                        : plateNumber;
+                                    }
+                                    return null;
+                                  })(),
                           },
                           {
                             label: "Platform Uzunluk",
@@ -1962,33 +1961,40 @@ const AdDetail: React.FC = () => {
                           // Diğer Bilgiler
                           {
                             label: "Takas",
-                            value: (() => {
-                              // Önce takasli field'ını kontrol et (Tanker vb için)
-                              if (ad.customFields?.takasli) {
-                                return ad.customFields.takasli === "evet" ||
-                                  ad.customFields.takasli === true
-                                  ? "Evet"
-                                  : "Hayır";
-                              }
-                              // Sonra isExchangeable kontrol et
-                              if (
-                                ad.customFields?.isExchangeable !== undefined
-                              ) {
-                                return ad.customFields.isExchangeable ===
-                                  true ||
-                                  ad.customFields.isExchangeable === "evet"
-                                  ? "Evet"
-                                  : "Hayır";
-                              }
-                              // En son exchange field'ı
-                              if (ad.customFields?.exchange) {
-                                return ad.customFields.exchange === "true" ||
-                                  ad.customFields.exchange === "evet"
-                                  ? "Evet"
-                                  : "Hayır";
-                              }
-                              return ad.takas || null;
-                            })(),
+                            value:
+                              ad.category?.id === 10 || ad.category?.id === 9
+                                ? null // Minivan ve Oto Kurtarıcı için gösterme, özel alanlarında var
+                                : (() => {
+                                    // Önce takasli field'ını kontrol et (Tanker vb için)
+                                    if (ad.customFields?.takasli) {
+                                      return ad.customFields.takasli ===
+                                        "evet" ||
+                                        ad.customFields.takasli === true
+                                        ? "Evet"
+                                        : "Hayır";
+                                    }
+                                    // Sonra isExchangeable kontrol et
+                                    if (
+                                      ad.customFields?.isExchangeable !==
+                                      undefined
+                                    ) {
+                                      return ad.customFields.isExchangeable ===
+                                        true ||
+                                        ad.customFields.isExchangeable ===
+                                          "evet"
+                                        ? "Evet"
+                                        : "Hayır";
+                                    }
+                                    // En son exchange field'ı
+                                    if (ad.customFields?.exchange) {
+                                      return ad.customFields.exchange ===
+                                        "true" ||
+                                        ad.customFields.exchange === "evet"
+                                        ? "Evet"
+                                        : "Hayır";
+                                    }
+                                    return ad.takas || null;
+                                  })(),
                           },
                           { label: "Hasar Durumu", value: ad.damage || null },
 

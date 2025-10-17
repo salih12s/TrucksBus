@@ -146,7 +146,6 @@ interface FormData {
   engineCapacity: string;
   cabinType: string;
   bedCount: string;
-  dorseAvailable: string;
   plateType: string;
   plateNumber: string;
   tireCondition: string;
@@ -266,7 +265,6 @@ const CekiciAdForm: React.FC = () => {
     engineCapacity: "",
     cabinType: "",
     bedCount: "yok",
-    dorseAvailable: "yok",
     plateType: "tr-plakali",
     plateNumber: "",
     tireCondition: "",
@@ -1197,30 +1195,8 @@ const CekiciAdForm: React.FC = () => {
                 </FormControl>
               </Box>
 
-              {/* Dorse, Plaka Tipi */}
+              {/* Plaka Tipi */}
               <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 3 }}>
-                <FormControl
-                  sx={{
-                    flex: 1,
-                    minWidth: 250,
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 3,
-                    },
-                  }}
-                >
-                  <InputLabel>Dorse Var Mı?</InputLabel>
-                  <Select
-                    value={formData.dorseAvailable}
-                    onChange={(e) =>
-                      handleInputChange("dorseAvailable", e.target.value)
-                    }
-                    required
-                    label="Dorse Var Mı?"
-                  >
-                    <MenuItem value="var">Var</MenuItem>
-                    <MenuItem value="yok">Yok</MenuItem>
-                  </Select>
-                </FormControl>
                 <FormControl
                   sx={{
                     flex: 1,
