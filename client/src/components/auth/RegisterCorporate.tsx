@@ -13,7 +13,7 @@ import {
   FormControlLabel,
   MenuItem,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, ArrowBack } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { registerUser, clearError } from "../../store/authSlice";
 import apiClient from "../../api/client";
@@ -269,32 +269,49 @@ const RegisterCorporate: React.FC = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        height: "100vh",
         display: "flex",
         backgroundColor: "#f8f9fa",
         justifyContent: "center",
         alignItems: "center",
         p: 2,
+        overflow: "hidden",
+        position: "relative",
       }}
     >
+      <IconButton
+        onClick={() => navigate("/login-selection")}
+        sx={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          color: "#666",
+          "&:hover": {
+            backgroundColor: "rgba(0,0,0,0.04)",
+          },
+        }}
+      >
+        <ArrowBack />
+      </IconButton>
       <Paper
         elevation={0}
         sx={{
           width: "100%",
-          maxWidth: 900,
+          maxWidth: 850,
           backgroundColor: "white",
           borderRadius: 2,
           border: "1px solid #e0e0e0",
-          overflow: "hidden",
+          overflow: "auto",
+          maxHeight: "90vh",
         }}
       >
         {/* Header with Logo/Brand */}
         <Box
           sx={{
             textAlign: "center",
-            pt: 6,
-            pb: 2,
-            px: 4,
+            pt: 2,
+            pb: 1.5,
+            px: 3,
             position: "relative",
           }}
         >
@@ -304,12 +321,12 @@ const RegisterCorporate: React.FC = () => {
               display: "inline-block",
               backgroundColor: "#E53E3E",
               color: "white",
-              px: 3,
-              py: 1,
+              px: 2,
+              py: 0.5,
               borderRadius: 1,
-              fontSize: "18px",
+              fontSize: "13px",
               fontWeight: "bold",
-              mb: 2,
+              mb: 1,
               letterSpacing: "0.5px",
             }}
           >
@@ -317,12 +334,12 @@ const RegisterCorporate: React.FC = () => {
           </Box>
 
           {/* Logo */}
-          <Box sx={{ mb: 2 }}>
+          <Box sx={{ mb: 1 }}>
             <img
               src="/Trucksbus.png"
               alt="TrucksBus Logo"
               style={{
-                height: "96px",
+                height: "50px",
                 width: "auto",
               }}
             />
@@ -334,18 +351,18 @@ const RegisterCorporate: React.FC = () => {
             sx={{
               fontWeight: "600",
               color: "#333",
-              mb: 1,
-              fontSize: "24px",
+              mb: 0.5,
+              fontSize: "18px",
             }}
           >
             Kurumsal Hesap Aç
           </Typography>
         </Box>
         {/* Form Container */}
-        <Box sx={{ px: 6, pb: 6 }}>
+        <Box sx={{ px: 3, pb: 3 }}>
           {/* Error Alert */}
           {(error || validationError) && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity="error" sx={{ mb: 1.5, py: 0.5, fontSize: "13px" }}>
               {validationError || error}
             </Alert>
           )}
@@ -357,8 +374,8 @@ const RegisterCorporate: React.FC = () => {
               sx={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
-                gap: 2,
-                mb: 2,
+                gap: 1.5,
+                mb: 1.5,
               }}
             >
               {/* Company Name - Full width first */}
@@ -374,25 +391,25 @@ const RegisterCorporate: React.FC = () => {
               required
               variant="outlined"
               sx={{
-                mb: 2,
+                mb: 1.5,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.1,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -402,8 +419,8 @@ const RegisterCorporate: React.FC = () => {
               sx={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
-                gap: 2,
-                mb: 2,
+                gap: 1.5,
+                mb: 1.5,
               }}
             >
               {/* First Name and Last Name */}
@@ -422,19 +439,19 @@ const RegisterCorporate: React.FC = () => {
                     borderRadius: 1,
                     "& fieldset": {
                       borderColor: "#ddd",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                     "&:hover fieldset": {
                       borderColor: "#4A90E2",
                     },
                     "&.Mui-focused fieldset": {
                       borderColor: "#4A90E2",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                   },
                   "& .MuiInputBase-input": {
-                    py: 2,
-                    fontSize: "16px",
+                    py: 1.1,
+                    fontSize: "14px",
                   },
                 }}
               />
@@ -453,19 +470,19 @@ const RegisterCorporate: React.FC = () => {
                     borderRadius: 1,
                     "& fieldset": {
                       borderColor: "#ddd",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                     "&:hover fieldset": {
                       borderColor: "#4A90E2",
                     },
                     "&.Mui-focused fieldset": {
                       borderColor: "#4A90E2",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                   },
                   "& .MuiInputBase-input": {
-                    py: 2,
-                    fontSize: "16px",
+                    py: 1.1,
+                    fontSize: "14px",
                   },
                 }}
               />
@@ -483,25 +500,25 @@ const RegisterCorporate: React.FC = () => {
               variant="outlined"
               autoComplete="email"
               sx={{
-                mb: 2,
+                mb: 1.5,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.1,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -519,25 +536,25 @@ const RegisterCorporate: React.FC = () => {
               autoComplete="new-password"
               helperText="En az 8 karakter, 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter (@$!%*?&)"
               sx={{
-                mb: 2,
+                mb: 1.5,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.1,
+                  fontSize: "14px",
                 },
                 "& .MuiFormHelperText-root": {
                   fontSize: "12px",
@@ -572,25 +589,25 @@ const RegisterCorporate: React.FC = () => {
               variant="outlined"
               autoComplete="new-password"
               sx={{
-                mb: 2,
+                mb: 1.5,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.1,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -599,31 +616,31 @@ const RegisterCorporate: React.FC = () => {
             <TextField
               fullWidth
               name="phone"
-              placeholder="Sabit Telefon"
+              placeholder="Telefon Numarası"
               value={formData.phone}
               onChange={handleChange}
               required
               variant="outlined"
               sx={{
-                mb: 2,
+                mb: 1.5,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.1,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -633,14 +650,15 @@ const RegisterCorporate: React.FC = () => {
               sx={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
-                gap: 2,
-                mb: 2,
+                gap: 1.5,
+                mb: 1.5,
               }}
             >
               <TextField
                 select
                 name="cityId"
-                placeholder="İl"
+                label="İl"
+                placeholder="İl Seçiniz"
                 value={formData.cityId}
                 onChange={handleChange}
                 required
@@ -651,19 +669,19 @@ const RegisterCorporate: React.FC = () => {
                     borderRadius: 1,
                     "& fieldset": {
                       borderColor: "#ddd",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                     "&:hover fieldset": {
                       borderColor: "#4A90E2",
                     },
                     "&.Mui-focused fieldset": {
                       borderColor: "#4A90E2",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                   },
                   "& .MuiInputBase-input": {
-                    py: 2,
-                    fontSize: "16px",
+                    py: 1.1,
+                    fontSize: "14px",
                   },
                 }}
               >
@@ -679,7 +697,8 @@ const RegisterCorporate: React.FC = () => {
               <TextField
                 select
                 name="districtId"
-                placeholder="İlçe"
+                label="İlçe"
+                placeholder="İlçe Seçiniz"
                 value={formData.districtId}
                 onChange={handleChange}
                 required
@@ -691,19 +710,19 @@ const RegisterCorporate: React.FC = () => {
                     borderRadius: 1,
                     "& fieldset": {
                       borderColor: "#ddd",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                     "&:hover fieldset": {
                       borderColor: "#4A90E2",
                     },
                     "&.Mui-focused fieldset": {
                       borderColor: "#4A90E2",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                   },
                   "& .MuiInputBase-input": {
-                    py: 2,
-                    fontSize: "16px",
+                    py: 1.1,
+                    fontSize: "14px",
                   },
                 }}
               >
@@ -730,25 +749,25 @@ const RegisterCorporate: React.FC = () => {
               multiline
               rows={3}
               sx={{
-                mb: 3,
+                mb: 2,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.1,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -756,16 +775,16 @@ const RegisterCorporate: React.FC = () => {
             {/* Business Type Section */}
             <Typography
               sx={{
-                fontSize: "16px",
+                fontSize: "14px",
                 fontWeight: "600",
                 color: "#333",
-                mb: 2,
+                mb: 1.5,
               }}
             >
               İşletme Türü
             </Typography>
 
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            <Box sx={{ display: "flex", gap: 1.5, mb: 3 }}>
               <FormControlLabel
                 control={
                   <Box
@@ -830,25 +849,25 @@ const RegisterCorporate: React.FC = () => {
               required
               variant="outlined"
               sx={{
-                mb: 3,
+                mb: 2,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.1,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -909,10 +928,10 @@ const RegisterCorporate: React.FC = () => {
               variant="contained"
               disabled={isLoading || !acceptTerms}
               sx={{
-                py: 2,
-                mb: 4,
+                py: 1.1,
+                mb: 2.5,
                 backgroundColor: "#4A90E2",
-                fontSize: "16px",
+                fontSize: "14px",
                 fontWeight: "600",
                 borderRadius: 1,
                 textTransform: "none",

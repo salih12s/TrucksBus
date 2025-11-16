@@ -12,7 +12,7 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, ArrowBack } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { registerUser, clearError } from "../../store/authSlice";
 
@@ -174,32 +174,49 @@ const Register: React.FC = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        height: "100vh",
         display: "flex",
         backgroundColor: "#f8f9fa",
         justifyContent: "center",
         alignItems: "center",
         p: 2,
+        overflow: "hidden",
+        position: "relative",
       }}
     >
+      <IconButton
+        onClick={() => navigate("/login-selection")}
+        sx={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          color: "#666",
+          "&:hover": {
+            backgroundColor: "rgba(0,0,0,0.04)",
+          },
+        }}
+      >
+        <ArrowBack />
+      </IconButton>
       <Paper
         elevation={0}
         sx={{
           width: "100%",
-          maxWidth: 420,
+          maxWidth: 400,
           backgroundColor: "white",
           borderRadius: 2,
           border: "1px solid #e0e0e0",
-          overflow: "hidden",
+          overflow: "auto",
+          maxHeight: "90vh",
         }}
       >
         {/* Header with Logo/Brand */}
         <Box
           sx={{
             textAlign: "center",
-            pt: 6,
-            pb: 4,
-            px: 4,
+            pt: 3,
+            pb: 2,
+            px: 2.5,
           }}
         >
           {/* TrucksBus.com Brand */}
@@ -208,10 +225,10 @@ const Register: React.FC = () => {
               display: "inline-block",
               backgroundColor: "#E53E3E",
               color: "white",
-              px: 3,
+              px: 2.5,
               py: 1,
               borderRadius: 1,
-              fontSize: "18px",
+              fontSize: "14px",
               fontWeight: "bold",
               mb: 2,
               letterSpacing: "0.5px",
@@ -226,7 +243,7 @@ const Register: React.FC = () => {
               src="/Trucksbus.png"
               alt="TrucksBus Logo"
               style={{
-                height: "96px",
+                height: "60px",
                 width: "auto",
               }}
             />
@@ -239,14 +256,14 @@ const Register: React.FC = () => {
               fontWeight: "600",
               color: "#333",
               mb: 2,
-              fontSize: "24px",
+              fontSize: "20px",
             }}
           >
             Hesap aç
           </Typography>
         </Box>
         {/* Form Container */}
-        <Box sx={{ px: 4, pb: 6 }}>
+        <Box sx={{ px: 2.5, pb: 6 }}>
           {/* Error Alert */}
           {(error || validationError) && (
             <Alert severity="error" sx={{ mb: 3 }}>
@@ -274,19 +291,19 @@ const Register: React.FC = () => {
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.2,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -314,19 +331,19 @@ const Register: React.FC = () => {
                     borderRadius: 1,
                     "& fieldset": {
                       borderColor: "#ddd",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                     "&:hover fieldset": {
                       borderColor: "#4A90E2",
                     },
                     "&.Mui-focused fieldset": {
                       borderColor: "#4A90E2",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                   },
                   "& .MuiInputBase-input": {
-                    py: 2,
-                    fontSize: "16px",
+                    py: 1.2,
+                    fontSize: "14px",
                   },
                 }}
               />
@@ -345,19 +362,19 @@ const Register: React.FC = () => {
                     borderRadius: 1,
                     "& fieldset": {
                       borderColor: "#ddd",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                     "&:hover fieldset": {
                       borderColor: "#4A90E2",
                     },
                     "&.Mui-focused fieldset": {
                       borderColor: "#4A90E2",
-                      borderWidth: "2px",
+                      borderWidth: "1px",
                     },
                   },
                   "& .MuiInputBase-input": {
-                    py: 2,
-                    fontSize: "16px",
+                    py: 1.2,
+                    fontSize: "14px",
                   },
                 }}
               />
@@ -379,19 +396,19 @@ const Register: React.FC = () => {
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.2,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -415,19 +432,19 @@ const Register: React.FC = () => {
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.2,
+                  fontSize: "14px",
                 },
                 "& .MuiFormHelperText-root": {
                   fontSize: "12px",
@@ -462,25 +479,25 @@ const Register: React.FC = () => {
               variant="outlined"
               autoComplete="new-password"
               sx={{
-                mb: 3,
+                mb: 2,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.2,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -534,10 +551,10 @@ const Register: React.FC = () => {
               variant="contained"
               disabled={isLoading || !acceptTerms}
               sx={{
-                py: 2,
-                mb: 4,
+                py: 1.2,
+                mb: 2.5,
                 backgroundColor: "#4A90E2",
-                fontSize: "16px",
+                fontSize: "14px",
                 fontWeight: "600",
                 borderRadius: 1,
                 textTransform: "none",

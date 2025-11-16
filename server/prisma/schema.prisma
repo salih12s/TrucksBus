@@ -42,8 +42,27 @@ model User {
   notifications    Notification[] @relation("UserNotifications")
   reviewedAds      PendingAd[]    @relation("ReviewedByAdmin")
   userDopings      UserDoping[]   @relation("UserDopings")
+  subscriptions    Subscription[] @relation("UserSubscriptions")
 
   @@map("users")
+}
+
+model Subscription {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  packageType    String   @map("package_type") // "trucks", "trucks_plus", "trucksbus"
+  adLimit        Int      @map("ad_limit") // 3, 5, 10
+  adsUsed        Int      @default(0) @map("ads_used")
+  price          Float
+  isActive       Boolean  @default(true) @map("is_active")
+  startDate      DateTime @default(now()) @map("start_date")
+  endDate        DateTime @map("end_date")
+  isTrial        Boolean  @default(true) @map("is_trial") // İlk 3 ay ücretsiz
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  user           User     @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
 }
 
 model Category {

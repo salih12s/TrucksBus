@@ -184,14 +184,6 @@ const CreateMinibusAdForm: React.FC = () => {
   const selectedModelSlug = modelSlug || searchParams.get("model");
   const selectedVariantSlug = variantSlug || searchParams.get("variant");
 
-  // Debug log'ları
-  console.log("URL Parametreleri:", {
-    categorySlug: selectedCategorySlug,
-    brandSlug: selectedBrandSlug,
-    modelSlug: selectedModelSlug,
-    variantSlug: selectedVariantSlug,
-  });
-
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);

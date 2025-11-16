@@ -44,6 +44,7 @@ import { useAppSelector } from "@/hooks/redux";
 import type { RootState } from "@/store";
 import * as dopingApi from "@/api/doping";
 import { authApi } from "@/api/auth";
+import { subscriptionApi } from "@/api/subscription";
 
 const Profile: React.FC = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
@@ -83,6 +84,9 @@ const Profile: React.FC = () => {
     activeDopings: 0,
   });
 
+  // Subscription data
+  const [subscription, setSubscription] = useState<any>(null);
+
   // Form data
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
@@ -106,14 +110,16 @@ const Profile: React.FC = () => {
       try {
         setLoading(true);
 
-        // Fetch dopings and stats in parallel
-        const [dopings, stats] = await Promise.all([
+        // Fetch dopings, stats, and subscription in parallel
+        const [dopings, stats, userSubscription] = await Promise.all([
           dopingApi.getUserDopings(),
           authApi.getUserStats(),
+          subscriptionApi.getMySubscription().catch(() => null),
         ]);
 
         setUserDopings(dopings);
         setUserStats(stats);
+        setSubscription(userSubscription);
       } catch (error: unknown) {
         console.error("Error fetching user data:", error);
       } finally {
@@ -244,27 +250,57 @@ const Profile: React.FC = () => {
         )}
 
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant={isMobile ? "h5" : "h4"}
+        <Box
+          sx={{
+            mb: 4,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography
+              variant={isMobile ? "h5" : "h4"}
+              sx={{
+                fontWeight: 600,
+                color: "#1a1a1a",
+                fontSize: { xs: "1.75rem", sm: "2.125rem" },
+                mb: 1,
+              }}
+            >
+              Profil Ayarları
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: "#6b7280",
+                fontSize: isMobile ? "0.875rem" : "1rem",
+              }}
+            >
+              Hesap bilgilerinizi yönetin ve güncelleyin
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => (window.location.href = "/packages")}
             sx={{
+              background: "linear-gradient(135deg, #D34237 0%, #313B4C 100%)",
+              color: "white",
               fontWeight: 600,
-              color: "#1a1a1a",
-              fontSize: { xs: "1.75rem", sm: "2.125rem" },
-              mb: 1,
+              px: 4,
+              py: 1.5,
+              fontSize: "1rem",
+              "&:hover": {
+                background: "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                transform: "scale(1.02)",
+              },
             }}
           >
-            Profil Ayarları
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{
-              color: "#6b7280",
-              fontSize: isMobile ? "0.875rem" : "1rem",
-            }}
-          >
-            Hesap bilgilerinizi yönetin ve güncelleyin
-          </Typography>
+            🏪 Dükkan Aç
+          </Button>
         </Box>
 
         {/* Tabs */}
@@ -460,6 +496,72 @@ const Profile: React.FC = () => {
                   </Box>
                 </Stack>
               </Paper>
+
+              {/* Subscription Card */}
+              {subscription && (
+                <Paper
+                  sx={{
+                    p: 2.5,
+                    mt: 2,
+                    background: subscription.isTrial
+                      ? "linear-gradient(135deg, #D34237 0%, #313B4C 100%)"
+                      : "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)",
+                    color: "white",
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                    🏪 Aktif Paket
+                  </Typography>
+                  <Stack spacing={1.5}>
+                    <Box>
+                      <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        {subscription.packageType === "trucks"
+                          ? "Trucks"
+                          : subscription.packageType === "trucks_plus"
+                          ? "Trucks+"
+                          : "TrucksBus"}
+                      </Typography>
+                      {subscription.isTrial && (
+                        <Chip
+                          label="Deneme Süresi"
+                          size="small"
+                          sx={{
+                            backgroundColor: "rgba(255,255,255,0.2)",
+                            color: "white",
+                            mt: 0.5,
+                          }}
+                        />
+                      )}
+                    </Box>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Typography variant="body2">İlan Hakkı</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        {subscription.adsUsed} / {subscription.adLimit}
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Typography variant="body2">Bitiş Tarihi</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                        {new Date(subscription.endDate).toLocaleDateString(
+                          "tr-TR"
+                        )}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              )}
             </Box>
 
             {/* Profile Form */}

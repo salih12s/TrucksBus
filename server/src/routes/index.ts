@@ -14,6 +14,7 @@ import complaintRoutes from "./complaint";
 import messagingRoutes from "./messaging";
 import citiesRoutes from "./cities";
 import debugRoutes from "./debug";
+import subscriptionRoutes from "./subscriptionRoutes";
 
 const router = Router();
 
@@ -34,6 +35,7 @@ router.use("/favorites", favoriteRoutes);
 router.use("/complaints", complaintRoutes);
 router.use("/messages", messagingRoutes);
 router.use("/cities", citiesRoutes);
+router.use("/subscriptions", subscriptionRoutes);
 
 // Test endpoint for debugging
 router.get("/test", (req, res) => {

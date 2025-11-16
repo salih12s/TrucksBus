@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -12,14 +12,13 @@ import {
   Checkbox,
   FormControlLabel,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, ArrowBack } from "@mui/icons-material";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { loginUser, clearError } from "../../store/authSlice";
 
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { isLoading, error } = useAppSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
@@ -28,16 +27,6 @@ const Login: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-
-  // Check if this is corporate login
-  const isCorporateLogin = searchParams.get("type") === "corporate";
-
-  useEffect(() => {
-    // If this is corporate login, redirect to corporate registration page
-    if (isCorporateLogin) {
-      navigate("/register-corporate");
-    }
-  }, [isCorporateLogin, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -70,32 +59,49 @@ const Login: React.FC = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        height: "100vh",
         display: "flex",
         backgroundColor: "#f8f9fa",
         justifyContent: "center",
         alignItems: "center",
         p: 2,
+        overflow: "hidden",
+        position: "relative",
       }}
     >
+      <IconButton
+        onClick={() => navigate("/login-selection")}
+        sx={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          color: "#666",
+          "&:hover": {
+            backgroundColor: "rgba(0,0,0,0.04)",
+          },
+        }}
+      >
+        <ArrowBack />
+      </IconButton>
       <Paper
         elevation={0}
         sx={{
           width: "100%",
-          maxWidth: 420,
+          maxWidth: 400,
           backgroundColor: "white",
           borderRadius: 2,
           border: "1px solid #e0e0e0",
-          overflow: "hidden",
+          overflow: "auto",
+          maxHeight: "90vh",
         }}
       >
         {/* Header with Logo/Brand */}
         <Box
           sx={{
             textAlign: "center",
-            pt: 6,
-            pb: 4,
-            px: 4,
+            pt: 3,
+            pb: 2,
+            px: 3,
           }}
         >
           {/* TrucksBus.com Brand */}
@@ -104,12 +110,12 @@ const Login: React.FC = () => {
               display: "inline-block",
               backgroundColor: "#E53E3E",
               color: "white",
-              px: 3,
-              py: 1,
+              px: 2,
+              py: 0.5,
               borderRadius: 1,
-              fontSize: "18px",
+              fontSize: "14px",
               fontWeight: "bold",
-              mb: 2,
+              mb: 1.5,
               letterSpacing: "0.5px",
             }}
           >
@@ -117,12 +123,12 @@ const Login: React.FC = () => {
           </Box>
 
           {/* Logo */}
-          <Box sx={{ mb: 4 }}>
+          <Box sx={{ mb: 2 }}>
             <img
               src="/Trucksbus.png"
               alt="TrucksBus Logo"
               style={{
-                height: "96px",
+                height: "60px",
                 width: "auto",
               }}
             />
@@ -134,8 +140,8 @@ const Login: React.FC = () => {
             sx={{
               fontWeight: "600",
               color: "#333",
-              mb: 2,
-              fontSize: "24px",
+              mb: 1,
+              fontSize: "20px",
             }}
           >
             Giriş yap
@@ -143,10 +149,10 @@ const Login: React.FC = () => {
         </Box>
 
         {/* Form Container */}
-        <Box sx={{ px: 4, pb: 6 }}>
+        <Box sx={{ px: 3, pb: 3 }}>
           {/* Error Alert */}
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity="error" sx={{ mb: 2, py: 0.5, fontSize: "13px" }}>
               {error}
             </Alert>
           )}
@@ -165,25 +171,25 @@ const Login: React.FC = () => {
               variant="outlined"
               autoComplete="email"
               sx={{
-                mb: 3,
+                mb: 2,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.2,
+                  fontSize: "14px",
                 },
               }}
             />
@@ -200,25 +206,25 @@ const Login: React.FC = () => {
               variant="outlined"
               autoComplete="current-password"
               sx={{
-                mb: 3,
+                mb: 2,
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "transparent",
                   borderRadius: 1,
                   "& fieldset": {
                     borderColor: "#ddd",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                   "&:hover fieldset": {
                     borderColor: "#4A90E2",
                   },
                   "&.Mui-focused fieldset": {
                     borderColor: "#4A90E2",
-                    borderWidth: "2px",
+                    borderWidth: "1px",
                   },
                 },
                 "& .MuiInputBase-input": {
-                  py: 2,
-                  fontSize: "16px",
+                  py: 1.2,
+                  fontSize: "14px",
                 },
               }}
               InputProps={{
@@ -242,7 +248,7 @@ const Login: React.FC = () => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                mb: 4,
+                mb: 2.5,
               }}
             >
               <FormControlLabel
@@ -255,11 +261,12 @@ const Login: React.FC = () => {
                       "&.Mui-checked": {
                         color: "#4A90E2",
                       },
+                      padding: "6px",
                     }}
                   />
                 }
                 label={
-                  <Typography sx={{ fontSize: "14px", color: "#666" }}>
+                  <Typography sx={{ fontSize: "13px", color: "#666" }}>
                     Oturumumu açık kalsın
                   </Typography>
                 }
@@ -269,7 +276,7 @@ const Login: React.FC = () => {
                 style={{
                   color: "#4A90E2",
                   textDecoration: "none",
-                  fontSize: "14px",
+                  fontSize: "13px",
                 }}
               >
                 Şifremi unuttum
@@ -283,10 +290,10 @@ const Login: React.FC = () => {
               variant="contained"
               disabled={isLoading}
               sx={{
-                py: 2,
-                mb: 4,
+                py: 1.3,
+                mb: 2.5,
                 backgroundColor: "#4A90E2",
-                fontSize: "16px",
+                fontSize: "14px",
                 fontWeight: "600",
                 borderRadius: 1,
                 textTransform: "none",
@@ -305,7 +312,10 @@ const Login: React.FC = () => {
 
             {/* Register Link */}
             <Box sx={{ textAlign: "center" }}>
-              <Typography variant="body2" sx={{ color: "#666", mb: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{ color: "#666", fontSize: "13px" }}
+              >
                 Henüz hesabın yok mu?{" "}
                 <Link
                   to="/register"
@@ -317,21 +327,6 @@ const Login: React.FC = () => {
                 >
                   Hesap aç ▸
                 </Link>
-              </Typography>
-            </Box>
-
-            {/* Divider */}
-            <Box sx={{ textAlign: "center", my: 3 }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "#999",
-                  fontSize: "12px",
-                  textTransform: "uppercase",
-                  letterSpacing: "1px",
-                }}
-              >
-                VEYA
               </Typography>
             </Box>
           </Box>

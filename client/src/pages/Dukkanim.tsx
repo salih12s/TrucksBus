@@ -30,6 +30,7 @@ import type { RootState } from "../store";
 import type { User } from "../store/authSlice";
 import { setCredentials } from "../store/authSlice";
 import apiClient from "../api/client";
+import { subscriptionApi } from "../api/subscription";
 
 interface AdImage {
   id: number;
@@ -134,6 +135,7 @@ const Dukkanim: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -155,10 +157,15 @@ const Dukkanim: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      // Kullanıcının ilanlarını getir
-      const adsResponse = await apiClient.get("/ads/user/my-ads?limit=50");
+      // Kullanıcının ilanlarını ve subscription'ını getir
+      const [adsResponse, userSubscription] = await Promise.all([
+        apiClient.get("/ads/user/my-ads?limit=50"),
+        subscriptionApi.getMySubscription().catch(() => null),
+      ]);
+
       const { ads } = adsResponse.data as { ads: Ad[]; pagination: Pagination };
       setUserAds(ads);
+      setSubscription(userSubscription);
     } catch (error) {
       console.error("Store data fetch error:", error);
       setError("Mağaza verileri yüklenirken bir hata oluştu");
@@ -470,15 +477,35 @@ const Dukkanim: React.FC = () => {
               "Dükkanım"}
           </Typography>
 
-          {/* Ayarlar Butonu */}
+          {/* Ayarlar ve Dükkan Aç Butonları */}
           <Box
             sx={{
               position: "absolute",
               right: 30,
               top: "50%",
               transform: "translateY(-50%)",
+              display: "flex",
+              gap: 2,
             }}
           >
+            <Button
+              variant="contained"
+              sx={{
+                background: "linear-gradient(135deg, #D34237 0%, #313B4C 100%)",
+                color: "white",
+                fontWeight: 600,
+                px: 3,
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
+                  transform: "scale(1.02)",
+                },
+                borderRadius: 2,
+              }}
+              onClick={() => navigate("/packages")}
+            >
+              🏪 Dükkan Aç
+            </Button>
             <Button
               variant="contained"
               startIcon={<Settings />}
@@ -533,6 +560,27 @@ const Dukkanim: React.FC = () => {
                   size="small"
                   variant="outlined"
                 />
+
+                {subscription && (
+                  <Chip
+                    label={`${
+                      subscription.packageType === "trucks"
+                        ? "Trucks"
+                        : subscription.packageType === "trucks_plus"
+                        ? "Trucks+"
+                        : "TrucksBus"
+                    } - ${subscription.adsUsed}/${subscription.adLimit} ilan`}
+                    size="small"
+                    color="primary"
+                    variant="filled"
+                    sx={{
+                      fontWeight: 600,
+                      background: subscription.isTrial
+                        ? "linear-gradient(135deg, #D34237 0%, #313B4C 100%)"
+                        : "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)",
+                    }}
+                  />
+                )}
 
                 {user?.phone && (
                   <Chip

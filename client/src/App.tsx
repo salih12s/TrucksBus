@@ -409,6 +409,14 @@ function App() {
                             }
                           />
                           <Route
+                            path="/packages"
+                            element={
+                              <ProtectedRoute>
+                                <MainLayout />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
                             path="/my-ads"
                             element={
                               <ProtectedRoute>

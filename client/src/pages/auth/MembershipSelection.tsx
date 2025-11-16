@@ -24,30 +24,33 @@ const MembershipSelection: React.FC = () => {
       <Header />
       <Box
         sx={{
-          minHeight: "100vh",
+          height: "100vh",
           backgroundColor: "white",
-          pt: 10,
-          pb: 4,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          position: "relative",
         }}
       >
-        <Container maxWidth="md">
-          <Box sx={{ mb: 4, textAlign: "center" }}>
-            <Button
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate("/")}
-              sx={{
-                position: "absolute",
-                top: 120,
-                left: 32,
-                color: "#666",
-                "&:hover": {
-                  backgroundColor: "rgba(0,0,0,0.04)",
-                },
-              }}
-            >
-              Ana Sayfaya Dön
-            </Button>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/")}
+          sx={{
+            position: "fixed",
+            top: 100,
+            left: 24,
+            color: "#666",
+            zIndex: 10,
+            "&:hover": {
+              backgroundColor: "rgba(0,0,0,0.04)",
+            },
+          }}
+        >
+          Ana Sayfaya Dön
+        </Button>
 
+        <Container maxWidth="lg" sx={{ py: 2 }}>
+          <Box sx={{ mb: 2, textAlign: "center" }}>
             <Typography
               variant="h3"
               sx={{
@@ -55,7 +58,8 @@ const MembershipSelection: React.FC = () => {
                 background: "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
-                mb: 2,
+                mb: 0.5,
+                fontSize: { xs: "1.75rem", md: "2.5rem" },
               }}
             >
               Üyelik Türünü Seçin
@@ -65,6 +69,7 @@ const MembershipSelection: React.FC = () => {
               sx={{
                 color: "#666",
                 fontWeight: 400,
+                fontSize: { xs: "0.9rem", md: "1.1rem" },
               }}
             >
               Size uygun üyelik türünü seçerek devam edin
@@ -75,81 +80,98 @@ const MembershipSelection: React.FC = () => {
             sx={{
               display: "grid",
               gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-              gap: 4,
+              gap: 2.5,
+              maxWidth: "850px",
+              margin: "0 auto",
             }}
           >
             {/* Normal Üye */}
             <Box>
               <Card
                 elevation={8}
+                onClick={() => navigate("/register?type=normal")}
                 sx={{
                   height: "100%",
                   borderRadius: 4,
                   transition: "all 0.3s ease-in-out",
+                  cursor: "pointer",
                   "&:hover": {
                     transform: "translateY(-8px)",
                     boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
                   },
                 }}
               >
-                <CardContent sx={{ p: 4, textAlign: "center" }}>
+                <CardContent sx={{ p: 2.5, textAlign: "center" }}>
                   <Box
                     sx={{
                       background:
                         "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)",
                       borderRadius: "50%",
-                      width: 80,
-                      height: 80,
+                      width: 60,
+                      height: 60,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      margin: "0 auto 24px",
+                      margin: "0 auto 12px",
                     }}
                   >
-                    <PersonIcon sx={{ color: "white", fontSize: 40 }} />
+                    <PersonIcon sx={{ color: "white", fontSize: 32 }} />
                   </Box>
 
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
+                  <Typography
+                    variant="h5"
+                    sx={{ fontWeight: 700, mb: 1, fontSize: "1.35rem" }}
+                  >
                     Bireysel Üye
                   </Typography>
 
                   <Typography
-                    variant="body1"
-                    sx={{ color: "#666", mb: 3, lineHeight: 1.6 }}
+                    variant="body2"
+                    sx={{
+                      color: "#666",
+                      mb: 1.5,
+                      lineHeight: 1.4,
+                      fontSize: "0.875rem",
+                    }}
                   >
                     Bireysel kullanıcılar için ideal. Araç alım-satım
                     işlemlerinizi kolayca gerçekleştirin.
                   </Typography>
 
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="body2" sx={{ color: "#888", mb: 1 }}>
+                  <Box sx={{ mb: 1.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#888", mb: 0.3, fontSize: "0.8rem" }}
+                    >
                       ✓ Ücretsiz ilan verme
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "#888", mb: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#888", mb: 0.3, fontSize: "0.8rem" }}
+                    >
                       ✓ Mesajlaşma sistemi
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "#888", mb: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#888", mb: 0.3, fontSize: "0.8rem" }}
+                    >
                       ✓ Favoriler listesi
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#888" }}>
-                      ✓ İlan yönetimi
                     </Typography>
                   </Box>
                 </CardContent>
 
-                <CardActions sx={{ p: 4, pt: 0 }}>
+                <CardActions sx={{ p: 2.5, pt: 0 }}>
                   <Button
                     fullWidth
                     variant="contained"
                     size="large"
-                    onClick={() => navigate("/register?type=normal")}
                     sx={{
                       background:
                         "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)",
                       color: "white",
                       fontWeight: 600,
-                      py: 1.5,
-                      fontSize: "16px",
+                      py: 1,
+                      fontSize: "14px",
                       borderRadius: 2,
                       "&:hover": {
                         background:
@@ -167,74 +189,89 @@ const MembershipSelection: React.FC = () => {
             <Box>
               <Card
                 elevation={8}
+                onClick={() => navigate("/register?type=corporate")}
                 sx={{
                   height: "100%",
                   borderRadius: 4,
                   transition: "all 0.3s ease-in-out",
+                  cursor: "pointer",
                   "&:hover": {
                     transform: "translateY(-8px)",
                     boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
                   },
                 }}
               >
-                <CardContent sx={{ p: 4, textAlign: "center" }}>
+                <CardContent sx={{ p: 2.5, textAlign: "center" }}>
                   <Box
                     sx={{
                       background:
                         "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       borderRadius: "50%",
-                      width: 80,
-                      height: 80,
+                      width: 60,
+                      height: 60,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      margin: "0 auto 24px",
+                      margin: "0 auto 12px",
                     }}
                   >
-                    <BusinessIcon sx={{ color: "white", fontSize: 40 }} />
+                    <BusinessIcon sx={{ color: "white", fontSize: 32 }} />
                   </Box>
 
-                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
+                  <Typography
+                    variant="h5"
+                    sx={{ fontWeight: 700, mb: 1, fontSize: "1.35rem" }}
+                  >
                     Kurumsal Üye
                   </Typography>
 
                   <Typography
-                    variant="body1"
-                    sx={{ color: "#666", mb: 3, lineHeight: 1.6 }}
+                    variant="body2"
+                    sx={{
+                      color: "#666",
+                      mb: 1.5,
+                      lineHeight: 1.4,
+                      fontSize: "0.875rem",
+                    }}
                   >
                     Şirketler ve kurumlar için özel avantajlarla donatılmış
                     profesyonel üyelik.
                   </Typography>
 
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="body2" sx={{ color: "#888", mb: 1 }}>
+                  <Box sx={{ mb: 1.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#888", mb: 0.3, fontSize: "0.8rem" }}
+                    >
                       ✓ Sınırsız ilan verme
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "#888", mb: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#888", mb: 0.3, fontSize: "0.8rem" }}
+                    >
                       ✓ Öncelikli destek
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "#888", mb: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#888", mb: 0.3, fontSize: "0.8rem" }}
+                    >
                       ✓ Öne çıkarma hizmetleri
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#888" }}>
-                      ✓ Detaylı raporlama
                     </Typography>
                   </Box>
                 </CardContent>
 
-                <CardActions sx={{ p: 4, pt: 0 }}>
+                <CardActions sx={{ p: 2.5, pt: 0 }}>
                   <Button
                     fullWidth
                     variant="contained"
                     size="large"
-                    onClick={() => navigate("/register?type=corporate")}
                     sx={{
                       background:
                         "linear-gradient(135deg, #313B4C 0%, #D34237 100%)",
                       color: "white",
                       fontWeight: 600,
-                      py: 1.5,
-                      fontSize: "16px",
+                      py: 1,
+                      fontSize: "14px",
                       borderRadius: 2,
                       "&:hover": {
                         background:
@@ -249,8 +286,11 @@ const MembershipSelection: React.FC = () => {
             </Box>
           </Box>
 
-          <Box sx={{ textAlign: "center", mt: 4 }}>
-            <Typography variant="body2" sx={{ color: "#888" }}>
+          <Box sx={{ textAlign: "center", mt: 1.5 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "#888", fontSize: "0.85rem" }}
+            >
               Zaten hesabınız var mı?{" "}
               <Button
                 component="span"
@@ -261,6 +301,7 @@ const MembershipSelection: React.FC = () => {
                   textTransform: "none",
                   p: 0,
                   minWidth: "auto",
+                  fontSize: "0.85rem",
                   "&:hover": {
                     backgroundColor: "transparent",
                     textDecoration: "underline",

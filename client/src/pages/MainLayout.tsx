@@ -50,6 +50,7 @@ import Doping from "./Doping";
 import MessagesPage from "./MessagesPage";
 import Complaints from "./Complaints";
 import Dukkanim from "./Dukkanim";
+import PackageSelection from "../components/subscription/PackageSelection";
 import LazyImage from "../components/common/LazyImage";
 
 interface Category {
@@ -251,6 +252,7 @@ const MainLayout: React.FC = () => {
   // Define avatar menu pages that don't need sidebar
   const avatarMenuPages = [
     "/profile",
+    "/packages",
     "/my-ads",
     "/doping",
     "/messages",
@@ -8672,6 +8674,8 @@ const MainLayout: React.FC = () => {
             <AboutPage />
           ) : location.pathname === "/profile" && isAuthenticated ? (
             <Profile />
+          ) : location.pathname === "/packages" && isAuthenticated ? (
+            <PackageSelection />
           ) : location.pathname === "/my-ads" && isAuthenticated ? (
             <MyAds />
           ) : location.pathname === "/doping" && isAuthenticated ? (
