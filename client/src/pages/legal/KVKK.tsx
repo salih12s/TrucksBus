@@ -236,10 +236,7 @@ const KVKK: React.FC = () => {
             }}
           >
             <Typography variant="body1">
-              <strong>E-posta:</strong> kvkk@trucksbus.com.tr
-            </Typography>
-            <Typography variant="body1">
-              <strong>Telefon:</strong> +90 (555) 123 45 67
+              <strong>E-posta:</strong> iletisim@trucksbus.com.tr
             </Typography>
             <Typography variant="body1">
               <strong>Adres:</strong> İstanbul, Türkiye

@@ -314,9 +314,7 @@ const TermsOfService: React.FC = () => {
                     📞 Hukuki Destek ve İletişim
                   </Typography>
                   <Typography variant="body2" sx={{ lineHeight: 1.8 }}>
-                    <strong>E-posta:</strong> hukuk@trucksbus.com.tr
-                    <br />
-                    <strong>Telefon:</strong> +90 (212) XXX-XXXX
+                    <strong>E-posta:</strong> iletisim@trucksbus.com.tr
                     <br />
                     <strong>Adres:</strong> TrucksBus Ltd. Şti., İstanbul,
                     Türkiye

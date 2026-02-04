@@ -16,7 +16,6 @@ import {
 import {
   ExpandMore,
   Help,
-  Phone,
   Email,
   Chat,
   VideoCall,
@@ -105,7 +104,7 @@ const HelpGuide: React.FC = () => {
         },
         {
           q: "Şüpheli bir ilan nasıl bildirerim?",
-          a: "İlan sayfasında 'Şikayet Et' butonunu kullanın veya support@trucksbus.com.tr adresine yazın. Ekibimiz 24 saat içinde inceleme yapar.",
+          a: "İlan sayfasında 'Şikayet Et' butonunu kullanın veya iletisim@trucksbus.com.tr adresine yazın. Ekibimiz 24 saat içinde inceleme yapar.",
         },
       ],
     },
@@ -130,17 +129,10 @@ const HelpGuide: React.FC = () => {
 
   const contactMethods = [
     {
-      icon: <Phone sx={{ fontSize: 32, color: "#D34237" }} />,
-      title: "Telefon Desteği",
-      description: "7/24 canlı destek hattı",
-      contact: "+90 (555) 123 45 67",
-      hours: "Pazartesi-Pazar 00:00-24:00",
-    },
-    {
       icon: <Email sx={{ fontSize: 32, color: "#D34237" }} />,
       title: "E-posta Desteği",
       description: "Detaylı sorularınız için",
-      contact: "support@trucksbus.com.tr",
+      contact: "iletisim@trucksbus.com.tr",
       hours: "24 saat içinde yanıt",
     },
     {

@@ -52,6 +52,7 @@ import Complaints from "./Complaints";
 import Dukkanim from "./Dukkanim";
 import PackageSelection from "../components/subscription/PackageSelection";
 import LazyImage from "../components/common/LazyImage";
+import MeetUs from "../components/common/MeetUs";
 
 interface Category {
   id: string;
@@ -9680,6 +9681,12 @@ const MainLayout: React.FC = () => {
           )}
         </Box>
       </Box>
+
+      {/* Meet Us Section - Only show on main listing page */}
+      {!isAvatarMenuPage &&
+        !isFooterPage &&
+        !isAdDetailPage &&
+        !isBookmarksPage && <MeetUs />}
 
       <Footer />
 

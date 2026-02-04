@@ -336,8 +336,8 @@ const CerezYonetimi: React.FC = () => {
                         cookie.type === "Zorunlu"
                           ? "#f44336"
                           : cookie.type === "Analitik"
-                          ? "#2196f3"
-                          : "#ff9800",
+                            ? "#2196f3"
+                            : "#ff9800",
                       fontWeight: 500,
                     }}
                   >
@@ -408,9 +408,7 @@ const CerezYonetimi: React.FC = () => {
             geçebilirsiniz:
           </Typography>
           <Typography variant="body2">
-            📧 <strong>E-posta:</strong> cerez@trucksbus.com
-            <br />
-            📞 <strong>Telefon:</strong> 0 850 222 44 44
+            📧 <strong>E-posta:</strong> iletisim@trucksbus.com.tr
           </Typography>
         </Paper>
       </Container>

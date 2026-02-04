@@ -237,9 +237,12 @@ const messagingSlice = createSlice({
 
         // Only increment unread count if this message is received (not sent)
         // and the conversation is not currently open
+        // and user is not on messages page
+        const isOnMessagesPage = window.location.pathname.includes("/messages");
         if (
           message.receiverId === currentUserId &&
-          state.currentConversation.otherUserId !== message.senderId
+          state.currentConversation.otherUserId !== message.senderId &&
+          !isOnMessagesPage
         ) {
           existingConversation.unreadCount++;
           state.unreadCount++;

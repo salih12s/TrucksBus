@@ -93,7 +93,7 @@ Ek bilgiler:
     `);
 
     window.open(
-      `mailto:support@trucksbus.com.tr?subject=${subject}&body=${body}`
+      `mailto:iletisim@trucksbus.com.tr?subject=${subject}&body=${body}`,
     );
   };
 

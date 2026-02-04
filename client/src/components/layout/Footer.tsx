@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Container, Typography, Link } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { Phone, Email } from "@mui/icons-material";
+import { Email } from "@mui/icons-material";
 import FeedbackModal from "../modals/FeedbackModal";
 
 const Footer: React.FC = () => {
@@ -256,24 +256,6 @@ const Footer: React.FC = () => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Phone sx={{ color: "#d63384", fontSize: 18 }} />
-                <Box>
-                  <Typography
-                    sx={{
-                      color: "#d63384",
-                      fontWeight: "bold",
-                      fontSize: "12px",
-                    }}
-                  >
-                    {t("footer.customerService247")}
-                  </Typography>
-                  <Typography
-                    sx={{ color: "#333", fontSize: "12px" }}
-                  ></Typography>
-                </Box>
-              </Box>
-
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Email sx={{ color: "#d63384", fontSize: 18 }} />
                 <Box>
                   <Typography
@@ -286,7 +268,7 @@ const Footer: React.FC = () => {
                     {t("footer.helpCenter")}
                   </Typography>
                   <Typography sx={{ color: "#333", fontSize: "12px" }}>
-                    yardim.trucksbus.com.tr
+                    iletisim@trucksbus.com.tr
                   </Typography>
                 </Box>
               </Box>

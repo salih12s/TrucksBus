@@ -65,36 +65,31 @@ const MessagingSystem: React.FC = () => {
   } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const isInitialLoadRef = useRef(true); // İlk yükleme mi takip et
-  const lastConversationIdRef = useRef<string | null>(null); // Son açılan konuşma ID'si
+  const prevMessagesCountRef = useRef<number>(0); // Önceki mesaj sayısını takip et
 
-  // ✅ SADECE İLK YÜKLEMEDE SCROLL YAP - Mesaj gönderildiğinde ASLA scroll yapma
+  // ✅ Mesajlar değiştiğinde otomatik scroll
   useEffect(() => {
-    // Mevcut konuşma ID'sini hesapla
-    const currentConversationId = selectedConversation
-      ? `${selectedConversation.otherUser.id}-${selectedConversation.ad?.id || "general"}`
-      : newConversationParams
-        ? `${newConversationParams.userId}-${newConversationParams.adId || "general"}`
-        : null;
+    const currentMessagesCount = currentConversation.messages.length;
 
-    // Konuşma değişti mi kontrol et
-    if (currentConversationId !== lastConversationIdRef.current) {
-      isInitialLoadRef.current = true;
-      lastConversationIdRef.current = currentConversationId;
+    // Mesaj sayısı arttıysa (yeni mesaj geldi veya gönderildi) veya konuşma yeni açıldıysa
+    if (currentMessagesCount > 0) {
+      // Küçük bir gecikme ile scroll yap (DOM güncellemesini bekle)
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
     }
 
-    // SADECE İLK YÜKLEME'de scroll yap (konuşma açıldığında)
-    if (isInitialLoadRef.current && currentConversation.messages.length > 0) {
+    prevMessagesCountRef.current = currentMessagesCount;
+  }, [currentConversation.messages.length]);
+
+  // Konuşma değiştiğinde anında scroll (yumuşak değil, hızlı)
+  useEffect(() => {
+    if (selectedConversation && currentConversation.messages.length > 0) {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-      }, 200);
-      isInitialLoadRef.current = false; // Artık yeni mesajlarda scroll yapma
+      }, 150);
     }
-  }, [
-    currentConversation.messages,
-    selectedConversation,
-    newConversationParams,
-  ]);
+  }, [selectedConversation?.otherUser.id, selectedConversation?.ad?.id]);
 
   // Load conversations on component mount and refresh when needed
   useEffect(() => {
@@ -229,7 +224,7 @@ const MessagingSystem: React.FC = () => {
           });
       }
 
-      // ❌ SCROLL YAPMA - Kullanıcı istediği yerde kalabilir
+      // Mesaj gönderildikten sonra scroll otomatik olarak useEffect ile yapılır
     } catch (error) {
       console.error("Failed to send message:", error);
       setNewMessage(messageContent); // Hata durumunda mesajı geri yükle
@@ -239,8 +234,6 @@ const MessagingSystem: React.FC = () => {
   const handleConversationSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     setNewConversationParams(null); // Yeni konuşma modunu kapat
-    // Yeni konuşma açıldığında initial load flag'ini resetle
-    isInitialLoadRef.current = true;
   };
 
   const handleBackToConversations = () => {
@@ -248,9 +241,6 @@ const MessagingSystem: React.FC = () => {
     setNewConversationParams(null); // Yeni konuşma modunu kapat
     setNewConversationAd(null); // Ad bilgisini temizle
     dispatch(clearCurrentConversation());
-    // Konuşma listesine dönüldüğünde ref'leri resetle
-    isInitialLoadRef.current = true;
-    lastConversationIdRef.current = null;
   };
 
   const filteredConversations = conversations.filter(

@@ -21,7 +21,7 @@ const AdBanner: React.FC<AdBannerProps> = ({ variant = "horizontal" }) => {
     },
     {
       icon: "⭐",
-      text: "Premium reklam alanları - info@trucksbus.com.tr",
+      text: "Premium reklam alanları - iletisim@trucksbus.com.tr",
     },
     {
       icon: "🎯",

@@ -25,7 +25,6 @@ import {
   ExpandMore,
   Info,
   Email,
-  Phone,
 } from "@mui/icons-material";
 
 const KisiselVeriler: React.FC = () => {
@@ -337,8 +336,8 @@ const KisiselVeriler: React.FC = () => {
           </Typography>
           <Box
             sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+              display: "flex",
+              justifyContent: "center",
               gap: 3,
             }}
           >
@@ -347,14 +346,7 @@ const KisiselVeriler: React.FC = () => {
                 <Email sx={{ mr: 1, verticalAlign: "middle" }} />
                 E-posta
               </Typography>
-              <Typography variant="body2">kvkk@trucksbus.com</Typography>
-            </Box>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-                <Phone sx={{ mr: 1, verticalAlign: "middle" }} />
-                Telefon
-              </Typography>
-              <Typography variant="body2">0 850 222 44 44</Typography>
+              <Typography variant="body2">iletisim@trucksbus.com.tr</Typography>
             </Box>
           </Box>
           <Divider sx={{ my: 3 }} />

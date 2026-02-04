@@ -246,9 +246,7 @@ const KullanimKosullari: React.FC = () => {
             Bu kullanım koşulları hakkında sorularınız için:
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
-            📧 <strong>E-posta:</strong> info@trucksbus.com
-            <br />
-            📞 <strong>Telefon:</strong> 0 850 222 44 44
+            📧 <strong>E-posta:</strong> iletisim@trucksbus.com.tr
           </Typography>
         </Paper>
 

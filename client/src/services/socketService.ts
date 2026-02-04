@@ -85,10 +85,13 @@ class SocketService {
     // Listen for unread count updates
     this.socket.on("updateUnreadCount", () => {
       console.log("Unread count update received");
-      // Trigger unread count refresh
-      import("../store/messagingSlice").then(({ fetchUnreadCount }) => {
-        store.dispatch(fetchUnreadCount());
-      });
+      // Mesaj sayfasında değilsek unread count'u güncelle
+      if (!window.location.pathname.includes("/messages")) {
+        // Trigger unread count refresh
+        import("../store/messagingSlice").then(({ fetchUnreadCount }) => {
+          store.dispatch(fetchUnreadCount());
+        });
+      }
     });
 
     // Listen for new notifications

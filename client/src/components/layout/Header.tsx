@@ -39,9 +39,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
   const { user, isAuthenticated, isLoading } = useAppSelector(
-    (state) => state.auth
+    (state) => state.auth,
   );
-  const { unreadCount } = useAppSelector((state) => state.messaging);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -171,9 +170,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                 }}
                 onClick={() => navigate("/messages")}
               >
-                <Badge badgeContent={unreadCount} color="error">
-                  <MessageIcon sx={{ fontSize: isMobile ? 22 : 24 }} />
-                </Badge>
+                <MessageIcon sx={{ fontSize: isMobile ? 22 : 24 }} />
               </IconButton>
 
               <NotificationDropdown />

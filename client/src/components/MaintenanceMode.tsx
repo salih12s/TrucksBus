@@ -171,9 +171,7 @@ const MaintenanceMode: React.FC = () => {
                 color: "#666",
               }}
             >
-              📧 info@trucksbus.com.tr
-              <br />
-              📱 WhatsApp: +90 XXX XXX XX XX
+              📧 iletisim@trucksbus.com.tr
             </Typography>
           </Box>
 

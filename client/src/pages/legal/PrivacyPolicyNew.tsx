@@ -120,9 +120,7 @@ const PrivacyPolicy: React.FC = () => {
                       <br />
                       <strong>Adres:</strong> İstanbul, Türkiye
                       <br />
-                      <strong>E-posta:</strong> kvkk@trucksbus.com.tr
-                      <br />
-                      <strong>Telefon:</strong> +90 (212) XXX-XXXX
+                      <strong>E-posta:</strong> iletisim@trucksbus.com.tr
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında
@@ -372,7 +370,7 @@ const PrivacyPolicy: React.FC = () => {
                     başvurabilirsiniz:
                   </Typography>
                   <Typography variant="body2" sx={{ lineHeight: 1.8 }}>
-                    <strong>E-posta:</strong> kvkk@trucksbus.com.tr
+                    <strong>E-posta:</strong> iletisim@trucksbus.com.tr
                     <br />
                     <strong>Posta:</strong> TrucksBus Ltd. Şti., KVKK Sorumlusu,
                     İstanbul
@@ -437,7 +435,7 @@ const PrivacyPolicy: React.FC = () => {
                   Kullanım Şartları
                 </Button>
                 <Button
-                  href="mailto:kvkk@trucksbus.com.tr"
+                  href="mailto:iletisim@trucksbus.com.tr"
                   variant="outlined"
                   fullWidth
                 >
