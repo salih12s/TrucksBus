@@ -28,7 +28,7 @@ export const createNotification = async (
   title: string,
   message: string,
   type: "INFO" | "SUCCESS" | "WARNING" | "ERROR" = "INFO",
-  relatedId?: number
+  relatedId?: number,
 ) => {
   try {
     const notification = await prisma.notification.create({
@@ -50,7 +50,7 @@ export const createNotification = async (
 // Kullanıcının bildirimlerini getir
 export const getNotifications = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
@@ -93,7 +93,7 @@ export const getNotifications = async (
 // Bildirimi okundu olarak işaretle
 export const markAsRead = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const { notificationId } = req.params;
@@ -131,7 +131,7 @@ export const markAsRead = async (
 // Tüm bildirimleri okundu olarak işaretle
 export const markAllAsRead = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
@@ -168,7 +168,7 @@ export const markAllAsRead = async (
 // Bildirimi sil
 export const deleteNotification = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const { notificationId } = req.params;

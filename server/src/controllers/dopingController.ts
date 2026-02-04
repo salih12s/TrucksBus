@@ -60,7 +60,7 @@ export const getUserDopings = async (req: Request, res: Response) => {
 // Activate a doping package for user
 export const activateDoping = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const { packageId } = req.body;
@@ -159,7 +159,7 @@ export const getUserAds = async (req: Request, res: Response) => {
 // Deactivate a doping package
 export const deactivateDoping = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const dopingId = req.params.dopingId;

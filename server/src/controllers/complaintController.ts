@@ -17,7 +17,7 @@ const prisma = new PrismaClient();
 
 export const createComplaint = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { adId, reason, description } = req.body;
@@ -85,7 +85,7 @@ export const createComplaint = async (
 
 export const getComplaints = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const userId = req.user?.id;
@@ -132,7 +132,7 @@ export const getComplaints = async (
 
 export const getComplaintById = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -186,7 +186,7 @@ export const getComplaintById = async (
 
 export const updateComplaintStatus = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -275,7 +275,7 @@ export const updateComplaintStatus = async (
 
 export const deleteComplaint = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;

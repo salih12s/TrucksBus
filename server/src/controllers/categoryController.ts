@@ -159,11 +159,11 @@ export const getBrandsByCategory = async (req: Request, res: Response) => {
     console.error("❌ ERROR in getBrandsByCategory:", error);
     console.error(
       "❌ Error stack:",
-      error instanceof Error ? error.stack : "No stack"
+      error instanceof Error ? error.stack : "No stack",
     );
     console.error(
       "❌ Error message:",
-      error instanceof Error ? error.message : error
+      error instanceof Error ? error.message : error,
     );
     return res.status(500).json({ error: "Server error" });
   }
@@ -210,11 +210,11 @@ export const getModelsByBrand = async (req: Request, res: Response) => {
     });
 
     console.log(
-      `🔍 Found ${models.length} models for brand ${brand.name} in category ${category.name}`
+      `🔍 Found ${models.length} models for brand ${brand.name} in category ${category.name}`,
     );
     console.log(
       `📋 Models:`,
-      models.map((m: any) => m.name)
+      models.map((m: any) => m.name),
     );
 
     return res.json(models);
@@ -274,7 +274,7 @@ export const getVariantsByModel = async (req: Request, res: Response) => {
         "brandId:",
         brand.id,
         "categoryId:",
-        category.id
+        category.id,
       );
       return res
         .status(404)
@@ -285,7 +285,7 @@ export const getVariantsByModel = async (req: Request, res: Response) => {
       "✅ Model bulundu:",
       model.name,
       "categoryId:",
-      model.categoryId
+      model.categoryId,
     );
 
     const variants = await prisma.variant.findMany({
@@ -784,7 +784,7 @@ export const getCategoryFields = async (req: Request, res: Response) => {
 // Get single brand by slug
 export const getBrandBySlug = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const { categorySlug, brandSlug } = req.params;
@@ -823,7 +823,7 @@ export const getBrandBySlug = async (
 // Get single model by slug
 export const getModelBySlug = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const { categorySlug, brandSlug, modelSlug } = req.params;
@@ -864,7 +864,7 @@ export const getModelBySlug = async (
 // Get single variant by slug
 export const getVariantBySlug = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const { categorySlug, brandSlug, modelSlug, variantSlug } = req.params;

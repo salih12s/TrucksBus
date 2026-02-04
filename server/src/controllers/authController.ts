@@ -91,7 +91,7 @@ export class AuthController {
     if (attemptInfo.count >= MAX_LOGIN_ATTEMPTS) {
       attemptInfo.lockUntil = new Date(now.getTime() + LOCK_TIME);
       console.warn(
-        `Account locked for ${email} due to ${attemptInfo.count} failed login attempts`
+        `Account locked for ${email} due to ${attemptInfo.count} failed login attempts`,
       );
     }
 
@@ -148,7 +148,7 @@ export class AuthController {
 
         if (!companyName || companyName.trim().length < 2) {
           validationErrors.push(
-            "Company name is required for corporate accounts"
+            "Company name is required for corporate accounts",
           );
         }
         if (!taxId || taxId.trim().length < 5) {
@@ -237,7 +237,7 @@ export class AuthController {
       // Generate JWT tokens
       const accessToken = AuthController.generateAccessToken(
         user.id,
-        user.role
+        user.role,
       );
       const refreshToken = AuthController.generateRefreshToken(user.id);
 
@@ -267,7 +267,7 @@ export class AuthController {
       const attemptInfo = failedLoginAttempts.get(email);
       if (attemptInfo?.lockUntil && attemptInfo.lockUntil > new Date()) {
         const remainingTime = Math.ceil(
-          (attemptInfo.lockUntil.getTime() - new Date().getTime()) / 60000
+          (attemptInfo.lockUntil.getTime() - new Date().getTime()) / 60000,
         );
         res.status(429).json({
           error: `Account temporarily locked due to too many failed attempts. Try again in ${remainingTime} minutes.`,
@@ -332,7 +332,7 @@ export class AuthController {
       // Generate JWT tokens
       const accessToken = AuthController.generateAccessToken(
         user.id,
-        user.role
+        user.role,
       );
       const refreshToken = AuthController.generateRefreshToken(user.id);
 
@@ -346,7 +346,7 @@ export class AuthController {
           undefined,
           undefined,
           clientIP,
-          req.get("User-Agent")
+          req.get("User-Agent"),
         );
       }
 
@@ -355,7 +355,7 @@ export class AuthController {
 
       // Log successful login for security monitoring
       console.log(
-        `Successful login: ${email} from IP: ${clientIP} at ${new Date().toISOString()}`
+        `Successful login: ${email} from IP: ${clientIP} at ${new Date().toISOString()}`,
       );
 
       res.status(200).json({
@@ -414,7 +414,7 @@ export class AuthController {
       // Generate new access token
       const accessToken = AuthController.generateAccessToken(
         user.id,
-        user.role
+        user.role,
       );
 
       res.json({
@@ -441,7 +441,7 @@ export class AuthController {
   // Get current user
   static async getCurrentUser(
     req: AuthenticatedRequest,
-    res: Response
+    res: Response,
   ): Promise<void> {
     try {
       if (!req.user) {
@@ -586,7 +586,7 @@ export class AuthController {
         userIdNum,
         user.email,
         req.ip,
-        req.get("User-Agent")
+        req.get("User-Agent"),
       );
 
       res.json({
@@ -645,7 +645,7 @@ export class AuthController {
       // Verify current password
       const isCurrentPasswordValid = await bcrypt.compare(
         currentPassword,
-        user.passwordHash
+        user.passwordHash,
       );
 
       if (!isCurrentPasswordValid) {
@@ -670,7 +670,7 @@ export class AuthController {
         userId,
         user.email,
         "PASSWORD_CHANGED",
-        "User changed their password"
+        "User changed their password",
       );
 
       res.json({
@@ -720,7 +720,7 @@ export class AuthController {
 
       const totalViews = userAds.reduce(
         (sum: number, ad: any) => sum + (ad.viewCount || 0),
-        0
+        0,
       );
 
       // Get active dopings count
@@ -814,7 +814,7 @@ export class AuthController {
 
       // Convert to base64
       const base64Image = `data:${file.mimetype};base64,${file.buffer.toString(
-        "base64"
+        "base64",
       )}`;
 
       // Update user's profile image URL
@@ -896,7 +896,7 @@ export class AuthController {
           type: "password_reset",
         },
         secret,
-        { expiresIn: "1h" }
+        { expiresIn: "1h" },
       );
 
       // Şifre sıfırlama bağlantısını oluştur
@@ -1051,7 +1051,7 @@ export class AuthController {
         user.id,
         user.email,
         "PASSWORD_RESET",
-        "User reset their password via forgot password flow"
+        "User reset their password via forgot password flow",
       );
 
       res.json({

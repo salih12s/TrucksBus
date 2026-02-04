@@ -17,7 +17,7 @@ const prisma = new PrismaClient();
 // Get user's favorites
 export const getFavorites = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = (req as any).user?.id;
@@ -64,7 +64,7 @@ export const getFavorites = async (
 // Add to favorites
 export const addToFavorites = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = (req as any).user?.id;
@@ -150,7 +150,7 @@ export const addToFavorites = async (
 // Remove from favorites
 export const removeFromFavorites = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = (req as any).user?.id;
@@ -194,7 +194,7 @@ export const removeFromFavorites = async (
 // Check if ad is favorited
 export const checkFavorite = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = (req as any).user?.id;
