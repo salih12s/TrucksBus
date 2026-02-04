@@ -415,7 +415,7 @@ const MeetUs: React.FC = () => {
               >
                 <Box
                   component="img"
-                  src="/nüre.jpeg"
+                  src="/nurettin-gokce.jpeg"
                   alt="Kurucu & Genel Müdür"
                   sx={{
                     width: "100%",
@@ -452,7 +452,7 @@ const MeetUs: React.FC = () => {
                   mb: 0.5,
                 }}
               >
-                Nüre Turan
+                Nurettin Gökçe
               </Typography>
 
               {/* Founder Title */}
