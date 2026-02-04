@@ -36,9 +36,7 @@ import {
   sendMessage,
   markConversationAsRead,
   clearCurrentConversation,
-  newMessageReceived,
   type Conversation,
-  type Message,
 } from "../../store/messagingSlice";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -50,7 +48,7 @@ const MessagingSystem: React.FC = () => {
   const location = useLocation();
   const { user } = useAppSelector((state) => state.auth);
   const { conversations, currentConversation, loading, error } = useAppSelector(
-    (state) => state.messaging
+    (state) => state.messaging,
   );
 
   const [newMessage, setNewMessage] = useState("");
@@ -67,46 +65,53 @@ const MessagingSystem: React.FC = () => {
   } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const previousMessageCountRef = useRef(0);
+  const isInitialLoadRef = useRef(true); // İlk yükleme mi takip et
+  const lastConversationIdRef = useRef<string | null>(null); // Son açılan konuşma ID'si
 
-  // ✅ SADECE İLK YÜKLEMEDE SCROLL YAP - Yeni mesajlarda ASLA scroll yapma
+  // ✅ SADECE İLK YÜKLEMEDE SCROLL YAP - Mesaj gönderildiğinde ASLA scroll yapma
   useEffect(() => {
-    const currentMessageCount = currentConversation.messages.length;
-    const previousMessageCount = previousMessageCountRef.current;
+    // Mevcut konuşma ID'sini hesapla
+    const currentConversationId = selectedConversation
+      ? `${selectedConversation.otherUser.id}-${selectedConversation.ad?.id || "general"}`
+      : newConversationParams
+        ? `${newConversationParams.userId}-${newConversationParams.adId || "general"}`
+        : null;
 
-    // SADECE İLK YÜKLEME (0'dan bir sayıya geçiş)
-    if (previousMessageCount === 0 && currentMessageCount > 0) {
+    // Konuşma değişti mi kontrol et
+    if (currentConversationId !== lastConversationIdRef.current) {
+      isInitialLoadRef.current = true;
+      lastConversationIdRef.current = currentConversationId;
+    }
+
+    // SADECE İLK YÜKLEME'de scroll yap (konuşma açıldığında)
+    if (isInitialLoadRef.current && currentConversation.messages.length > 0) {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
       }, 200);
+      isInitialLoadRef.current = false; // Artık yeni mesajlarda scroll yapma
     }
-
-    previousMessageCountRef.current = currentMessageCount;
-  }, [currentConversation.messages]);
+  }, [
+    currentConversation.messages,
+    selectedConversation,
+    newConversationParams,
+  ]);
 
   // Load conversations on component mount and refresh when needed
   useEffect(() => {
     dispatch(fetchConversations());
   }, [dispatch]);
 
-  // Socket.io ile gerçek zamanlı mesaj dinle
+  // Socket bağlantısının aktif olduğundan emin ol
   useEffect(() => {
     if (!user) return;
 
+    // Socket bağlantısını kontrol et ve yoksa yeniden bağlan
     const socket = socketService.getSocket();
-    if (!socket) return;
-
-    const handleNewMessage = (message: Message) => {
-      console.log("📬 Yeni mesaj alındı:", message);
-      dispatch(newMessageReceived({ message, currentUserId: user.id }));
-    };
-
-    socket.on("newMessage", handleNewMessage);
-
-    return () => {
-      socket.off("newMessage", handleNewMessage);
-    };
-  }, [user, dispatch]);
+    if (!socket || !socket.connected) {
+      console.log("🔄 Socket bağlantısı yenileniyor...");
+      socketService.connect(user.id);
+    }
+  }, [user]);
 
   // Refresh conversations when loading flag is set (triggered by new message from unknown conversation)
   useEffect(() => {
@@ -133,13 +138,13 @@ const MessagingSystem: React.FC = () => {
           const targetConversation = fetchedConversations.find(
             (conv: Conversation) =>
               conv.otherUser.id === userIdNum &&
-              (adIdNum ? conv.ad?.id === adIdNum : true)
+              (adIdNum ? conv.ad?.id === adIdNum : true),
           );
 
           if (targetConversation) {
             console.log(
               "🎯 URL parametresinden konuşma açılıyor:",
-              targetConversation
+              targetConversation,
             );
             handleConversationSelect(targetConversation);
           } else {
@@ -170,7 +175,7 @@ const MessagingSystem: React.FC = () => {
         fetchMessages({
           otherUserId: selectedConversation.otherUser.id,
           adId: selectedConversation.ad?.id,
-        })
+        }),
       );
 
       // Mark conversation as read
@@ -179,7 +184,7 @@ const MessagingSystem: React.FC = () => {
           markConversationAsRead({
             otherUserId: selectedConversation.otherUser.id,
             adId: selectedConversation.ad?.id,
-          })
+          }),
         );
       }
     }
@@ -204,7 +209,7 @@ const MessagingSystem: React.FC = () => {
           receiverId,
           content: messageContent,
           adId,
-        })
+        }),
       ).unwrap();
 
       // Mesaj gönderildikten sonra konuşmaları yenile ve konuşmayı aç
@@ -215,7 +220,7 @@ const MessagingSystem: React.FC = () => {
             const newConv = fetchedConversations.find(
               (conv: Conversation) =>
                 conv.otherUser.id === receiverId &&
-                (adId ? conv.ad?.id === adId : true)
+                (adId ? conv.ad?.id === adId : true),
             );
             if (newConv) {
               setNewConversationParams(null);
@@ -234,8 +239,8 @@ const MessagingSystem: React.FC = () => {
   const handleConversationSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     setNewConversationParams(null); // Yeni konuşma modunu kapat
-    // Yeni konuşma açıldığında mesaj sayacını resetle
-    previousMessageCountRef.current = 0;
+    // Yeni konuşma açıldığında initial load flag'ini resetle
+    isInitialLoadRef.current = true;
   };
 
   const handleBackToConversations = () => {
@@ -243,8 +248,9 @@ const MessagingSystem: React.FC = () => {
     setNewConversationParams(null); // Yeni konuşma modunu kapat
     setNewConversationAd(null); // Ad bilgisini temizle
     dispatch(clearCurrentConversation());
-    // Mesaj sayacını resetle
-    previousMessageCountRef.current = 0;
+    // Konuşma listesine dönüldüğünde ref'leri resetle
+    isInitialLoadRef.current = true;
+    lastConversationIdRef.current = null;
   };
 
   const filteredConversations = conversations.filter(
@@ -258,7 +264,7 @@ const MessagingSystem: React.FC = () => {
       conversation.otherUser.email
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
-      conversation.ad?.title.toLowerCase().includes(searchQuery.toLowerCase())
+      conversation.ad?.title.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const formatMessageTime = (dateString: string) => {

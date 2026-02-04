@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // Get conversations for a user
 export const getConversations = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
@@ -82,7 +82,7 @@ export const getConversations = async (
 
     const result = Array.from(conversationMap.values()).sort(
       (a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
     );
 
     res.json(result);
@@ -95,7 +95,7 @@ export const getConversations = async (
 // Get messages for a specific conversation
 export const getMessages = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
@@ -173,7 +173,7 @@ export const getMessages = async (
 // Send a new message
 export const sendMessage = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
@@ -237,15 +237,22 @@ export const sendMessage = async (
       },
     });
 
-    // Emit real-time message to receiver
+    // Emit real-time message to receiver AND sender (for multi-device sync)
     if (io) {
-      console.log(`📨 Emitting newMessage to user_${receiverIdNum}:`, {
-        messageId: message.id,
-        content: message.content,
-        senderId: message.senderId,
-      });
+      console.log(
+        `📨 Emitting newMessage to user_${receiverIdNum} and user_${userId}:`,
+        {
+          messageId: message.id,
+          content: message.content,
+          senderId: message.senderId,
+        },
+      );
+      // Alıcıya mesajı gönder
       io.to(`user_${receiverIdNum}`).emit("newMessage", message);
       io.to(`user_${receiverIdNum}`).emit("updateUnreadCount");
+
+      // Gönderene de mesajı gönder (farklı cihazda açıksa senkronize olsun)
+      io.to(`user_${userId}`).emit("newMessage", message);
     } else {
       console.log("❌ Socket.io not available for real-time messaging");
     }
@@ -279,7 +286,7 @@ export const sendMessage = async (
 // Get unread message count
 export const getUnreadCount = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
@@ -306,7 +313,7 @@ export const getUnreadCount = async (
 // Start a conversation from ad
 export const startConversation = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
@@ -433,7 +440,7 @@ export const startConversation = async (
 // Mark conversation as read
 export const markAsRead = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user?.id;

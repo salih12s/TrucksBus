@@ -119,6 +119,7 @@ interface Ad {
   mileage?: number | null;
   location?: string;
   isExchangeable?: boolean | null;
+  isExample?: boolean; // Örnek ilan işareti
   customFields?: {
     isExchangeable?: string | boolean;
     [key: string]: unknown;
@@ -193,11 +194,11 @@ const MainLayout: React.FC = () => {
   const [filteredAds, setFilteredAds] = useState<Ad[]>([]);
   const [cities, setCities] = useState<{ id: number; name: string }[]>([]);
   const [districts, setDistricts] = useState<{ id: number; name: string }[]>(
-    []
+    [],
   );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(
-    null
+    null,
   );
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -243,7 +244,7 @@ const MainLayout: React.FC = () => {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const { user, isAuthenticated, token } = useAppSelector(
-    (state) => state.auth
+    (state) => state.auth,
   );
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -292,7 +293,7 @@ const MainLayout: React.FC = () => {
   // Brand handler - for filtering by brand within dorse category
   const handleDorseBrandClick = (
     brandName: string | null,
-    event?: React.MouseEvent
+    event?: React.MouseEvent,
   ) => {
     if (event) {
       event.preventDefault();
@@ -309,7 +310,7 @@ const MainLayout: React.FC = () => {
 
     console.log(
       "After state update - selectedCategory: dorse, selectedBrand:",
-      brandName
+      brandName,
     );
   };
 
@@ -387,7 +388,7 @@ const MainLayout: React.FC = () => {
       const axiosError = err as { response?: { data?: { error?: string } } };
       setBookmarksError(
         axiosError.response?.data?.error ||
-          "Favorilerden kaldırılırken hata oluştu"
+          "Favorilerden kaldırılırken hata oluştu",
       );
     }
   };
@@ -408,7 +409,7 @@ const MainLayout: React.FC = () => {
           fav.ad.model?.name
             ?.toLowerCase()
             .includes(bookmarkSearchQuery.toLowerCase()) ||
-          fav.ad.id?.toString().includes(bookmarkSearchQuery)
+          fav.ad.id?.toString().includes(bookmarkSearchQuery),
       );
     }
 
@@ -423,12 +424,12 @@ const MainLayout: React.FC = () => {
     if (bookmarkSortBy === "newest") {
       filtered.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     } else if (bookmarkSortBy === "oldest") {
       filtered.sort(
         (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
     } else if (bookmarkSortBy === "price-high") {
       filtered.sort((a, b) => (b.ad.price || 0) - (a.ad.price || 0));
@@ -825,7 +826,7 @@ const MainLayout: React.FC = () => {
     try {
       const adsRes = await apiClient
         .get(
-          `/ads?status=APPROVED&limit=${adsPerPage}&page=${page}&minimal=true`
+          `/ads?status=APPROVED&limit=${adsPerPage}&page=${page}&minimal=true`,
         )
         .catch((err) => {
           console.error("Ads lazy loading error:", err);
@@ -843,8 +844,8 @@ const MainLayout: React.FC = () => {
           ? adsResponse.ads
           : []
         : Array.isArray(adsRes.data)
-        ? (adsRes.data as Ad[])
-        : [];
+          ? (adsRes.data as Ad[])
+          : [];
 
       // Pagination bilgilerini güncelle
       if (adsResponse?.pagination) {
@@ -866,7 +867,7 @@ const MainLayout: React.FC = () => {
           console.log(
             `API Ad ${index + 1} - ID: ${ad.id}, Title: ${ad.title}, Mileage: ${
               ad.mileage
-            }, Type: ${typeof ad.mileage}`
+            }, Type: ${typeof ad.mileage}`,
           );
         });
       }
@@ -1023,7 +1024,7 @@ const MainLayout: React.FC = () => {
       if (event.data?.type === "AD_APPROVED") {
         console.log(
           "📬 PostMessage ile ilan onayı bildirimi alındı:",
-          event.data.adId
+          event.data.adId,
         );
         loadAdsLazy(1); // Sayfa 1'e dön
       }
@@ -1033,7 +1034,7 @@ const MainLayout: React.FC = () => {
     const handleCustomEvent = (event: CustomEvent) => {
       console.log(
         "⚡ CustomEvent ile ilan onayı bildirimi alındı:",
-        event.detail.adId
+        event.detail.adId,
       );
       loadAdsLazy(1); // Sayfa 1'e dön
     };
@@ -1045,7 +1046,7 @@ const MainLayout: React.FC = () => {
       window.removeEventListener("message", handlePostMessage);
       window.removeEventListener(
         "adApproved",
-        handleCustomEvent as EventListener
+        handleCustomEvent as EventListener,
       );
     };
   }, []);
@@ -1121,7 +1122,7 @@ const MainLayout: React.FC = () => {
       try {
         console.log("Loading brands for category:", selectedCategory);
         const response = await apiClient.get(
-          `/categories/${selectedCategory}/brands`
+          `/categories/${selectedCategory}/brands`,
         );
         const brandsData = Array.isArray(response.data) ? response.data : [];
         console.log("Category brands loaded:", brandsData.length);
@@ -1157,7 +1158,7 @@ const MainLayout: React.FC = () => {
       // Kategori filtresi - slug ile eşleştir
       if (selectedCategory) {
         const selectedCategoryName = categories.find(
-          (cat) => cat.slug === selectedCategory
+          (cat) => cat.slug === selectedCategory,
         )?.name;
         if (selectedCategoryName) {
           // Türkçe karakter desteği için normalize etme
@@ -1177,7 +1178,7 @@ const MainLayout: React.FC = () => {
 
           filtered = filtered.filter((ad) => {
             const adCategoryNormalized = normalizeString(
-              ad.category?.name || ""
+              ad.category?.name || "",
             );
             const selectedCategoryNormalized =
               normalizeString(selectedCategoryName);
@@ -1187,7 +1188,7 @@ const MainLayout: React.FC = () => {
             "After category filter:",
             filtered.length,
             "Category:",
-            selectedCategoryName
+            selectedCategoryName,
           );
         }
       }
@@ -1197,7 +1198,7 @@ const MainLayout: React.FC = () => {
         // Önce categoryBrands'de ara, bulamazsan brands'de ara
         const allBrands = categoryBrands.length > 0 ? categoryBrands : brands;
         const selectedBrandName = allBrands.find(
-          (brand) => brand.slug === selectedBrand
+          (brand) => brand.slug === selectedBrand,
         )?.name;
 
         if (selectedBrandName) {
@@ -1213,14 +1214,14 @@ const MainLayout: React.FC = () => {
             selectedBrandName,
             "(from:",
             categoryBrands.length > 0 ? "categoryBrands" : "brands",
-            ")"
+            ")",
           );
         } else {
           console.warn(
             "⚠️ Brand not found:",
             selectedBrand,
             "in",
-            categoryBrands.length > 0 ? "categoryBrands" : "brands"
+            categoryBrands.length > 0 ? "categoryBrands" : "brands",
           );
         }
       }
@@ -1285,7 +1286,7 @@ const MainLayout: React.FC = () => {
           "After enhanced search filter:",
           filtered.length,
           "Search term:",
-          searchTerm
+          searchTerm,
         );
       }
 
@@ -1333,7 +1334,7 @@ const MainLayout: React.FC = () => {
 
           // Name ile eşleştir (fallback)
           const selectedCityName = cities.find(
-            (c) => c.id.toString() === selectedCity.toString()
+            (c) => c.id.toString() === selectedCity.toString(),
           )?.name;
           const cityNameMatch =
             selectedCityName &&
@@ -1345,7 +1346,7 @@ const MainLayout: React.FC = () => {
             console.log(`✓ City match: ${ad.title}`);
             console.log(`  cityId: ${cityId}, cityName: ${cityName}`);
             console.log(
-              `  selectedCity: ${selectedCity}, selectedCityName: ${selectedCityName}`
+              `  selectedCity: ${selectedCity}, selectedCityName: ${selectedCityName}`,
             );
           }
 
@@ -1355,7 +1356,7 @@ const MainLayout: React.FC = () => {
           "After city filter:",
           filtered.length,
           "City ID:",
-          selectedCity
+          selectedCity,
         );
         console.log("=== END ŞEHIR DEBUG ===");
       }
@@ -1377,7 +1378,7 @@ const MainLayout: React.FC = () => {
 
           // Name ile eşleştir (fallback)
           const selectedDistrictName = districts.find(
-            (d) => d.id.toString() === selectedDistrict.toString()
+            (d) => d.id.toString() === selectedDistrict.toString(),
           )?.name;
           const districtNameMatch =
             selectedDistrictName &&
@@ -1388,10 +1389,10 @@ const MainLayout: React.FC = () => {
           if (result) {
             console.log(`✓ District match: ${ad.title}`);
             console.log(
-              `  districtId: ${districtId}, districtName: ${districtName}`
+              `  districtId: ${districtId}, districtName: ${districtName}`,
             );
             console.log(
-              `  selectedDistrict: ${selectedDistrict}, selectedDistrictName: ${selectedDistrictName}`
+              `  selectedDistrict: ${selectedDistrict}, selectedDistrictName: ${selectedDistrictName}`,
             );
           }
 
@@ -1401,7 +1402,7 @@ const MainLayout: React.FC = () => {
           "After district filter:",
           filtered.length,
           "District ID:",
-          selectedDistrict
+          selectedDistrict,
         );
         console.log("=== END İLÇE DEBUG ===");
       }
@@ -1446,7 +1447,7 @@ const MainLayout: React.FC = () => {
           "After seller type filter:",
           filtered.length,
           "Type:",
-          selectedSellerType
+          selectedSellerType,
         );
       }
 
@@ -1462,12 +1463,12 @@ const MainLayout: React.FC = () => {
           console.log(
             `  - isExchangeable:`,
             ad.isExchangeable,
-            typeof ad.isExchangeable
+            typeof ad.isExchangeable,
           );
           console.log(
             `  - customFields.isExchangeable:`,
             ad.customFields?.isExchangeable,
-            typeof ad.customFields?.isExchangeable
+            typeof ad.customFields?.isExchangeable,
           );
         });
 
@@ -1669,7 +1670,7 @@ const MainLayout: React.FC = () => {
         const axiosError = err as { response?: { data?: { error?: string } } };
         setBookmarksError(
           axiosError.response?.data?.error ||
-            "Favoriler yüklenirken hata oluştu"
+            "Favoriler yüklenirken hata oluştu",
         );
       } finally {
         setBookmarksLoading(false);
@@ -2062,7 +2063,7 @@ const MainLayout: React.FC = () => {
 
     if (!selectedCategory || categoryBrands.length === 0) {
       console.log(
-        "Early return: No category selected or no category brands loaded"
+        "Early return: No category selected or no category brands loaded",
       );
       return [];
     }
@@ -2070,14 +2071,14 @@ const MainLayout: React.FC = () => {
     // Search filter uygula
     const filteredBrands = brandSearchQuery.trim()
       ? categoryBrands.filter((brand) =>
-          brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase())
+          brand.name.toLowerCase().includes(brandSearchQuery.toLowerCase()),
         )
       : categoryBrands;
 
     console.log("Filtered brands:", filteredBrands.length);
     console.log(
       "Brand names:",
-      filteredBrands.map((b) => b.name)
+      filteredBrands.map((b) => b.name),
     );
     console.log("=== END DEBUG ===");
 
@@ -2090,7 +2091,7 @@ const MainLayout: React.FC = () => {
 
     // Seçili kategorinin adını bul
     const selectedCategoryName = categories.find(
-      (cat) => cat.slug === selectedCategory
+      (cat) => cat.slug === selectedCategory,
     )?.name;
 
     if (!selectedCategoryName) return "0";
@@ -2142,7 +2143,7 @@ const MainLayout: React.FC = () => {
 
     console.log(
       `Brand count for ${brandSlug} in ${selectedCategoryName}:`,
-      count
+      count,
     );
     return count.toString();
   };
@@ -2278,7 +2279,7 @@ const MainLayout: React.FC = () => {
 
     // Kategori seçilmişse o kategoriye özel sidebar göster
     const selectedCategoryData = categories.find(
-      (cat) => cat.slug === selectedCategory
+      (cat) => cat.slug === selectedCategory,
     );
     const categoryBrands = getCategoryBrands();
 
@@ -2369,7 +2370,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "kapakli-tip"
                             ? null
-                            : "kapakli-tip"
+                            : "kapakli-tip",
                         )
                       }
                       sx={{
@@ -2694,7 +2695,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -2728,7 +2729,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "hafriyat-tipi"
                             ? null
-                            : "hafriyat-tipi"
+                            : "hafriyat-tipi",
                         )
                       }
                       sx={{
@@ -2950,7 +2951,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -2984,7 +2985,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "havuz-hardox-tipi"
                             ? null
-                            : "havuz-hardox-tipi"
+                            : "havuz-hardox-tipi",
                         )
                       }
                       sx={{
@@ -3293,7 +3294,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -3327,7 +3328,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "kaya-tipi"
                             ? null
-                            : "kaya-tipi"
+                            : "kaya-tipi",
                         )
                       }
                       sx={{
@@ -3536,7 +3537,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -3601,7 +3602,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "lowbed-havuzlu"
                             ? null
-                            : "lowbed-havuzlu"
+                            : "lowbed-havuzlu",
                         )
                       }
                       sx={{
@@ -3881,7 +3882,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -3915,7 +3916,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "lowbed-önden-kırmalı"
                             ? null
-                            : "lowbed-önden-kırmalı"
+                            : "lowbed-önden-kırmalı",
                         )
                       }
                       sx={{
@@ -4107,7 +4108,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -4172,7 +4173,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "kuruyuk-kapaklı"
                             ? null
-                            : "kuruyuk-kapaklı"
+                            : "kuruyuk-kapaklı",
                         )
                       }
                       sx={{
@@ -4521,7 +4522,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -4556,7 +4557,7 @@ const MainLayout: React.FC = () => {
                           expandedDorseSubCategory ===
                             "kuruyuk-kapaklı-kaya-tipi"
                             ? null
-                            : "kuruyuk-kapaklı-kaya-tipi"
+                            : "kuruyuk-kapaklı-kaya-tipi",
                         )
                       }
                       sx={{
@@ -4785,7 +4786,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -4820,7 +4821,7 @@ const MainLayout: React.FC = () => {
                           expandedDorseSubCategory ===
                             "kuruyuk-kapaksız-platform"
                             ? null
-                            : "kuruyuk-kapaksız-platform"
+                            : "kuruyuk-kapaksız-platform",
                         )
                       }
                       sx={{
@@ -4983,7 +4984,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -5048,7 +5049,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "tenteli-pilot"
                             ? null
-                            : "tenteli-pilot"
+                            : "tenteli-pilot",
                         )
                       }
                       sx={{
@@ -5311,7 +5312,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -5345,7 +5346,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "tenteli-midilli"
                             ? null
-                            : "tenteli-midilli"
+                            : "tenteli-midilli",
                         )
                       }
                       sx={{
@@ -5535,7 +5536,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -5569,7 +5570,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "tenteli-yarımidilli"
                             ? null
-                            : "tenteli-yarımidilli"
+                            : "tenteli-yarımidilli",
                         )
                       }
                       sx={{
@@ -5761,7 +5762,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -5826,7 +5827,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "frigofirik-dorse"
                             ? null
-                            : "frigofirik-dorse"
+                            : "frigofirik-dorse",
                         )
                       }
                       sx={{
@@ -6016,7 +6017,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -6081,7 +6082,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "tanker-dorse"
                             ? null
-                            : "tanker-dorse"
+                            : "tanker-dorse",
                         )
                       }
                       sx={{
@@ -6324,7 +6325,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -6389,7 +6390,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "silobas-dorse"
                             ? null
-                            : "silobas-dorse"
+                            : "silobas-dorse",
                         )
                       }
                       sx={{
@@ -6582,7 +6583,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -6647,7 +6648,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "tekstil-dorse"
                             ? null
-                            : "tekstil-dorse"
+                            : "tekstil-dorse",
                         )
                       }
                       sx={{
@@ -6802,7 +6803,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -6847,7 +6848,7 @@ const MainLayout: React.FC = () => {
                 <Typography
                   onClick={() =>
                     navigate(
-                      "/ads?category=dorse&subCategory=konteyner-tasiyici-sasi"
+                      "/ads?category=dorse&subCategory=konteyner-tasiyici-sasi",
                     )
                   }
                   sx={{
@@ -6871,7 +6872,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "damper-şasi"
                             ? null
-                            : "damper-şasi"
+                            : "damper-şasi",
                         )
                       }
                       sx={{
@@ -7033,7 +7034,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -7067,7 +7068,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "kılçık-şasi"
                             ? null
-                            : "kılçık-şasi"
+                            : "kılçık-şasi",
                         )
                       }
                       sx={{
@@ -7270,7 +7271,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -7304,7 +7305,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "platform-şasi"
                             ? null
-                            : "platform-şasi"
+                            : "platform-şasi",
                         )
                       }
                       sx={{
@@ -7471,7 +7472,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -7505,7 +7506,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "romork-konvantoru-dolli"
                             ? null
-                            : "romork-konvantoru-dolli"
+                            : "romork-konvantoru-dolli",
                         )
                       }
                       sx={{
@@ -7662,7 +7663,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -7696,7 +7697,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "tanker-sasi"
                             ? null
-                            : "tanker-sasi"
+                            : "tanker-sasi",
                         )
                       }
                       sx={{
@@ -7852,7 +7853,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -7886,7 +7887,7 @@ const MainLayout: React.FC = () => {
                         setExpandedDorseSubCategory(
                           expandedDorseSubCategory === "uzayabilir-sasi"
                             ? null
-                            : "uzayabilir-sasi"
+                            : "uzayabilir-sasi",
                         )
                       }
                       sx={{
@@ -8054,7 +8055,7 @@ const MainLayout: React.FC = () => {
                             .filter((brand) =>
                               brand
                                 .toLowerCase()
-                                .includes(dorseBrandSearchQuery.toLowerCase())
+                                .includes(dorseBrandSearchQuery.toLowerCase()),
                             )
                             .map((brand) => (
                               <Typography
@@ -8725,15 +8726,16 @@ const MainLayout: React.FC = () => {
                       {selectedBrand
                         ? `${selectedBrand} Dorse İlanları`
                         : selectedSubCategory
-                        ? `${
-                            selectedSubCategory.charAt(0).toUpperCase() +
-                            selectedSubCategory.slice(1)
-                          } İlanları`
-                        : selectedCategory && selectedCategory !== "Tüm İlanlar"
-                        ? categories.find(
-                            (cat) => cat.slug === selectedCategory
-                          )?.name || selectedCategory
-                        : t("homePage.showcase")}
+                          ? `${
+                              selectedSubCategory.charAt(0).toUpperCase() +
+                              selectedSubCategory.slice(1)
+                            } İlanları`
+                          : selectedCategory &&
+                              selectedCategory !== "Tüm İlanlar"
+                            ? categories.find(
+                                (cat) => cat.slug === selectedCategory,
+                              )?.name || selectedCategory
+                            : t("homePage.showcase")}
                     </Typography>{" "}
                     {/* Universal Search Box */}
                     <TextField
@@ -8947,7 +8949,7 @@ const MainLayout: React.FC = () => {
                                 />
                               </Box>
                             </Card>
-                          )
+                          ),
                         )}
                       </>
                     ) : filteredAds.length === 0 ? (
@@ -8959,7 +8961,7 @@ const MainLayout: React.FC = () => {
                           onClick={() => {
                             console.log(
                               "Card clicked, navigating to:",
-                              `/ad/${ad.id}`
+                              `/ad/${ad.id}`,
                             );
                             navigate(`/ad/${ad.id}`);
                           }}
@@ -8978,8 +8980,32 @@ const MainLayout: React.FC = () => {
                             width: "100%",
                             backgroundColor: "white",
                             border: "1px solid #e0e0e0",
+                            position: "relative",
+                            overflow: "hidden",
                           }}
                         >
+                          {/* ÖRNEKTİR Badge - Örnek ilanlar için */}
+                          {ad.isExample && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 12,
+                                right: -35,
+                                backgroundColor: "#ff5722",
+                                color: "white",
+                                padding: "4px 40px",
+                                fontSize: "10px",
+                                fontWeight: "bold",
+                                transform: "rotate(45deg)",
+                                zIndex: 10,
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                                textTransform: "uppercase",
+                                letterSpacing: "1px",
+                              }}
+                            >
+                              ÖRNEKTİR
+                            </Box>
+                          )}
                           {/* Vitrin Görseli */}
                           <Box
                             component="div"
@@ -9324,7 +9350,7 @@ const MainLayout: React.FC = () => {
                                 />
                               </Box>
                             </Box>
-                          )
+                          ),
                         )}
                       </>
                     ) : filteredAds.length === 0 ? (
@@ -9336,7 +9362,7 @@ const MainLayout: React.FC = () => {
                           onClick={() => {
                             console.log(
                               "Card clicked (mobile), navigating to:",
-                              `/ad/${ad.id}`
+                              `/ad/${ad.id}`,
                             );
                             navigate(`/ad/${ad.id}`);
                           }}
@@ -9357,8 +9383,32 @@ const MainLayout: React.FC = () => {
                             mb: 1,
                             p: isMobile ? 1.5 : 2,
                             alignItems: "center",
+                            position: "relative",
+                            overflow: "hidden",
                           }}
                         >
+                          {/* ÖRNEKTİR Badge - Örnek ilanlar için */}
+                          {ad.isExample && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                top: 8,
+                                right: -30,
+                                backgroundColor: "#ff5722",
+                                color: "white",
+                                padding: "2px 35px",
+                                fontSize: "9px",
+                                fontWeight: "bold",
+                                transform: "rotate(45deg)",
+                                zIndex: 10,
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                                textTransform: "uppercase",
+                                letterSpacing: "1px",
+                              }}
+                            >
+                              ÖRNEKTİR
+                            </Box>
+                          )}
                           {/* Vitrin Görseli */}
                           <Box
                             sx={{
@@ -9547,7 +9597,7 @@ const MainLayout: React.FC = () => {
                             >
                               {ad.createdAt
                                 ? new Date(ad.createdAt).toLocaleDateString(
-                                    "tr-TR"
+                                    "tr-TR",
                                   )
                                 : "---"}
                             </Typography>

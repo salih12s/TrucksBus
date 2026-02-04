@@ -4,11 +4,20 @@ import { store } from "../store";
 class SocketService {
   private socket: Socket | null = null;
   private isConnected = false;
+  private userId: number | null = null;
 
   connect(userId: number) {
-    if (this.socket && this.isConnected) {
+    // Eğer aynı kullanıcı için zaten bağlıysa, mevcut socket'i döndür
+    if (this.socket && this.isConnected && this.userId === userId) {
       return this.socket;
     }
+
+    // Farklı bir kullanıcı için bağlantı isteniyorsa, önce mevcut bağlantıyı kapat
+    if (this.socket && this.userId !== userId) {
+      this.disconnect();
+    }
+
+    this.userId = userId;
 
     const serverUrl = (
       import.meta.env.VITE_API_URL ||
@@ -19,25 +28,37 @@ class SocketService {
       transports: ["websocket", "polling"],
       withCredentials: true,
       forceNew: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
 
-    console.log("Attempting to connect to Socket.io server at:", serverUrl);
+    console.log("🔌 Socket.io bağlantısı başlatılıyor:", serverUrl);
 
     this.socket.on("connect", () => {
-      console.log("Connected to socket server");
+      console.log("✅ Socket.io sunucusuna bağlandı");
       this.isConnected = true;
 
       // Join user's personal room for notifications
       this.socket?.emit("join_user_room", userId);
+      console.log(`👤 Kullanıcı odası: user_${userId}`);
     });
 
-    this.socket.on("disconnect", () => {
-      console.log("Disconnected from socket server");
+    this.socket.on("disconnect", (reason) => {
+      console.log("❌ Socket bağlantısı kesildi:", reason);
       this.isConnected = false;
     });
 
+    this.socket.on("reconnect", (attemptNumber) => {
+      console.log(`🔄 Socket yeniden bağlandı (deneme: ${attemptNumber})`);
+      // Yeniden bağlandığında kullanıcı odasına tekrar katıl
+      this.socket?.emit("join_user_room", userId);
+    });
+
     this.socket.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
+      console.error("❌ Socket bağlantı hatası:", error.message);
       this.isConnected = false;
     });
 
@@ -77,14 +98,28 @@ class SocketService {
       store.dispatch({ type: "notifications/refreshNotifications" });
     });
 
+    // Listen for notification events (from ad approval, rejection, subscription)
+    this.socket.on(
+      "notification",
+      (data: { title: string; message: string; type: string }) => {
+        console.log("Notification event received:", data);
+        // Show browser notification
+        this.showNotification(data.title, data.message);
+        // Trigger notification refresh
+        store.dispatch({ type: "notifications/refreshNotifications" });
+      },
+    );
+
     return this.socket;
   }
 
   disconnect() {
     if (this.socket) {
+      console.log("🔌 Socket bağlantısı kapatılıyor...");
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+      this.userId = null;
     }
   }
 

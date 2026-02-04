@@ -42,7 +42,7 @@ const AboutPage: React.FC = () => {
           color="text.secondary"
           sx={{ fontSize: { xs: "1rem", md: "1.25rem" } }}
         >
-          Ticari Araç Platformu
+          Alın Satın TrucksBus ile Mutlu Kalın
         </Typography>
       </Box>
 

@@ -10,7 +10,7 @@ interface SEOProps {
 }
 
 const SEO: React.FC<SEOProps> = ({
-  title = "TrucksBus - Türkiye'nin En Büyük Ticari Araç Platformu",
+  title = "TrucksBus - Alın Satın TrucksBus ile Mutlu Kalın",
   description = "Kamyon, minibüs, otobüs ve ticari araç alım satımı için güvenli platform. Binlerce ilan, detaylı filtreler ve güvenli ödeme sistemi.",
   keywords = "kamyon, minibüs, otobüs, ticari araç, alım satım, ikinci el araç, fiyatları, galeri",
   image = "/og-image.jpg",

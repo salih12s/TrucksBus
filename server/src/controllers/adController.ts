@@ -23,7 +23,7 @@ const ensureBrandModelVariant = async (
   variantName?: string,
   existingBrandId?: number,
   existingModelId?: number,
-  existingVariantId?: number
+  existingVariantId?: number,
 ) => {
   let brandId = existingBrandId;
   let modelId = existingModelId;
@@ -55,7 +55,7 @@ const ensureBrandModelVariant = async (
         finalBrandName,
         "(slug:",
         brandSlug,
-        ")"
+        ")",
       );
       brand = await prisma.brand.create({
         data: {
@@ -115,7 +115,7 @@ const ensureBrandModelVariant = async (
         "(slug:",
         modelSlug,
         ") for brand ID:",
-        brandId
+        brandId,
       );
       model = await prisma.model.create({
         data: {
@@ -163,7 +163,7 @@ const ensureBrandModelVariant = async (
         "(slug:",
         variantSlug,
         ") for model ID:",
-        modelId
+        modelId,
       );
       variant = await prisma.variant.create({
         data: {
@@ -242,6 +242,7 @@ export const getAds = async (req: Request, res: Response) => {
           a.year,
           a.mileage,
           a.is_exchangeable as "isExchangeable",
+          a.is_example as "isExample",
           a.custom_fields as "customFields",
           a.created_at as "createdAt",
           c.name as city_name,
@@ -285,7 +286,7 @@ export const getAds = async (req: Request, res: Response) => {
       const ads = await prisma.$queryRawUnsafe(
         rawQuery,
         parseInt(limit as string),
-        skip
+        skip,
       );
 
       const responseTime = Date.now() - startTime;
@@ -301,6 +302,7 @@ export const getAds = async (req: Request, res: Response) => {
           mileage: ad.mileage,
           createdAt: ad.createdAt,
           isExchangeable: ad.isExchangeable,
+          isExample: ad.isExample,
           customFields: ad.customFields,
           city: ad.city_name ? { name: ad.city_name } : null,
           district: ad.district_name ? { name: ad.district_name } : null,
@@ -353,6 +355,7 @@ export const getAds = async (req: Request, res: Response) => {
         mileage: true,
         location: true,
         isExchangeable: true,
+        isExample: true,
         customFields: true,
         createdAt: true,
         user: {
@@ -452,8 +455,8 @@ export const getAdById = async (req: Request, res: Response) => {
   if (cached && Date.now() - cached.timestamp < cached.ttl) {
     console.log(
       `⚡ CACHE HIT for ad ${id} - ${(performance.now() - startTime).toFixed(
-        2
-      )}ms`
+        2,
+      )}ms`,
     );
     res.set({
       "Cache-Control": "public, max-age=1800", // 30 dakika (daha güvenli)
@@ -541,7 +544,7 @@ export const getAdById = async (req: Request, res: Response) => {
       prisma
         .$executeRawUnsafe(
           `UPDATE ads SET view_count = view_count + 1 WHERE id = $1`,
-          adId
+          adId,
         )
         .catch(() => {}); // Silent fail
     });
@@ -549,8 +552,8 @@ export const getAdById = async (req: Request, res: Response) => {
     if (!ad) {
       console.log(
         `❌ Ad ${id} not found - ${(performance.now() - startTime).toFixed(
-          2
-        )}ms`
+          2,
+        )}ms`,
       );
       // ❗ Clear any cached version of this ad
       adCache.delete(cacheKey);
@@ -873,7 +876,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
         "🎯 Using NEW FORMAT branch - category:",
         category,
         "subcategory:",
-        actualSubcategory
+        actualSubcategory,
       );
       console.log("🏷️ Brand/Model/Variant IDs:", {
         brandId,
@@ -904,14 +907,14 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       adData.variantId = variantId
         ? parseInt(variantId)
         : variant_id
-        ? parseInt(variant_id)
-        : null;
+          ? parseInt(variant_id)
+          : null;
       adData.price = price ? parseFloat(price) : null;
       adData.year = year
         ? parseInt(year)
         : productionYear
-        ? parseInt(productionYear)
-        : null;
+          ? parseInt(productionYear)
+          : null;
 
       // Construct location string from cityId and districtId
       let locationString = "";
@@ -988,8 +991,8 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       adData.year = year
         ? parseInt(year)
         : productionYear
-        ? parseInt(productionYear)
-        : null;
+          ? parseInt(productionYear)
+          : null;
       adData.mileage = mileage ? parseInt(mileage) : null;
       adData.location = location;
       adData.latitude = latitude ? parseFloat(latitude) : null;
@@ -1132,7 +1135,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
             mimetype: videoFile.mimetype,
             size: videoFile.size,
             base64Length: base64Video.length,
-          }
+          },
         );
 
         return prisma.adVideo.create({
@@ -1146,7 +1149,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
 
       await Promise.all(videoPromises);
       console.log(
-        `✅ ${videoFiles.length} videos saved successfully to database for ad ${ad.id}`
+        `✅ ${videoFiles.length} videos saved successfully to database for ad ${ad.id}`,
       );
 
       // Verify videos were saved
@@ -1155,7 +1158,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
         select: { id: true, displayOrder: true, adId: true },
       });
       console.log(
-        `🔍 Verification: ${savedVideos.length} videos found in database for ad ${ad.id}`
+        `🔍 Verification: ${savedVideos.length} videos found in database for ad ${ad.id}`,
       );
     } else {
       console.log("ℹ️ No video files to process");
@@ -1400,7 +1403,7 @@ export const moderateAd = async (req: Request, res: Response) => {
     console.log(
       `Admin ${adminId} ${status} ad ${id}. Reason: ${
         reason || "No reason provided"
-      }`
+      }`,
     );
 
     return res.json({ message: `Ad ${status.toLowerCase()} successfully`, ad });
@@ -1609,7 +1612,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
     if (files && files.length > 0) {
       console.log(
         "📷 Resimler base64 formatında kaydediliyor:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
 
       const imagePromises = [];
@@ -1617,7 +1620,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
 
       // Vitrin resmini bul ve işle
       const showcaseFile = files.find(
-        (f: any) => f.fieldname === "showcasePhoto"
+        (f: any) => f.fieldname === "showcasePhoto",
       );
       if (showcaseFile) {
         // Base64 formatına çevir
@@ -1636,14 +1639,14 @@ export const createMinibusAd = async (req: Request, res: Response) => {
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
             },
-          })
+          }),
         );
         displayOrder = 1;
       }
 
       // Diğer resimleri işle
       const photoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("photo_")
+        f.fieldname.startsWith("photo_"),
       );
       for (const file of photoFiles) {
         // Base64 formatına çevir
@@ -1662,7 +1665,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
             },
-          })
+          }),
         );
         displayOrder++;
       }
@@ -1671,18 +1674,18 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(
-          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`,
         );
       }
 
       // Video yükleme işlemi (Base64 formatında)
       const videoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("video_")
+        f.fieldname.startsWith("video_"),
       );
       if (videoFiles.length > 0) {
         console.log(
           "🎬 Videolar base64 formatında kaydediliyor:",
-          videoFiles.map((f: any) => f.fieldname)
+          videoFiles.map((f: any) => f.fieldname),
         );
 
         const videoPromises = [];
@@ -1695,7 +1698,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
           };base64,${file.buffer.toString("base64")}`;
 
           console.log(
-            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
+            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`,
           );
 
           videoPromises.push(
@@ -1708,7 +1711,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
                 displayOrder: videoDisplayOrder,
                 description: `${title} - Video ${videoDisplayOrder}`,
               },
-            })
+            }),
           );
           videoDisplayOrder++;
         }
@@ -1717,7 +1720,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
         if (videoPromises.length > 0) {
           await Promise.all(videoPromises);
           console.log(
-            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`,
           );
         }
       }
@@ -1865,7 +1868,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
         } else {
           console.log(
             "⚠️ Geçersiz categoryId, fallback kullanılıyor:",
-            finalCategoryId
+            finalCategoryId,
           );
         }
       }
@@ -1940,7 +1943,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
     if (files && files.length > 0) {
       console.log(
         "📷 Resimler base64 formatında kaydediliyor:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
 
       const imagePromises: any[] = [];
@@ -1948,7 +1951,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
 
       // Vitrin resmini bul ve işle
       const showcaseFile = files.find(
-        (f: any) => f.fieldname === "showcasePhoto"
+        (f: any) => f.fieldname === "showcasePhoto",
       );
       if (showcaseFile) {
         // Base64 formatına çevir
@@ -1967,14 +1970,14 @@ export const createCekiciAd = async (req: Request, res: Response) => {
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
             },
-          })
+          }),
         );
         displayOrder = 1;
       }
 
       // Diğer resimleri işle
       const photoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("photo_")
+        f.fieldname.startsWith("photo_"),
       );
       for (const file of photoFiles) {
         // Base64 formatına çevir
@@ -1993,7 +1996,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
             },
-          })
+          }),
         );
         displayOrder++;
       }
@@ -2002,25 +2005,25 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(
-          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`,
         );
       }
 
       // Video yükleme işlemleri (resimsiz olsa bile video olabilir)
       console.log("🎬 Video dosyaları filtreleniyor...");
       const videoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("video_")
+        f.fieldname.startsWith("video_"),
       );
       console.log(`🎬 Bulunan video dosya sayısı: ${videoFiles.length}`);
       console.log(
         "🎬 Video dosya isimleri:",
-        videoFiles.map((f: any) => f.fieldname)
+        videoFiles.map((f: any) => f.fieldname),
       );
 
       if (videoFiles && videoFiles.length > 0) {
         console.log(
           "🎬 Videolar base64 formatında kaydediliyor:",
-          videoFiles.map((f: any) => f.fieldname)
+          videoFiles.map((f: any) => f.fieldname),
         );
 
         const videoPromises: any[] = [];
@@ -2033,7 +2036,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
           };base64,${file.buffer.toString("base64")}`;
 
           console.log(
-            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
+            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`,
           );
 
           videoPromises.push(
@@ -2046,7 +2049,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
                 displayOrder: videoDisplayOrder,
                 description: `${title} - Video ${videoDisplayOrder}`,
               },
-            })
+            }),
           );
           videoDisplayOrder++;
         }
@@ -2055,7 +2058,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
         if (videoPromises.length > 0) {
           await Promise.all(videoPromises);
           console.log(
-            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`,
           );
         }
       }
@@ -2140,7 +2143,7 @@ export const getDistricts = async (req: Request, res: Response) => {
 
     const districts =
       await prisma.$queryRaw`SELECT id, name, city_id as "cityId" FROM districts WHERE city_id = ${parseInt(
-        cityId
+        cityId,
       )} AND is_active = true ORDER BY name ASC`;
 
     res.json(districts);
@@ -2156,7 +2159,7 @@ export const getPendingAds = async (req: Request, res: Response) => {
     console.log("🔍 getPendingAds çağrıldı");
     console.log(
       "📋 Request headers:",
-      req.headers.authorization ? "Auth header var" : "Auth header YOK"
+      req.headers.authorization ? "Auth header var" : "Auth header YOK",
     );
 
     const pendingAds = await prisma.ad.findMany({
@@ -2348,7 +2351,7 @@ export const approveAd = async (req: Request, res: Response) => {
 
     // Log
     console.log(
-      `📣 İlan onaylandı ve socket bildirimi gönderildi: ${ad.title} - Kullanıcı: ${ad.user.email}`
+      `📣 İlan onaylandı ve socket bildirimi gönderildi: ${ad.title} - Kullanıcı: ${ad.user.email}`,
     );
 
     res.json({ message: "İlan başarıyla onaylandı", ad });
@@ -2397,7 +2400,7 @@ export const rejectAd = async (req: Request, res: Response) => {
 
     // Log
     console.log(
-      `İlan reddedildi: ${ad.title} - Kullanıcı: ${ad.user.email} - Sebep: ${reason}`
+      `İlan reddedildi: ${ad.title} - Kullanıcı: ${ad.user.email} - Sebep: ${reason}`,
     );
 
     res.json({ message: "İlan başarıyla reddedildi", ad });
@@ -2429,17 +2432,17 @@ export const createKamyonAd = async (req: Request, res: Response) => {
     console.log("  - Files type:", typeof files);
     console.log(
       "  - Files length:",
-      files ? files.length : "files null/undefined"
+      files ? files.length : "files null/undefined",
     );
     console.log("  - Files content:", files);
     if (files && files.length > 0) {
       console.log(
         "  - File names:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
       console.log(
         "  - Video files:",
-        files.filter((f: any) => f.fieldname.startsWith("video_"))
+        files.filter((f: any) => f.fieldname.startsWith("video_")),
       );
     }
 
@@ -2580,7 +2583,7 @@ export const createKamyonAd = async (req: Request, res: Response) => {
     if (files && files.length > 0) {
       console.log(
         "📷 Resimler base64 formatında kaydediliyor:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
 
       const imagePromises: any[] = [];
@@ -2588,7 +2591,7 @@ export const createKamyonAd = async (req: Request, res: Response) => {
 
       // Vitrin resmini bul ve işle
       const showcaseFile = files.find(
-        (f: any) => f.fieldname === "showcasePhoto"
+        (f: any) => f.fieldname === "showcasePhoto",
       );
       if (showcaseFile) {
         // Base64 formatına çevir
@@ -2607,14 +2610,14 @@ export const createKamyonAd = async (req: Request, res: Response) => {
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
             },
-          })
+          }),
         );
         displayOrder = 1;
       }
 
       // Diğer resimleri işle
       const photoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("photo_")
+        f.fieldname.startsWith("photo_"),
       );
       for (const file of photoFiles) {
         // Base64 formatına çevir
@@ -2633,7 +2636,7 @@ export const createKamyonAd = async (req: Request, res: Response) => {
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
             },
-          })
+          }),
         );
         displayOrder++;
       }
@@ -2642,7 +2645,7 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(
-          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`,
         );
       }
     }
@@ -2677,7 +2680,7 @@ export const createKamyonAd = async (req: Request, res: Response) => {
             mimetype: videoFile.mimetype,
             size: videoFile.size,
             base64Length: base64Video.length,
-          }
+          },
         );
 
         return prisma.adVideo.create({
@@ -2832,7 +2835,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       } else {
         console.log(
           "❌ Frontend categoryId yanlış, Otobüs kategori ID'sini arayacağım:",
-          categoryId
+          categoryId,
         );
       }
     }
@@ -2875,7 +2878,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       variantName,
       brandId && brandId !== "" ? parseInt(brandId) : undefined,
       modelId && modelId !== "" ? parseInt(modelId) : undefined,
-      variantId && variantId !== "" ? parseInt(variantId) : undefined
+      variantId && variantId !== "" ? parseInt(variantId) : undefined,
     );
 
     const parsedBrandId = result.brandId || null;
@@ -2949,7 +2952,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
     if (files && files.length > 0) {
       console.log(
         "📷 Resimler base64 formatında kaydediliyor:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
 
       const imagePromises: any[] = [];
@@ -2957,7 +2960,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
 
       // Vitrin resmini bul ve işle
       const showcaseFile = files.find(
-        (f: any) => f.fieldname === "showcasePhoto"
+        (f: any) => f.fieldname === "showcasePhoto",
       );
       if (showcaseFile) {
         // Base64 formatına çevir
@@ -2976,14 +2979,14 @@ export const createOtobusAd = async (req: Request, res: Response) => {
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
             },
-          })
+          }),
         );
         displayOrder = 1;
       }
 
       // Diğer resimleri işle
       const photoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("photo_")
+        f.fieldname.startsWith("photo_"),
       );
       for (const file of photoFiles) {
         // Base64 formatına çevir
@@ -3002,7 +3005,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
             },
-          })
+          }),
         );
         displayOrder++;
       }
@@ -3011,18 +3014,18 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(
-          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`,
         );
       }
 
       // Video yükleme işlemi (Base64 formatında) - MinibüsAd'daki gibi files blok içinde
       const videoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("video_")
+        f.fieldname.startsWith("video_"),
       );
       if (videoFiles.length > 0) {
         console.log(
           "🎬 Videolar base64 formatında kaydediliyor:",
-          videoFiles.map((f: any) => f.fieldname)
+          videoFiles.map((f: any) => f.fieldname),
         );
 
         const videoPromises = [];
@@ -3035,7 +3038,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
           };base64,${file.buffer.toString("base64")}`;
 
           console.log(
-            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
+            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`,
           );
 
           videoPromises.push(
@@ -3048,7 +3051,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
                 displayOrder: videoDisplayOrder,
                 description: `${title} - Video ${videoDisplayOrder}`,
               },
-            })
+            }),
           );
           videoDisplayOrder++;
         }
@@ -3057,7 +3060,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
         if (videoPromises.length > 0) {
           await Promise.all(videoPromises);
           console.log(
-            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`,
           );
         }
       }
@@ -3199,13 +3202,13 @@ export const createDorseAd = async (req: Request, res: Response) => {
       if (!categoryExists || categoryExists.slug !== "dorse") {
         console.log(
           "⚠️ Provided categoryId yanlış, Dorse kategori ID'sini arayacağım:",
-          categoryId
+          categoryId,
         );
         categoryId = null;
       } else {
         console.log(
           "✅ Dorse CategoryId validation successful:",
-          categoryExists.name
+          categoryExists.name,
         );
         categoryId = parseInt(categoryId);
       }
@@ -3243,7 +3246,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
       {
         categoryId,
         dorseBrand,
-      }
+      },
     );
 
     // Ensure categoryId is a valid number
@@ -3318,7 +3321,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
     if (files && files.length > 0) {
       console.log(
         "📷 Dorse resimleri base64 formatında kaydediliyor:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
 
       const imagePromises = [];
@@ -3326,7 +3329,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
 
       // Vitrin resmini bul ve işle
       const showcaseFile = files.find(
-        (f: any) => f.fieldname === "showcasePhoto"
+        (f: any) => f.fieldname === "showcasePhoto",
       );
       if (showcaseFile) {
         // Base64 formatına çevir
@@ -3345,14 +3348,14 @@ export const createDorseAd = async (req: Request, res: Response) => {
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
             },
-          })
+          }),
         );
         displayOrder = 1;
       }
 
       // Diğer resimleri işle
       const photoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("photo_")
+        f.fieldname.startsWith("photo_"),
       );
       for (const file of photoFiles) {
         // Base64 formatına çevir
@@ -3361,7 +3364,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
         };base64,${file.buffer.toString("base64")}`;
 
         console.log(
-          `📷 Dorse resim ${displayOrder} base64 formatında kaydediliyor`
+          `📷 Dorse resim ${displayOrder} base64 formatında kaydediliyor`,
         );
 
         imagePromises.push(
@@ -3373,7 +3376,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
             },
-          })
+          }),
         );
         displayOrder++;
       }
@@ -3410,7 +3413,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
 
       await Promise.all(videoPromises);
       console.log(
-        `✅ ${videoFiles.length} videos saved successfully for Dorse ad`
+        `✅ ${videoFiles.length} videos saved successfully for Dorse ad`,
       );
     }
 
@@ -3565,7 +3568,7 @@ export const createKaroserAd = async (req: Request, res: Response) => {
       "Standart", // variant her zaman Standart
       undefined, // brandId
       undefined, // modelId
-      undefined // variantId
+      undefined, // variantId
     );
 
     const ad = await prisma.ad.create({
@@ -3580,8 +3583,8 @@ export const createKaroserAd = async (req: Request, res: Response) => {
         year: year
           ? parseInt(year)
           : productionYear
-          ? parseInt(productionYear)
-          : null,
+            ? parseInt(productionYear)
+            : null,
         price: price ? parseFloat(price) : null,
         // Şehir ve ilçe bilgilerini ana tablo alanlarına kaydet
         cityId: cityId ? parseInt(cityId) : null,
@@ -3629,7 +3632,7 @@ export const createKaroserAd = async (req: Request, res: Response) => {
     if (files && files.length > 0) {
       console.log(
         "📷 Karoser ilanı için resimler base64 formatında kaydediliyor:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
 
       const imagePromises = [];
@@ -3637,7 +3640,7 @@ export const createKaroserAd = async (req: Request, res: Response) => {
 
       // Vitrin resmini bul ve işle
       const showcaseFile = files.find(
-        (f: any) => f.fieldname === "showcasePhoto"
+        (f: any) => f.fieldname === "showcasePhoto",
       );
       if (showcaseFile) {
         // Base64 formatına çevir
@@ -3656,14 +3659,14 @@ export const createKaroserAd = async (req: Request, res: Response) => {
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
             },
-          })
+          }),
         );
         displayOrder = 1;
       }
 
       // Diğer resimleri işle (photo_0, photo_1, photo_2, ...)
       const photoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("photo_")
+        f.fieldname.startsWith("photo_"),
       );
 
       photoFiles.forEach((file: any, index: number) => {
@@ -3672,7 +3675,7 @@ export const createKaroserAd = async (req: Request, res: Response) => {
         };base64,${file.buffer.toString("base64")}`;
 
         console.log(
-          `📷 Karoser resim ${index + 1} base64 formatında kaydediliyor`
+          `📷 Karoser resim ${index + 1} base64 formatında kaydediliyor`,
         );
 
         imagePromises.push(
@@ -3684,7 +3687,7 @@ export const createKaroserAd = async (req: Request, res: Response) => {
               displayOrder: displayOrder + index,
               altText: `${title} - Resim ${index + 1}`,
             },
-          })
+          }),
         );
       });
 
@@ -3692,7 +3695,7 @@ export const createKaroserAd = async (req: Request, res: Response) => {
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(
-          `✅ ${imagePromises.length} adet karoser resmi başarıyla kaydedildi`
+          `✅ ${imagePromises.length} adet karoser resmi başarıyla kaydedildi`,
         );
       }
     } else {
@@ -3775,7 +3778,7 @@ export const getSimilarAds = async (req: Request, res: Response) => {
 // İlan oluştur (Oto Kurtarıcı - Tekli Araç) - UNIQUE_MARKER_FOR_TEKLI
 export const createOtoKurtariciTekliAd = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("🚛 Oto Kurtarıcı Tekli İlanı API'ye istek geldi");
@@ -3869,7 +3872,7 @@ export const createOtoKurtariciTekliAd = async (
       });
       console.log(
         "✅ 'Tekli Araç' markası oluşturuldu, ID:",
-        tekliAracBrand.id
+        tekliAracBrand.id,
       );
     }
 
@@ -3915,7 +3918,7 @@ export const createOtoKurtariciTekliAd = async (
       });
       console.log(
         "✅ 'Tekli Araç' varyantı oluşturuldu, ID:",
-        tekliAracVariant.id
+        tekliAracVariant.id,
       );
     }
 
@@ -3983,7 +3986,7 @@ export const createOtoKurtariciTekliAd = async (
     console.log("✅ Oto Kurtarıcı Tekli ilanı oluşturuldu, ID:", ad.id);
     console.log(
       "🚗 Seçilen araç markası customFields'a kaydedildi:",
-      vehicleBrandName
+      vehicleBrandName,
     );
 
     // Resim yükleme işlemi (Base64 formatında)
@@ -3991,7 +3994,7 @@ export const createOtoKurtariciTekliAd = async (
     if (files && files.length > 0) {
       console.log(
         "📷 Oto Kurtarıcı Tekli - Resimler base64 formatında kaydediliyor:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
 
       const imagePromises = [];
@@ -3999,7 +4002,7 @@ export const createOtoKurtariciTekliAd = async (
 
       // Vitrin resmini bul ve işle
       const showcaseFile = files.find(
-        (f: any) => f.fieldname === "showcasePhoto"
+        (f: any) => f.fieldname === "showcasePhoto",
       );
       if (showcaseFile) {
         // Base64 formatına çevir
@@ -4018,14 +4021,14 @@ export const createOtoKurtariciTekliAd = async (
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
             },
-          })
+          }),
         );
         displayOrder = 1;
       }
 
       // Diğer resimleri işle
       const photoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("photo_")
+        f.fieldname.startsWith("photo_"),
       );
       for (const file of photoFiles) {
         // Base64 formatına çevir
@@ -4044,7 +4047,7 @@ export const createOtoKurtariciTekliAd = async (
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
             },
-          })
+          }),
         );
         displayOrder++;
       }
@@ -4053,7 +4056,7 @@ export const createOtoKurtariciTekliAd = async (
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(
-          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`,
         );
       }
     }
@@ -4100,7 +4103,7 @@ export const createOtoKurtariciTekliAd = async (
 // İlan oluştur (Oto Kurtarıcı - Çoklu Araç)
 export const createOtoKurtariciCokluAd = async (
   req: Request,
-  res: Response
+  res: Response,
 ) => {
   try {
     console.log("🚛 Oto Kurtarıcı Çoklu İlanı API'ye istek geldi");
@@ -4185,7 +4188,7 @@ export const createOtoKurtariciCokluAd = async (
       req.body.variantName,
       undefined, // brandId
       undefined, // modelId
-      undefined // variantId
+      undefined, // variantId
     );
 
     console.log("� Çoklu Araç - Seçilen araç markası:", vehicleBrandName);
@@ -4247,7 +4250,7 @@ export const createOtoKurtariciCokluAd = async (
     console.log("✅ Oto Kurtarıcı Çoklu ilanı oluşturuldu, ID:", ad.id);
     console.log(
       "🚗 Seçilen araç markası customFields'a kaydedildi:",
-      vehicleBrandName
+      vehicleBrandName,
     );
     console.log("📊 CustomFields içeriği:", ad.customFields);
 
@@ -4256,7 +4259,7 @@ export const createOtoKurtariciCokluAd = async (
     if (files && files.length > 0) {
       console.log(
         "📷 Oto Kurtarıcı Çoklu - Resimler base64 formatında kaydediliyor:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
 
       const imagePromises = [];
@@ -4264,7 +4267,7 @@ export const createOtoKurtariciCokluAd = async (
 
       // Vitrin resmini bul ve işle
       const showcaseFile = files.find(
-        (f: any) => f.fieldname === "showcasePhoto"
+        (f: any) => f.fieldname === "showcasePhoto",
       );
       if (showcaseFile) {
         // Base64 formatına çevir
@@ -4283,14 +4286,14 @@ export const createOtoKurtariciCokluAd = async (
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
             },
-          })
+          }),
         );
         displayOrder = 1;
       }
 
       // Diğer resimleri işle
       const photoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("photo_")
+        f.fieldname.startsWith("photo_"),
       );
       for (const file of photoFiles) {
         // Base64 formatına çevir
@@ -4309,7 +4312,7 @@ export const createOtoKurtariciCokluAd = async (
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
             },
-          })
+          }),
         );
         displayOrder++;
       }
@@ -4318,7 +4321,7 @@ export const createOtoKurtariciCokluAd = async (
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(
-          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`,
         );
       }
     }
@@ -4487,7 +4490,7 @@ export const getAdminStats = async (req: Request, res: Response) => {
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const startOfWeek = new Date(
-      today.setDate(today.getDate() - today.getDay())
+      today.setDate(today.getDate() - today.getDay()),
     );
 
     const thisMonthUsers = await prisma.user.count({
@@ -4547,7 +4550,7 @@ export const getAdminStats = async (req: Request, res: Response) => {
     // Kategori adlarını ekle
     const adsByCategoryWithNames = adsByCategory.map((item: any) => {
       const category = categories.find(
-        (cat: any) => cat.id === item.categoryId
+        (cat: any) => cat.id === item.categoryId,
       );
       return {
         categoryId: item.categoryId,
@@ -4604,7 +4607,7 @@ export const getAdminStats = async (req: Request, res: Response) => {
 // Admin: İlanı zorla sil
 export const forceDeleteAd = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const { id } = req.params;
@@ -4637,7 +4640,7 @@ export const forceDeleteAd = async (
 
     // Admin aktivitesini logla
     console.log(
-      `Admin ${adminEmail} (ID: ${adminId}) deleted ad "${ad.title}" (ID: ${id}) by user ${ad.user.email}`
+      `Admin ${adminEmail} (ID: ${adminId}) deleted ad "${ad.title}" (ID: ${id}) by user ${ad.user.email}`,
     );
 
     res.json({
@@ -4706,7 +4709,7 @@ export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
         } else if (file.fieldname === "photos") {
           // Galeri fotoğrafları için base64 encode
           galleryImages.push(
-            `data:${file.mimetype};base64,${file.buffer.toString("base64")}`
+            `data:${file.mimetype};base64,${file.buffer.toString("base64")}`,
           );
         }
       }
@@ -4757,7 +4760,7 @@ export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
       "sasi",
       "Şasi",
       "standart",
-      "Standart"
+      "Standart",
     );
 
     // İlanı oluştur
@@ -4914,7 +4917,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       variantName,
       brandId || undefined,
       modelId || undefined,
-      variantId || undefined
+      variantId || undefined,
     );
 
     brandId = result.brandId || null;
@@ -5042,7 +5045,7 @@ export const uploadVideo = async (req: Request, res: Response) => {
 
     // Video dosyasını kaydet (şimdilik base64 olarak, ileride file upload service kullanılabilir)
     const videoBase64 = `data:${file.mimetype};base64,${file.buffer.toString(
-      "base64"
+      "base64",
     )}`;
 
     const video = await prisma.adVideo.create({
@@ -5245,7 +5248,7 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
     if (files && files.length > 0) {
       console.log(
         "📷 Resimler base64 formatında kaydediliyor:",
-        files.map((f: any) => f.fieldname)
+        files.map((f: any) => f.fieldname),
       );
 
       const imagePromises = [];
@@ -5253,7 +5256,7 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
 
       // Vitrin resmini bul ve işle
       const showcaseFile = files.find(
-        (f: any) => f.fieldname === "showcasePhoto"
+        (f: any) => f.fieldname === "showcasePhoto",
       );
       if (showcaseFile) {
         const base64Image = `data:${
@@ -5271,14 +5274,14 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
               displayOrder: 0,
               altText: `${title} - Vitrin Resmi`,
             },
-          })
+          }),
         );
         displayOrder = 1;
       }
 
       // Diğer resimleri işle
       const photoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("photo_")
+        f.fieldname.startsWith("photo_"),
       );
       for (const file of photoFiles) {
         const base64Image = `data:${
@@ -5296,7 +5299,7 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
               displayOrder,
               altText: `${title} - Resim ${displayOrder}`,
             },
-          })
+          }),
         );
         displayOrder++;
       }
@@ -5304,18 +5307,18 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
       if (imagePromises.length > 0) {
         await Promise.all(imagePromises);
         console.log(
-          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`
+          `✅ ${imagePromises.length} resim başarıyla base64 formatında kaydedildi`,
         );
       }
 
       // Video yükleme işlemi (Base64 formatında)
       const videoFiles = files.filter((f: any) =>
-        f.fieldname.startsWith("video_")
+        f.fieldname.startsWith("video_"),
       );
       if (videoFiles.length > 0) {
         console.log(
           "🎬 Videolar base64 formatında kaydediliyor:",
-          videoFiles.map((f: any) => f.fieldname)
+          videoFiles.map((f: any) => f.fieldname),
         );
 
         const videoPromises = [];
@@ -5328,7 +5331,7 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
           };base64,${file.buffer.toString("base64")}`;
 
           console.log(
-            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`
+            `🎬 Video ${videoDisplayOrder} base64 formatında kaydediliyor`,
           );
 
           videoPromises.push(
@@ -5341,7 +5344,7 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
                 displayOrder: videoDisplayOrder,
                 description: `${title} - Video ${videoDisplayOrder}`,
               },
-            })
+            }),
           );
           videoDisplayOrder++;
         }
@@ -5350,14 +5353,14 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
         if (videoPromises.length > 0) {
           await Promise.all(videoPromises);
           console.log(
-            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`
+            `✅ ${videoPromises.length} video başarıyla base64 formatında kaydedildi`,
           );
         }
       }
 
       // Ekspertiz raporu yükleme işlemi (Base64 formatında)
       const expertiseReportFile = files.find(
-        (f: any) => f.fieldname === "expertiseReport"
+        (f: any) => f.fieldname === "expertiseReport",
       );
       if (expertiseReportFile) {
         console.log("📄 Ekspertiz raporu base64 formatında kaydediliyor");

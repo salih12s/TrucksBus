@@ -88,7 +88,7 @@ const ResetPassword: React.FC = () => {
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
     if (!passwordRegex.test(formData.newPassword)) {
       setError(
-        "Şifre en az 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir"
+        "Şifre en az 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir",
       );
       return;
     }
@@ -107,7 +107,7 @@ const ResetPassword: React.FC = () => {
         const apiError = error as { response?: { data?: { error?: string } } };
         setError(
           apiError.response?.data?.error ||
-            "Şifre sıfırlanırken bir hata oluştu"
+            "Şifre sıfırlanırken bir hata oluştu",
         );
       } else {
         setError("Şifre sıfırlanırken bir hata oluştu");
@@ -212,7 +212,7 @@ const ResetPassword: React.FC = () => {
             fontSize: { xs: "1rem", md: "1.25rem" },
           }}
         >
-          Ticari araç alım satımında güvenilir adresiniz
+          Alın Satın TrucksBus ile Mutlu Kalın
         </Typography>
       </Box>
 

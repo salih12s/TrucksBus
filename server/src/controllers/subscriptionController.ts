@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { AuthenticatedRequest } from "../types/auth";
+import { io } from "../app";
 
 // Initialize Prisma Client with subscription model
 const prisma = new PrismaClient();
@@ -67,7 +68,7 @@ export const getPackages = async (req: AuthenticatedRequest, res: Response) => {
 // Kullanıcının aktif paketini getir
 export const getUserSubscription = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const userId = req.user?.id;
@@ -123,7 +124,7 @@ export const getUserSubscription = async (
 // Yeni paket satın al
 export const createSubscription = async (
   req: AuthenticatedRequest,
-  res: Response
+  res: Response,
 ) => {
   try {
     const userId = req.user?.id;
@@ -167,10 +168,10 @@ export const createSubscription = async (
     const packageDetails =
       PACKAGE_DETAILS[packageType as keyof typeof PACKAGE_DETAILS];
 
-    // İlk 3 ay ücretsiz
+    // İlk 6 ay ücretsiz
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + 3);
+    endDate.setMonth(endDate.getMonth() + 6);
 
     const subscription = await prisma.subscription.create({
       data: {
@@ -186,9 +187,32 @@ export const createSubscription = async (
       },
     });
 
+    // 🏪 Kullanıcıya bildirim gönder - Dükkan açıldı
+    await prisma.notification.create({
+      data: {
+        userId,
+        title: "Dükkanınız Açıldı! 🏪🎉",
+        message: `Tebrikler! "${packageDetails.name}" başarıyla aktif edildi. ${packageDetails.adLimit} ilan hakkınız bulunmaktadır. İlk 6 ay ücretsiz, sonraki dönemde %50 indirimli!`,
+        type: "SUCCESS",
+        relatedId: subscription.id,
+      },
+    });
+
+    // Gerçek zamanlı bildirim gönder
+    io.to(`user_${userId}`).emit("notification", {
+      title: "Dükkanınız Açıldı! 🏪🎉",
+      message: `"${packageDetails.name}" aktif edildi. ${packageDetails.adLimit} ilan hakkınız var!`,
+      type: "SUCCESS",
+    });
+
+    console.log(
+      `🏪 Dükkan açıldı ve bildirim gönderildi - Kullanıcı ID: ${userId}, Paket: ${packageDetails.name}`,
+    );
+
     return res.json({
       success: true,
-      message: "Paket başarıyla aktif edildi! İlk 3 ay ücretsiz.",
+      message:
+        "Paket başarıyla aktif edildi! İlk 6 ay ücretsiz, sonraki dönemde %50 indirimli.",
       subscription: {
         ...subscription,
         packageName: packageDetails.name,
@@ -206,7 +230,7 @@ export const createSubscription = async (
 
 // İlan oluştururken paket kontrolü
 export const checkAdLimit = async (
-  userId: number
+  userId: number,
 ): Promise<{ allowed: boolean; message?: string }> => {
   try {
     const subscription = await prisma.subscription.findFirst({

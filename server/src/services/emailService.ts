@@ -58,7 +58,15 @@ class EmailService {
       console.error("❌ E-posta servisi bağlantı hatası:", error);
       console.log("🔧 E-posta ayarlarınızı kontrol edin (.env dosyası)");
       console.log(
-        "💡 Gerçek e-posta göndermek için Gmail uygulama şifresi gerekli"
+        "💡 Gerçek e-posta göndermek için Gmail uygulama şifresi gerekli",
+      );
+      console.log(
+        "📋 EMAIL_USER:",
+        process.env.EMAIL_USER ? "✓ ayarlandı" : "✗ eksik",
+      );
+      console.log(
+        "📋 EMAIL_PASSWORD:",
+        process.env.EMAIL_PASSWORD ? "✓ ayarlandı" : "✗ eksik",
       );
     }
   }
@@ -70,11 +78,24 @@ class EmailService {
       console.log("📮 To:", options.to);
       console.log("📑 Subject:", options.subject);
       console.log("💌 E-posta gönderildi (simulated)");
+      console.log(
+        "⚠️  Gerçek e-posta göndermek için DISABLE_EMAIL=false yapın ve Gmail App Password ekleyin",
+      );
       return;
     }
 
     if (!this.transporter) {
-      throw new Error("E-posta servisi yapılandırılmamış");
+      console.error("❌ E-posta transporter yapılandırılmamış!");
+      console.log("📋 Kontrol edin:");
+      console.log("   - EMAIL_USER:", process.env.EMAIL_USER || "EKSİK");
+      console.log(
+        "   - EMAIL_PASSWORD:",
+        process.env.EMAIL_PASSWORD ? "***" : "EKSİK",
+      );
+      console.log("   - DISABLE_EMAIL:", process.env.DISABLE_EMAIL);
+      throw new Error(
+        "E-posta servisi yapılandırılmamış. EMAIL_USER ve EMAIL_PASSWORD .env dosyasında tanımlı olmalı.",
+      );
     }
 
     try {
@@ -88,17 +109,28 @@ class EmailService {
         html: options.html,
       };
 
+      console.log("📧 E-posta gönderiliyor:", options.to);
       const info = await this.transporter.sendMail(mailOptions);
-      console.log("✅ E-posta gönderildi:", info.messageId);
-    } catch (error) {
-      console.error("❌ E-posta gönderme hatası:", error);
-      throw new Error("E-posta gönderilemedi");
+      console.log("✅ E-posta başarıyla gönderildi:", info.messageId);
+    } catch (error: any) {
+      console.error("❌ E-posta gönderme hatası:", error.message || error);
+      if (error.code === "EAUTH") {
+        console.error(
+          "🔐 Kimlik doğrulama hatası! Gmail App Password kullandığınızdan emin olun.",
+        );
+        console.error(
+          "   Normal Gmail şifresi ÇALIŞMAZ. Google Account > Security > App passwords",
+        );
+      }
+      throw new Error(
+        `E-posta gönderilemedi: ${error.message || "Bilinmeyen hata"}`,
+      );
     }
   }
 
   async sendPasswordResetEmail(
     email: string,
-    resetLink: string
+    resetLink: string,
   ): Promise<void> {
     const htmlTemplate = `
       <!DOCTYPE html>

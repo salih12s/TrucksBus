@@ -243,9 +243,9 @@ const ContactPage: React.FC = () => {
             fontSize: { xs: "0.9rem", md: "1rem" },
           }}
         >
-          Türkiye'nin en kapsamlı ticari araç platformu olarak, kamyon, çekici,
-          otobüs, minibüs-midibüs, dorse ve benzeri ağır ticari araçların
-          alım-satımında güvenilir ve profesyonel hizmet sunuyoruz.
+          Alın Satın TrucksBus ile Mutlu Kalın! Kamyon, çekici, otobüs,
+          minibüs-midibüs, dorse ve benzeri ağır ticari araçların alım-satımında
+          güvenilir ve profesyonel hizmet sunuyoruz.
         </Typography>
         <Box mt={3}>
           <Typography

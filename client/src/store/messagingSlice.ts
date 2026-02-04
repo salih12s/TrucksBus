@@ -93,14 +93,14 @@ export const fetchConversations = createAsyncThunk(
           : "Failed to fetch conversations";
       return rejectWithValue(errorMessage);
     }
-  }
+  },
 );
 
 export const fetchMessages = createAsyncThunk(
   "messaging/fetchMessages",
   async (
     { otherUserId, adId }: { otherUserId: number; adId?: number | null },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const messages = await messagingAPI.getMessages(otherUserId, adId);
@@ -110,14 +110,14 @@ export const fetchMessages = createAsyncThunk(
         error instanceof Error ? error.message : "Failed to fetch messages";
       return rejectWithValue(errorMessage);
     }
-  }
+  },
 );
 
 export const sendMessage = createAsyncThunk(
   "messaging/sendMessage",
   async (
     messageData: { receiverId: number; content: string; adId?: number | null },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       return await messagingAPI.sendMessage(messageData);
@@ -126,7 +126,7 @@ export const sendMessage = createAsyncThunk(
         error instanceof Error ? error.message : "Failed to send message";
       return rejectWithValue(errorMessage);
     }
-  }
+  },
 );
 
 export const fetchUnreadCount = createAsyncThunk(
@@ -140,14 +140,14 @@ export const fetchUnreadCount = createAsyncThunk(
         error instanceof Error ? error.message : "Failed to fetch unread count";
       return rejectWithValue(errorMessage);
     }
-  }
+  },
 );
 
 export const startConversation = createAsyncThunk(
   "messaging/startConversation",
   async (
     data: { adId?: number | null; receiverId: number; initialMessage?: string },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       return await messagingAPI.startConversation({
@@ -162,14 +162,14 @@ export const startConversation = createAsyncThunk(
         error instanceof Error ? error.message : "Failed to start conversation";
       return rejectWithValue(errorMessage);
     }
-  }
+  },
 );
 
 export const markConversationAsRead = createAsyncThunk(
   "messaging/markAsRead",
   async (
     { otherUserId, adId }: { otherUserId: number; adId?: number | null },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       await messagingAPI.markAsRead(otherUserId, adId);
@@ -179,7 +179,7 @@ export const markConversationAsRead = createAsyncThunk(
         error instanceof Error ? error.message : "Failed to mark as read";
       return rejectWithValue(errorMessage);
     }
-  }
+  },
 );
 
 const messagingSlice = createSlice({
@@ -191,14 +191,14 @@ const messagingSlice = createSlice({
     },
     newMessageReceived: (
       state,
-      action: PayloadAction<{ message: Message; currentUserId: number }>
+      action: PayloadAction<{ message: Message; currentUserId: number }>,
     ) => {
       const { message, currentUserId } = action.payload;
       console.log(
         "New message received in Redux:",
         message,
         "Current user:",
-        currentUserId
+        currentUserId,
       );
 
       // Add to current conversation if it matches the open conversation
@@ -208,8 +208,16 @@ const messagingSlice = createSlice({
           state.currentConversation.otherUserId === message.receiverId) &&
         state.currentConversation.adId === message.adId
       ) {
-        state.currentConversation.messages.push(message);
-        console.log("Message added to current conversation");
+        // Çift ekleme kontrolü - aynı ID'li mesaj zaten varsa ekleme
+        const messageExists = state.currentConversation.messages.some(
+          (m) => m.id === message.id,
+        );
+        if (!messageExists) {
+          state.currentConversation.messages.push(message);
+          console.log("Message added to current conversation");
+        } else {
+          console.log("Message already exists, skipping duplicate");
+        }
       }
 
       // For conversation list, determine the other user
@@ -220,7 +228,7 @@ const messagingSlice = createSlice({
       const conversationId = `${otherUserId}-${message.adId || "general"}`;
 
       const existingConversation = state.conversations.find(
-        (conv) => conv.id === conversationId
+        (conv) => conv.id === conversationId,
       );
 
       if (existingConversation) {
@@ -240,13 +248,13 @@ const messagingSlice = createSlice({
         // Sort conversations by last message time
         state.conversations.sort(
           (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
         );
 
         console.log("Conversation updated:", conversationId);
       } else {
         console.log(
-          "Conversation not found, may need to refresh conversations"
+          "Conversation not found, may need to refresh conversations",
         );
         // Force refresh conversations when a new conversation is detected
         state.loading.conversations = true;
@@ -303,7 +311,13 @@ const messagingSlice = createSlice({
       })
       .addCase(sendMessage.fulfilled, (state, action) => {
         state.loading.sending = false;
-        state.currentConversation.messages.push(action.payload);
+        // Çift ekleme kontrolü - socket'ten de gelebilir
+        const messageExists = state.currentConversation.messages.some(
+          (m) => m.id === action.payload.id,
+        );
+        if (!messageExists) {
+          state.currentConversation.messages.push(action.payload);
+        }
       })
       .addCase(sendMessage.rejected, (state, action) => {
         state.loading.sending = false;
@@ -318,8 +332,14 @@ const messagingSlice = createSlice({
       // Start conversation
       .addCase(startConversation.fulfilled, (state, action) => {
         if ("content" in action.payload) {
-          // Message was sent
-          state.currentConversation.messages.push(action.payload as Message);
+          // Message was sent - çift ekleme kontrolü
+          const message = action.payload as Message;
+          const messageExists = state.currentConversation.messages.some(
+            (m) => m.id === message.id,
+          );
+          if (!messageExists) {
+            state.currentConversation.messages.push(message);
+          }
         }
       })
 
@@ -328,7 +348,7 @@ const messagingSlice = createSlice({
         const { otherUserId, adId } = action.payload;
         const conversationId = `${otherUserId}-${adId || "general"}`;
         const conversation = state.conversations.find(
-          (conv) => conv.id === conversationId
+          (conv) => conv.id === conversationId,
         );
 
         if (conversation) {

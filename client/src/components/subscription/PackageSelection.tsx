@@ -31,7 +31,7 @@ import SubscriptionModal from "./SubscriptionModal";
 const PackageSelection: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, token } = useSelector(
-    (state: RootState) => state.auth
+    (state: RootState) => state.auth,
   );
   const [packages, setPackages] = useState<PackageDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +66,7 @@ const PackageSelection: React.FC = () => {
 
     console.log(
       "✅ User authenticated, token:",
-      token?.substring(0, 20) + "..."
+      token?.substring(0, 20) + "...",
     );
     setSelectedPackage({ type: packageType, data: packageData });
     setModalOpen(true);
@@ -131,7 +131,7 @@ const PackageSelection: React.FC = () => {
           </Typography>
           <Chip
             icon={<LocalOfferIcon />}
-            label="İlk 3 Ay Ücretsiz!"
+            label="İlk 6 Ay Ücretsiz!"
             color="error"
             sx={{ fontSize: "16px", fontWeight: 600, py: 2, px: 1 }}
           />
@@ -232,7 +232,7 @@ const PackageSelection: React.FC = () => {
                           variant="body2"
                           sx={{ color: "#D34237", fontWeight: 600 }}
                         >
-                          İlk 3 ay ücretsiz!
+                          İlk 6 ay ücretsiz, sonra %50 indirimli!
                         </Typography>
                       </Box>
 
@@ -297,8 +297,8 @@ const PackageSelection: React.FC = () => {
             variant="body2"
             sx={{ color: "#666", mb: 0.5, fontSize: "13px" }}
           >
-            💡 <strong>Not:</strong> İlk 3 ay ücretsiz deneme süresi sonunda
-            otomatik olarak ücretlendirme başlar. İstediğiniz zaman iptal
+            💡 <strong>Not:</strong> İlk 6 ay ücretsiz deneme süresi sonunda %50
+            indirimli olarak ücretlendirme başlar. İstediğiniz zaman iptal
             edebilirsiniz.
           </Typography>
           <Typography variant="body2" sx={{ color: "#666", fontSize: "13px" }}>

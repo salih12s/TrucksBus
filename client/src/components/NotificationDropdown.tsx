@@ -27,6 +27,7 @@ import {
 } from "@mui/icons-material";
 import { notificationAPI, type Notification } from "../api/notifications";
 import NotificationDetailModal from "./modals/NotificationDetailModal";
+import socketService from "../services/socketService";
 
 interface NotificationDropdownProps {
   className?: string;
@@ -36,7 +37,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   className,
 }) => {
   const user = useSelector(
-    (state: { auth?: { user?: unknown } }) => state.auth?.user
+    (state: { auth?: { user?: unknown } }) => state.auth?.user,
   );
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -75,7 +76,27 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
       // Her 30 saniyede bir bildirimları kontrol et
       const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
+
+      // Socket event listener - yeni bildirim geldiğinde yenile
+      const socket = socketService.getSocket();
+      if (socket) {
+        socket.on("notification", () => {
+          console.log("📬 Yeni bildirim alındı - yenileniyor...");
+          fetchNotifications();
+        });
+        socket.on("newNotification", () => {
+          console.log("📬 Yeni bildirim sinyali alındı - yenileniyor...");
+          fetchNotifications();
+        });
+      }
+
+      return () => {
+        clearInterval(interval);
+        if (socket) {
+          socket.off("notification");
+          socket.off("newNotification");
+        }
+      };
     }
   }, [user, fetchNotifications]);
 
@@ -109,8 +130,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       await notificationAPI.markAsRead(notificationId);
       setNotifications((prev) =>
         prev.map((notif) =>
-          notif.id === notificationId ? { ...notif, isRead: true } : notif
-        )
+          notif.id === notificationId ? { ...notif, isRead: true } : notif,
+        ),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
@@ -122,13 +143,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     try {
       await notificationAPI.markAllAsRead();
       setNotifications((prev) =>
-        prev.map((notif) => ({ ...notif, isRead: true }))
+        prev.map((notif) => ({ ...notif, isRead: true })),
       );
       setUnreadCount(0);
     } catch (error) {
       console.error(
         "Tüm bildirimler okundu olarak işaretlenirken hata:",
-        error
+        error,
       );
     }
   };
@@ -137,7 +158,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     try {
       await notificationAPI.deleteNotification(notificationId);
       setNotifications((prev) =>
-        prev.filter((notif) => notif.id !== notificationId)
+        prev.filter((notif) => notif.id !== notificationId),
       );
       setUnreadCount((prev) => {
         const deletedNotif = notifications.find((n) => n.id === notificationId);
@@ -194,7 +215,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60)
+      (now.getTime() - date.getTime()) / (1000 * 60),
     );
 
     if (diffInMinutes < 1) return "Şimdi";
@@ -360,7 +381,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                           >
                             <Chip
                               label={getNotificationTypeLabel(
-                                notification.type
+                                notification.type,
                               )}
                               size="small"
                               color={

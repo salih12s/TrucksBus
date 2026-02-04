@@ -56,7 +56,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       setError(
-        error.response?.data?.message || "Paket aktivasyonunda bir hata oluştu"
+        error.response?.data?.message || "Paket aktivasyonunda bir hata oluştu",
       );
     } finally {
       setLoading(false);
@@ -105,8 +105,8 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <strong>{packageData.name}</strong> başarıyla aktif edildi!
           </Typography>
           <Alert severity="success" sx={{ mb: 2 }}>
-            İlk 3 ay boyunca ücretsiz olarak {packageData.adLimit} ilan
-            yayınlayabilirsiniz.
+            İlk 6 ay boyunca ücretsiz olarak {packageData.adLimit} ilan
+            yayınlayabilirsiniz. Sonraki dönemde %50 indirimli!
           </Alert>
           <Typography variant="body2" sx={{ color: "#666" }}>
             Profilinizden paket bilgilerinizi görüntüleyebilirsiniz.
@@ -172,7 +172,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         >
           <LocalOfferIcon sx={{ fontSize: 16 }} />
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            İlk 3 Ay Ücretsiz!
+            İlk 6 Ay Ücretsiz!
           </Typography>
         </Box>
       </DialogTitle>
@@ -211,10 +211,11 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
         <Box sx={{ backgroundColor: "#f5f5f5", p: 2, borderRadius: 2 }}>
           <Typography variant="body2" sx={{ color: "#666", mb: 1 }}>
-            📅 <strong>Deneme Süresi:</strong> İlk 3 ay tamamen ücretsiz
+            📅 <strong>Deneme Süresi:</strong> İlk 6 ay tamamen ücretsiz
           </Typography>
           <Typography variant="body2" sx={{ color: "#666", mb: 1 }}>
-            💳 <strong>Ödeme:</strong> 3 ay sonra otomatik ücretlendirme başlar
+            💳 <strong>Ödeme:</strong> 6 ay sonra %50 indirimli ücretlendirme
+            başlar
           </Typography>
           <Typography variant="body2" sx={{ color: "#666" }}>
             ❌ <strong>İptal:</strong> İstediğiniz zaman iptal edebilirsiniz

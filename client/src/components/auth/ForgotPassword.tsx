@@ -46,7 +46,7 @@ const ForgotPassword: React.FC = () => {
         const apiError = error as { response?: { data?: { error?: string } } };
         setError(
           apiError.response?.data?.error ||
-            "Bir hata oluştu. Lütfen tekrar deneyin."
+            "Bir hata oluştu. Lütfen tekrar deneyin.",
         );
       } else {
         setError("Bir hata oluştu. Lütfen tekrar deneyin.");
@@ -100,7 +100,7 @@ const ForgotPassword: React.FC = () => {
             fontSize: { xs: "1rem", md: "1.25rem" },
           }}
         >
-          Ticari araç alım satımında güvenilir adresiniz
+          Alın Satın TrucksBus ile Mutlu Kalın
         </Typography>
       </Box>
 

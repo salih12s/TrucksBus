@@ -1,15 +1,26 @@
-# 🚀 CANLI ORTAM E-POSTA KURULUMU
+# 🚀 CANLI ORTAM E-POSTA KURULUMU (Şifre Sıfırlama)
+
+## ✅ Şifre Sıfırlama Akışı
+
+1. Kullanıcı `/forgot-password` sayfasına gider
+2. E-posta adresini girer
+3. Sistem JWT token ile reset link oluşturur
+4. E-posta gönderilir (1 saat geçerli link)
+5. Kullanıcı linke tıklar → `/reset-password?token=xxx`
+6. Yeni şifre belirlenir ve kaydedilir
 
 ## Hızlı Başlangıç (5 dakikada hazır!)
 
-### Adım 1: Gmail Hesabı Hazırlayın
+### Adım 1: Gmail Uygulama Şifresi Oluşturun
 
-1. **Gmail hesabınıza gidin** (mevcut hesabınızı kullanabilirsiniz)
-2. **2FA'yı aktifleştirin**: Hesap > Güvenlik > 2 Adımlı Doğrulama
-3. **Uygulama şifresi oluşturun**:
-   - Google Hesap > Güvenlik > 2 Adımlı Doğrulama > Uygulama şifreleri
-   - "Mail" seçin
-   - 16 haneli şifreyi kopyalayın (xxxx xxxx xxxx xxxx formatında)
+1. **https://myaccount.google.com** adresine gidin
+2. **Security (Güvenlik)** sekmesine tıklayın
+3. **2-Step Verification** açık olmalı (kapalıysa açın)
+4. **App passwords (Uygulama şifreleri)** bölümüne gidin
+5. **Select app** → "Mail" seçin
+6. **Select device** → "Other" seçin, "TrucksBus" yazın
+7. **Generate** butonuna tıklayın
+8. Oluşan 16 haneli şifreyi kopyalayın (boşluklar olmadan: `xxxxxxxxxxxxxxxx`)
 
 ### Adım 2: Railway'de Environment Variables Ayarlayın
 
@@ -17,79 +28,89 @@ Railway dashboard'unda **Variables** sekmesine gidin ve şunları ekleyin:
 
 ```
 EMAIL_USER=sizin-gmail-adresiniz@gmail.com
-EMAIL_PASSWORD=xxxx-xxxx-xxxx-xxxx  (16 haneli uygulama şifresi)
+EMAIL_PASSWORD=xxxxxxxxxxxxxxxx
+DISABLE_EMAIL=false
+FRONTEND_URL=https://trucksbus.com.tr
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-FROM_EMAIL=noreply@trucksbus.com.tr
-FRONTEND_URL=https://trucksbus.com.tr
+FROM_EMAIL=noreply@trucksbus.com
 ```
 
-### Adım 3: Test Edin
+⚠️ **ÖNEMLİ**: `EMAIL_PASSWORD` değerinde boşluk OLMAMALI!
 
-1. Railway'de deploy edin
-2. Canlı sitede "Şifremi Unuttum"a tıklayın
+### Adım 3: Deploy ve Test
+
+1. Railway'de **Deploy** butonuna tıklayın
+2. Canlı sitede **Giriş Yap** → **Şifremi Unuttum** tıklayın
 3. E-posta adresinizi girin
-4. Gmail'inizi kontrol edin
+4. Gmail'inizi kontrol edin (SPAM klasörüne de bakın)
+5. E-postadaki linke tıklayın
+6. Yeni şifre belirleyin
 
-## 🔧 Alternatif Çözümler
+## 🔍 Sorun Giderme
+
+### E-posta gitmiyor mu?
+
+**Railway Logs'u kontrol edin:**
+
+```bash
+railway logs
+```
+
+Şu mesajları arayın:
+
+- ✅ `E-posta servisi hazır` = Başarılı
+- ❌ `E-posta bağlantı hatası` = Şifre yanlış veya 2FA kapalı
+
+**Kontrol Listesi:**
+
+- [ ] Gmail 2-Step Verification açık mı?
+- [ ] App Password kullanıyor musunuz (normal şifre ÇALIŞMAZ)?
+- [ ] `DISABLE_EMAIL=false` mu?
+- [ ] `EMAIL_PASSWORD` boşluksuz mu?
+- [ ] Railway'i yeniden deploy ettiniz mi?
+
+### Test için Console Log'ları
+
+Server loglarında şunları görmelisiniz:
+
+```
+📧 E-posta gönderiliyor: kullanici@email.com
+✅ E-posta başarıyla gönderildi: <message-id>
+```
+
+## 🔧 Alternatif E-posta Servisleri
 
 ### SendGrid (Önerilen - Profesyonel)
 
 - **Avantaj**: Aylık 100 e-posta ücretsiz, güvenilir teslimat
 - **Kurulum**: sendgrid.com'da hesap açın
-- **Railway Variables**:
-
-```
-SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxx
-FROM_EMAIL=noreply@trucksbus.com.tr
-```
 
 ### Mailgun (Alternatif)
 
 - **Avantaj**: İlk 5,000 e-posta ücretsiz
-- **Kurulum**: mailgun.com'da hesap açın
 
 ### AWS SES (Gelişmiş)
 
 - **Avantaj**: Çok ucuz (1000 e-posta = $0.10)
-- **Kurulum**: AWS hesabı gerekli
 
-## 🚨 Önemli Notlar
+## 📋 Lokal Test (Development)
 
-1. **Gmail Limitleri**:
+Lokal ortamda test etmek için `.env` dosyasında:
 
-   - Günlük ~500 e-posta limiti
-   - Spam klasörüne düşebilir
+```env
+# Simülasyon modu - console'a yazdırır
+DISABLE_EMAIL=true
 
-2. **Profesyonel Görünüm İçin**:
-
-   - Google Workspace kullanın (@trucksbus.com.tr e-posta)
-   - SPF/DKIM kayıtları ekleyin
-
-3. **Test Environment**:
-   - Geliştirme ortamında console.log kullanılıyor
-   - Canlıda gerçek e-posta gönderilecek
-
-## ⚡ Hızlı Başlangıç Komutu
-
-Railway'de bu değişkenleri ekledikten sonra:
-
-```bash
-railway redeploy
+# VEYA gerçek e-posta için
+DISABLE_EMAIL=false
+EMAIL_USER=your-gmail@gmail.com
+EMAIL_PASSWORD=your-16-digit-app-password
+FRONTEND_URL=http://localhost:5174
 ```
 
-Veya Railway dashboard'unda "Deploy" butonuna tıklayın.
+## 🚨 Gmail Limitleri
 
-## 🔍 Sorun Giderme
-
-**E-posta gitmiyor?**
-
-1. Railway logs kontrol edin: `railway logs`
-2. Gmail uygulama şifresi doğru mu?
-3. 2FA aktif mi?
-4. SPAM klasörünü kontrol edin
-
-**Hala sorun var?**
-
-- Console'da "✅ E-posta servisi hazır" mesajını görüyor musunuz?
-- Variables'lar doğru yazıldı mı?
+- Günlük **~500 e-posta** limiti
+- Çok fazla gönderim SPAM olarak işaretlenebilir
+- Profesyonel kullanım için **Google Workspace** önerilir

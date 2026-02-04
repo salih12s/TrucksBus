@@ -57,7 +57,7 @@ model Subscription {
   isActive       Boolean  @default(true) @map("is_active")
   startDate      DateTime @default(now()) @map("start_date")
   endDate        DateTime @map("end_date")
-  isTrial        Boolean  @default(true) @map("is_trial") // İlk 3 ay ücretsiz
+  isTrial        Boolean  @default(true) @map("is_trial") // İlk 6 ay ücretsiz, sonra %50 indirimli
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   user           User     @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
@@ -152,6 +152,7 @@ model Ad {
   status             AdStatus          @default(PENDING)
   viewCount          Int               @default(0) @map("view_count")
   isPromoted         Boolean           @default(false) @map("is_promoted")
+  isExample          Boolean           @default(false) @map("is_example") // Örnek ilan işareti - mevcut ilanlar için true
   promotedUntil      DateTime?         @map("promoted_until")
   customFields       Json?             @map("custom_fields")
   createdAt          DateTime          @default(now()) @map("created_at")
