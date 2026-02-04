@@ -3,6 +3,17 @@ import { PrismaClient } from "@prisma/client";
 import { io } from "../app";
 import { AuthenticatedRequest } from "../middleware/auth";
 
+// Helper function to safely parse query/params that can be string or string[]
+const parseStringParam = (param: string | string[] | undefined): string => {
+  if (Array.isArray(param)) return param[0] || "";
+  return param || "";
+};
+
+const parseIntParam = (param: string | string[] | undefined): number => {
+  const str = parseStringParam(param);
+  return parseInt(str) || 0;
+};
+
 const prisma = new PrismaClient();
 
 // Get conversations for a user
@@ -106,8 +117,8 @@ export const getMessages = async (
       return;
     }
 
-    const otherUserIdNum = parseInt(otherUserId);
-    const adIdNum = adId ? parseInt(adId) : null;
+    const otherUserIdNum = parseIntParam(otherUserId);
+    const adIdNum = adId ? parseIntParam(adId) : null;
 
     const messages = await prisma.message.findMany({
       where: {

@@ -7,6 +7,17 @@ import { AuthenticatedRequest } from "../middleware/auth";
 import { AdminLogController } from "./adminLogController";
 import { emailService } from "../services/emailService";
 
+// Helper function to safely parse query/params that can be string or string[]
+const parseStringParam = (param: string | string[] | undefined): string => {
+  if (Array.isArray(param)) return param[0] || "";
+  return param || "";
+};
+
+const parseIntParam = (param: string | string[] | undefined): number => {
+  const str = parseStringParam(param);
+  return parseInt(str) || 0;
+};
+
 interface RegisterRequest {
   email: string;
   password: string;

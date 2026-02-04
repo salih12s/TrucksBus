@@ -1,6 +1,17 @@
 import { Request, Response } from "express";
 import { prisma } from "../config/database";
 
+// Helper function to safely parse query/params that can be string or string[]
+const parseStringParam = (param: string | string[] | undefined): string => {
+  if (Array.isArray(param)) return param[0] || "";
+  return param || "";
+};
+
+const parseIntParam = (param: string | string[] | undefined): number => {
+  const str = parseStringParam(param);
+  return parseInt(str) || 0;
+};
+
 // Get all cities - OPTIMIZED
 export const getCities = async (req: Request, res: Response) => {
   try {
