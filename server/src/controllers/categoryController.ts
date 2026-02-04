@@ -59,7 +59,9 @@ export const getCategoryById = async (req: Request, res: Response) => {
 
     // ❗ FIX: Sadece category bilgisini çek, brands'i ayrı çek
     const category = await prisma.category.findUnique({
-      where: isNumeric ? { id: parseIntParam(id) } : { slug: parseStringParam(id) },
+      where: isNumeric
+        ? { id: parseIntParam(id) }
+        : { slug: parseStringParam(id) },
     });
 
     if (!category) {

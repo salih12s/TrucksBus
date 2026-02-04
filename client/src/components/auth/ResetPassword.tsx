@@ -83,10 +83,15 @@ const ResetPassword: React.FC = () => {
       return;
     }
 
-    // Password strength validation
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
-    if (!passwordRegex.test(formData.newPassword)) {
+    // Password strength validation - daha esnek
+    const hasUpperCase = /[A-Z]/.test(formData.newPassword);
+    const hasLowerCase = /[a-z]/.test(formData.newPassword);
+    const hasNumber = /\d/.test(formData.newPassword);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/]/.test(
+      formData.newPassword,
+    );
+
+    if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
       setError(
         "Şifre en az 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir",
       );

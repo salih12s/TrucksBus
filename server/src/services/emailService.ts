@@ -261,7 +261,21 @@ class EmailService {
             <p><strong>Merhaba,</strong></p>
             <p>TrucksBus hesabınız için şifre sıfırlama talebinde bulundunuz. Güvenliğiniz için bu işlemi tamamlamak üzere aşağıdaki butona tıklayın:</p>
             
-            <a href="${resetLink}" class="reset-button">🔑 Şifremi Şimdi Sıfırla</a>
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${resetLink}" style="height:50px;v-text-anchor:middle;width:250px;" arcsize="10%" strokecolor="#357ABD" fillcolor="#4A90E2">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:bold;">🔑 Şifremi Şimdi Sıfırla</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 30px auto;">
+              <tr>
+                <td style="border-radius: 8px; background-color: #4A90E2;">
+                  <a href="${resetLink}" target="_blank" style="display: inline-block; padding: 16px 32px; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; color: #ffffff; text-decoration: none; border-radius: 8px; background-color: #4A90E2; border: 1px solid #357ABD;">🔑 Şifremi Şimdi Sıfırla</a>
+                </td>
+              </tr>
+            </table>
+            <!--<![endif]-->
             
             <div class="warning">
               <strong>⚠️ Güvenlik Uyarıları:</strong>

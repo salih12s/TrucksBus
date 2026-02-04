@@ -992,13 +992,18 @@ export class AuthController {
         return;
       }
 
-      // Password strength validation
-      const passwordRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
-      if (!passwordRegex.test(newPassword)) {
+      // Password strength validation - daha esnek
+      const hasUpperCase = /[A-Z]/.test(newPassword);
+      const hasLowerCase = /[a-z]/.test(newPassword);
+      const hasNumber = /\d/.test(newPassword);
+      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/]/.test(
+        newPassword,
+      );
+
+      if (!hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
         res.status(400).json({
           error:
-            "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character",
+            "Şifre en az 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir",
         });
         return;
       }
