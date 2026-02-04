@@ -311,7 +311,13 @@ export class AuthController {
       }
 
       // Verify password with timing-safe comparison
+      console.log("=== LOGIN DEBUG ===");
+      console.log("Email:", email);
+      console.log("Password Length:", password.length);
+      console.log("Stored Hash:", user.passwordHash);
       const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+      console.log("Password Valid:", isValidPassword);
+      console.log("=== END LOGIN DEBUG ===");
       if (!isValidPassword) {
         AuthController.recordFailedLoginAttempt(email);
         res.status(401).json({
@@ -1041,15 +1047,31 @@ export class AuthController {
 
       // Hash new password
       const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+      
+      console.log("=== PASSWORD RESET DEBUG ===");
+      console.log("User ID:", user.id);
+      console.log("User Email:", user.email);
+      console.log("New Password Length:", newPassword.length);
+      console.log("New Hash:", passwordHash);
+      console.log("BCRYPT_ROUNDS:", BCRYPT_ROUNDS);
 
       // Update password
-      await prisma.user.update({
+      const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: {
           passwordHash,
           updatedAt: new Date(),
         },
+        select: {
+          id: true,
+          email: true,
+          passwordHash: true,
+        }
       });
+      
+      console.log("Updated User Hash:", updatedUser.passwordHash);
+      console.log("Hash Match Check:", passwordHash === updatedUser.passwordHash);
+      console.log("=== END PASSWORD RESET DEBUG ===");
 
       // Log the password reset
       await AdminLogController.logActivity(
