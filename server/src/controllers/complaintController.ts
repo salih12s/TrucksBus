@@ -145,7 +145,7 @@ export const getComplaintById = async (
     }
 
     const complaint = await prisma.complaint.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
       include: {
         ad: {
           select: {
@@ -211,7 +211,7 @@ export const updateComplaintStatus = async (
     }
 
     const complaint = await prisma.complaint.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
     });
 
     if (!complaint) {
@@ -220,7 +220,7 @@ export const updateComplaintStatus = async (
     }
 
     const updatedComplaint = await prisma.complaint.update({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
       data: {
         status,
         adminResponse: adminResponse || null,
@@ -288,7 +288,7 @@ export const deleteComplaint = async (
     }
 
     const complaint = await prisma.complaint.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
     });
 
     if (!complaint) {
@@ -303,7 +303,7 @@ export const deleteComplaint = async (
     }
 
     await prisma.complaint.delete({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
     });
 
     res.json({ message: "Şikayet başarıyla silindi" });

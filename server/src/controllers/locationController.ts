@@ -45,7 +45,7 @@ export const getDistrictsByCity = async (req: Request, res: Response) => {
 
     const districts = await prisma.district.findMany({
       where: {
-        cityId: parseInt(cityId),
+        cityId: parseIntParam(cityId),
         isActive: true,
       },
       orderBy: { name: "asc" },

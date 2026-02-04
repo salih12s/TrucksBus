@@ -452,7 +452,7 @@ export const getAdById = async (req: Request, res: Response) => {
   console.log("🔍 getAdById çağrıldı, ID:", req.params.id);
   const startTime = performance.now();
   const { id } = req.params;
-  const adId = parseInt(id);
+  const adId = parseIntParam(id);
 
   // ❗ SAFE CACHE CHECK - only for valid IDs
   if (!adId || adId <= 0) {
@@ -709,7 +709,7 @@ export const getAdVideos = async (req: Request, res: Response) => {
 
   try {
     const { id } = req.params;
-    const adId = parseInt(id);
+    const adId = parseIntParam(id);
 
     if (!adId || adId <= 0) {
       return res.status(400).json({ error: "Invalid ad ID" });
@@ -1198,7 +1198,7 @@ export const updateAd = async (req: Request, res: Response) => {
     const userRole = (req as any).user.role;
 
     const existingAd = await prisma.ad.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
     });
 
     if (!existingAd) {
@@ -1247,7 +1247,7 @@ export const updateAd = async (req: Request, res: Response) => {
     }
 
     const ad = await prisma.ad.update({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
       data: updateData,
       include: {
         category: true,
@@ -1273,7 +1273,7 @@ export const deleteAd = async (req: Request, res: Response) => {
     const userRole = (req as any).user.role;
 
     const existingAd = await prisma.ad.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
     });
 
     if (!existingAd) {
@@ -1289,7 +1289,7 @@ export const deleteAd = async (req: Request, res: Response) => {
     }
 
     await prisma.ad.delete({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
     });
 
     return res.json({ message: "Ad deleted successfully" });
@@ -1399,7 +1399,7 @@ export const moderateAd = async (req: Request, res: Response) => {
     }
 
     const ad = await prisma.ad.update({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
       data: {
         status,
         ...(status === "APPROVED" && { publishedAt: new Date() }),
@@ -2153,7 +2153,7 @@ export const getDistricts = async (req: Request, res: Response) => {
     const { cityId } = req.params;
 
     const districts =
-      await prisma.$queryRaw`SELECT id, name, city_id as "cityId" FROM districts WHERE city_id = ${parseInt(
+      await prisma.$queryRaw`SELECT id, name, city_id as "cityId" FROM districts WHERE city_id = ${parseIntParam(
         cityId,
       )} AND is_active = true ORDER BY name ASC`;
 
@@ -2314,7 +2314,7 @@ export const approveAd = async (req: Request, res: Response) => {
 
     // İlanı onayla
     const ad = await prisma.ad.update({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
       data: {
         status: "APPROVED",
       },
@@ -2379,7 +2379,7 @@ export const rejectAd = async (req: Request, res: Response) => {
     const { reason } = req.body;
 
     const ad = await prisma.ad.update({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
       data: {
         status: "REJECTED",
       },
@@ -3735,7 +3735,7 @@ export const createKaroserAd = async (req: Request, res: Response) => {
 export const getSimilarAds = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const adId = parseInt(id);
+    const adId = parseIntParam(id);
 
     // Önce mevcut ilanı bul
     const currentAd = await prisma.ad.findUnique({
@@ -4627,7 +4627,7 @@ export const forceDeleteAd = async (
 
     // İlanı bul
     const ad = await prisma.ad.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
       include: {
         user: {
           select: {
@@ -4646,7 +4646,7 @@ export const forceDeleteAd = async (
 
     // İlanı sil
     await prisma.ad.delete({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
     });
 
     // Admin aktivitesini logla
@@ -5046,7 +5046,7 @@ export const uploadVideo = async (req: Request, res: Response) => {
 
     // İlan sahibi kontrolü
     const ad = await prisma.ad.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
       select: { userId: true },
     });
 
@@ -5061,7 +5061,7 @@ export const uploadVideo = async (req: Request, res: Response) => {
 
     const video = await prisma.adVideo.create({
       data: {
-        adId: parseInt(id),
+        adId: parseIntParam(id),
         videoUrl: videoBase64,
         mimeType: file.mimetype,
         fileSize: file.size,
@@ -5091,7 +5091,7 @@ export const deleteVideo = async (req: Request, res: Response) => {
 
     // İlan sahibi kontrolü
     const ad = await prisma.ad.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: parseIntParam(id) },
       select: { userId: true },
     });
 
@@ -5101,8 +5101,8 @@ export const deleteVideo = async (req: Request, res: Response) => {
 
     await prisma.adVideo.delete({
       where: {
-        id: parseInt(videoId),
-        adId: parseInt(id),
+        id: parseIntParam(videoId),
+        adId: parseIntParam(id),
       },
     });
 

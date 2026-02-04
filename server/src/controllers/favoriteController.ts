@@ -165,7 +165,7 @@ export const removeFromFavorites = async (
       where: {
         userId_adId: {
           userId,
-          adId: parseInt(adId),
+          adId: parseIntParam(adId),
         },
       },
     });
@@ -179,7 +179,7 @@ export const removeFromFavorites = async (
       where: {
         userId_adId: {
           userId,
-          adId: parseInt(adId),
+          adId: parseIntParam(adId),
         },
       },
     });
@@ -209,7 +209,7 @@ export const checkFavorite = async (
       where: {
         userId_adId: {
           userId,
-          adId: parseInt(adId),
+          adId: parseIntParam(adId),
         },
       },
     });

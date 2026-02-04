@@ -519,7 +519,7 @@ export class AuthController {
       }
 
       const { userId } = req.params;
-      const userIdNum = parseInt(userId);
+      const userIdNum = parseIntParam(userId);
 
       if (isNaN(userIdNum)) {
         res.status(400).json({ error: "Invalid user ID" });

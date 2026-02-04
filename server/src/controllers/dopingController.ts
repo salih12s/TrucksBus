@@ -162,7 +162,7 @@ export const deactivateDoping = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const dopingId = req.params.dopingId;
+    const dopingId = parseStringParam(req.params.dopingId);
     const userId = (req as any).user?.id;
 
     if (!userId) {

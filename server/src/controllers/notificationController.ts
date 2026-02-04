@@ -109,7 +109,7 @@ export const markAsRead = async (
 
     await prisma.notification.update({
       where: {
-        id: parseInt(notificationId),
+        id: parseIntParam(notificationId),
         userId, // Sadece kendi bildirimini güncelleyebilir
       },
       data: { isRead: true },
@@ -184,7 +184,7 @@ export const deleteNotification = async (
 
     await prisma.notification.delete({
       where: {
-        id: parseInt(notificationId),
+        id: parseIntParam(notificationId),
         userId, // Sadece kendi bildirimini silebilir
       },
     });

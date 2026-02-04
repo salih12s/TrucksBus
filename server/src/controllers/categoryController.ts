@@ -55,11 +55,11 @@ export const getCategoryById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     // Check if id is numeric (ID) or string (slug)
-    const isNumeric = /^\d+$/.test(id);
+    const isNumeric = /^\d+$/.test(parseStringParam(id));
 
     // ❗ FIX: Sadece category bilgisini çek, brands'i ayrı çek
     const category = await prisma.category.findUnique({
-      where: isNumeric ? { id: parseInt(id) } : { slug: id },
+      where: isNumeric ? { id: parseIntParam(id) } : { slug: parseStringParam(id) },
     });
 
     if (!category) {
@@ -109,7 +109,7 @@ export const getBrandsByCategory = async (req: Request, res: Response) => {
 
     // ❗ CRITICAL: Simplified query for performance
     const category = await prisma.category.findUnique({
-      where: { slug: categorySlug },
+      where: { slug: parseStringParam(categorySlug) },
       select: { id: true },
     });
 
@@ -176,7 +176,7 @@ export const getModelsByBrand = async (req: Request, res: Response) => {
 
     // First find the category and brand
     const category = await prisma.category.findUnique({
-      where: { slug: categorySlug },
+      where: { slug: parseStringParam(categorySlug) },
     });
 
     if (!category) {
@@ -184,7 +184,7 @@ export const getModelsByBrand = async (req: Request, res: Response) => {
     }
 
     const brand = await prisma.brand.findUnique({
-      where: { slug: brandSlug },
+      where: { slug: parseStringParam(brandSlug) },
     });
 
     if (!brand) {
@@ -236,7 +236,7 @@ export const getVariantsByModel = async (req: Request, res: Response) => {
 
     // Find the category first
     const category = await prisma.category.findUnique({
-      where: { slug: categorySlug },
+      where: { slug: parseStringParam(categorySlug) },
     });
 
     if (!category) {
@@ -248,7 +248,7 @@ export const getVariantsByModel = async (req: Request, res: Response) => {
 
     // Find the brand
     const brand = await prisma.brand.findUnique({
-      where: { slug: brandSlug },
+      where: { slug: parseStringParam(brandSlug) },
     });
 
     if (!brand) {
@@ -261,7 +261,7 @@ export const getVariantsByModel = async (req: Request, res: Response) => {
     // Find the model - MUST be in the specified category
     const model = await prisma.model.findFirst({
       where: {
-        slug: modelSlug,
+        slug: parseStringParam(modelSlug),
         brandId: brand.id,
         categoryId: category.id, // ✅ Kategoriye göre filtrele
       },
@@ -767,7 +767,7 @@ export const getCategoryFields = async (req: Request, res: Response) => {
       },
     };
 
-    const config = fieldConfigurations[parseInt(categoryId)];
+    const config = fieldConfigurations[parseIntParam(categoryId)];
     if (!config) {
       return res
         .status(404)
@@ -791,7 +791,7 @@ export const getBrandBySlug = async (
 
     // Verify category exists
     const category = await prisma.category.findUnique({
-      where: { slug: categorySlug },
+      where: { slug: parseStringParam(categorySlug) },
     });
 
     if (!category) {
@@ -800,7 +800,7 @@ export const getBrandBySlug = async (
     }
 
     const brand = await prisma.brand.findUnique({
-      where: { slug: brandSlug },
+      where: { slug: parseStringParam(brandSlug) },
       include: {
         _count: {
           select: { models: true },
@@ -829,7 +829,7 @@ export const getModelBySlug = async (
     const { categorySlug, brandSlug, modelSlug } = req.params;
 
     const brand = await prisma.brand.findUnique({
-      where: { slug: brandSlug },
+      where: { slug: parseStringParam(brandSlug) },
     });
 
     if (!brand) {
@@ -839,7 +839,7 @@ export const getModelBySlug = async (
 
     const model = await prisma.model.findFirst({
       where: {
-        slug: modelSlug,
+        slug: parseStringParam(modelSlug),
         brandId: brand.id,
       },
       include: {
@@ -870,7 +870,7 @@ export const getVariantBySlug = async (
     const { categorySlug, brandSlug, modelSlug, variantSlug } = req.params;
 
     const brand = await prisma.brand.findUnique({
-      where: { slug: brandSlug },
+      where: { slug: parseStringParam(brandSlug) },
     });
 
     if (!brand) {
@@ -880,7 +880,7 @@ export const getVariantBySlug = async (
 
     const model = await prisma.model.findFirst({
       where: {
-        slug: modelSlug,
+        slug: parseStringParam(modelSlug),
         brandId: brand.id,
       },
     });
@@ -892,7 +892,7 @@ export const getVariantBySlug = async (
 
     const variant = await prisma.variant.findFirst({
       where: {
-        slug: variantSlug,
+        slug: parseStringParam(variantSlug),
         modelId: model.id,
       },
     });
