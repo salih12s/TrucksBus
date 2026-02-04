@@ -43,6 +43,8 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://trucksbus.com.tr",
   "https://www.trucksbus.com.tr",
+  "http://trucksbus.com.tr",
+  "http://www.trucksbus.com.tr",
 ];
 
 app.use(

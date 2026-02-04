@@ -1047,7 +1047,7 @@ export class AuthController {
 
       // Hash new password
       const passwordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-      
+
       console.log("=== PASSWORD RESET DEBUG ===");
       console.log("User ID:", user.id);
       console.log("User Email:", user.email);
@@ -1066,11 +1066,14 @@ export class AuthController {
           id: true,
           email: true,
           passwordHash: true,
-        }
+        },
       });
-      
+
       console.log("Updated User Hash:", updatedUser.passwordHash);
-      console.log("Hash Match Check:", passwordHash === updatedUser.passwordHash);
+      console.log(
+        "Hash Match Check:",
+        passwordHash === updatedUser.passwordHash,
+      );
       console.log("=== END PASSWORD RESET DEBUG ===");
 
       // Log the password reset
