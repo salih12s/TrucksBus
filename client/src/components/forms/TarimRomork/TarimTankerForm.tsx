@@ -21,6 +21,9 @@ import {
   Card,
   FormControlLabel,
   Switch,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import { PhotoCamera, EditNote, LocationOn } from "@mui/icons-material";
 import apiClient from "../../../api/client";
@@ -142,6 +145,7 @@ interface TarimTankerFormData {
   description: string;
   productionYear: string;
   price: string;
+  currency: string;
   romorkMarkasi: string; // Yeni alan
   volume: string;
   condition: string;
@@ -194,6 +198,7 @@ const TarimTankerForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    currency: "TRY",
     romorkMarkasi: "Seçiniz",
     volume: "",
     condition: "ikinci-el",
@@ -325,6 +330,7 @@ const TarimTankerForm: React.FC = () => {
           }
         }
       });
+    submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("categorySlug", categorySlug || "");
@@ -441,7 +447,7 @@ const TarimTankerForm: React.FC = () => {
                     </FormControl>
 
                     <TextField
-                      label="Fiyat (TL)"
+                      label="Fiyat"
                       value={formatNumber(formData.price)}
                       onChange={(e) =>
                         handleInputChange(
@@ -452,7 +458,25 @@ const TarimTankerForm: React.FC = () => {
                       placeholder="Örn: 200.000"
                       sx={{ maxWidth: 200 }}
                       required
-                    />
+                    
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <ToggleButtonGroup
+                      value={formData.currency || "TRY"}
+                      exclusive
+                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
+                      size="small"
+                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
+                    >
+                      <ToggleButton value="TRY">₺ TL</ToggleButton>
+                      <ToggleButton value="USD">$ USD</ToggleButton>
+                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                    </ToggleButtonGroup>
+                  </InputAdornment>
+                ),
+              }}
+              />
                     {/* Hacim */}
                     <TextField
                       label="Hacim (Litre)"

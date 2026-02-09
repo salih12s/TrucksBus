@@ -28,6 +28,8 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import {
   PhotoCamera,
@@ -109,7 +111,7 @@ const OzelAmacliRomorkForm: React.FC = () => {
     images: [], // Backward compatibility
     // İletişim & Fiyat
     price: "",
-    currency: "TL",
+    currency: "TRY",
     contactName: "",
     phone: "",
     email: "",
@@ -157,7 +159,7 @@ const OzelAmacliRomorkForm: React.FC = () => {
         try {
           setLoadingDistricts(true);
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -175,7 +177,7 @@ const OzelAmacliRomorkForm: React.FC = () => {
 
   const handleInputChange = (
     field: keyof FormData,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -185,7 +187,7 @@ const OzelAmacliRomorkForm: React.FC = () => {
 
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    isShowcase = false
+    isShowcase = false,
   ) => {
     const files = event.target.files;
     if (files) {
@@ -246,6 +248,7 @@ const OzelAmacliRomorkForm: React.FC = () => {
           submitData.append(key, value.toString());
         }
       });
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("subType", "ozel-amacli-romork");
@@ -266,7 +269,7 @@ const OzelAmacliRomorkForm: React.FC = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       console.log("İlan başarıyla oluşturuldu:", response.data);
@@ -597,6 +600,34 @@ const OzelAmacliRomorkForm: React.FC = () => {
                 required
                 type="number"
                 InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <ToggleButtonGroup
+                        value={formData.currency || "TRY"}
+                        exclusive
+                        onChange={(_, v) =>
+                          v &&
+                          setFormData((prev: any) => ({ ...prev, currency: v }))
+                        }
+                        size="small"
+                        sx={{
+                          "& .MuiToggleButton-root": {
+                            py: 0.5,
+                            px: 1,
+                            fontSize: "0.75rem",
+                            "&.Mui-selected": {
+                              bgcolor: "#D34237",
+                              color: "#fff",
+                            },
+                          },
+                        }}
+                      >
+                        <ToggleButton value="TRY">₺ TL</ToggleButton>
+                        <ToggleButton value="USD">$ USD</ToggleButton>
+                        <ToggleButton value="EUR">€ EUR</ToggleButton>
+                      </ToggleButtonGroup>
+                    </InputAdornment>
+                  ),
                   startAdornment: (
                     <InputAdornment position="start">
                       <AttachMoney />

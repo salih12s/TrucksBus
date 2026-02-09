@@ -13,6 +13,7 @@ export interface Ad {
   title: string;
   description?: string;
   price?: number;
+  currency?: string;
   year?: number;
   mileage?: number;
   location?: string;
@@ -63,7 +64,7 @@ export interface GetMyAdsParams {
 
 // Kullanıcının kendi ilanlarını getir
 export const getMyAds = async (
-  params?: GetMyAdsParams
+  params?: GetMyAdsParams,
 ): Promise<GetMyAdsResponse> => {
   const response = await apiClient.get("/ads/user/my-ads", { params });
   return response.data as GetMyAdsResponse;

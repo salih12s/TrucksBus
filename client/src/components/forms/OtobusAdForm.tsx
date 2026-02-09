@@ -20,6 +20,9 @@ import {
   Dialog,
   DialogContent,
   DialogActions,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import { PhotoCamera, CheckCircle } from "@mui/icons-material";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -57,6 +60,7 @@ interface FormData {
   title: string;
   description: string;
   price: string;
+  currency: string;
   condition: string;
 
   // Konum Bilgileri
@@ -122,6 +126,7 @@ const OtobusAdForm: React.FC = () => {
     title: "",
     description: "",
     price: "",
+    currency: "TRY",
     condition: "",
     cityId: "",
     districtId: "",
@@ -179,7 +184,7 @@ const OtobusAdForm: React.FC = () => {
 
   // Statik seçenekler
   const yearOptions = Array.from({ length: 30 }, (_, i) =>
-    (2024 - i).toString()
+    (2024 - i).toString(),
   );
 
   const fuelTypeOptions = ["Dizel", "Benzin", "LPG", "Elektrik", "Hibrit"];
@@ -267,10 +272,10 @@ const OtobusAdForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(
-            (response.data as Array<{ id: string; name: string }>) || []
+            (response.data as Array<{ id: string; name: string }>) || [],
           );
         } catch (error) {
           console.error("İlçeler yüklenirken hata:", error);
@@ -351,7 +356,7 @@ const OtobusAdForm: React.FC = () => {
 
   const handleInputChange = (
     field: keyof FormData,
-    value: string | string[] | File[] | File | null
+    value: string | string[] | File[] | File | null,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -391,7 +396,7 @@ const OtobusAdForm: React.FC = () => {
 
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    isShowcase: boolean = false
+    isShowcase: boolean = false,
   ) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -427,7 +432,7 @@ const OtobusAdForm: React.FC = () => {
         });
       } else {
         alert(
-          `En fazla 15 fotoğraf yükleyebilirsiniz. Şu anda ${currentPhotos.length} fotoğraf var.`
+          `En fazla 15 fotoğraf yükleyebilirsiniz. Şu anda ${currentPhotos.length} fotoğraf var.`,
         );
       }
     }
@@ -510,7 +515,7 @@ const OtobusAdForm: React.FC = () => {
         setSelectedVideoIndex(selectedVideoIndex + 1);
       }
     },
-    [selectedVideoIndex, formData.videos.length]
+    [selectedVideoIndex, formData.videos.length],
   );
 
   // Klavye navigation
@@ -561,7 +566,7 @@ const OtobusAdForm: React.FC = () => {
 
     try {
       const response = await apiClient.get(
-        `/categories/${categorySlug}/brands`
+        `/categories/${categorySlug}/brands`,
       );
       const brandsData = response.data as Brand[];
 
@@ -625,7 +630,7 @@ const OtobusAdForm: React.FC = () => {
             "Brand bulunamadı:",
             brandId,
             "Mevcut brands:",
-            brands.map((b) => `${b.id}:${b.name}`)
+            brands.map((b) => `${b.id}:${b.name}`),
           );
           setModels([]);
           setVariants([]);
@@ -655,17 +660,17 @@ const OtobusAdForm: React.FC = () => {
           brandId,
           "Slug:",
           brand.slug,
-          ")"
+          ")",
         );
         const response = await apiClient.get(
-          `/categories/otobus/brands/${brand.slug}/models`
+          `/categories/otobus/brands/${brand.slug}/models`,
         );
         const modelsData = response.data as Model[];
         console.log(
           "✅ Models loaded:",
           modelsData.length,
           "models for brand",
-          brand.name
+          brand.name,
         );
 
         // Cache the result
@@ -707,7 +712,7 @@ const OtobusAdForm: React.FC = () => {
         setIsLoadingModels(false);
       }
     },
-    [brands, isLoadingModels]
+    [brands, isLoadingModels],
   );
 
   const loadVariants = useCallback(
@@ -735,7 +740,7 @@ const OtobusAdForm: React.FC = () => {
             "Model bulunamadı:",
             modelId,
             "Mevcut models:",
-            models.map((m) => `${m.id}:${m.name}`)
+            models.map((m) => `${m.id}:${m.name}`),
           );
           setVariants([]);
           setFormData((prev) => ({
@@ -750,7 +755,7 @@ const OtobusAdForm: React.FC = () => {
             "Brand bulunamadı:",
             formData.brandId,
             "Mevcut brands:",
-            brands.map((b) => `${b.id}:${b.name}`)
+            brands.map((b) => `${b.id}:${b.name}`),
           );
           setVariants([]);
           setFormData((prev) => ({
@@ -768,17 +773,17 @@ const OtobusAdForm: React.FC = () => {
           "Slug:",
           model.slug,
           ") of brand:",
-          brand.name
+          brand.name,
         );
         const response = await apiClient.get(
-          `/categories/otobus/brands/${brand.slug}/models/${model.slug}/variants`
+          `/categories/otobus/brands/${brand.slug}/models/${model.slug}/variants`,
         );
         const variantsData = response.data as Variant[];
         console.log(
           "✅ Variants loaded:",
           variantsData.length,
           "variants for model",
-          model.name
+          model.name,
         );
         setVariants(variantsData);
 
@@ -805,7 +810,7 @@ const OtobusAdForm: React.FC = () => {
         setIsLoadingVariants(false);
       }
     },
-    [models, brands, formData.brandId, isLoadingVariants]
+    [models, brands, formData.brandId, isLoadingVariants],
   );
 
   // Function refs to avoid dependency issues
@@ -831,7 +836,7 @@ const OtobusAdForm: React.FC = () => {
         if (selectedBrandSlug) {
           console.log("Brand yükleniyor:", selectedBrandSlug);
           const brandResponse = await apiClient.get(
-            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}`
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}`,
           );
           const brandData = brandResponse.data as Brand;
           setSelectedBrand(brandData);
@@ -849,7 +854,7 @@ const OtobusAdForm: React.FC = () => {
           if (selectedModelSlug) {
             console.log("Model yükleniyor:", selectedModelSlug);
             const modelResponse = await apiClient.get(
-              `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}`
+              `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}`,
             );
             const modelData = modelResponse.data as Model;
             setSelectedModel(modelData);
@@ -867,7 +872,7 @@ const OtobusAdForm: React.FC = () => {
             if (selectedVariantSlug) {
               console.log("Variant yükleniyor:", selectedVariantSlug);
               const variantResponse = await apiClient.get(
-                `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`
+                `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`,
               );
               const variantData = variantResponse.data as Variant;
               setSelectedVariant(variantData);
@@ -936,6 +941,7 @@ const OtobusAdForm: React.FC = () => {
       // Fiyatı düz sayıya çevir (nokta ve boşlukları kaldır)
       const cleanPrice = formData.price.replace(/[\s.]/g, "");
       submitData.append("price", cleanPrice);
+      submitData.append("currency", formData.currency || "TRY");
       if (formData.condition && formData.condition.trim() !== "") {
         submitData.append("condition", formData.condition);
       }
@@ -1073,7 +1079,7 @@ const OtobusAdForm: React.FC = () => {
         alert("Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyiniz.");
       } else {
         alert(
-          "İlan gönderilirken bir hata oluştu. Lütfen bilgilerinizi kontrol edip tekrar deneyiniz."
+          "İlan gönderilirken bir hata oluştu. Lütfen bilgilerinizi kontrol edip tekrar deneyiniz.",
         );
       }
     } finally {
@@ -1165,7 +1171,7 @@ const OtobusAdForm: React.FC = () => {
                 <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
                   <TextField
                     fullWidth
-                    label="Fiyat (₺)"
+                    label="Fiyat"
                     value={formData.price}
                     onChange={(e) => {
                       const formattedValue = formatNumber(e.target.value);
@@ -1178,6 +1184,37 @@ const OtobusAdForm: React.FC = () => {
                       inputProps: {
                         inputMode: "numeric",
                       },
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <ToggleButtonGroup
+                            value={formData.currency || "TRY"}
+                            exclusive
+                            onChange={(_, v) =>
+                              v &&
+                              setFormData((prev: any) => ({
+                                ...prev,
+                                currency: v,
+                              }))
+                            }
+                            size="small"
+                            sx={{
+                              "& .MuiToggleButton-root": {
+                                py: 0.5,
+                                px: 1,
+                                fontSize: "0.75rem",
+                                "&.Mui-selected": {
+                                  bgcolor: "#D34237",
+                                  color: "#fff",
+                                },
+                              },
+                            }}
+                          >
+                            <ToggleButton value="TRY">₺ TL</ToggleButton>
+                            <ToggleButton value="USD">$ USD</ToggleButton>
+                            <ToggleButton value="EUR">€ EUR</ToggleButton>
+                          </ToggleButtonGroup>
+                        </InputAdornment>
+                      ),
                     }}
                     sx={{
                       "& .MuiOutlinedInput-root": {
@@ -1269,7 +1306,7 @@ const OtobusAdForm: React.FC = () => {
                     getOptionLabel={(option) => option.name}
                     value={
                       districts.find(
-                        (district) => district.id === formData.districtId
+                        (district) => district.id === formData.districtId,
                       ) || null
                     }
                     onChange={(_, newValue) =>

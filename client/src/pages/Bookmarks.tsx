@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatPrice as formatPriceUtil } from "../utils/formatPrice";
 import {
   Box,
   Container,
@@ -42,6 +43,7 @@ interface FavoriteAd {
     id: number;
     title: string;
     price: number | null;
+    currency?: string;
     year: number | null;
     mileage: number | null;
     createdAt: string;
@@ -111,9 +113,8 @@ const Bookmarks: React.FC = () => {
   };
 
   // Fiyat formatlama fonksiyonu
-  const formatPrice = (price: number | null) => {
-    if (!price) return "Belirtilmemiş";
-    return price.toLocaleString("tr-TR") + " TL";
+  const formatPrice = (price: number | null, currency?: string) => {
+    return formatPriceUtil(price, currency || "TRY", "Belirtilmemiş");
   };
 
   // Telefon formatlama fonksiyonu
@@ -123,7 +124,7 @@ const Bookmarks: React.FC = () => {
     if (digits.length === 11) {
       return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(
         7,
-        9
+        9,
       )} ${digits.slice(9, 11)}`;
     }
     return phone;
@@ -132,7 +133,7 @@ const Bookmarks: React.FC = () => {
   // Şehir/İlçe formatlama fonksiyonu
   const formatLocation = (
     city?: { name: string },
-    district?: { name: string }
+    district?: { name: string },
   ) => {
     if (!city && !district) return "Belirtilmemiş";
     if (city && district) return `${city.name} / ${district.name}`;
@@ -158,7 +159,7 @@ const Bookmarks: React.FC = () => {
         const axiosError = err as { response?: { data?: { error?: string } } };
         setError(
           axiosError.response?.data?.error ||
-            "Favoriler yüklenirken hata oluştu"
+            "Favoriler yüklenirken hata oluştu",
         );
       } finally {
         setLoading(false);
@@ -177,7 +178,7 @@ const Bookmarks: React.FC = () => {
       const axiosError = err as { response?: { data?: { error?: string } } };
       setError(
         axiosError.response?.data?.error ||
-          "Favorilerden kaldırılırken hata oluştu"
+          "Favorilerden kaldırılırken hata oluştu",
       );
     }
   };
@@ -194,7 +195,7 @@ const Bookmarks: React.FC = () => {
           fav.ad.brand?.name
             ?.toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
-          fav.ad.model?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+          fav.ad.model?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
 
@@ -209,12 +210,12 @@ const Bookmarks: React.FC = () => {
     if (sortBy === "newest") {
       filtered.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     } else if (sortBy === "oldest") {
       filtered.sort(
         (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
     } else if (sortBy === "price-high") {
       filtered.sort((a, b) => (b.ad.price || 0) - (a.ad.price || 0));
@@ -450,7 +451,7 @@ const Bookmarks: React.FC = () => {
                     color="primary"
                     sx={{ fontWeight: "bold", mb: 2 }}
                   >
-                    {formatPrice(favorite.ad.price)}
+                    {formatPrice(favorite.ad.price, favorite.ad.currency)}
                   </Typography>
 
                   <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
@@ -475,7 +476,7 @@ const Bookmarks: React.FC = () => {
                     {favorite.ad.mileage && (
                       <Chip
                         label={`${favorite.ad.mileage.toLocaleString(
-                          "tr-TR"
+                          "tr-TR",
                         )} km`}
                         size="small"
                         variant="outlined"

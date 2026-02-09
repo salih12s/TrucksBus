@@ -17,6 +17,9 @@ import {
   Alert,
   Snackbar,
   CircularProgress,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -140,6 +143,7 @@ interface FormData {
 
   // Konum ve fiyat bilgileri
   price: string;
+  currency: string;
   city: string;
   district: string;
 }
@@ -194,6 +198,7 @@ const RomorkKonvantöruForm: React.FC = () => {
     uploadedImages: [],
     showcaseImageIndex: 0,
     price: "",
+    currency: "TRY",
     city: "",
     district: "",
   });
@@ -230,7 +235,7 @@ const RomorkKonvantöruForm: React.FC = () => {
 
       try {
         const response = await apiClient.get(
-          `/cities/${formData.city}/districts`
+          `/cities/${formData.city}/districts`,
         );
         setDistricts(response.data as District[]);
       } catch (error) {
@@ -436,6 +441,7 @@ const RomorkKonvantöruForm: React.FC = () => {
 
       // Fiyat ve konum bilgileri
       submitData.append("price", formData.price.replace(/\./g, ""));
+      submitData.append("currency", formData.currency || "TRY");
       submitData.append("cityId", formData.city);
       submitData.append("districtId", formData.district);
 
@@ -510,7 +516,7 @@ const RomorkKonvantöruForm: React.FC = () => {
               >
                 {Array.from(
                   { length: 30 },
-                  (_, i) => new Date().getFullYear() - i
+                  (_, i) => new Date().getFullYear() - i,
                 ).map((year) => (
                   <MenuItem key={year} value={year.toString()}>
                     {year}
@@ -750,7 +756,7 @@ const RomorkKonvantöruForm: React.FC = () => {
 
             <TextField
               fullWidth
-              label="Fiyat (TL) *"
+              label="Fiyat"
               name="price"
               value={formData.price}
               onChange={(e) => {
@@ -759,6 +765,36 @@ const RomorkKonvantöruForm: React.FC = () => {
                 setFormData({ ...formData, price: formatted });
               }}
               helperText="Örnek: 1.500.000"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <ToggleButtonGroup
+                      value={formData.currency || "TRY"}
+                      exclusive
+                      onChange={(_, v) =>
+                        v &&
+                        setFormData((prev: any) => ({ ...prev, currency: v }))
+                      }
+                      size="small"
+                      sx={{
+                        "& .MuiToggleButton-root": {
+                          py: 0.5,
+                          px: 1,
+                          fontSize: "0.75rem",
+                          "&.Mui-selected": {
+                            bgcolor: "#D34237",
+                            color: "#fff",
+                          },
+                        },
+                      }}
+                    >
+                      <ToggleButton value="TRY">₺ TL</ToggleButton>
+                      <ToggleButton value="USD">$ USD</ToggleButton>
+                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                    </ToggleButtonGroup>
+                  </InputAdornment>
+                ),
+              }}
             />
           </Box>
         );

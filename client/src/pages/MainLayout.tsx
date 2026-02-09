@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { formatPrice as formatPriceUtil } from "../utils/formatPrice";
 import {
   Box,
   Card,
@@ -75,6 +76,7 @@ interface Ad {
   title: string;
   description?: string;
   price: number | null;
+  currency?: string;
   year: number | null;
   createdAt: string;
   city?: {
@@ -144,6 +146,7 @@ interface FavoriteAd {
     id: number;
     title: string;
     price: number | null;
+    currency?: string;
     year: number | null;
     mileage: number | null;
     createdAt: string;
@@ -355,10 +358,9 @@ const MainLayout: React.FC = () => {
   };
 
   // Fiyat formatlama fonksiyonu
-  const formatPrice = (price: number | null) => {
+  const formatPriceDisplay = (price: number | null, currency?: string) => {
     if (!price) return "Belirtilmemiş";
-    // Sayıyı string'e çevir ve nokta ile ayır
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return formatPriceUtil(price, currency || "TRY", "Belirtilmemiş");
   };
 
   // Bookmarks utility functions
@@ -801,7 +803,10 @@ const MainLayout: React.FC = () => {
                       }}
                     >
                       {favorite.ad.price
-                        ? `${formatPrice(favorite.ad.price)} TL`
+                        ? formatPriceDisplay(
+                            favorite.ad.price,
+                            favorite.ad.currency,
+                          )
                         : t("homePage.noPrice")}
                     </Typography>
                   </Box>
@@ -9123,7 +9128,7 @@ const MainLayout: React.FC = () => {
                                 }}
                               >
                                 {ad.price
-                                  ? `${formatPrice(ad.price)} TL`
+                                  ? formatPriceDisplay(ad.price, ad.currency)
                                   : "Fiyat Yok"}
                               </Typography>
                             </Box>
@@ -9575,7 +9580,7 @@ const MainLayout: React.FC = () => {
                               }}
                             >
                               {ad.price
-                                ? `${formatPrice(ad.price)} TL`
+                                ? formatPriceDisplay(ad.price, ad.currency)
                                 : "Fiyat Yok"}
                             </Typography>
                           </Box>

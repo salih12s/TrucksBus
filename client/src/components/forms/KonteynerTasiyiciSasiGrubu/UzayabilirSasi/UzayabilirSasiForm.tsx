@@ -19,6 +19,9 @@ import {
   CircularProgress,
   Chip,
   IconButton,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
 import {
@@ -171,6 +174,7 @@ interface FormData {
   cityId: string;
   districtId: string;
   price: string;
+  currency: string;
 }
 
 const steps = ["Araç Bilgileri", "Fotoğraflar", "Konum & Fiyat"];
@@ -208,6 +212,7 @@ const UzayabilirSasiForm: React.FC = () => {
     cityId: "",
     districtId: "",
     price: "",
+    currency: "TRY",
   });
 
   const [snackbar, setSnackbar] = useState({
@@ -262,7 +267,7 @@ const UzayabilirSasiForm: React.FC = () => {
 
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    type: "showcase" | "gallery"
+    type: "showcase" | "gallery",
   ) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
@@ -447,6 +452,7 @@ const UzayabilirSasiForm: React.FC = () => {
       submitData.append("cityId", formData.cityId);
       submitData.append("districtId", formData.districtId);
       submitData.append("price", formData.price.replace(/\./g, ""));
+      submitData.append("currency", formData.currency || "TRY");
 
       // Fotoğraflar
       if (formData.showcasePhoto) {
@@ -521,7 +527,7 @@ const UzayabilirSasiForm: React.FC = () => {
               >
                 {Array.from(
                   { length: 30 },
-                  (_, i) => new Date().getFullYear() - i
+                  (_, i) => new Date().getFullYear() - i,
                 ).map((year) => (
                   <MenuItem key={year} value={year.toString()}>
                     {year}
@@ -940,7 +946,7 @@ const UzayabilirSasiForm: React.FC = () => {
               <TextField
                 fullWidth
                 required
-                label="Fiyat (TL)"
+                label="Fiyat"
                 name="price"
                 value={formData.price}
                 onChange={(e) => {
@@ -952,12 +958,32 @@ const UzayabilirSasiForm: React.FC = () => {
                 helperText="Fiyat binlik ayracı ile otomatik formatlanır"
                 InputProps={{
                   endAdornment: (
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#f57c00", fontWeight: 600 }}
-                    >
-                      TL
-                    </Typography>
+                    <InputAdornment position="end">
+                      <ToggleButtonGroup
+                        value={formData.currency || "TRY"}
+                        exclusive
+                        onChange={(_, v) =>
+                          v &&
+                          setFormData((prev: any) => ({ ...prev, currency: v }))
+                        }
+                        size="small"
+                        sx={{
+                          "& .MuiToggleButton-root": {
+                            py: 0.5,
+                            px: 1,
+                            fontSize: "0.75rem",
+                            "&.Mui-selected": {
+                              bgcolor: "#D34237",
+                              color: "#fff",
+                            },
+                          },
+                        }}
+                      >
+                        <ToggleButton value="TRY">₺ TL</ToggleButton>
+                        <ToggleButton value="USD">$ USD</ToggleButton>
+                        <ToggleButton value="EUR">€ EUR</ToggleButton>
+                      </ToggleButtonGroup>
+                    </InputAdornment>
                   ),
                 }}
                 sx={{

@@ -86,6 +86,7 @@ interface Ad {
   title: string;
   description: string;
   price: number;
+  currency?: string;
   status: string;
   createdAt: string;
   user: {
@@ -221,7 +222,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const getStatusColor = (
-    status: string
+    status: string,
   ): "success" | "warning" | "error" | "default" => {
     switch (status) {
       case "APPROVED":

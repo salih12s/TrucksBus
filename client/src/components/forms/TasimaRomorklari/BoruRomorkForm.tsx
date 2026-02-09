@@ -23,6 +23,9 @@ import {
   Modal,
   Backdrop,
   Fade,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -778,7 +781,21 @@ const BoruRomorkForm: React.FC = () => {
                 required
                 sx={{ mb: 2 }}
                 InputProps={{
-                  endAdornment: <Typography>₺</Typography>,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <ToggleButtonGroup
+                        value={formData.currency || "TRY"}
+                        exclusive
+                        onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
+                        size="small"
+                        sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
+                      >
+                        <ToggleButton value="TRY">₺ TL</ToggleButton>
+                        <ToggleButton value="USD">$ USD</ToggleButton>
+                        <ToggleButton value="EUR">€ EUR</ToggleButton>
+                      </ToggleButtonGroup>
+                    </InputAdornment>
+                  ),
                 }}
               />
               <FormControl fullWidth sx={{ mb: 2 }}>

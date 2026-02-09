@@ -20,6 +20,9 @@ import {
   DialogActions,
   Alert,
   IconButton,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -135,6 +138,7 @@ interface FormData {
   description: string;
   year: string;
   price: string;
+  currency: string;
   mileage: string;
   condition: string;
   color: string;
@@ -254,6 +258,7 @@ const CekiciAdForm: React.FC = () => {
     description: "",
     year: "",
     price: "",
+    currency: "TRY",
     mileage: "",
     condition: "ikinci-el",
     color: "",
@@ -772,6 +777,7 @@ const CekiciAdForm: React.FC = () => {
           }
         }
       });
+    submitData.append("currency", formData.currency || "TRY");
 
       // Category/Brand/Model/Variant ID'lerini ekle
       submitData.append("categoryId", formData.categoryId);
@@ -929,7 +935,7 @@ const CekiciAdForm: React.FC = () => {
                   }}
                 />
                 <TextField
-                  label="Fiyat (TL)"
+                  label="Fiyat"
                   value={formatNumber(formData.price)}
                   onChange={(e) => {
                     const rawValue = parseFormattedNumber(e.target.value);
@@ -943,7 +949,25 @@ const CekiciAdForm: React.FC = () => {
                       borderRadius: 3,
                     },
                   }}
-                />
+                
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <ToggleButtonGroup
+                      value={formData.currency || "TRY"}
+                      exclusive
+                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
+                      size="small"
+                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
+                    >
+                      <ToggleButton value="TRY">₺ TL</ToggleButton>
+                      <ToggleButton value="USD">$ USD</ToggleButton>
+                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                    </ToggleButtonGroup>
+                  </InputAdornment>
+                ),
+              }}
+              />
                 <TextField
                   label="Kilometre"
                   value={formatNumber(formData.mileage)}

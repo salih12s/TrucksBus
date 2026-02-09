@@ -25,6 +25,8 @@ import {
   Autocomplete,
   CircularProgress,
   IconButton,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import {
   ArrowForward,
@@ -160,6 +162,7 @@ interface FrigofirikFormData {
   title: string;
   description: string;
   price: string;
+  currency: string;
   year: number;
   dorseBrand: string;
 
@@ -217,6 +220,7 @@ const FrigofirikForm: React.FC = () => {
     title: "",
     description: "",
     price: "",
+    currency: "TRY",
     year: new Date().getFullYear(),
     dorseBrand: "Seçiniz",
     uzunluk: "",
@@ -297,7 +301,7 @@ const FrigofirikForm: React.FC = () => {
 
   const handleInputChange = (
     field: keyof FrigofirikFormData,
-    value: string | number | boolean
+    value: string | number | boolean,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -451,10 +455,10 @@ const FrigofirikForm: React.FC = () => {
 
       // Konum bilgileri - hem ID hem de isim
       const selectedCity = cities.find(
-        (c) => c.id.toString() === formData.cityId
+        (c) => c.id.toString() === formData.cityId,
       );
       const selectedDistrict = districts.find(
-        (d) => d.id.toString() === formData.districtId
+        (d) => d.id.toString() === formData.districtId,
       );
 
       formDataToSend.append("city", selectedCity?.name || "");
@@ -466,7 +470,7 @@ const FrigofirikForm: React.FC = () => {
       formDataToSend.append("seller_name", formData.sellerName);
       formDataToSend.append(
         "seller_phone",
-        formData.sellerPhone.replace(/\s/g, "")
+        formData.sellerPhone.replace(/\s/g, ""),
       );
       formDataToSend.append("seller_email", formData.sellerEmail);
 
@@ -474,7 +478,7 @@ const FrigofirikForm: React.FC = () => {
       formDataToSend.append("warranty", formData.warranty ? "true" : "false");
       formDataToSend.append(
         "negotiable",
-        formData.negotiable ? "true" : "false"
+        formData.negotiable ? "true" : "false",
       );
       formDataToSend.append("exchange", formData.exchange ? "true" : "false");
 
@@ -493,7 +497,7 @@ const FrigofirikForm: React.FC = () => {
         console.log(
           `📷 ${images.length} fotoğraf gönderiliyor (${
             showcaseImageIndex + 1
-          }. vitrin)`
+          }. vitrin)`,
         );
       }
 
@@ -529,7 +533,7 @@ const FrigofirikForm: React.FC = () => {
       setError(
         error.response?.data?.message ||
           error.message ||
-          "İlan oluşturulurken bir hata oluştu"
+          "İlan oluşturulurken bir hata oluştu",
       );
     } finally {
       setLoading(false);
@@ -808,7 +812,7 @@ const FrigofirikForm: React.FC = () => {
                 getOptionLabel={(option) => option.name}
                 value={
                   cities.find(
-                    (city) => city.id.toString() === formData.cityId
+                    (city) => city.id.toString() === formData.cityId,
                   ) || null
                 }
                 onChange={(_, newValue) => {
@@ -847,7 +851,8 @@ const FrigofirikForm: React.FC = () => {
                 getOptionLabel={(option) => option.name}
                 value={
                   districts.find(
-                    (district) => district.id.toString() === formData.districtId
+                    (district) =>
+                      district.id.toString() === formData.districtId,
                   ) || null
                 }
                 onChange={(_, newValue) => {
@@ -890,7 +895,32 @@ const FrigofirikForm: React.FC = () => {
               onChange={(e) => handlePriceChange(e.target.value)}
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">TL</InputAdornment>
+                  <InputAdornment position="end">
+                    <ToggleButtonGroup
+                      value={formData.currency || "TRY"}
+                      exclusive
+                      onChange={(_, v) =>
+                        v &&
+                        setFormData((prev: any) => ({ ...prev, currency: v }))
+                      }
+                      size="small"
+                      sx={{
+                        "& .MuiToggleButton-root": {
+                          py: 0.5,
+                          px: 1,
+                          fontSize: "0.75rem",
+                          "&.Mui-selected": {
+                            bgcolor: "#D34237",
+                            color: "#fff",
+                          },
+                        },
+                      }}
+                    >
+                      <ToggleButton value="TRY">₺ TL</ToggleButton>
+                      <ToggleButton value="USD">$ USD</ToggleButton>
+                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                    </ToggleButtonGroup>
+                  </InputAdornment>
                 ),
               }}
               placeholder="150.000"

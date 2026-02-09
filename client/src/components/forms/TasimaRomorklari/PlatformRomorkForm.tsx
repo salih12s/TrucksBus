@@ -19,6 +19,9 @@ import {
   Modal,
   Backdrop,
   Fade,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import { PhotoCamera, CheckCircle } from "@mui/icons-material";
 import Header from "../../layout/Header";
@@ -51,6 +54,7 @@ interface FormData {
 
   // İletişim ve fiyat bilgileri
   price: string;
+  currency: string;
   priceType: string;
   cityId: string;
   districtId: string;
@@ -97,6 +101,7 @@ const PlatformRomorkForm: React.FC = () => {
     showcasePhoto: null,
     photos: [],
     price: "",
+    currency: "TRY",
     priceType: "Sabit",
     cityId: "",
     districtId: "",
@@ -132,7 +137,7 @@ const PlatformRomorkForm: React.FC = () => {
 
       try {
         const response = await apiClient.get(
-          `/ads/cities/${formData.cityId}/districts`
+          `/ads/cities/${formData.cityId}/districts`,
         );
         setDistricts(response.data as District[]);
       } catch (error) {
@@ -165,7 +170,7 @@ const PlatformRomorkForm: React.FC = () => {
   // Input change handlers
   const handleInputChange = (
     field: keyof FormData,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -184,7 +189,7 @@ const PlatformRomorkForm: React.FC = () => {
   // Modern fotoğraf yönetimi
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    isShowcase: boolean = false
+    isShowcase: boolean = false,
   ) => {
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
@@ -262,6 +267,7 @@ const PlatformRomorkForm: React.FC = () => {
 
       // Fiyat ve iletişim bilgileri
       submitData.append("price", parseFormattedNumber(formData.price));
+      submitData.append("currency", formData.currency || "TRY");
       submitData.append("priceType", formData.priceType);
       submitData.append("sellerName", formData.sellerName);
       submitData.append("sellerPhone", formData.sellerPhone);
@@ -723,11 +729,41 @@ const PlatformRomorkForm: React.FC = () => {
                   onChange={(e) =>
                     handleInputChange(
                       "price",
-                      parseFormattedNumber(e.target.value)
+                      parseFormattedNumber(e.target.value),
                     )
                   }
                   InputProps={{
-                    endAdornment: <Typography>₺</Typography>,
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ToggleButtonGroup
+                          value={formData.currency || "TRY"}
+                          exclusive
+                          onChange={(_, v) =>
+                            v &&
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              currency: v,
+                            }))
+                          }
+                          size="small"
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              py: 0.5,
+                              px: 1,
+                              fontSize: "0.75rem",
+                              "&.Mui-selected": {
+                                bgcolor: "#D34237",
+                                color: "#fff",
+                              },
+                            },
+                          }}
+                        >
+                          <ToggleButton value="TRY">₺ TL</ToggleButton>
+                          <ToggleButton value="USD">$ USD</ToggleButton>
+                          <ToggleButton value="EUR">€ EUR</ToggleButton>
+                        </ToggleButtonGroup>
+                      </InputAdornment>
+                    ),
                   }}
                 />
 

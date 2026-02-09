@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Box, Card, Typography, Button, CircularProgress } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { formatPrice as formatPriceUtil } from "../../utils/formatPrice";
 import apiClient from "../../api/client";
 import LazyImage from "../common/LazyImage";
 
@@ -8,6 +9,7 @@ interface Ad {
   id: number;
   title: string;
   price: number | null;
+  currency?: string;
   year: number | null;
   createdAt: string;
   city?: {
@@ -136,7 +138,7 @@ const AdsGrid: React.FC<AdsGridProps> = React.memo(({ filters = {} }) => {
         setLoadingMore(false);
       }
     },
-    [buildApiUrl]
+    [buildApiUrl],
   );
 
   const loadMore = () => {
@@ -195,9 +197,8 @@ const AdsGrid: React.FC<AdsGridProps> = React.memo(({ filters = {} }) => {
     return `${baseUrl}${firstImage.imageUrl}`;
   };
 
-  const formatPrice = (price: number | null): string => {
-    if (!price) return "Fiyat Belirtilmemiş";
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " TL";
+  const formatPrice = (price: number | null, currency?: string): string => {
+    return formatPriceUtil(price, currency || "TRY", "Fiyat Belirtilmemiş");
   };
 
   if (loading) {
@@ -321,7 +322,7 @@ const AdsGrid: React.FC<AdsGridProps> = React.memo(({ filters = {} }) => {
                     mb: 0.5,
                   }}
                 >
-                  {formatPrice(ad.price)}
+                  {formatPrice(ad.price, ad.currency)}
                 </Typography>
               )}
 

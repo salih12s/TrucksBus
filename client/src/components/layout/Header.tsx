@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
     <AppBar
       position="static"
       sx={{
-        backgroundColor: "white",
+        backgroundColor: "#D7D7D5",
         boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
         borderBottom: "1px solid #e0e0e0",
       }}
@@ -108,35 +108,45 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
             cursor: "pointer",
             transition: "all 0.3s ease",
             "&:hover": {
-              transform: "translateY(-50%) scale(1.05)",
-              filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.3))",
+              transform: "translateY(-50%) scale(1.02)",
             },
           }}
           onClick={() => navigate("/")}
         >
+          <Typography
+            variant="h6"
+            component="span"
+            sx={{
+              fontWeight: "bold",
+              fontSize: isMobile ? "0.9rem" : isTablet ? "1.1rem" : "1.3rem",
+              color: "#333",
+              marginRight: isMobile ? 0.5 : 1,
+              display: isMobile ? "none" : "block",
+            }}
+          >
+            Alın Satın
+          </Typography>
           <img
-            src="/Trucksbus.png"
+            src="/LogoNew.jpeg"
             alt="TrucksBus"
             style={{
               height: isMobile ? 42 : isTablet ? 52 : 62,
-              marginRight: isMobile ? 6 : 12,
               transition: "all 0.3s ease",
+              borderRadius: "8px",
             }}
           />
           <Typography
             variant="h6"
-            component="div"
+            component="span"
             sx={{
               fontWeight: "bold",
               fontSize: isMobile ? "0.9rem" : isTablet ? "1.1rem" : "1.3rem",
-              marginLeft: isMobile ? 1 : 2,
-              transition: "all 0.3s ease",
+              color: "#333",
+              marginLeft: isMobile ? 0.5 : 1,
               display: isMobile ? "none" : "block",
             }}
           >
-            <span style={{ color: "#333" }}>Alın Satın </span>
-            <span style={{ color: "#D34237" }}>Trucksbus.com.tr</span>
-            <span style={{ color: "#333" }}> ile Mutlu Kalın</span>
+            ile Mutlu Kalın
           </Typography>
         </Box>
 

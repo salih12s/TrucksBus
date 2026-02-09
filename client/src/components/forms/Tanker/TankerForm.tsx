@@ -22,6 +22,8 @@ import {
   FormLabel,
   InputAdornment,
   IconButton,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -73,6 +75,7 @@ interface TankerFormData {
   year: number;
   productionYear: number;
   price: string;
+  currency: string;
   dorseBrand: string; // Dorse markası
 
   // Brand/Model/Variant IDs
@@ -336,6 +339,7 @@ const TankerForm: React.FC = () => {
     year: new Date().getFullYear(),
     productionYear: new Date().getFullYear(),
     price: "",
+    currency: "TRY",
     dorseBrand: "Seçiniz",
 
     // Brand/Model/Variant IDs
@@ -396,13 +400,13 @@ const TankerForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
 
           // Update district name when districts load
           const selectedDistrict = (response.data as District[]).find(
-            (d: District) => d.id.toString() === formData.districtId
+            (d: District) => d.id.toString() === formData.districtId,
           );
           if (selectedDistrict) {
             setFormData((prev) => ({
@@ -423,7 +427,7 @@ const TankerForm: React.FC = () => {
 
   const handleInputChange = (
     field: keyof TankerFormData,
-    value: string | number | File[] | File | null | boolean
+    value: string | number | File[] | File | null | boolean,
   ) => {
     if (field === "year" || field === "hacim" || field === "lastikDurumu") {
       const numValue =
@@ -456,7 +460,7 @@ const TankerForm: React.FC = () => {
         alert(
           `Şu dosyalar çok büyük (max 50MB): ${oversizedFiles
             .map((f) => f.name)
-            .join(", ")}`
+            .join(", ")}`,
         );
         return;
       }
@@ -496,7 +500,7 @@ const TankerForm: React.FC = () => {
   // Modern fotoğraf upload fonksiyonu
   const handlePhotoUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
-    isShowcase: boolean = false
+    isShowcase: boolean = false,
   ) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -552,7 +556,7 @@ const TankerForm: React.FC = () => {
         // Brand çek (Tanker)
         const brandsResponse = await apiClient.get("/brands");
         const tankerBrand = (brandsResponse.data as Brand[]).find(
-          (b: Brand) => b.slug === "tanker"
+          (b: Brand) => b.slug === "tanker",
         );
 
         if (tankerBrand) {
@@ -562,24 +566,24 @@ const TankerForm: React.FC = () => {
           // Model çek
           try {
             console.log(
-              `🔄 Model API çağrısı yapılıyor: /brands/${tankerBrand.id}/models`
+              `🔄 Model API çağrısı yapılıyor: /brands/${tankerBrand.id}/models`,
             );
             const modelsResponse = await apiClient.get(
-              `/brands/${tankerBrand.id}/models`
+              `/brands/${tankerBrand.id}/models`,
             );
             console.log(
               `📦 Tanker Brand'in tüm modelleri:`,
-              modelsResponse.data
+              modelsResponse.data,
             );
             console.log(
               `📊 Model sayısı:`,
               Array.isArray(modelsResponse.data)
                 ? modelsResponse.data.length
-                : "Array değil!"
+                : "Array değil!",
             );
 
             const tankerModel = (modelsResponse.data as Model[]).find(
-              (m: Model) => m.slug === "tanker-tanker"
+              (m: Model) => m.slug === "tanker-tanker",
             );
 
             if (tankerModel) {
@@ -589,24 +593,24 @@ const TankerForm: React.FC = () => {
               // Variant çek
               try {
                 console.log(
-                  `🔄 Variant API çağrısı yapılıyor: /models/${tankerModel.id}/variants`
+                  `🔄 Variant API çağrısı yapılıyor: /models/${tankerModel.id}/variants`,
                 );
                 const variantsResponse = await apiClient.get(
-                  `/models/${tankerModel.id}/variants`
+                  `/models/${tankerModel.id}/variants`,
                 );
                 console.log(
                   `📦 Tanker Model'in tüm varyantları:`,
-                  variantsResponse.data
+                  variantsResponse.data,
                 );
                 console.log(
                   `📊 Variant sayısı:`,
                   Array.isArray(variantsResponse.data)
                     ? variantsResponse.data.length
-                    : "Array değil!"
+                    : "Array değil!",
                 );
 
                 const tankerVariant = (variantsResponse.data as Variant[]).find(
-                  (v: Variant) => v.slug === "tanker-tanker-tanker"
+                  (v: Variant) => v.slug === "tanker-tanker-tanker",
                 );
 
                 if (tankerVariant) {
@@ -614,7 +618,7 @@ const TankerForm: React.FC = () => {
                   console.log(`✅ Tanker Variant ID: ${tankerVariantId}`);
                 } else {
                   console.error(
-                    `❌ Tanker variant bulunamadı! Aranan slug: "tanker-tanker-tanker"`
+                    `❌ Tanker variant bulunamadı! Aranan slug: "tanker-tanker-tanker"`,
                   );
                 }
               } catch (variantError) {
@@ -622,7 +626,7 @@ const TankerForm: React.FC = () => {
               }
             } else {
               console.error(
-                `❌ Tanker model bulunamadı! Aranan slug: "tanker-tanker"`
+                `❌ Tanker model bulunamadı! Aranan slug: "tanker-tanker"`,
               );
             }
           } catch (modelError) {
@@ -632,7 +636,7 @@ const TankerForm: React.FC = () => {
       } catch (error) {
         console.error(
           "❌ Tanker brand/model/variant ID'leri alınamadı:",
-          error
+          error,
         );
       }
 
@@ -643,6 +647,7 @@ const TankerForm: React.FC = () => {
       submitData.append("description", formData.description);
       submitData.append("year", formData.year.toString());
       submitData.append("price", formData.price);
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgileri (new format için)
       submitData.append("category", "Dorse");
@@ -736,13 +741,13 @@ const TankerForm: React.FC = () => {
       console.log(
         `📷 ${
           formData.photos.length + (formData.showcasePhoto ? 1 : 0)
-        } fotoğraf gönderiliyor`
+        } fotoğraf gönderiliyor`,
       );
 
       // Video dosyalarını ekle
       if (formData.videos && formData.videos.length > 0) {
         console.log(
-          `🎥 Adding ${formData.videos.length} videos to submit data`
+          `🎥 Adding ${formData.videos.length} videos to submit data`,
         );
         formData.videos.forEach((video, index) => {
           submitData.append(`video_${index}`, video);
@@ -788,7 +793,7 @@ const TankerForm: React.FC = () => {
       setError(
         err.response?.data?.message ||
           err.message ||
-          "İlan oluşturulurken bir hata oluştu. Lütfen tekrar deneyin."
+          "İlan oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
       );
     } finally {
       setLoading(false);
@@ -885,12 +890,40 @@ const TankerForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  label="Fiyat (TL) *"
+                  label="Fiyat"
                   value={formatPrice(formData.price)}
                   onChange={(e) => handlePriceChange(e.target.value)}
                   InputProps={{
                     endAdornment: (
-                      <InputAdornment position="end">TL</InputAdornment>
+                      <InputAdornment position="end">
+                        <ToggleButtonGroup
+                          value={formData.currency || "TRY"}
+                          exclusive
+                          onChange={(_, v) =>
+                            v &&
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              currency: v,
+                            }))
+                          }
+                          size="small"
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              py: 0.5,
+                              px: 1,
+                              fontSize: "0.75rem",
+                              "&.Mui-selected": {
+                                bgcolor: "#D34237",
+                                color: "#fff",
+                              },
+                            },
+                          }}
+                        >
+                          <ToggleButton value="TRY">₺ TL</ToggleButton>
+                          <ToggleButton value="USD">$ USD</ToggleButton>
+                          <ToggleButton value="EUR">€ EUR</ToggleButton>
+                        </ToggleButtonGroup>
+                      </InputAdornment>
                     ),
                   }}
                   placeholder="150.000"

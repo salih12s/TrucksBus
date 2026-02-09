@@ -21,6 +21,9 @@ import {
   Alert,
   Chip,
   IconButton,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -173,6 +176,7 @@ interface FormData {
   description: string;
   year: string;
   price: string;
+  currency: string;
   mileage: string;
   condition: string;
   motorPower: string;
@@ -284,6 +288,7 @@ const KamyonAdForm: React.FC = () => {
     description: "",
     year: "",
     price: "",
+    currency: "TRY",
     mileage: "",
     condition: "ikinci-el",
     motorPower: "",
@@ -902,6 +907,7 @@ const KamyonAdForm: React.FC = () => {
           }
         }
       });
+    submitData.append("currency", formData.currency || "TRY");
 
       // Category/Brand/Model/Variant ID'lerini ekle
       submitData.append("categoryId", formData.categoryId);
@@ -1137,7 +1143,7 @@ const KamyonAdForm: React.FC = () => {
 
                   <TextField
                     fullWidth
-                    label="Fiyat (TL)"
+                    label="Fiyat"
                     type="text"
                     value={formatNumber(formData.price)}
                     onChange={(e) =>
@@ -1155,7 +1161,25 @@ const KamyonAdForm: React.FC = () => {
                         "&:hover fieldset": { borderColor: "primary.main" },
                       },
                     }}
-                  />
+                  
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <ToggleButtonGroup
+                      value={formData.currency || "TRY"}
+                      exclusive
+                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
+                      size="small"
+                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
+                    >
+                      <ToggleButton value="TRY">₺ TL</ToggleButton>
+                      <ToggleButton value="USD">$ USD</ToggleButton>
+                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                    </ToggleButtonGroup>
+                  </InputAdornment>
+                ),
+              }}
+              />
 
                   <TextField
                     fullWidth

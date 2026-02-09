@@ -24,6 +24,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import {
   ArrowForward,
@@ -32,7 +34,6 @@ import {
   Close,
   Person,
   LocationOn,
-  AttachMoney,
   Umbrella,
   DateRange,
   VideoLibrary,
@@ -205,6 +206,7 @@ interface MidilliFormData {
   description: string;
   year: number;
   price: string;
+  currency: string;
   dorseBrand: string; // Dorse markası
 
   // Brand/Model/Variant
@@ -284,6 +286,7 @@ const MidilliForm: React.FC = () => {
     description: "",
     year: 0,
     price: "",
+    currency: "TRY",
     dorseBrand: "Seçiniz",
     categoryId: "",
     brandId: "",
@@ -308,7 +311,7 @@ const MidilliForm: React.FC = () => {
     const files = event.target.files;
     if (files) {
       const videoFiles = Array.from(files).filter((file) =>
-        file.type.startsWith("video/")
+        file.type.startsWith("video/"),
       );
 
       if (videoFiles.length > 0) {
@@ -379,11 +382,11 @@ const MidilliForm: React.FC = () => {
           setBrands(allBrands);
 
           const selectedBrand = allBrands.find(
-            (b: Brand) => b.slug === brandSlug
+            (b: Brand) => b.slug === brandSlug,
           );
           if (selectedBrand) {
             console.log(
-              `✅ Brand found: ${selectedBrand.name} (ID: ${selectedBrand.id})`
+              `✅ Brand found: ${selectedBrand.name} (ID: ${selectedBrand.id})`,
             );
             setFormData((prev) => ({
               ...prev,
@@ -394,17 +397,17 @@ const MidilliForm: React.FC = () => {
               console.log(`🔍 Looking for model: ${modelSlug}`);
               setLoadingModels(true);
               const modelResponse = await apiClient.get(
-                `/brands/${selectedBrand.id}/models`
+                `/brands/${selectedBrand.id}/models`,
               );
               const brandModels = modelResponse.data as Model[];
               setModels(brandModels);
 
               const selectedModel = brandModels.find(
-                (m: Model) => m.slug === modelSlug
+                (m: Model) => m.slug === modelSlug,
               );
               if (selectedModel) {
                 console.log(
-                  `✅ Model found: ${selectedModel.name} (ID: ${selectedModel.id})`
+                  `✅ Model found: ${selectedModel.name} (ID: ${selectedModel.id})`,
                 );
                 setFormData((prev) => ({
                   ...prev,
@@ -415,17 +418,17 @@ const MidilliForm: React.FC = () => {
                   console.log(`🔍 Looking for variant: ${variantSlug}`);
                   setLoadingVariants(true);
                   const variantResponse = await apiClient.get(
-                    `/models/${selectedModel.id}/variants`
+                    `/models/${selectedModel.id}/variants`,
                   );
                   const modelVariants = variantResponse.data as Variant[];
                   setVariants(modelVariants);
 
                   const selectedVariant = modelVariants.find(
-                    (v: Variant) => v.slug === variantSlug
+                    (v: Variant) => v.slug === variantSlug,
                   );
                   if (selectedVariant) {
                     console.log(
-                      `✅ Variant found: ${selectedVariant.name} (ID: ${selectedVariant.id})`
+                      `✅ Variant found: ${selectedVariant.name} (ID: ${selectedVariant.id})`,
                     );
                     setFormData((prev) => ({
                       ...prev,
@@ -474,7 +477,7 @@ const MidilliForm: React.FC = () => {
         setBrands(brandsData);
         console.log(
           `✅ ${brandsData.length} marka yüklendi:`,
-          brandsData.map((b) => b.name)
+          brandsData.map((b) => b.name),
         );
       } catch (error) {
         console.error("❌ Brands loading error:", error);
@@ -508,7 +511,7 @@ const MidilliForm: React.FC = () => {
         try {
           setLoadingModels(true);
           const response = await apiClient.get(
-            `/brands/${formData.brandId}/models`
+            `/brands/${formData.brandId}/models`,
           );
           setModels((response.data as Model[]) || []);
         } catch (error) {
@@ -546,7 +549,7 @@ const MidilliForm: React.FC = () => {
         try {
           setLoadingVariants(true);
           const response = await apiClient.get(
-            `/models/${formData.modelId}/variants`
+            `/models/${formData.modelId}/variants`,
           );
           setVariants((response.data as Variant[]) || []);
         } catch (error) {
@@ -616,7 +619,7 @@ const MidilliForm: React.FC = () => {
         setLoadingDistricts(true);
         try {
           const response = await apiClient.get(
-            `/cities/${formData.cityId}/districts`
+            `/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -634,7 +637,7 @@ const MidilliForm: React.FC = () => {
 
   const handleInputChange = (
     field: keyof MidilliFormData,
-    value: string | number | File[] | File | null | boolean
+    value: string | number | File[] | File | null | boolean,
   ) => {
     if (field === "year" || field === "uzunluk" || field === "lastikDurumu") {
       const numValue =
@@ -656,7 +659,7 @@ const MidilliForm: React.FC = () => {
   // Fotoğraf yükleme fonksiyonları
   const handlePhotoUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
-    isShowcase: boolean = false
+    isShowcase: boolean = false,
   ) => {
     const files = e.target.files;
     if (files) {
@@ -804,13 +807,13 @@ const MidilliForm: React.FC = () => {
 
       // Brand/Model/Variant name'lerini ekle (ensureBrandModelVariant için gerekli)
       const selectedBrand = brands.find(
-        (b) => b.id.toString() === formData.brandId
+        (b) => b.id.toString() === formData.brandId,
       );
       const selectedModel = models.find(
-        (m) => m.id.toString() === formData.modelId
+        (m) => m.id.toString() === formData.modelId,
       );
       const selectedVariant = variants.find(
-        (v) => v.id.toString() === formData.variantId
+        (v) => v.id.toString() === formData.variantId,
       );
 
       if (selectedBrand) {
@@ -851,6 +854,7 @@ const MidilliForm: React.FC = () => {
       const parsedPrice = parseFormattedNumber(formData.price);
       if (parsedPrice) {
         submitData.append("price", parsedPrice);
+        submitData.append("currency", formData.currency || "TRY");
       }
 
       // Seller bilgileri (backend'in beklediği field name'ler)
@@ -913,7 +917,7 @@ const MidilliForm: React.FC = () => {
       // Video dosyalarını ekle
       if (formData.videos && formData.videos.length > 0) {
         console.log(
-          `🎥 Adding ${formData.videos.length} videos to submit data`
+          `🎥 Adding ${formData.videos.length} videos to submit data`,
         );
         formData.videos.forEach((video, index) => {
           submitData.append(`video_${index}`, video);
@@ -935,7 +939,7 @@ const MidilliForm: React.FC = () => {
 
       console.log(
         "Midilli Tenteli Dorse ilanı başarıyla oluşturuldu:",
-        response.data
+        response.data,
       );
 
       // İlan ID'sini kaydet ve başarı modal'ını göster
@@ -955,7 +959,7 @@ const MidilliForm: React.FC = () => {
       setError(
         err.response?.data?.message ||
           err.message ||
-          "İlan oluşturulurken bir hata oluştu. Lütfen tekrar deneyin."
+          "İlan oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.",
       );
     } finally {
       setLoading(false);
@@ -1388,7 +1392,8 @@ const MidilliForm: React.FC = () => {
                 getOptionLabel={(option) => option.name}
                 value={
                   districts.find(
-                    (district) => district.id.toString() === formData.districtId
+                    (district) =>
+                      district.id.toString() === formData.districtId,
                   ) || null
                 }
                 onChange={(_, newValue) => {
@@ -1431,13 +1436,33 @@ const MidilliForm: React.FC = () => {
               value={formatPrice(formData.price)}
               onChange={(e) => handlePriceChange(e.target.value)}
               InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <AttachMoney />
-                  </InputAdornment>
-                ),
                 endAdornment: (
-                  <InputAdornment position="end">TL</InputAdornment>
+                  <InputAdornment position="end">
+                    <ToggleButtonGroup
+                      value={formData.currency || "TRY"}
+                      exclusive
+                      onChange={(_, v) =>
+                        v &&
+                        setFormData((prev: any) => ({ ...prev, currency: v }))
+                      }
+                      size="small"
+                      sx={{
+                        "& .MuiToggleButton-root": {
+                          py: 0.5,
+                          px: 1,
+                          fontSize: "0.75rem",
+                          "&.Mui-selected": {
+                            bgcolor: "#D34237",
+                            color: "#fff",
+                          },
+                        },
+                      }}
+                    >
+                      <ToggleButton value="TRY">₺ TL</ToggleButton>
+                      <ToggleButton value="USD">$ USD</ToggleButton>
+                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                    </ToggleButtonGroup>
+                  </InputAdornment>
                 ),
               }}
               placeholder="150.000"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import socketService from "../../services/socketService";
+import { formatPrice } from "../../utils/formatPrice";
 import {
   Box,
   Container,
@@ -46,6 +47,7 @@ interface Ad {
   title: string;
   description: string;
   price: number;
+  currency?: string;
   year: number;
   mileage: number;
   status: string;
@@ -193,7 +195,7 @@ const PendingAds: React.FC = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       // İlanı listeden kaldır
       setAds((prev) => prev.filter((ad) => ad.id !== adId));
@@ -247,7 +249,7 @@ const PendingAds: React.FC = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       // İlanı listeden kaldır
       setAds((prev) => prev.filter((ad) => ad.id !== selectedAd.id));
@@ -285,18 +287,18 @@ const PendingAds: React.FC = () => {
 
   const nextImage = useCallback(() => {
     setCurrentImageIndex((prev) =>
-      prev < selectedImages.length - 1 ? prev + 1 : 0
+      prev < selectedImages.length - 1 ? prev + 1 : 0,
     );
   }, [selectedImages.length]);
 
   const prevImage = useCallback(() => {
     setCurrentImageIndex((prev) =>
-      prev > 0 ? prev - 1 : selectedImages.length - 1
+      prev > 0 ? prev - 1 : selectedImages.length - 1,
     );
   }, [selectedImages.length]);
 
   const handleImageError = (
-    e: React.SyntheticEvent<HTMLImageElement, Event>
+    e: React.SyntheticEvent<HTMLImageElement, Event>,
   ) => {
     const target = e.target as HTMLImageElement;
     target.style.display = "none";
@@ -443,7 +445,7 @@ const PendingAds: React.FC = () => {
                       >
                         <Chip
                           icon={<AttachMoney />}
-                          label={`${ad.price?.toLocaleString("tr-TR")} TL`}
+                          label={formatPrice(ad.price, ad.currency)}
                           color="primary"
                           size="small"
                         />
@@ -803,7 +805,7 @@ const PendingAds: React.FC = () => {
                           </Typography>
                           <Typography variant="body1">
                             {translateTransmission(
-                              ad.customFields.transmission
+                              ad.customFields.transmission,
                             )}
                           </Typography>
                         </Box>
@@ -908,7 +910,7 @@ const PendingAds: React.FC = () => {
                                 );
                               }
                               return null;
-                            }
+                            },
                           )}
                         </Box>
                       </Box>
@@ -1028,7 +1030,7 @@ const PendingAds: React.FC = () => {
                 <>
                   <img
                     src={getImageUrl(
-                      selectedImages[currentImageIndex]?.imageUrl
+                      selectedImages[currentImageIndex]?.imageUrl,
                     )}
                     alt={
                       selectedImages[currentImageIndex]?.altText ||

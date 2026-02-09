@@ -31,6 +31,9 @@ import {
   TableHead,
   TableRow,
   Paper,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import {
   PhotoCamera,
@@ -109,6 +112,7 @@ interface FormData {
   description: string;
   year: string;
   price: string;
+  currency: string;
   fuelType: string;
   transmission: string;
   condition: string;
@@ -158,6 +162,7 @@ const CreateMinivanPanelvanForm: React.FC = () => {
     description: "",
     year: "",
     price: "",
+    currency: "TRY",
     fuelType: "",
     transmission: "",
     condition: "",
@@ -862,6 +867,7 @@ const CreateMinivanPanelvanForm: React.FC = () => {
       submitData.append("description", formData.description);
       submitData.append("year", formData.year);
       submitData.append("price", formData.price);
+      submitData.append("currency", formData.currency || "TRY");
       submitData.append("mileage", formData.mileage);
       submitData.append("cityId", formData.cityId);
       submitData.append("districtId", formData.districtId);
@@ -1040,10 +1046,20 @@ const CreateMinivanPanelvanForm: React.FC = () => {
                   }}
                   InputProps={{
                     endAdornment: (
-                      <Box component="span" sx={{ ml: 1 }}>
-                        TL
-                      </Box>
-                    ),
+                  <InputAdornment position="end">
+                      <ToggleButtonGroup
+                        value={formData.currency || "TRY"}
+                        exclusive
+                        onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
+                        size="small"
+                        sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
+                      >
+                        <ToggleButton value="TRY">₺ TL</ToggleButton>
+                        <ToggleButton value="USD">$ USD</ToggleButton>
+                        <ToggleButton value="EUR">€ EUR</ToggleButton>
+                      </ToggleButtonGroup>
+                    </InputAdornment>
+                ),
                   }}
                   placeholder="0"
                 />

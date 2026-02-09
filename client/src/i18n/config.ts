@@ -6,6 +6,12 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import trTranslations from "./locales/tr.json";
 // İngilizce çeviriler
 import enTranslations from "./locales/en.json";
+// Çince çeviriler
+import zhTranslations from "./locales/zh.json";
+// Almanca çeviriler
+import deTranslations from "./locales/de.json";
+// Rusça çeviriler
+import ruTranslations from "./locales/ru.json";
 
 i18n
   .use(LanguageDetector) // Tarayıcı dilini otomatik algıla
@@ -17,6 +23,15 @@ i18n
       },
       en: {
         translation: enTranslations,
+      },
+      zh: {
+        translation: zhTranslations,
+      },
+      de: {
+        translation: deTranslations,
+      },
+      ru: {
+        translation: ruTranslations,
       },
     },
     fallbackLng: "tr", // Varsayılan dil Türkçe

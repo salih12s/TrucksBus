@@ -17,6 +17,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import { CheckCircle } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -41,6 +44,7 @@ interface FormData {
   description: string;
   year: string;
   price: string;
+  currency: string;
 
   // Karoser Teknik Özellikler
   genislik: string; // metre
@@ -100,6 +104,7 @@ const HavuzHardoxTipiForm: React.FC = () => {
     description: "",
     year: "",
     price: "",
+    currency: "TRY",
 
     // Karoser Teknik Özellikler
     genislik: "",
@@ -183,7 +188,7 @@ const HavuzHardoxTipiForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -248,6 +253,7 @@ const HavuzHardoxTipiForm: React.FC = () => {
           submitData.append(key, value.toString());
         }
       });
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("categoryId", formData.categoryId);
@@ -269,7 +275,7 @@ const HavuzHardoxTipiForm: React.FC = () => {
 
       console.log(
         "Havuz Hardox Tipi Karoser ilanı başarıyla oluşturuldu:",
-        response.data
+        response.data,
       );
       setSubmitSuccess(true);
     } catch (error) {
@@ -342,12 +348,42 @@ const HavuzHardoxTipiForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  label="Fiyat (TL) *"
+                  label="Fiyat"
                   value={formatPrice(formData.price)}
                   onChange={(e) => handlePriceChange(e.target.value)}
                   placeholder="Örn: 150.000"
                   InputProps={{
-                    endAdornment: "₺",
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ToggleButtonGroup
+                          value={formData.currency || "TRY"}
+                          exclusive
+                          onChange={(_, v) =>
+                            v &&
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              currency: v,
+                            }))
+                          }
+                          size="small"
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              py: 0.5,
+                              px: 1,
+                              fontSize: "0.75rem",
+                              "&.Mui-selected": {
+                                bgcolor: "#D34237",
+                                color: "#fff",
+                              },
+                            },
+                          }}
+                        >
+                          <ToggleButton value="TRY">₺ TL</ToggleButton>
+                          <ToggleButton value="USD">$ USD</ToggleButton>
+                          <ToggleButton value="EUR">€ EUR</ToggleButton>
+                        </ToggleButtonGroup>
+                      </InputAdornment>
+                    ),
                   }}
                   required
                 />

@@ -21,6 +21,9 @@ import {
   Radio,
   RadioGroup,
   FormLabel,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import { CheckCircle } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -45,6 +48,7 @@ interface FormData {
   description: string;
   productionYear: string;
   price: string;
+  currency: string;
 
   // Ahşap Kasa Özellikleri
   length: string; // cm
@@ -121,6 +125,7 @@ const AhsapKasaForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    currency: "TRY",
 
     // Ahşap Kasa Özellikleri
     length: "",
@@ -203,7 +208,7 @@ const AhsapKasaForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -277,6 +282,7 @@ const AhsapKasaForm: React.FC = () => {
           submitData.append(key, value.toString());
         }
       });
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("categoryId", formData.categoryId);
@@ -285,7 +291,7 @@ const AhsapKasaForm: React.FC = () => {
       if (formData.showcasePhoto) {
         console.log(
           "📷 Vitrin fotoğrafı ekleniyor:",
-          formData.showcasePhoto.name
+          formData.showcasePhoto.name,
         );
         submitData.append("showcasePhoto", formData.showcasePhoto);
       } else {
@@ -304,7 +310,7 @@ const AhsapKasaForm: React.FC = () => {
       for (const [key, value] of submitData.entries()) {
         console.log(
           `  ${key}:`,
-          typeof value === "object" ? value.constructor.name : value
+          typeof value === "object" ? value.constructor.name : value,
         );
       }
 
@@ -330,7 +336,7 @@ const AhsapKasaForm: React.FC = () => {
       alert(
         `İlan oluşturulurken bir hata oluştu: ${
           err.response?.data?.error || err.message
-        }`
+        }`,
       );
     } finally {
       setLoading(false);
@@ -402,12 +408,42 @@ const AhsapKasaForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  label="Fiyat (TL) *"
+                  label="Fiyat"
                   value={formatPrice(formData.price)}
                   onChange={(e) => handlePriceChange(e.target.value)}
                   placeholder="Örn: 150.000"
                   InputProps={{
-                    endAdornment: "₺",
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ToggleButtonGroup
+                          value={formData.currency || "TRY"}
+                          exclusive
+                          onChange={(_, v) =>
+                            v &&
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              currency: v,
+                            }))
+                          }
+                          size="small"
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              py: 0.5,
+                              px: 1,
+                              fontSize: "0.75rem",
+                              "&.Mui-selected": {
+                                bgcolor: "#D34237",
+                                color: "#fff",
+                              },
+                            },
+                          }}
+                        >
+                          <ToggleButton value="TRY">₺ TL</ToggleButton>
+                          <ToggleButton value="USD">$ USD</ToggleButton>
+                          <ToggleButton value="EUR">€ EUR</ToggleButton>
+                        </ToggleButtonGroup>
+                      </InputAdornment>
+                    ),
                   }}
                   required
                 />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { formatPrice as formatPriceUtil } from "../utils/formatPrice";
 import {
   Box,
   Container,
@@ -74,6 +75,7 @@ interface Ad {
   id: number;
   title: string;
   price: number | null;
+  currency?: string;
   location?: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "SOLD" | "EXPIRED";
   viewCount: number;
@@ -226,7 +228,7 @@ const Dukkanim: React.FC = () => {
           setCredentials({
             user: updatedUser,
             token: currentToken,
-          })
+          }),
         );
       }
 
@@ -240,7 +242,7 @@ const Dukkanim: React.FC = () => {
   };
 
   const handleProfileImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -256,7 +258,7 @@ const Dukkanim: React.FC = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       const responseData = response.data as { imageUrl: string };
@@ -271,14 +273,8 @@ const Dukkanim: React.FC = () => {
     }
   };
 
-  const formatPrice = (price: number | null | undefined) => {
-    if (!price || price === 0) return "Fiyat belirtilmemiş";
-    return new Intl.NumberFormat("tr-TR", {
-      style: "currency",
-      currency: "TRY",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
+  const formatPrice = (price: number | null | undefined, currency?: string) => {
+    return formatPriceUtil(price, currency || "TRY", "Fiyat belirtilmemiş");
   };
 
   const formatPhone = (phone: string | null | undefined) => {
@@ -567,8 +563,8 @@ const Dukkanim: React.FC = () => {
                       subscription.packageType === "trucks"
                         ? "Trucks"
                         : subscription.packageType === "trucks_plus"
-                        ? "Trucks+"
-                        : "TrucksBus"
+                          ? "Trucks+"
+                          : "TrucksBus"
                     } - ${subscription.adsUsed}/${subscription.adLimit} ilan`}
                     size="small"
                     color="primary"
@@ -630,7 +626,7 @@ const Dukkanim: React.FC = () => {
             <Chip
               label={`${userAds.reduce(
                 (sum, ad) => sum + (ad.viewCount || 0),
-                0
+                0,
               )} Toplam Görüntülenme`}
               color="info"
               variant="outlined"
@@ -739,7 +735,7 @@ const Dukkanim: React.FC = () => {
                       fontSize: "1.25rem",
                     }}
                   >
-                    {formatPrice(ad.price)}
+                    {formatPrice(ad.price, ad.currency)}
                   </Typography>
 
                   {/* Bilgiler */}

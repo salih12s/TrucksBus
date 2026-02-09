@@ -20,6 +20,9 @@ import {
   Chip,
   Card,
   CardContent,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -146,6 +149,7 @@ interface FormData {
   description: string;
   productionYear: string;
   price: string;
+  currency: string;
   romorkMarkasi: string; // Yeni alan
   volume: string;
   condition: string;
@@ -182,6 +186,7 @@ const AcikKasaForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    currency: "TRY",
     romorkMarkasi: "Seçiniz",
     volume: "",
     condition: "ikinci-el",
@@ -225,7 +230,7 @@ const AcikKasaForm: React.FC = () => {
 
   const handleInputChange = (
     field: keyof FormData,
-    value: string | boolean | File[] | File | null
+    value: string | boolean | File[] | File | null,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -235,7 +240,7 @@ const AcikKasaForm: React.FC = () => {
 
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    isShowcase = false
+    isShowcase = false,
   ) => {
     const files = event.target.files;
     if (files) {
@@ -538,11 +543,44 @@ const AcikKasaForm: React.FC = () => {
                     {/* Fiyat */}
                     <TextField
                       fullWidth
-                      label="Fiyat (TL)"
+                      label="Fiyat"
                       value={formData.price}
                       onChange={(e) =>
                         handleInputChange("price", e.target.value)
                       }
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <ToggleButtonGroup
+                              value={formData.currency || "TRY"}
+                              exclusive
+                              onChange={(_, v) =>
+                                v &&
+                                setFormData((prev: any) => ({
+                                  ...prev,
+                                  currency: v,
+                                }))
+                              }
+                              size="small"
+                              sx={{
+                                "& .MuiToggleButton-root": {
+                                  py: 0.5,
+                                  px: 1,
+                                  fontSize: "0.75rem",
+                                  "&.Mui-selected": {
+                                    bgcolor: "#D34237",
+                                    color: "#fff",
+                                  },
+                                },
+                              }}
+                            >
+                              <ToggleButton value="TRY">₺ TL</ToggleButton>
+                              <ToggleButton value="USD">$ USD</ToggleButton>
+                              <ToggleButton value="EUR">€ EUR</ToggleButton>
+                            </ToggleButtonGroup>
+                          </InputAdornment>
+                        ),
+                      }}
                       placeholder="Örn: 150000"
                       type="number"
                       required

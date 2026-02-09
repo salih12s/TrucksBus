@@ -18,6 +18,9 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import { CheckCircle } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
@@ -76,6 +79,7 @@ interface FormData {
   description: string;
   productionYear: string;
   price: string;
+  currency: string;
 
   // Özel Kasa Özellikleri
   caseType: string;
@@ -154,6 +158,7 @@ const OzelKasaForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    currency: "TRY",
 
     // Özel Kasa Özellikleri
     caseType: "",
@@ -360,6 +365,7 @@ const OzelKasaForm: React.FC = () => {
           }
         }
       });
+    submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("categorySlug", categorySlug || "");
@@ -553,7 +559,7 @@ const OzelKasaForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  label="Fiyat (TL) *"
+                  label="Fiyat"
                   value={formatNumber(formData.price)}
                   onChange={(e) => {
                     const rawValue = e.target.value.replace(/[^0-9]/g, "");
@@ -561,7 +567,25 @@ const OzelKasaForm: React.FC = () => {
                   }}
                   placeholder="100.000"
                   required
-                />
+                
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <ToggleButtonGroup
+                      value={formData.currency || "TRY"}
+                      exclusive
+                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
+                      size="small"
+                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
+                    >
+                      <ToggleButton value="TRY">₺ TL</ToggleButton>
+                      <ToggleButton value="USD">$ USD</ToggleButton>
+                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                    </ToggleButtonGroup>
+                  </InputAdornment>
+                ),
+              }}
+              />
               </Box>
             </Box>
 

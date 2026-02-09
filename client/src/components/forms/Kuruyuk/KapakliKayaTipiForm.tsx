@@ -16,6 +16,9 @@ import {
   Container,
   Card,
   CardContent,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
@@ -52,6 +55,7 @@ interface FormData {
   description: string;
   productionYear: string;
   price: string;
+  currency: string;
 
   // Category
   categoryId: string;
@@ -267,6 +271,7 @@ const KapakliKayaTipiForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    currency: "TRY",
     categoryId: "6", // Dorse category ID
     dorseBrand: "",
     dingilSayisi: "",
@@ -465,6 +470,7 @@ const KapakliKayaTipiForm: React.FC = () => {
       submitData.append("description", formData.description);
       submitData.append("year", formData.productionYear);
       submitData.append("price", formData.price);
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kapaklı Kaya Tipi özel bilgileri
       submitData.append("dingilSayisi", formData.dingilSayisi);
@@ -635,11 +641,29 @@ const KapakliKayaTipiForm: React.FC = () => {
 
               <TextField
                 fullWidth
-                label="Fiyat (TL)"
+                label="Fiyat"
                 value={formData.price}
                 onChange={(e) => handleInputChange("price", e.target.value)}
                 margin="normal"
                 required
+              
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <ToggleButtonGroup
+                      value={formData.currency || "TRY"}
+                      exclusive
+                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
+                      size="small"
+                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
+                    >
+                      <ToggleButton value="TRY">₺ TL</ToggleButton>
+                      <ToggleButton value="USD">$ USD</ToggleButton>
+                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                    </ToggleButtonGroup>
+                  </InputAdornment>
+                ),
+              }}
               />
             </Box>
 

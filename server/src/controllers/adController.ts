@@ -250,6 +250,7 @@ export const getAds = async (req: Request, res: Response) => {
           a.id,
           a.title,
           a.price,
+          a.currency,
           a.year,
           a.mileage,
           a.is_exchangeable as "isExchangeable",
@@ -309,6 +310,7 @@ export const getAds = async (req: Request, res: Response) => {
           id: ad.id,
           title: ad.title,
           price: ad.price,
+          currency: ad.currency,
           year: ad.year,
           mileage: ad.mileage,
           createdAt: ad.createdAt,
@@ -362,6 +364,7 @@ export const getAds = async (req: Request, res: Response) => {
         title: true,
         description: true,
         price: true,
+        currency: true,
         year: true,
         mileage: true,
         location: true,
@@ -483,7 +486,7 @@ export const getAdById = async (req: Request, res: Response) => {
     // ❗ OPTIMIZED SQL - keep base64 but limit size and count
     const lightningQuery = `
       SELECT 
-        a.id, a.title, a.description, a.price, a.year, a.mileage,
+        a.id, a.title, a.description, a.price, a.currency, a.year, a.mileage,
         a.location, a.latitude, a.longitude, a.status, a.view_count,
         a.is_promoted, a.promoted_until, a.custom_fields, 
         a.created_at, a.updated_at, a.chassis_type, a.color, 
@@ -811,6 +814,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       title,
       description,
       price,
+      currency,
       year,
       productionYear,
       category,
@@ -921,6 +925,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
           ? parseInt(variant_id)
           : null;
       adData.price = price ? parseFloat(price) : null;
+      adData.currency = currency || "TRY";
       adData.year = year
         ? parseInt(year)
         : productionYear
@@ -999,6 +1004,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       adData.modelId = modelId ? parseInt(modelId) : null;
       adData.variantId = variantId ? parseInt(variantId) : null;
       adData.price = price ? parseFloat(price) : null;
+      adData.currency = currency || "TRY";
       adData.year = year
         ? parseInt(year)
         : productionYear
@@ -1217,6 +1223,7 @@ export const updateAd = async (req: Request, res: Response) => {
       title,
       description,
       price,
+      currency,
       year,
       mileage,
       location,
@@ -1231,6 +1238,7 @@ export const updateAd = async (req: Request, res: Response) => {
     if (description !== undefined) updateData.description = description;
     if (price !== undefined)
       updateData.price = price ? parseFloat(price) : null;
+    if (currency !== undefined) updateData.currency = currency;
     if (year !== undefined) updateData.year = year ? parseInt(year) : null;
     if (mileage !== undefined)
       updateData.mileage = mileage ? parseInt(mileage) : null;

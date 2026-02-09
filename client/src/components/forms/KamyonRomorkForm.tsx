@@ -22,6 +22,9 @@ import {
   Radio,
   RadioGroup,
   FormLabel,
+  ToggleButtonGroup,
+  ToggleButton,
+  InputAdornment,
 } from "@mui/material";
 import { CheckCircle } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
@@ -141,6 +144,7 @@ const KamyonRomorkForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    currency: "TRY",
 
     // Römork Markası
     romorkMarkasi: "Seçiniz",
@@ -165,9 +169,6 @@ const KamyonRomorkForm: React.FC = () => {
     phone: "",
     email: "",
 
-    // Para birimi
-    currency: "TL",
-
     detailedInfo: "",
   });
 
@@ -190,7 +191,7 @@ const KamyonRomorkForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -218,7 +219,7 @@ const KamyonRomorkForm: React.FC = () => {
 
   const handleInputChange = (
     field: string,
-    value: string | File[] | boolean
+    value: string | File[] | boolean,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -272,6 +273,7 @@ const KamyonRomorkForm: React.FC = () => {
           }
         }
       });
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("categorySlug", categorySlug || "");
@@ -369,17 +371,50 @@ const KamyonRomorkForm: React.FC = () => {
 
                 <TextField
                   fullWidth
-                  label="Fiyat (TL) *"
+                  label="Fiyat"
                   type="text"
                   value={formatNumber(formData.price)}
                   onChange={(e) =>
                     handleInputChange(
                       "price",
-                      parseFormattedNumber(e.target.value)
+                      parseFormattedNumber(e.target.value),
                     )
                   }
                   required
                   placeholder="Örn: 250.000"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ToggleButtonGroup
+                          value={formData.currency || "TRY"}
+                          exclusive
+                          onChange={(_, v) =>
+                            v &&
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              currency: v,
+                            }))
+                          }
+                          size="small"
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              py: 0.5,
+                              px: 1,
+                              fontSize: "0.75rem",
+                              "&.Mui-selected": {
+                                bgcolor: "#D34237",
+                                color: "#fff",
+                              },
+                            },
+                          }}
+                        >
+                          <ToggleButton value="TRY">₺ TL</ToggleButton>
+                          <ToggleButton value="USD">$ USD</ToggleButton>
+                          <ToggleButton value="EUR">€ EUR</ToggleButton>
+                        </ToggleButtonGroup>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Box>
 

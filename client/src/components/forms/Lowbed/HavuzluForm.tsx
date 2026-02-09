@@ -27,6 +27,8 @@ import {
   Chip,
   Checkbox,
   FormGroup,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import { CheckCircle, PhotoCamera, Close } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
@@ -52,6 +54,7 @@ interface FormData {
   description: string;
   productionYear: string;
   price: string;
+  currency: string;
 
   // Category
   categoryId: string;
@@ -315,6 +318,7 @@ const HavuzluForm: React.FC = () => {
     description: "",
     productionYear: "",
     price: "",
+    currency: "TRY",
     categoryId: "6", // Dorse category ID
     dorseBrand: "",
     havuzDerinligi: "",
@@ -404,7 +408,7 @@ const HavuzluForm: React.FC = () => {
   // Fotoğraf upload
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    isShowcase = false
+    isShowcase = false,
   ) => {
     const files = event.target.files;
     if (!files) return;
@@ -466,6 +470,7 @@ const HavuzluForm: React.FC = () => {
       const parsedPrice = parseFormattedNumber(formData.price);
       if (parsedPrice) {
         submitData.append("price", parsedPrice);
+        submitData.append("currency", formData.currency || "TRY");
       }
 
       // Category/Brand/Model/Variant ID'lerini ekle
@@ -509,7 +514,7 @@ const HavuzluForm: React.FC = () => {
       // Rampa mekanizması
       submitData.append(
         "rampaMekanizmasi",
-        JSON.stringify(formData.rampaMekanizmasi)
+        JSON.stringify(formData.rampaMekanizmasi),
       );
 
       // Konum
@@ -538,7 +543,7 @@ const HavuzluForm: React.FC = () => {
         technicalSpecs.push(`Dingil Sayısı: ${formData.dingilSayisi}`);
       if (formData.rampaMekanizmasi.length > 0)
         technicalSpecs.push(
-          `Rampa Mekanizması: ${formData.rampaMekanizmasi.join(", ")}`
+          `Rampa Mekanizması: ${formData.rampaMekanizmasi.join(", ")}`,
         );
 
       if (technicalSpecs.length > 0) {
@@ -634,7 +639,32 @@ const HavuzluForm: React.FC = () => {
                 }}
                 InputProps={{
                   endAdornment: (
-                    <InputAdornment position="end">TL</InputAdornment>
+                    <InputAdornment position="end">
+                      <ToggleButtonGroup
+                        value={formData.currency || "TRY"}
+                        exclusive
+                        onChange={(_, v) =>
+                          v &&
+                          setFormData((prev: any) => ({ ...prev, currency: v }))
+                        }
+                        size="small"
+                        sx={{
+                          "& .MuiToggleButton-root": {
+                            py: 0.5,
+                            px: 1,
+                            fontSize: "0.75rem",
+                            "&.Mui-selected": {
+                              bgcolor: "#D34237",
+                              color: "#fff",
+                            },
+                          },
+                        }}
+                      >
+                        <ToggleButton value="TRY">₺ TL</ToggleButton>
+                        <ToggleButton value="USD">$ USD</ToggleButton>
+                        <ToggleButton value="EUR">€ EUR</ToggleButton>
+                      </ToggleButtonGroup>
+                    </InputAdornment>
                   ),
                 }}
                 placeholder="Örn: 250.000"

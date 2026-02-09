@@ -79,6 +79,27 @@ const LanguageSwitcher: React.FC = () => {
           <ListItemIcon>🇬🇧</ListItemIcon>
           <ListItemText>{t("common.english")}</ListItemText>
         </MenuItem>
+        <MenuItem
+          onClick={() => changeLanguage("zh")}
+          selected={currentLanguage === "zh"}
+        >
+          <ListItemIcon>🇨🇳</ListItemIcon>
+          <ListItemText>{t("common.chinese")}</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => changeLanguage("de")}
+          selected={currentLanguage === "de"}
+        >
+          <ListItemIcon>🇩🇪</ListItemIcon>
+          <ListItemText>{t("common.german")}</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => changeLanguage("ru")}
+          selected={currentLanguage === "ru"}
+        >
+          <ListItemIcon>🇷🇺</ListItemIcon>
+          <ListItemText>{t("common.russian")}</ListItemText>
+        </MenuItem>
       </Menu>
     </>
   );

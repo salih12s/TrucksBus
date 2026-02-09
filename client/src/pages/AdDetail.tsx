@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { formatPrice as formatPriceUtil } from "../utils/formatPrice";
 import {
   Box,
   Typography,
@@ -47,6 +48,7 @@ interface Ad {
   description?: string;
   detailedInfo?: string;
   price: number;
+  currency?: string;
   year?: number;
   city?: { id: number; name: string };
   district?: { id: number; name: string };
@@ -143,7 +145,7 @@ const AdDetail: React.FC = () => {
   const [videosLoading, setVideosLoading] = useState(false);
   const [videosLoaded, setVideosLoaded] = useState(false);
   const [videoBlobUrls, setVideoBlobUrls] = useState<Map<number, string>>(
-    new Map()
+    new Map(),
   );
   const [tooltipData, setTooltipData] = useState<{
     visible: boolean;
@@ -163,7 +165,7 @@ const AdDetail: React.FC = () => {
         console.log("⚡ LIGHTNING ad detail fetch...");
         console.log(
           "🔍 Request URL:",
-          `${apiClient.defaults.baseURL}/ads/${id}`
+          `${apiClient.defaults.baseURL}/ads/${id}`,
         );
         console.log("🔍 apiClient config:", {
           baseURL: apiClient.defaults.baseURL,
@@ -199,7 +201,7 @@ const AdDetail: React.FC = () => {
         console.log(
           "✅ Response received:",
           adResponse.status,
-          adResponse.statusText
+          adResponse.statusText,
         );
         const data = adResponse.data as Ad;
 
@@ -207,7 +209,7 @@ const AdDetail: React.FC = () => {
         console.log("🔍 Data type:", typeof data);
         console.log(
           "🔍 Data keys:",
-          data ? Object.keys(data) : "null/undefined"
+          data ? Object.keys(data) : "null/undefined",
         );
 
         // ❗ FIX: Parse customFields if it's a string
@@ -224,7 +226,7 @@ const AdDetail: React.FC = () => {
         console.log("🔍 DEBUG customFields:", data.customFields);
         console.log(
           "🔍 All customFields keys:",
-          data.customFields ? Object.keys(data.customFields) : "null"
+          data.customFields ? Object.keys(data.customFields) : "null",
         );
         console.log("🔍 tireCondition:", data.customFields?.tireCondition);
         console.log("🔍 lastikDurumu:", data.customFields?.lastikDurumu);
@@ -248,7 +250,7 @@ const AdDetail: React.FC = () => {
                   setIsFavorited(favResult.isFavorited || false);
                 }
               })
-              .catch(() => {}) // Silent fail
+              .catch(() => {}), // Silent fail
           );
         }
 
@@ -256,7 +258,7 @@ const AdDetail: React.FC = () => {
         Promise.all(instantOperations).finally(() => {
           const totalTime = performance.now() - startTime;
           console.log(
-            `⚡ Total Detail Page Load Time: ${totalTime.toFixed(2)}ms`
+            `⚡ Total Detail Page Load Time: ${totalTime.toFixed(2)}ms`,
           );
         });
 
@@ -274,15 +276,15 @@ const AdDetail: React.FC = () => {
           if (err.response) {
             console.error(
               "❌ Response status:",
-              (err.response as Record<string, unknown>).status
+              (err.response as Record<string, unknown>).status,
             );
             console.error(
               "❌ Response headers:",
-              (err.response as Record<string, unknown>).headers
+              (err.response as Record<string, unknown>).headers,
             );
             console.error(
               "❌ Response data:",
-              (err.response as Record<string, unknown>).data
+              (err.response as Record<string, unknown>).data,
             );
           } else if (err.request) {
             console.error("❌ Request made but no response received");
@@ -382,12 +384,12 @@ const AdDetail: React.FC = () => {
       !videosLoading
     ) {
       const hasVideoWithoutUrl = ad.videos.some(
-        (video) => video && !video.videoUrl && video.id
+        (video) => video && !video.videoUrl && video.id,
       );
 
       if (hasVideoWithoutUrl) {
         console.log(
-          "🎥 Auto-fetching videos - metadata exists but videoUrl missing"
+          "🎥 Auto-fetching videos - metadata exists but videoUrl missing",
         );
         fetchVideos();
       }
@@ -417,7 +419,7 @@ const AdDetail: React.FC = () => {
   };
 
   const getImageUrl = (
-    images?: (string | { imageUrl: string; isPrimary?: boolean })[]
+    images?: (string | { imageUrl: string; isPrimary?: boolean })[],
   ): string => {
     if (!images || images.length === 0) {
       return "https://via.placeholder.com/400x300/f0f0f0/999999?text=Resim+Yok";
@@ -425,7 +427,7 @@ const AdDetail: React.FC = () => {
 
     // Önce vitrin resmini (isPrimary: true) ara
     let selectedImage = images.find(
-      (img) => typeof img === "object" && img.isPrimary === true
+      (img) => typeof img === "object" && img.isPrimary === true,
     );
 
     // Vitrin resmi yoksa ilk resmi al
@@ -935,20 +937,20 @@ const AdDetail: React.FC = () => {
                   {ad.category?.name?.toLowerCase() === "dorse"
                     ? "Dorse Markası:"
                     : ad.category?.name?.toLowerCase() === "römork"
-                    ? "Römork Markası:"
-                    : ad.category?.name?.includes("Oto Kurtarıcı")
-                    ? "Araç Markası:"
-                    : "Marka:"}
+                      ? "Römork Markası:"
+                      : ad.category?.name?.includes("Oto Kurtarıcı")
+                        ? "Araç Markası:"
+                        : "Marka:"}
                 </strong>{" "}
                 {ad.category?.name?.toLowerCase() === "dorse"
                   ? (ad.customFields?.dorseBrand as string) || "Belirtilmemiş"
                   : ad.category?.name?.toLowerCase() === "römork"
-                  ? (ad.customFields?.romorkMarkasi as string) ||
-                    "Belirtilmemiş"
-                  : ad.category?.name?.includes("Oto Kurtarıcı")
-                  ? (ad.customFields?.vehicleBrandName as string) ||
-                    "Belirtilmemiş"
-                  : ad.brand?.name || "Volkswagen"}
+                    ? (ad.customFields?.romorkMarkasi as string) ||
+                      "Belirtilmemiş"
+                    : ad.category?.name?.includes("Oto Kurtarıcı")
+                      ? (ad.customFields?.vehicleBrandName as string) ||
+                        "Belirtilmemiş"
+                      : ad.brand?.name || "Volkswagen"}
               </Box>
 
               {/* Tipi ve Variant bilgileri sadece Dorse, Römork ve Oto Kurtarıcı kategorisi DIŞINDA gösterilir */}
@@ -1003,7 +1005,7 @@ const AdDetail: React.FC = () => {
                     color: "#dc3545",
                   }}
                 >
-                  {formatPrice(ad.price)} TL
+                  {formatPriceUtil(ad.price, ad.currency)}
                 </Typography>
                 <Chip
                   label="🔄"
@@ -1232,7 +1234,7 @@ const AdDetail: React.FC = () => {
                             label: "İlan Tarihi",
                             value: ad.createdAt
                               ? new Date(ad.createdAt).toLocaleDateString(
-                                  "tr-TR"
+                                  "tr-TR",
                                 )
                               : null,
                           },
@@ -1287,7 +1289,7 @@ const AdDetail: React.FC = () => {
                           {
                             label: "Fiyat",
                             value: ad.price
-                              ? `${formatPrice(ad.price)} TL`
+                              ? formatPriceUtil(ad.price, ad.currency)
                               : null,
                           },
                           {
@@ -1325,8 +1327,8 @@ const AdDetail: React.FC = () => {
                                   value: ad.maxPower
                                     ? `${ad.maxPower} HP`
                                     : ad.customFields?.maxPower
-                                    ? `${ad.customFields.maxPower} HP`
-                                    : null,
+                                      ? `${ad.customFields.maxPower} HP`
+                                      : null,
                                 },
                                 {
                                   label: "Maksimum Tork",
@@ -1357,16 +1359,16 @@ const AdDetail: React.FC = () => {
                                   value: ad.platformLength
                                     ? `${ad.platformLength} m`
                                     : ad.customFields?.platformLength
-                                    ? `${ad.customFields.platformLength} m`
-                                    : null,
+                                      ? `${ad.customFields.platformLength} m`
+                                      : null,
                                 },
                                 {
                                   label: "Platform Genişliği",
                                   value: ad.platformWidth
                                     ? `${ad.platformWidth} m`
                                     : ad.customFields?.platformWidth
-                                    ? `${ad.customFields.platformWidth} m`
-                                    : null,
+                                      ? `${ad.customFields.platformWidth} m`
+                                      : null,
                                 },
                                 {
                                   label: "Maksimum Araç Kapasitesi",
@@ -1378,8 +1380,8 @@ const AdDetail: React.FC = () => {
                                   value: ad.loadCapacity
                                     ? `${ad.loadCapacity} t`
                                     : ad.customFields?.loadCapacity
-                                    ? `${ad.customFields.loadCapacity} t`
-                                    : null,
+                                      ? `${ad.customFields.loadCapacity} t`
+                                      : null,
                                 },
                                 {
                                   label: "Araç Plakası",
@@ -1663,8 +1665,8 @@ const AdDetail: React.FC = () => {
                               ad.customFields?.hasTent === true
                                 ? "Evet"
                                 : ad.customFields?.hasTent === false
-                                ? "Hayır"
-                                : null,
+                                  ? "Hayır"
+                                  : null,
                           },
                           {
                             label: "Damperli",
@@ -1672,8 +1674,8 @@ const AdDetail: React.FC = () => {
                               ad.customFields?.hasDamper === true
                                 ? "Evet"
                                 : ad.customFields?.hasDamper === false
-                                ? "Hayır"
-                                : null,
+                                  ? "Hayır"
+                                  : null,
                           },
 
                           // Tanker Özel Alanları
@@ -1797,8 +1799,8 @@ const AdDetail: React.FC = () => {
                                         plateType === "tr-plakali"
                                           ? "TR Plaka"
                                           : plateType === "mavi-plakali"
-                                          ? "Mavi Plaka"
-                                          : plateType || "";
+                                            ? "Mavi Plaka"
+                                            : plateType || "";
                                       return typeText
                                         ? `${plateNumber} (${typeText})`
                                         : plateNumber;
@@ -1865,18 +1867,18 @@ const AdDetail: React.FC = () => {
                                         .rampaMekanizmasi === "string"
                                     ) {
                                       const parsed = JSON.parse(
-                                        ad.customFields.rampaMekanizmasi
+                                        ad.customFields.rampaMekanizmasi,
                                       );
                                       return Array.isArray(parsed)
                                         ? parsed.join(", ")
                                         : ad.customFields.rampaMekanizmasi;
                                     } else if (
                                       Array.isArray(
-                                        ad.customFields.rampaMekanizmasi
+                                        ad.customFields.rampaMekanizmasi,
                                       )
                                     ) {
                                       return ad.customFields.rampaMekanizmasi.join(
-                                        ", "
+                                        ", ",
                                       );
                                     } else {
                                       return ad.customFields.rampaMekanizmasi;
@@ -2281,7 +2283,7 @@ const AdDetail: React.FC = () => {
                             (item) =>
                               item.value !== null &&
                               item.value !== "" &&
-                              item.value !== undefined
+                              item.value !== undefined,
                           )
                           .map((item, index, array) => (
                             <Box
@@ -2450,21 +2452,21 @@ const AdDetail: React.FC = () => {
                         borderColor: isOwner
                           ? "#ccc"
                           : isFavorited
-                          ? "#dc3545"
-                          : "#007bff",
+                            ? "#dc3545"
+                            : "#007bff",
                         color: isOwner
                           ? "#666"
                           : isFavorited
-                          ? "#dc3545"
-                          : "#007bff",
+                            ? "#dc3545"
+                            : "#007bff",
                         fontSize: "11px",
                         py: 0.8,
                         "&:hover": {
                           backgroundColor: isOwner
                             ? "transparent"
                             : isFavorited
-                            ? "#dc3545"
-                            : "#007bff",
+                              ? "#dc3545"
+                              : "#007bff",
                           color: isOwner ? "#666" : "white",
                         },
                         "&:disabled": {
@@ -2476,8 +2478,8 @@ const AdDetail: React.FC = () => {
                       {isOwner
                         ? "Kendi İlanınız"
                         : isFavorited
-                        ? "Favorilerden Çıkar"
-                        : "Favorilerime Ekle"}
+                          ? "Favorilerden Çıkar"
+                          : "Favorilerime Ekle"}
                     </Button>
                   </Box>
                 </Box>
@@ -2602,9 +2604,9 @@ const AdDetail: React.FC = () => {
                             const searchQuery = `${cityName}, ${districtName}, Turkey`;
                             window.open(
                               `https://www.google.com/maps/search/${encodeURIComponent(
-                                searchQuery
+                                searchQuery,
                               )}`,
-                              "_blank"
+                              "_blank",
                             );
                           }}
                         >
@@ -2631,9 +2633,9 @@ const AdDetail: React.FC = () => {
                             const districtName = ad.district?.name || "Merkez";
                             window.open(
                               `https://yandex.com.tr/maps/?text=${encodeURIComponent(
-                                cityName + " " + districtName
+                                cityName + " " + districtName,
                               )}`,
-                              "_blank"
+                              "_blank",
                             );
                           }}
                         >
@@ -2688,10 +2690,10 @@ const AdDetail: React.FC = () => {
                     {typeof ad.description === "string"
                       ? ad.description
                       : typeof ad.detailedInfo === "string"
-                      ? ad.detailedInfo
-                      : typeof ad.customFields?.detailedInfo === "string"
-                      ? ad.customFields.detailedInfo
-                      : "Açıklama bulunmuyor."}
+                        ? ad.detailedInfo
+                        : typeof ad.customFields?.detailedInfo === "string"
+                          ? ad.customFields.detailedInfo
+                          : "Açıklama bulunmuyor."}
                   </Typography>
                 </Box>
               </Box>
@@ -2744,8 +2746,8 @@ const AdDetail: React.FC = () => {
                       ad.detailedInfo.trim() !== ""
                         ? ad.detailedInfo
                         : typeof ad.customFields?.detailedInfo === "string"
-                        ? ad.customFields.detailedInfo
-                        : "Detaylı bilgi bulunmuyor."}
+                          ? ad.customFields.detailedInfo
+                          : "Detaylı bilgi bulunmuyor."}
                     </Typography>
                   </Box>
                 </Box>
@@ -2789,8 +2791,8 @@ const AdDetail: React.FC = () => {
                       {ad.category?.id === 9
                         ? "Araç Özellikleri ve Ekipmanlar"
                         : ad.category?.id === 10
-                        ? "Donanım Bilgisi"
-                        : "Araç Özellikleri"}
+                          ? "Donanım Bilgisi"
+                          : "Araç Özellikleri"}
                     </Typography>
                   </Box>
 
@@ -2807,7 +2809,7 @@ const AdDetail: React.FC = () => {
                       {ad.customFields?.features &&
                         typeof ad.customFields.features === "object" &&
                         Object.entries(
-                          ad.customFields.features as Record<string, boolean>
+                          ad.customFields.features as Record<string, boolean>,
                         )
                           .filter(([, value]) => value === true)
                           .map(([key]) => (
@@ -2851,7 +2853,7 @@ const AdDetail: React.FC = () => {
                               detailFeatures.safetyFeatures as Record<
                                 string,
                                 boolean
-                              >
+                              >,
                             )
                               .filter(([, value]) => value === true)
                               .forEach(([key]) => allFeatures.push(key));
@@ -2861,7 +2863,7 @@ const AdDetail: React.FC = () => {
                               detailFeatures.interiorFeatures as Record<
                                 string,
                                 boolean
-                              >
+                              >,
                             )
                               .filter(([, value]) => value === true)
                               .forEach(([key]) => allFeatures.push(key));
@@ -2871,7 +2873,7 @@ const AdDetail: React.FC = () => {
                               detailFeatures.exteriorFeatures as Record<
                                 string,
                                 boolean
-                              >
+                              >,
                             )
                               .filter(([, value]) => value === true)
                               .forEach(([key]) => allFeatures.push(key));
@@ -2881,7 +2883,7 @@ const AdDetail: React.FC = () => {
                               detailFeatures.multimediaFeatures as Record<
                                 string,
                                 boolean
-                              >
+                              >,
                             )
                               .filter(([, value]) => value === true)
                               .forEach(([key]) => allFeatures.push(key));
@@ -2896,7 +2898,7 @@ const AdDetail: React.FC = () => {
                             !detailFeatures.multimediaFeatures
                           ) {
                             return Object.entries(
-                              detailFeatures as Record<string, boolean>
+                              detailFeatures as Record<string, boolean>,
                             )
                               .filter(([, value]) => value === true)
                               .map(([key]) => (
@@ -2958,7 +2960,7 @@ const AdDetail: React.FC = () => {
                           ad.customFields.cekiciEkipmani as Record<
                             string,
                             boolean
-                          >
+                          >,
                         )
                           .filter(([, value]) => value === true)
                           .map(([key]) => (
@@ -2993,7 +2995,7 @@ const AdDetail: React.FC = () => {
                           ad.customFields.ekEkipmanlar as Record<
                             string,
                             boolean
-                          >
+                          >,
                         )
                           .filter(([, value]) => value === true)
                           .map(([key]) => (
@@ -3030,7 +3032,7 @@ const AdDetail: React.FC = () => {
                           ad.customFields.detailFeatures as Record<
                             string,
                             boolean
-                          >
+                          >,
                         )
                           .filter(([, value]) => value === true)
                           .map(([key]) => (
@@ -3151,25 +3153,25 @@ const AdDetail: React.FC = () => {
                                 console.error(
                                   "🚫 Video yükleme hatası:",
                                   video.id,
-                                  e.nativeEvent
+                                  e.nativeEvent,
                                 );
                               }}
                               onLoadStart={() => {
                                 console.log(
                                   "▶️ Video yüklenmeye başladı:",
-                                  video.id
+                                  video.id,
                                 );
                               }}
                               onLoadedData={() => {
                                 console.log(
                                   "✅ Video data yüklendi:",
-                                  video.id
+                                  video.id,
                                 );
                               }}
                               onCanPlay={() => {
                                 console.log(
                                   "🎬 Video oynatılabilir:",
-                                  video.id
+                                  video.id,
                                 );
                               }}
                               onLoadedMetadata={(e) => {
@@ -3188,7 +3190,7 @@ const AdDetail: React.FC = () => {
                                   if (cachedUrl) {
                                     console.log(
                                       "🔄 Using cached blob URL for video:",
-                                      video.id
+                                      video.id,
                                     );
                                     return cachedUrl;
                                   }
@@ -3197,7 +3199,7 @@ const AdDetail: React.FC = () => {
                                   if (!video.videoUrl) {
                                     console.warn(
                                       "Video URL bulunamadı:",
-                                      video
+                                      video,
                                     );
                                     return "";
                                   }
@@ -3207,7 +3209,7 @@ const AdDetail: React.FC = () => {
                                     console.warn(
                                       "Video URL string değil:",
                                       typeof video.videoUrl,
-                                      video.videoUrl
+                                      video.videoUrl,
                                     );
                                     return "";
                                   }
@@ -3218,7 +3220,7 @@ const AdDetail: React.FC = () => {
                                       "🎬 Converting data URL to blob for video:",
                                       video.id,
                                       "Size:",
-                                      video.videoUrl.length
+                                      video.videoUrl.length,
                                     );
 
                                     try {
@@ -3232,7 +3234,7 @@ const AdDetail: React.FC = () => {
                                       // Base64'ü binary'ye çevir
                                       const binaryString = atob(base64Data);
                                       const bytes = new Uint8Array(
-                                        binaryString.length
+                                        binaryString.length,
                                       );
                                       for (
                                         let i = 0;
@@ -3261,13 +3263,13 @@ const AdDetail: React.FC = () => {
                                         "✅ Blob URL created for video:",
                                         video.id,
                                         "Blob size:",
-                                        blob.size
+                                        blob.size,
                                       );
                                       return blobUrl;
                                     } catch (blobError) {
                                       console.error(
                                         "❌ Blob conversion failed, using original data URL:",
-                                        blobError
+                                        blobError,
                                       );
                                       return video.videoUrl;
                                     }
@@ -3281,13 +3283,13 @@ const AdDetail: React.FC = () => {
                                     "🎬 Created data URL for video:",
                                     video.id,
                                     "Size:",
-                                    dataUrl.length
+                                    dataUrl.length,
                                   );
                                   return dataUrl;
                                 } catch (error) {
                                   console.error(
                                     "Video URL oluşturma hatası:",
-                                    error
+                                    error,
                                   );
                                   return "";
                                 }
@@ -3306,7 +3308,7 @@ const AdDetail: React.FC = () => {
                               </Box>
                             )}
                           </Box>
-                        )
+                        ),
                       )}
                     </Box>
                   </Box>
@@ -3317,7 +3319,7 @@ const AdDetail: React.FC = () => {
               {ad.customFields?.expertiseInfo &&
                 typeof ad.customFields.expertiseInfo === "object" &&
                 Object.keys(
-                  ad.customFields.expertiseInfo as Record<string, unknown>
+                  ad.customFields.expertiseInfo as Record<string, unknown>,
                 ).length > 0 && (
                   <Box
                     sx={{
@@ -3589,7 +3591,7 @@ const AdDetail: React.FC = () => {
                                           target.setAttribute("opacity", "1");
                                           target.setAttribute(
                                             "stroke-width",
-                                            "4"
+                                            "4",
                                           );
 
                                           const rect =
@@ -3608,7 +3610,7 @@ const AdDetail: React.FC = () => {
                                           target.setAttribute("opacity", "0.9");
                                           target.setAttribute(
                                             "stroke-width",
-                                            "3"
+                                            "3",
                                           );
 
                                           setTooltipData((prev) => ({
@@ -3965,13 +3967,13 @@ const AdDetail: React.FC = () => {
                           "Benzer ilan tıklandı:",
                           similarAd.id,
                           "Mevcut ID:",
-                          id
+                          id,
                         );
                         // Aynı ilan ID'sine gitmemek için kontrol
                         if (similarAd.id !== Number(id)) {
                           console.log(
                             "Navigate ediliyor:",
-                            `/ad/${similarAd.id}`
+                            `/ad/${similarAd.id}`,
                           );
                           // React Router navigate kullan
                           navigate(`/ad/${similarAd.id}`);

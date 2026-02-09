@@ -41,6 +41,7 @@ interface Ad {
   title: string;
   status: string;
   price: number;
+  currency?: string;
   createdAt: string;
   viewCount: number;
   customFields?: {
@@ -166,7 +167,7 @@ const AllAds: React.FC = () => {
   };
 
   const getStatusColor = (
-    status: string
+    status: string,
   ): "success" | "warning" | "error" | "default" => {
     switch (status) {
       case "APPROVED":

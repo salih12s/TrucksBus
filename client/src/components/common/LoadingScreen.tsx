@@ -33,7 +33,7 @@ const LoadingContainer = styled(Box)({
   left: 0,
   width: "100vw",
   height: "100vh",
-  background: "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 50%, #d0d0d0 100%)",
+  background: "#D7D7D5",
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
@@ -44,8 +44,8 @@ const LoadingContainer = styled(Box)({
 
 const LogoContainer = styled(Box)({
   position: "relative",
-  width: "450px",
-  height: "220px",
+  width: "300px",
+  height: "150px",
   marginBottom: "40px",
   display: "flex",
   alignItems: "center",
@@ -56,7 +56,7 @@ const Logo = styled("img")({
   width: "100%",
   height: "100%",
   objectFit: "contain",
-  filter: "drop-shadow(0 8px 16px rgba(0, 0, 0, 0.25))",
+  borderRadius: "12px",
 });
 
 const LoadingText = styled(Typography)({
@@ -110,7 +110,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
     <LoadingContainer>
       <LogoContainer>
         <Logo
-          src="/Trucksbus.png"
+          src="/LogoNew.jpeg"
           alt="TrucksBus Logo"
           onError={() => {
             console.log("Logo yüklenemedi");

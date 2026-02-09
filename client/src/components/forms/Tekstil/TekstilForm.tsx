@@ -29,6 +29,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import {
   ArrowForward,
@@ -130,6 +132,7 @@ interface TekstilFormData {
   title: string;
   description: string;
   price: string;
+  currency: string;
   year: number;
   dorseBrand: string;
 
@@ -222,6 +225,7 @@ const TekstilForm: React.FC = () => {
     title: "",
     description: "",
     price: "",
+    currency: "TRY",
     year: new Date().getFullYear(),
     dorseBrand: "Seçiniz",
     takasli: "Hayır",
@@ -306,7 +310,7 @@ const TekstilForm: React.FC = () => {
 
           // Slug-based API kullanarak variant detayını çek
           const variantResponse = await apiClient.get(
-            `/categories/dorse/brands/${brandSlug}/models/${modelSlug}/variants/${variantSlug}`
+            `/categories/dorse/brands/${brandSlug}/models/${modelSlug}/variants/${variantSlug}`,
           );
           const variant = variantResponse.data as Variant;
 
@@ -314,7 +318,7 @@ const TekstilForm: React.FC = () => {
             // Model detayını çek
             setLoadingModels(true);
             const modelResponse = await apiClient.get(
-              `/models/${variant.modelId}`
+              `/models/${variant.modelId}`,
             );
             const model = modelResponse.data as Model;
 
@@ -322,24 +326,24 @@ const TekstilForm: React.FC = () => {
               // Brand detayını çek
               setLoadingBrands(true);
               const brandResponse = await apiClient.get(
-                `/brands/id/${model.brandId}`
+                `/brands/id/${model.brandId}`,
               );
               const brand = brandResponse.data as Brand;
 
               if (brand) {
                 // Tüm ilgili listeleri yükle
                 const brandsResponse = await apiClient.get(
-                  "/brands?category=Dorse"
+                  "/brands?category=Dorse",
                 );
                 setBrands(brandsResponse.data as Brand[]);
 
                 const modelsResponse = await apiClient.get(
-                  `/brands/${brand.id}/models`
+                  `/brands/${brand.id}/models`,
                 );
                 setModels(modelsResponse.data as Model[]);
 
                 const variantsResponse = await apiClient.get(
-                  `/models/${model.id}/variants`
+                  `/models/${model.id}/variants`,
                 );
                 setVariants(variantsResponse.data as Variant[]);
 
@@ -430,7 +434,7 @@ const TekstilForm: React.FC = () => {
 
   const handleInputChange = (
     field: keyof TekstilFormData,
-    value: string | number | boolean
+    value: string | number | boolean,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -548,7 +552,7 @@ const TekstilForm: React.FC = () => {
 
       // Create preview URLs
       const newPreviews = validVideos.map((video) =>
-        URL.createObjectURL(video)
+        URL.createObjectURL(video),
       );
       setVideoPreviews((prev) => [...prev, ...newPreviews].slice(0, 3));
 
@@ -609,10 +613,10 @@ const TekstilForm: React.FC = () => {
 
       // Konum bilgileri - hem ID hem de isim
       const selectedCity = cities.find(
-        (c) => c.id.toString() === formData.cityId
+        (c) => c.id.toString() === formData.cityId,
       );
       const selectedDistrict = districts.find(
-        (d) => d.id.toString() === formData.districtId
+        (d) => d.id.toString() === formData.districtId,
       );
 
       formDataToSend.append("city", selectedCity?.name || "");
@@ -624,7 +628,7 @@ const TekstilForm: React.FC = () => {
       formDataToSend.append("warranty", formData.warranty ? "true" : "false");
       formDataToSend.append(
         "negotiable",
-        formData.negotiable ? "true" : "false"
+        formData.negotiable ? "true" : "false",
       );
       formDataToSend.append("exchange", formData.exchange ? "true" : "false");
 
@@ -668,7 +672,7 @@ const TekstilForm: React.FC = () => {
       setError(
         error.response?.data?.message ||
           error.message ||
-          "İlan oluşturulurken bir hata oluştu"
+          "İlan oluşturulurken bir hata oluştu",
       );
     } finally {
       setLoading(false);
@@ -807,7 +811,7 @@ const TekstilForm: React.FC = () => {
                 getOptionLabel={(option) => option.name}
                 value={
                   variants.find(
-                    (v) => v.id.toString() === formData.variantId
+                    (v) => v.id.toString() === formData.variantId,
                   ) || null
                 }
                 onChange={(_, newValue) => {
@@ -815,7 +819,7 @@ const TekstilForm: React.FC = () => {
                     // Sadece URL'den variant gelmiyorsa değiştirilebilir
                     handleInputChange(
                       "variantId",
-                      newValue?.id.toString() || ""
+                      newValue?.id.toString() || "",
                     );
                   }
                 }}
@@ -1161,7 +1165,7 @@ const TekstilForm: React.FC = () => {
                 getOptionLabel={(option) => option.name}
                 value={
                   cities.find(
-                    (city) => city.id.toString() === formData.cityId
+                    (city) => city.id.toString() === formData.cityId,
                   ) || null
                 }
                 onChange={(_, newValue) => {
@@ -1200,7 +1204,8 @@ const TekstilForm: React.FC = () => {
                 getOptionLabel={(option) => option.name}
                 value={
                   districts.find(
-                    (district) => district.id.toString() === formData.districtId
+                    (district) =>
+                      district.id.toString() === formData.districtId,
                   ) || null
                 }
                 onChange={(_, newValue) => {
@@ -1248,7 +1253,32 @@ const TekstilForm: React.FC = () => {
                   </InputAdornment>
                 ),
                 endAdornment: (
-                  <InputAdornment position="end">TL</InputAdornment>
+                  <InputAdornment position="end">
+                    <ToggleButtonGroup
+                      value={formData.currency || "TRY"}
+                      exclusive
+                      onChange={(_, v) =>
+                        v &&
+                        setFormData((prev: any) => ({ ...prev, currency: v }))
+                      }
+                      size="small"
+                      sx={{
+                        "& .MuiToggleButton-root": {
+                          py: 0.5,
+                          px: 1,
+                          fontSize: "0.75rem",
+                          "&.Mui-selected": {
+                            bgcolor: "#D34237",
+                            color: "#fff",
+                          },
+                        },
+                      }}
+                    >
+                      <ToggleButton value="TRY">₺ TL</ToggleButton>
+                      <ToggleButton value="USD">$ USD</ToggleButton>
+                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                    </ToggleButtonGroup>
+                  </InputAdornment>
                 ),
               }}
               placeholder="150000"
