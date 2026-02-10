@@ -308,22 +308,30 @@ const Profile: React.FC = () => {
           <Tabs
             value={currentTab}
             onChange={(_, newValue) => setCurrentTab(newValue)}
+            variant={isMobile ? "scrollable" : "standard"}
+            scrollButtons={isMobile ? "auto" : false}
             sx={{
               borderBottom: 1,
               borderColor: "divider",
               "& .MuiTab-root": {
                 textTransform: "none",
                 fontWeight: 500,
-                fontSize: "1rem",
+                fontSize: { xs: "0.875rem", md: "1rem" },
+                minWidth: { xs: "auto", md: 160 },
+                px: { xs: 2, md: 3 },
               },
             }}
           >
             <Tab
               icon={<PersonIcon />}
-              label="Kişisel Bilgiler"
+              label={isMobile ? "Profil" : "Kişisel Bilgiler"}
               iconPosition="start"
             />
-            <Tab icon={<Star />} label="Aktif Dopingler" iconPosition="start" />
+            <Tab
+              icon={<Star />}
+              label={isMobile ? "Dopingler" : "Aktif Dopingler"}
+              iconPosition="start"
+            />
             <Tab icon={<Security />} label="Güvenlik" iconPosition="start" />
           </Tabs>
         </Paper>
@@ -518,8 +526,8 @@ const Profile: React.FC = () => {
                         {subscription.packageType === "trucks"
                           ? "Trucks"
                           : subscription.packageType === "trucks_plus"
-                          ? "Trucks+"
-                          : "TrucksBus"}
+                            ? "Trucks+"
+                            : "TrucksBus"}
                       </Typography>
                       {subscription.isTrial && (
                         <Chip
@@ -555,7 +563,7 @@ const Profile: React.FC = () => {
                       <Typography variant="body2">Bitiş Tarihi</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
                         {new Date(subscription.endDate).toLocaleDateString(
-                          "tr-TR"
+                          "tr-TR",
                         )}
                       </Typography>
                     </Box>

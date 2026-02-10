@@ -41,7 +41,7 @@ const FeedbackManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(
-    null
+    null,
   );
   const [responseModal, setResponseModal] = useState(false);
   const [response, setResponse] = useState("");
@@ -72,7 +72,7 @@ const FeedbackManagement: React.FC = () => {
   }, []);
 
   const getPriorityColor = (
-    priority: string
+    priority: string,
   ):
     | "default"
     | "primary"
@@ -96,7 +96,7 @@ const FeedbackManagement: React.FC = () => {
   };
 
   const getStatusColor = (
-    status: string
+    status: string,
   ):
     | "default"
     | "primary"
@@ -183,7 +183,7 @@ const FeedbackManagement: React.FC = () => {
         {
           status: responseStatus,
           adminResponse: response.trim() || undefined,
-        }
+        },
       );
 
       if (result.success) {
@@ -223,16 +223,22 @@ const FeedbackManagement: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: 2,
           mb: 3,
         }}
       >
-        <Typography variant="h4" component="h1">
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{ fontSize: { xs: "1.5rem", md: "2.125rem" } }}
+        >
           Geri Bildirim Yönetimi
         </Typography>
         <Button
@@ -240,6 +246,7 @@ const FeedbackManagement: React.FC = () => {
           startIcon={<RefreshIcon />}
           onClick={loadFeedbacks}
           disabled={loading}
+          size="small"
         >
           Yenile
         </Button>
@@ -253,8 +260,8 @@ const FeedbackManagement: React.FC = () => {
 
       <Card>
         <CardContent>
-          <TableContainer component={Paper}>
-            <Table>
+          <TableContainer component={Paper} sx={{ overflowX: "auto" }}>
+            <Table sx={{ minWidth: 800 }}>
               <TableHead>
                 <TableRow>
                   <TableCell>Kullanıcı</TableCell>
@@ -308,7 +315,7 @@ const FeedbackManagement: React.FC = () => {
                     <TableCell>
                       <Typography variant="caption">
                         {new Date(feedback.createdAt).toLocaleDateString(
-                          "tr-TR"
+                          "tr-TR",
                         )}
                       </Typography>
                     </TableCell>
@@ -432,7 +439,7 @@ const FeedbackManagement: React.FC = () => {
                     >
                       Yanıt Tarihi:{" "}
                       {new Date(
-                        selectedFeedback.adminResponseAt
+                        selectedFeedback.adminResponseAt,
                       ).toLocaleString("tr-TR")}
                     </Typography>
                   )}

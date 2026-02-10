@@ -400,15 +400,26 @@ const PendingAds: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ mt: { xs: 2, md: 4 }, px: { xs: 1, sm: 2, md: 3 } }}
+      >
         <Typography>Yükleniyor...</Typography>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
+    <Container
+      maxWidth="lg"
+      sx={{ mt: { xs: 2, md: 4 }, mb: 4, px: { xs: 1, sm: 2, md: 3 } }}
+    >
+      <Typography
+        variant="h4"
+        component="h1"
+        gutterBottom
+        sx={{ fontSize: { xs: "1.5rem", md: "2.125rem" } }}
+      >
         Onay Bekleyen İlanlar
       </Typography>
 
@@ -421,18 +432,25 @@ const PendingAds: React.FC = () => {
           {ads.map((ad) => (
             <Box key={ad.id}>
               <Card elevation={3}>
-                <CardContent>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
                   {/* İlan Başlığı ve Temel Bilgiler */}
                   <Box
                     sx={{
                       display: "flex",
+                      flexDirection: { xs: "column", md: "row" },
                       justifyContent: "space-between",
-                      alignItems: "flex-start",
+                      alignItems: { xs: "stretch", md: "flex-start" },
+                      gap: 2,
                       mb: 2,
                     }}
                   >
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="h6" component="h2" gutterBottom>
+                      <Typography
+                        variant="h6"
+                        component="h2"
+                        gutterBottom
+                        sx={{ fontSize: { xs: "1rem", md: "1.25rem" } }}
+                      >
                         {ad.title}
                       </Typography>
                       <Box
@@ -477,13 +495,21 @@ const PendingAds: React.FC = () => {
                     </Box>
 
                     {/* Aksiyon Butonları */}
-                    <Box sx={{ display: "flex", gap: 1, ml: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        flexWrap: "wrap",
+                        justifyContent: { xs: "flex-start", md: "flex-end" },
+                      }}
+                    >
                       <Button
                         variant="contained"
                         color="success"
                         startIcon={<CheckCircle />}
                         onClick={() => handleApprove(ad.id)}
                         size="small"
+                        sx={{ fontSize: { xs: "0.7rem", sm: "0.8125rem" } }}
                       >
                         Onayla
                       </Button>
@@ -493,12 +519,14 @@ const PendingAds: React.FC = () => {
                         startIcon={<Cancel />}
                         onClick={() => openRejectDialog(ad)}
                         size="small"
+                        sx={{ fontSize: { xs: "0.7rem", sm: "0.8125rem" } }}
                       >
                         Reddet
                       </Button>
                       <IconButton
                         onClick={() => toggleCardExpansion(ad.id)}
                         color="primary"
+                        size="small"
                       >
                         {expandedCard === ad.id ? (
                           <ExpandLess />

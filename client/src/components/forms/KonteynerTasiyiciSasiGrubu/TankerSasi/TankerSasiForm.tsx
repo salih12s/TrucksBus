@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Box,
@@ -807,9 +807,9 @@ const TankerSasiForm: React.FC = () => {
                         },
                       }}
                     >
-                      <ToggleButton value="TRY">₺ TL</ToggleButton>
-                      <ToggleButton value="USD">$ USD</ToggleButton>
-                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                      <ToggleButton value="TRY">₺</ToggleButton>
+                      <ToggleButton value="USD">$</ToggleButton>
+                      <ToggleButton value="EUR">€</ToggleButton>
                     </ToggleButtonGroup>
                   </InputAdornment>
                 ),

@@ -43,6 +43,36 @@ const theme = createTheme({
       main: "#dc004e",
     },
   },
+  components: {
+    // Global ToggleButton styles for mobile currency selectors
+    MuiToggleButton: {
+      styleOverrides: {
+        root: {
+          "@media (max-width: 600px)": {
+            padding: "4px 6px",
+            fontSize: "0.65rem",
+            minWidth: "40px",
+          },
+        },
+        sizeSmall: {
+          "@media (max-width: 600px)": {
+            padding: "2px 4px",
+            fontSize: "0.6rem",
+            minWidth: "32px",
+          },
+        },
+      },
+    },
+    MuiToggleButtonGroup: {
+      styleOverrides: {
+        root: {
+          "@media (max-width: 600px)": {
+            flexWrap: "nowrap",
+          },
+        },
+      },
+    },
+  },
 });
 
 createRoot(document.getElementById("root")!).render(
@@ -50,7 +80,7 @@ createRoot(document.getElementById("root")!).render(
   <ThemeProvider theme={theme}>
     <CssBaseline />
     <App />
-  </ThemeProvider>
+  </ThemeProvider>,
   // </StrictMode>
 );
 

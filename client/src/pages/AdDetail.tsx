@@ -410,10 +410,6 @@ const AdDetail: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [id]);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("tr-TR").format(price);
-  };
-
   const formatMileage = (mileage: number) => {
     return new Intl.NumberFormat("tr-TR").format(mileage);
   };
@@ -892,10 +888,11 @@ const AdDetail: React.FC = () => {
             <Box
               sx={{
                 display: "flex",
-                alignItems: "center",
-                gap: 3,
+                alignItems: { xs: "flex-start", md: "center" },
+                gap: { xs: 1.5, md: 3 },
                 mb: 3,
                 flexWrap: "wrap",
+                flexDirection: { xs: "column", sm: "row" },
               }}
             >
               {/* Back Button */}
@@ -903,10 +900,11 @@ const AdDetail: React.FC = () => {
                 variant="outlined"
                 startIcon={<ArrowBackIos />}
                 onClick={() => navigate(-1)}
+                size="small"
                 sx={{
                   borderColor: "#007bff",
                   color: "#007bff",
-                  fontSize: "14px",
+                  fontSize: { xs: "12px", md: "14px" },
                   "&:hover": {
                     backgroundColor: "#007bff",
                     color: "white",
@@ -916,41 +914,58 @@ const AdDetail: React.FC = () => {
                 Geri Dön
               </Button>
 
-              {/* Ad Info */}
-              <Box sx={{ fontSize: "14px", color: "#666" }}>
-                <strong>İlan No:</strong> #{ad.id || "56"}
-              </Box>
-              <Box sx={{ fontSize: "14px", color: "#666" }}>
-                <strong>İlan Tarihi:</strong>{" "}
-                {ad.createdAt
-                  ? new Date(ad.createdAt).toLocaleDateString("tr-TR")
-                  : "22.09.2025"}
-              </Box>
-              <Box sx={{ fontSize: "14px", color: "#666" }}>
-                <strong>Kategori:</strong>{" "}
-                {ad.category?.name || "Minibüs & Midibüs"}
-              </Box>
+              {/* Ad Info - Wrapped in flex container for mobile */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: { xs: 1, md: 3 },
+                  alignItems: "center",
+                }}
+              >
+                <Box
+                  sx={{ fontSize: { xs: "12px", md: "14px" }, color: "#666" }}
+                >
+                  <strong>İlan No:</strong> #{ad.id || "56"}
+                </Box>
+                <Box
+                  sx={{ fontSize: { xs: "12px", md: "14px" }, color: "#666" }}
+                >
+                  <strong>İlan Tarihi:</strong>{" "}
+                  {ad.createdAt
+                    ? new Date(ad.createdAt).toLocaleDateString("tr-TR")
+                    : "22.09.2025"}
+                </Box>
+                <Box
+                  sx={{ fontSize: { xs: "12px", md: "14px" }, color: "#666" }}
+                >
+                  <strong>Kategori:</strong>{" "}
+                  {ad.category?.name || "Minibüs & Midibüs"}
+                </Box>
 
-              {/* Marka gösterimi - Dorse, Römork, Oto Kurtarıcı ve diğer kategoriler için */}
-              <Box sx={{ fontSize: "14px", color: "#666" }}>
-                <strong>
+                {/* Marka gösterimi - Dorse, Römork, Oto Kurtarıcı ve diğer kategoriler için */}
+                <Box
+                  sx={{ fontSize: { xs: "12px", md: "14px" }, color: "#666" }}
+                >
+                  <strong>
+                    {ad.category?.name?.toLowerCase() === "dorse"
+                      ? "Dorse Markası:"
+                      : ad.category?.name?.toLowerCase() === "römork"
+                        ? "Römork Markası:"
+                        : ad.category?.name?.includes("Oto Kurtarıcı")
+                          ? "Araç Markası:"
+                          : "Marka:"}
+                  </strong>{" "}
                   {ad.category?.name?.toLowerCase() === "dorse"
-                    ? "Dorse Markası:"
+                    ? (ad.customFields?.dorseBrand as string) || "Belirtilmemiş"
                     : ad.category?.name?.toLowerCase() === "römork"
-                      ? "Römork Markası:"
-                      : ad.category?.name?.includes("Oto Kurtarıcı")
-                        ? "Araç Markası:"
-                        : "Marka:"}
-                </strong>{" "}
-                {ad.category?.name?.toLowerCase() === "dorse"
-                  ? (ad.customFields?.dorseBrand as string) || "Belirtilmemiş"
-                  : ad.category?.name?.toLowerCase() === "römork"
-                    ? (ad.customFields?.romorkMarkasi as string) ||
-                      "Belirtilmemiş"
-                    : ad.category?.name?.includes("Oto Kurtarıcı")
-                      ? (ad.customFields?.vehicleBrandName as string) ||
+                      ? (ad.customFields?.romorkMarkasi as string) ||
                         "Belirtilmemiş"
-                      : ad.brand?.name || "Volkswagen"}
+                      : ad.category?.name?.includes("Oto Kurtarıcı")
+                        ? (ad.customFields?.vehicleBrandName as string) ||
+                          "Belirtilmemiş"
+                        : ad.brand?.name || "Volkswagen"}
+                </Box>
               </Box>
 
               {/* Tipi ve Variant bilgileri sadece Dorse, Römork ve Oto Kurtarıcı kategorisi DIŞINDA gösterilir */}
@@ -977,7 +992,7 @@ const AdDetail: React.FC = () => {
               <Typography
                 variant="h4"
                 sx={{
-                  fontSize: "24px",
+                  fontSize: { xs: "18px", md: "24px" },
                   fontWeight: "bold",
                   color: "#333",
                   mb: 2,
@@ -1000,7 +1015,7 @@ const AdDetail: React.FC = () => {
                 <Typography
                   variant="h5"
                   sx={{
-                    fontSize: "28px",
+                    fontSize: { xs: "22px", md: "28px" },
                     fontWeight: "bold",
                     color: "#dc3545",
                   }}
@@ -1044,7 +1059,7 @@ const AdDetail: React.FC = () => {
                       <Box
                         sx={{
                           width: "100%",
-                          height: 400,
+                          height: { xs: 280, sm: 350, md: 400 },
                           backgroundColor: "#f8f9fa",
                           border: "1px solid #e0e0e0",
                           borderRadius: 1,
@@ -4125,7 +4140,10 @@ const AdDetail: React.FC = () => {
                             }}
                           >
                             {similarAd.price
-                              ? `${formatPrice(similarAd.price)} TL`
+                              ? formatPriceUtil(
+                                  similarAd.price,
+                                  similarAd.currency,
+                                )
                               : "Fiyat Yok"}
                           </Typography>
                         </Box>

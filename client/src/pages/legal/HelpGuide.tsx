@@ -155,8 +155,11 @@ const HelpGuide: React.FC = () => {
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
 
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, md: 3 }, flex: 1 }}
+      >
+        <Paper elevation={3} sx={{ p: { xs: 2, md: 4 }, borderRadius: 2 }}>
           <Typography
             variant="h3"
             component="h1"
@@ -166,13 +169,17 @@ const HelpGuide: React.FC = () => {
               fontWeight: "bold",
               textAlign: "center",
               mb: 4,
+              fontSize: { xs: "1.5rem", md: "2.5rem" },
             }}
           >
             Yardım Rehberi
           </Typography>
 
           <Alert severity="info" sx={{ mb: 4 }}>
-            <Typography variant="body2">
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "0.8rem", md: "0.875rem" } }}
+            >
               TrucksBus platformunu en verimli şekilde kullanmanız için
               hazırlanmış kapsamlı yardım rehberi. Aradığınızı bulamazsanız
               destek ekibimizle iletişime geçin.
@@ -183,14 +190,32 @@ const HelpGuide: React.FC = () => {
           <Typography
             variant="h5"
             gutterBottom
-            sx={{ color: "#313B4C", fontWeight: "bold", mb: 3 }}
+            sx={{
+              color: "#313B4C",
+              fontWeight: "bold",
+              mb: 3,
+              fontSize: { xs: "1.25rem", md: "1.5rem" },
+            }}
           >
             Ana Yardım Konuları
           </Typography>
 
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 6 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: { xs: 2, md: 3 },
+              mb: { xs: 4, md: 6 },
+            }}
+          >
             {helpCategories.map((category, index) => (
-              <Box key={index} sx={{ flex: "1 1 300px", minWidth: "300px" }}>
+              <Box
+                key={index}
+                sx={{
+                  flex: "1 1 280px",
+                  minWidth: { xs: "100%", sm: "280px" },
+                }}
+              >
                 <Card
                   elevation={2}
                   sx={{
@@ -202,7 +227,9 @@ const HelpGuide: React.FC = () => {
                     position: "relative",
                   }}
                 >
-                  <CardContent sx={{ flex: 1, textAlign: "center", p: 3 }}>
+                  <CardContent
+                    sx={{ flex: 1, textAlign: "center", p: { xs: 2, md: 3 } }}
+                  >
                     {category.badge && (
                       <Chip
                         label={category.badge}
@@ -215,7 +242,12 @@ const HelpGuide: React.FC = () => {
                     <Typography
                       variant="h6"
                       component="h3"
-                      sx={{ mt: 2, mb: 1, fontWeight: "bold" }}
+                      sx={{
+                        mt: 2,
+                        mb: 1,
+                        fontWeight: "bold",
+                        fontSize: { xs: "1rem", md: "1.25rem" },
+                      }}
                     >
                       {category.title}
                     </Typography>

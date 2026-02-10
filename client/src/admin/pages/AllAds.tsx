@@ -211,41 +211,69 @@ const AllAds: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
       {/* Header */}
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: 2,
           mb: 4,
         }}
       >
-        <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
+            fontWeight: "bold",
+            fontSize: { xs: "1.5rem", md: "2.125rem" },
+          }}
+        >
           Tüm İlanlar
         </Typography>
-        <Button onClick={fetchAds} startIcon={<Refresh />} variant="outlined">
+        <Button
+          onClick={fetchAds}
+          startIcon={<Refresh />}
+          variant="outlined"
+          size="small"
+        >
           Yenile
         </Button>
       </Box>
 
       {/* Filters */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3 }}>
         <Typography
           variant="h6"
           gutterBottom
-          sx={{ display: "flex", alignItems: "center" }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            fontSize: { xs: "1rem", md: "1.25rem" },
+          }}
         >
           <FilterIcon sx={{ mr: 1 }} />
           Filtreler
         </Typography>
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
           <TextField
             placeholder="İlan ara..."
             value={searchTerm}
             onChange={handleSearchChange}
             size="small"
-            sx={{ minWidth: 250 }}
+            sx={{
+              minWidth: { xs: "100%", sm: 200 },
+              flex: { xs: "1 1 100%", sm: "0 1 auto" },
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -255,7 +283,7 @@ const AllAds: React.FC = () => {
             }}
           />
 
-          <FormControl size="small" sx={{ minWidth: 150 }}>
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 150 } }}>
             <InputLabel>Durum</InputLabel>
             <Select
               value={statusFilter}
@@ -270,7 +298,7 @@ const AllAds: React.FC = () => {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 150 }}>
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 150 } }}>
             <InputLabel>Kategori</InputLabel>
             <Select
               value={categoryFilter}

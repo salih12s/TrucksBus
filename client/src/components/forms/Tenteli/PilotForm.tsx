@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store";
@@ -1403,9 +1403,9 @@ const PilotForm: React.FC = () => {
                         },
                       }}
                     >
-                      <ToggleButton value="TRY">₺ TL</ToggleButton>
-                      <ToggleButton value="USD">$ USD</ToggleButton>
-                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                      <ToggleButton value="TRY">₺</ToggleButton>
+                      <ToggleButton value="USD">$</ToggleButton>
+                      <ToggleButton value="EUR">€</ToggleButton>
                     </ToggleButtonGroup>
                   </InputAdornment>
                 ),

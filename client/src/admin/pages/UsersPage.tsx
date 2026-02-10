@@ -81,14 +81,14 @@ const UsersPage: React.FC = () => {
   const toggleUserStatus = async (userId: number, currentStatus: boolean) => {
     try {
       const response = await apiClient.patch(
-        `/auth/users/${userId}/toggle-status`
+        `/auth/users/${userId}/toggle-status`,
       );
 
       // Başarılı ise listeyi güncelle
       setUsers(
         users.map((user) =>
-          user.id === userId ? { ...user, isActive: !currentStatus } : user
-        )
+          user.id === userId ? { ...user, isActive: !currentStatus } : user,
+        ),
       );
 
       // Başarı mesajı
@@ -120,7 +120,7 @@ const UsersPage: React.FC = () => {
       (user.firstName &&
         user.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (user.lastName &&
-        user.lastName.toLowerCase().includes(searchTerm.toLowerCase()))
+        user.lastName.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const getDisplayName = (user: User) => {
@@ -144,8 +144,10 @@ const UsersPage: React.FC = () => {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: 2,
           mb: 4,
         }}
       >
@@ -153,11 +155,19 @@ const UsersPage: React.FC = () => {
           <Typography
             variant="h4"
             component="h1"
-            sx={{ fontWeight: "bold", mb: 1 }}
+            sx={{
+              fontWeight: "bold",
+              mb: 1,
+              fontSize: { xs: "1.5rem", md: "2.125rem" },
+            }}
           >
             Kullanıcılar
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ fontSize: { xs: "0.875rem", md: "1rem" } }}
+          >
             Tüm kayıtlı kullanıcıları görüntüleyin ve yönetin
           </Typography>
         </Box>
@@ -223,8 +233,12 @@ const UsersPage: React.FC = () => {
               <CircularProgress />
             </Box>
           ) : (
-            <TableContainer component={Paper} variant="outlined">
-              <Table>
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{ overflowX: "auto" }}
+            >
+              <Table sx={{ minWidth: 800 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Kullanıcı</TableCell>
@@ -314,8 +328,8 @@ const UsersPage: React.FC = () => {
                                 user.role === "ADMIN"
                                   ? "Admin kullanıcısı engellenemez"
                                   : user.isActive
-                                  ? "Kullanıcıyı engelle"
-                                  : "Kullanıcıyı etkinleştir"
+                                    ? "Kullanıcıyı engelle"
+                                    : "Kullanıcıyı etkinleştir"
                               }
                             >
                               {user.isActive ? (

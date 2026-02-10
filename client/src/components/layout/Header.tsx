@@ -131,6 +131,9 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
             alt="TrucksBus"
             style={{
               height: isMobile ? 42 : isTablet ? 52 : 62,
+              marginBottom: isMobile ? 2 : 5,
+              marginRight: isMobile ? 0.5 : -8,
+              marginLeft: isMobile ? 0.5 : -8,
               transition: "all 0.3s ease",
               borderRadius: "8px",
             }}
@@ -155,9 +158,9 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: isMobile ? 0.3 : isTablet ? 0.5 : 0.8,
+            gap: isMobile ? 0.2 : isTablet ? 0.5 : 0.8,
             marginLeft: "auto", // Push to right
-            marginRight: isMobile ? 1 : isTablet ? 2 : 3, // Ortaya yaklaştır
+            marginRight: isMobile ? 0.5 : isTablet ? 2 : 3,
             position: "relative",
             zIndex: 2,
           }}
@@ -167,9 +170,10 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
               {/* Authenticated user toolbar */}
               <IconButton
                 color="inherit"
+                size={isMobile ? "small" : "medium"}
                 sx={{
                   color: "#333",
-                  padding: isMobile ? "6px" : "8px",
+                  padding: isMobile ? "4px" : "8px",
                   borderRadius: "8px",
                   transition: "all 0.2s ease",
                   "&:hover": {
@@ -180,16 +184,17 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                 }}
                 onClick={() => navigate("/messages")}
               >
-                <MessageIcon sx={{ fontSize: isMobile ? 22 : 24 }} />
+                <MessageIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
               </IconButton>
 
               <NotificationDropdown />
 
               <IconButton
                 color="inherit"
+                size={isMobile ? "small" : "medium"}
                 sx={{
                   color: "#333",
-                  padding: isMobile ? "6px" : "8px",
+                  padding: isMobile ? "4px" : "8px",
                   borderRadius: "8px",
                   transition: "all 0.2s ease",
                   "&:hover": {
@@ -207,18 +212,22 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                     "& .MuiBadge-badge": {
                       backgroundColor: "#D34237",
                       color: "white",
+                      fontSize: isMobile ? "0.6rem" : "0.75rem",
+                      minWidth: isMobile ? 16 : 20,
+                      height: isMobile ? 16 : 20,
                     },
                   }}
                 >
-                  <BookmarkIcon sx={{ fontSize: isMobile ? 22 : 24 }} />
+                  <BookmarkIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
                 </Badge>
               </IconButton>
 
               <IconButton
                 color="inherit"
+                size={isMobile ? "small" : "medium"}
                 sx={{
                   color: "#333",
-                  padding: isMobile ? "6px" : "8px",
+                  padding: isMobile ? "4px" : "8px",
                   borderRadius: "8px",
                   transition: "all 0.2s ease",
                   "&:hover": {
@@ -229,7 +238,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                 }}
                 onClick={() => setFeedbackModalOpen(true)}
               >
-                <FeedbackIcon sx={{ fontSize: isMobile ? 22 : 24 }} />
+                <FeedbackIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
               </IconButton>
 
               {/* Post Ad button - responsive */}
@@ -237,14 +246,15 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                 variant="contained"
                 component={RouterLink}
                 to="/category-selection"
+                size="small"
                 sx={{
                   backgroundColor: "#D34237",
                   color: "white",
-                  ml: 1,
-                  fontSize: isMobile ? "0.75rem" : "0.85rem",
-                  padding: isMobile ? "6px 12px" : "8px 16px",
-                  minWidth: isMobile ? "auto" : "70px",
-                  minHeight: isMobile ? "32px" : "36px",
+                  ml: 0.5,
+                  fontSize: isMobile ? "0.65rem" : "0.85rem",
+                  padding: isMobile ? "4px 8px" : "8px 16px",
+                  minWidth: "auto",
+                  minHeight: isMobile ? "28px" : "36px",
                   borderRadius: "8px",
                   fontWeight: "600",
                   transition: "all 0.2s ease",
@@ -255,18 +265,17 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                   },
                 }}
               >
-                {isMobile
-                  ? t("common.createAd").split(" ")[0]
-                  : t("common.createAd")}
+                {isMobile ? "İlan" : t("common.createAd")}
               </Button>
 
               {/* User Avatar */}
               {(user || isLoading) && (
                 <IconButton
                   onClick={handleAvatarClick}
+                  size="small"
                   sx={{
-                    ml: 1,
-                    padding: "6px",
+                    ml: 0.5,
+                    padding: isMobile ? "2px" : "6px",
                     transition: "all 0.2s ease",
                     "&:hover": {
                       transform: "scale(1.1)",
@@ -276,9 +285,9 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                   <Avatar
                     sx={{
                       bgcolor: "#D34237",
-                      width: isMobile ? 32 : 36,
-                      height: isMobile ? 32 : 36,
-                      fontSize: isMobile ? "0.8rem" : "0.9rem",
+                      width: isMobile ? 28 : 36,
+                      height: isMobile ? 28 : 36,
+                      fontSize: isMobile ? "0.7rem" : "0.9rem",
                       boxShadow: "0 2px 8px rgba(211, 66, 55, 0.3)",
                     }}
                   >
@@ -414,14 +423,15 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                 to="/login-selection"
                 sx={{
                   color: "#000",
-                  fontSize: "14px",
+                  fontSize: isMobile ? "12px" : "14px",
                   fontWeight: 400,
-                  padding: "8px 16px",
+                  padding: isMobile ? "6px 8px" : "8px 16px",
                   textTransform: "none",
-                  ml: 1,
+                  ml: isMobile ? 0.5 : 1,
+                  minWidth: "auto",
                 }}
               >
-                Giriş Yap
+                {isMobile ? "Giriş" : "Giriş Yap"}
               </Button>
 
               <Button
@@ -430,14 +440,15 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                 to="/membership-selection"
                 sx={{
                   color: "#000",
-                  fontSize: "14px",
+                  fontSize: isMobile ? "12px" : "14px",
                   fontWeight: 400,
-                  padding: "8px 16px",
+                  padding: isMobile ? "6px 8px" : "8px 16px",
                   textTransform: "none",
-                  ml: 1,
+                  ml: isMobile ? 0.5 : 1,
+                  minWidth: "auto",
                 }}
               >
-                Üye Ol
+                {isMobile ? "Üye Ol" : "Üye Ol"}
               </Button>
 
               <Button
@@ -452,19 +463,21 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
                 sx={{
                   backgroundColor: "#fdeaea",
                   color: "#dc3545",
-                  fontSize: "12px",
+                  fontSize: isMobile ? "10px" : "12px",
                   fontWeight: 600,
-                  padding: "4px 12px",
+                  padding: isMobile ? "4px 8px" : "4px 12px",
                   textTransform: "none",
                   ml: 0.5,
                   borderRadius: "4px",
                   border: "1px solid #dc3545",
+                  minWidth: "auto",
+                  whiteSpace: "nowrap",
                   "&:hover": {
                     backgroundColor: "#f8d7da",
                   },
                 }}
               >
-                Ücretsiz İlan Ver
+                {isMobile ? "İlan Ver" : "Ücretsiz İlan Ver"}
               </Button>
             </>
           )}

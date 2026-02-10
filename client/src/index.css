@@ -19,3 +19,34 @@
 .skeleton-pulse {
   animation: skeletonPulse 1.5s ease-in-out infinite;
 }
+
+/* 📱 MOBILE RESPONSIVE - Currency Toggle Buttons */
+@media (max-width: 600px) {
+  /* Make toggle buttons smaller on mobile */
+  .MuiToggleButtonGroup-root .MuiToggleButton-root {
+    padding: 4px 6px !important;
+    font-size: 0.65rem !important;
+    min-width: 36px !important;
+  }
+  
+  /* Even smaller for toggle buttons inside input adornments */
+  .MuiInputAdornment-root .MuiToggleButtonGroup-root .MuiToggleButton-root {
+    padding: 2px 4px !important;
+    font-size: 0.6rem !important;
+    min-width: 28px !important;
+  }
+  
+  /* Hide text, show only symbols on very small screens */
+  .MuiInputAdornment-root .MuiToggleButton-root {
+    white-space: nowrap;
+  }
+}
+
+/* Very small screens - show only currency symbols */
+@media (max-width: 400px) {
+  .MuiInputAdornment-root .MuiToggleButtonGroup-root .MuiToggleButton-root {
+    padding: 2px 3px !important;
+    font-size: 0.55rem !important;
+    min-width: 24px !important;
+  }
+}

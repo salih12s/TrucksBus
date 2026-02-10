@@ -24,32 +24,33 @@ const LoginSelection: React.FC = () => {
       <Header />
       <Box
         sx={{
-          height: "100vh",
+          minHeight: "calc(100vh - 64px)",
           backgroundColor: "white",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
           position: "relative",
+          pt: { xs: 2, md: 0 },
         }}
       >
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/")}
-          sx={{
-            position: "fixed",
-            top: 100,
-            left: 24,
-            color: "#666",
-            zIndex: 10,
-            "&:hover": {
-              backgroundColor: "rgba(0,0,0,0.04)",
-            },
-          }}
-        >
-          Ana Sayfaya Dön
-        </Button>
-
         <Container maxWidth="lg" sx={{ py: 2 }}>
+          {/* Geri Dön Butonu - İçerik akışı içinde */}
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate("/")}
+            size="small"
+            sx={{
+              color: "#666",
+              mb: 2,
+              fontSize: { xs: "0.8rem", md: "0.9rem" },
+              "&:hover": {
+                backgroundColor: "rgba(0,0,0,0.04)",
+              },
+            }}
+          >
+            Ana Sayfaya Dön
+          </Button>
+
           <Box sx={{ mb: 2, textAlign: "center" }}>
             <Typography
               variant="h3"

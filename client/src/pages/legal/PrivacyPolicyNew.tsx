@@ -26,22 +26,26 @@ const PrivacyPolicy: React.FC = () => {
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
 
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, md: 3 }, flex: 1 }}
+      >
         {/* Ana Başlık */}
         <Paper
           elevation={0}
           sx={{
-            p: 4,
+            p: { xs: 2, md: 4 },
             mb: 3,
             background: "linear-gradient(135deg, #8E24AA 0%, #7B1FA2 100%)",
             color: "white",
-            borderRadius: 3,
+            borderRadius: { xs: 2, md: 3 },
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
             <Button
               startIcon={<ArrowBack />}
               onClick={() => navigate(-1)}
+              size="small"
               sx={{
                 color: "white",
                 "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
@@ -54,7 +58,7 @@ const PrivacyPolicy: React.FC = () => {
             variant="h3"
             component="h1"
             fontWeight="bold"
-            sx={{ mb: 1 }}
+            sx={{ mb: 1, fontSize: { xs: "1.5rem", md: "2.5rem" } }}
           >
             🔒 Gizlilik Politikası ve KVKK
           </Typography>

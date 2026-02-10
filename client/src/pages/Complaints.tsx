@@ -41,7 +41,7 @@ const Complaints: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedComplaint, setSelectedComplaint] = useState<Feedback | null>(
-    null
+    null,
   );
 
   const loadComplaints = async () => {
@@ -66,7 +66,7 @@ const Complaints: React.FC = () => {
   }, []);
 
   const getStatusColor = (
-    status: string
+    status: string,
   ):
     | "default"
     | "primary"
@@ -101,7 +101,7 @@ const Complaints: React.FC = () => {
   };
 
   const getPriorityColor = (
-    priority: string
+    priority: string,
   ):
     | "default"
     | "primary"
@@ -179,7 +179,7 @@ const Complaints: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
+      <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 3 } }}>
         <Box
           sx={{
             display: "flex",
@@ -266,7 +266,7 @@ const Complaints: React.FC = () => {
                         <TableCell>
                           <Typography variant="caption">
                             {new Date(complaint.createdAt).toLocaleDateString(
-                              "tr-TR"
+                              "tr-TR",
                             )}
                           </Typography>
                         </TableCell>
@@ -339,7 +339,7 @@ const Complaints: React.FC = () => {
 
                     <Typography variant="caption" color="text.secondary">
                       {new Date(complaint.createdAt).toLocaleDateString(
-                        "tr-TR"
+                        "tr-TR",
                       )}
                     </Typography>
                   </Card>
@@ -402,7 +402,7 @@ const Complaints: React.FC = () => {
                   <Typography variant="subtitle1" gutterBottom>
                     <strong>Tarih:</strong>{" "}
                     {new Date(selectedComplaint.createdAt).toLocaleString(
-                      "tr-TR"
+                      "tr-TR",
                     )}
                   </Typography>
                 </Box>
@@ -443,7 +443,7 @@ const Complaints: React.FC = () => {
                         >
                           Yanıt Tarihi:{" "}
                           {new Date(
-                            selectedComplaint.adminResponseAt
+                            selectedComplaint.adminResponseAt,
                           ).toLocaleString("tr-TR")}
                         </Typography>
                       )}

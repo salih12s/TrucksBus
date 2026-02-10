@@ -14,6 +14,8 @@ import {
   Avatar,
   Menu,
   MenuItem,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Dashboard as DashboardIcon,
@@ -26,6 +28,7 @@ import {
   AccountCircle,
   ExitToApp,
   Refresh,
+  Menu as MenuIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../hooks/redux";
@@ -55,7 +58,14 @@ const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   // Admin kontrolü
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
@@ -91,10 +101,13 @@ const AdminLayout: React.FC = () => {
 
     const resetTimeout = () => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        alert("Oturum süreniz doldu. Güvenlik için çıkış yapılıyor.");
-        handleLogout();
-      }, 30 * 60 * 1000); // 30 dakika
+      timeoutId = setTimeout(
+        () => {
+          alert("Oturum süreniz doldu. Güvenlik için çıkış yapılıyor.");
+          handleLogout();
+        },
+        30 * 60 * 1000,
+      ); // 30 dakika
     };
 
     const handleActivity = () => {
@@ -133,9 +146,14 @@ const AdminLayout: React.FC = () => {
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       {/* Sidebar */}
       <Drawer
-        variant="permanent"
+        variant={isMobile ? "temporary" : "permanent"}
+        open={isMobile ? mobileOpen : true}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile
+        }}
         sx={{
-          width: drawerWidth,
+          width: { xs: 0, md: drawerWidth },
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: drawerWidth,
@@ -163,7 +181,10 @@ const AdminLayout: React.FC = () => {
           {menuItems.map((item) => (
             <ListItem key={item.text} disablePadding>
               <ListItemButton
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  navigate(item.path);
+                  if (isMobile) setMobileOpen(false);
+                }}
                 selected={location.pathname === item.path}
                 sx={{
                   mx: 1,
@@ -200,7 +221,14 @@ const AdminLayout: React.FC = () => {
       </Drawer>
 
       {/* Main Content */}
-      <Box component="main" sx={{ flexGrow: 1, backgroundColor: "#f5f5f5" }}>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          backgroundColor: "#f5f5f5",
+          width: { xs: "100%", md: `calc(100% - ${drawerWidth}px)` },
+        }}
+      >
         {/* Top Header */}
         <AppBar
           position="sticky"
@@ -210,13 +238,30 @@ const AdminLayout: React.FC = () => {
             zIndex: (theme) => theme.zIndex.drawer - 1,
           }}
         >
-          <Toolbar sx={{ justifyContent: "space-between" }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: "bold", color: "white" }}
-            >
-              TruckBus Admin
-            </Typography>
+          <Toolbar sx={{ justifyContent: "space-between", gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {isMobile && (
+                <IconButton
+                  color="inherit"
+                  aria-label="open drawer"
+                  edge="start"
+                  onClick={handleDrawerToggle}
+                  sx={{ color: "white" }}
+                >
+                  <MenuIcon />
+                </IconButton>
+              )}
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  color: "white",
+                  fontSize: { xs: "1rem", md: "1.25rem" },
+                }}
+              >
+                TruckBus Admin
+              </Typography>
+            </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <IconButton
@@ -268,7 +313,7 @@ const AdminLayout: React.FC = () => {
         </AppBar>
 
         {/* Page Content */}
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
           <Outlet />
         </Box>
       </Box>

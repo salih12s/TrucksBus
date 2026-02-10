@@ -1487,6 +1487,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       variantId,
       // Detay bilgiler
       features,
+      currency,
     } = req.body;
 
     // Motor gücü debug (Minibüs)
@@ -1584,6 +1585,7 @@ export const createMinibusAd = async (req: Request, res: Response) => {
         description,
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         mileage: mileage ? parseInt(mileage) : null,
         // City ve District'i asıl sütunlara kaydet
         cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
@@ -1836,6 +1838,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       modelSlug,
       variantSlug,
       features,
+      currency,
     } = req.body;
 
     // Özellikleri JSON olarak hazırla
@@ -1917,6 +1920,7 @@ export const createCekiciAd = async (req: Request, res: Response) => {
         description,
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         mileage: mileage ? parseInt(mileage) : null,
         // City ve District'i asıl sütunlara kaydet
         cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
@@ -2507,6 +2511,7 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       modelId,
       variantId,
       features,
+      currency,
     } = req.body;
 
     // Özellikleri JSON olarak hazırla
@@ -2557,6 +2562,7 @@ export const createKamyonAd = async (req: Request, res: Response) => {
         description,
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         mileage: mileage ? parseInt(mileage) : null,
         // City ve District'i asıl sütunlara kaydet
         cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
@@ -2807,6 +2813,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
       brandId,
       modelId,
       variantId,
+      currency,
     } = req.body;
 
     // Debug için form verilerini log'la
@@ -2922,6 +2929,7 @@ export const createOtobusAd = async (req: Request, res: Response) => {
         description,
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         mileage: mileage ? parseInt(mileage) : null,
         // City ve District'i asıl sütunlara kaydet
         cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
@@ -3206,6 +3214,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
       phone,
       email,
       detailedInfo,
+      currency,
     } = req.body;
 
     // Dorse kategorisini bul
@@ -3289,6 +3298,7 @@ export const createDorseAd = async (req: Request, res: Response) => {
         detailedInfo,
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         cityId: cityId ? parseInt(cityId) : null,
         districtId: districtId ? parseInt(districtId) : null,
         customFields: {
@@ -3519,6 +3529,7 @@ export const createKaroserAd = async (req: Request, res: Response) => {
       phone,
       email,
       detailedInfo,
+      currency,
     } = req.body;
 
     // Karoser kategorisini bul (ID = 7)
@@ -3605,6 +3616,7 @@ export const createKaroserAd = async (req: Request, res: Response) => {
             ? parseInt(productionYear)
             : null,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         // Şehir ve ilçe bilgilerini ana tablo alanlarına kaydet
         cityId: cityId ? parseInt(cityId) : null,
         districtId: districtId ? parseInt(districtId) : null,
@@ -3832,6 +3844,7 @@ export const createOtoKurtariciTekliAd = async (
       cekiciEkipmani,
       ekEkipmanlar,
       vehicleBrandName, // Kullanıcının seçtiği araç markası (Ford, Mercedes-Benz vb.)
+      currency,
     } = req.body;
 
     console.log("🚗 Seçilen araç markası:", vehicleBrandName);
@@ -3952,6 +3965,7 @@ export const createOtoKurtariciTekliAd = async (
         description,
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         mileage: mileage ? parseInt(mileage) : null,
         vehicleCondition: "USED",
         maxPower: maxPower ? parseInt(maxPower) : null,
@@ -4157,6 +4171,7 @@ export const createOtoKurtariciCokluAd = async (
       features,
       vehicleBrandName,
       engineVolume,
+      currency,
     } = req.body;
 
     // Fuel type enum mapping
@@ -4223,6 +4238,7 @@ export const createOtoKurtariciCokluAd = async (
         description,
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         mileage: mileage ? parseInt(mileage) : null,
         vehicleCondition: "USED",
         maxPower: maxPower ? parseInt(maxPower) : null,
@@ -4696,6 +4712,7 @@ export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
       sellerPhone,
       sellerEmail,
       price,
+      currency,
     } = req.body;
 
     // Validasyonlar
@@ -4788,6 +4805,7 @@ export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
         title,
         description,
         price: parseFloat(price),
+        currency: currency || "TRY",
         year: parseInt(productionYear),
         location,
         cityId: parseInt(cityId),
@@ -4967,7 +4985,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
       sellerName: sellerName || contactName || "",
       sellerPhone: sellerPhone || phone || "",
       sellerEmail: sellerEmail || email || "",
-      currency: currency || "TL",
+      currency: currency || "TRY",
       detailedInfo: detailedInfo || "",
       cityId: cityId || "",
       districtId: districtId || "",
@@ -4990,6 +5008,7 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
         title,
         description,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         year: productionYear ? parseInt(productionYear) : null,
         location: locationString,
         customFields: JSON.stringify(customFields),
@@ -5168,6 +5187,7 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
       features,
       hasExpertiseInfo,
       expertiseInfo,
+      currency,
     } = req.body;
 
     console.log("✅ Form Data (Minivan & Panelvan):");
@@ -5226,6 +5246,7 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
         description,
         year: year ? parseInt(year) : null,
         price: price ? parseFloat(price) : null,
+        currency: currency || "TRY",
         mileage: mileage ? parseInt(mileage) : null,
         cityId: cityId && cityId !== "" ? parseInt(cityId) : null,
         districtId:

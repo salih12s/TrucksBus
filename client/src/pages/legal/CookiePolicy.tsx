@@ -22,8 +22,11 @@ const CookiePolicy: React.FC = () => {
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
 
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, md: 3 }, flex: 1 }}
+      >
+        <Paper elevation={3} sx={{ p: { xs: 2, md: 4 }, borderRadius: 2 }}>
           <Typography
             variant="h3"
             component="h1"
@@ -33,20 +36,32 @@ const CookiePolicy: React.FC = () => {
               fontWeight: "bold",
               textAlign: "center",
               mb: 4,
+              fontSize: { xs: "1.5rem", md: "2.5rem" },
             }}
           >
             Çerez Yönetimi
           </Typography>
 
           <Alert severity="info" sx={{ mb: 4 }}>
-            <Typography variant="body2">
+            <Typography
+              variant="body2"
+              sx={{ fontSize: { xs: "0.8rem", md: "0.875rem" } }}
+            >
               Bu sayfa, TrucksBus platformunda kullanılan çerezler hakkında
               detaylı bilgi ve yönetim seçenekleri sunar. Çerez tercihlerinizi
               istediğiniz zaman değiştirebilirsiniz.
             </Typography>
           </Alert>
 
-          <Typography variant="body1" paragraph sx={{ mb: 3, color: "#666" }}>
+          <Typography
+            variant="body1"
+            paragraph
+            sx={{
+              mb: 3,
+              color: "#666",
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
+          >
             Son güncelleme: {new Date().toLocaleDateString("tr-TR")}
           </Typography>
 
@@ -54,19 +69,46 @@ const CookiePolicy: React.FC = () => {
 
           {/* Çerez Türleri İkonları */}
           <Box
-            sx={{ display: "flex", justifyContent: "center", gap: 4, mb: 4 }}
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              gap: { xs: 2, md: 4 },
+              mb: 4,
+              flexWrap: "wrap",
+            }}
           >
             <Box sx={{ textAlign: "center" }}>
-              <Cookie sx={{ fontSize: 48, color: "#D34237", mb: 1 }} />
-              <Typography variant="caption">Temel Çerezler</Typography>
+              <Cookie
+                sx={{ fontSize: { xs: 36, md: 48 }, color: "#D34237", mb: 1 }}
+              />
+              <Typography
+                variant="caption"
+                sx={{ fontSize: { xs: "0.7rem", md: "0.75rem" } }}
+              >
+                Temel Çerezler
+              </Typography>
             </Box>
             <Box sx={{ textAlign: "center" }}>
-              <Analytics sx={{ fontSize: 48, color: "#D34237", mb: 1 }} />
-              <Typography variant="caption">Analitik Çerezler</Typography>
+              <Analytics
+                sx={{ fontSize: { xs: 36, md: 48 }, color: "#D34237", mb: 1 }}
+              />
+              <Typography
+                variant="caption"
+                sx={{ fontSize: { xs: "0.7rem", md: "0.75rem" } }}
+              >
+                Analitik Çerezler
+              </Typography>
             </Box>
             <Box sx={{ textAlign: "center" }}>
-              <Settings sx={{ fontSize: 48, color: "#D34237", mb: 1 }} />
-              <Typography variant="caption">Fonksiyonel Çerezler</Typography>
+              <Settings
+                sx={{ fontSize: { xs: 36, md: 48 }, color: "#D34237", mb: 1 }}
+              />
+              <Typography
+                variant="caption"
+                sx={{ fontSize: { xs: "0.7rem", md: "0.75rem" } }}
+              >
+                Fonksiyonel Çerezler
+              </Typography>
             </Box>
             <Box sx={{ textAlign: "center" }}>
               <Security sx={{ fontSize: 48, color: "#D34237", mb: 1 }} />

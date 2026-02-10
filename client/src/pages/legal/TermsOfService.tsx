@@ -20,22 +20,26 @@ const TermsOfService: React.FC = () => {
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
 
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, md: 3 }, flex: 1 }}
+      >
         {/* Ana Başlık */}
         <Paper
           elevation={0}
           sx={{
-            p: 4,
+            p: { xs: 2, md: 4 },
             mb: 3,
             background: "linear-gradient(135deg, #4A90E2 0%, #357ABD 100%)",
             color: "white",
-            borderRadius: 3,
+            borderRadius: { xs: 2, md: 3 },
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
             <Button
               startIcon={<ArrowBack />}
               onClick={() => navigate(-1)}
+              size="small"
               sx={{
                 color: "white",
                 "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
@@ -45,10 +49,20 @@ const TermsOfService: React.FC = () => {
             </Button>
           </Box>
 
-          <Typography variant="h3" sx={{ fontWeight: "bold", mb: 2 }}>
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: "bold",
+              mb: 2,
+              fontSize: { xs: "1.5rem", md: "2.5rem" },
+            }}
+          >
             📋 Kullanım Şartları ve Sözleşme
           </Typography>
-          <Typography variant="h6" sx={{ opacity: 0.9 }}>
+          <Typography
+            variant="h6"
+            sx={{ opacity: 0.9, fontSize: { xs: "0.9rem", md: "1.25rem" } }}
+          >
             TrucksBus Platformu Kullanıcı Sözleşmesi
           </Typography>
 
@@ -56,22 +70,34 @@ const TermsOfService: React.FC = () => {
             <Chip
               icon={<Info />}
               label="Son Güncellenme: 29 Eylül 2025"
+              size="small"
               sx={{ bgcolor: "rgba(255,255,255,0.2)", color: "white" }}
             />
           </Box>
         </Paper>
 
         {/* Sözleşme İçeriği */}
-        <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
+        <Paper elevation={2} sx={{ p: { xs: 2, md: 4 }, mb: 3 }}>
           <Typography
             variant="h4"
             gutterBottom
-            sx={{ color: "#2c3e50", fontWeight: "600" }}
+            sx={{
+              color: "#2c3e50",
+              fontWeight: "600",
+              fontSize: { xs: "1.25rem", md: "2rem" },
+            }}
           >
             1. TARAFLAR VE KONU
           </Typography>
 
-          <Typography paragraph sx={{ lineHeight: 1.8, mb: 3 }}>
+          <Typography
+            paragraph
+            sx={{
+              lineHeight: 1.8,
+              mb: 3,
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
+          >
             İşbu sözleşme, <strong>TrucksBus</strong> platformu
             (trucksbus.com.tr) ile platform üzerinde hesap açan kullanıcılar
             arasında akdedilmiştir. Bu sözleşme, platformumuzun kullanım
@@ -83,19 +109,30 @@ const TermsOfService: React.FC = () => {
           <Typography
             variant="h4"
             gutterBottom
-            sx={{ color: "#2c3e50", fontWeight: "600" }}
+            sx={{
+              color: "#2c3e50",
+              fontWeight: "600",
+              fontSize: { xs: "1.25rem", md: "2rem" },
+            }}
           >
             2. PLATFORM TANıMı VE HİZMETLER
           </Typography>
 
-          <Typography paragraph sx={{ lineHeight: 1.8, mb: 2 }}>
+          <Typography
+            paragraph
+            sx={{
+              lineHeight: 1.8,
+              mb: 2,
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
+          >
             <strong>TrucksBus</strong>, ticari araç alım-satım platformudur.
             Sunulan hizmetler:
           </Typography>
 
-          <Box component="ul" sx={{ pl: 3, mb: 3 }}>
+          <Box component="ul" sx={{ pl: { xs: 2, md: 3 }, mb: 3 }}>
             <li>
-              <Typography>
+              <Typography sx={{ fontSize: { xs: "0.9rem", md: "1rem" } }}>
                 🚛 Kamyon, kamyonet, çekici, dorse alım-satım ilanları
               </Typography>
             </li>

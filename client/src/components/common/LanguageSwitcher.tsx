@@ -39,9 +39,9 @@ const LanguageSwitcher: React.FC = () => {
         onClick={handleClick}
         size="small"
         sx={{
-          ml: 1,
+          ml: 0.5,
           color: "#333",
-          padding: "8px",
+          padding: { xs: "4px", sm: "8px" },
           borderRadius: "8px",
           transition: "all 0.2s ease",
           "&:hover": {
@@ -54,7 +54,7 @@ const LanguageSwitcher: React.FC = () => {
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
       >
-        <LanguageIcon sx={{ fontSize: 24 }} />
+        <LanguageIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
       </IconButton>
       <Menu
         anchorEl={anchorEl}

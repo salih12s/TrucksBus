@@ -313,8 +313,10 @@ const AdminDashboard: React.FC = () => {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: 2,
           mb: 4,
         }}
       >
@@ -322,11 +324,19 @@ const AdminDashboard: React.FC = () => {
           <Typography
             variant="h4"
             component="h1"
-            sx={{ fontWeight: "bold", mb: 1 }}
+            sx={{
+              fontWeight: "bold",
+              mb: 1,
+              fontSize: { xs: "1.5rem", md: "2.125rem" },
+            }}
           >
             Admin Dashboard
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ fontSize: { xs: "0.875rem", md: "1rem" } }}
+          >
             Sistem özetinizi ve kritik KPI'ları tek ekranda görün.
           </Typography>
         </Box>
@@ -537,31 +547,49 @@ const AdminDashboard: React.FC = () => {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: 2,
           mb: 4,
         }}
       >
-        <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
+            fontWeight: "bold",
+            fontSize: { xs: "1.5rem", md: "2.125rem" },
+          }}
+        >
           Tüm İlanlar
         </Typography>
         <Button
           onClick={fetchAllAds}
           startIcon={<Refresh />}
           variant="outlined"
+          size="small"
         >
           Yenile
         </Button>
       </Box>
 
       {/* Filters */}
-      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          mb: 3,
+          flexWrap: "wrap",
+          flexDirection: { xs: "column", sm: "row" },
+        }}
+      >
         <TextField
           placeholder="İlan ara..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           size="small"
-          sx={{ minWidth: 200 }}
+          sx={{ minWidth: { xs: "100%", sm: 200 } }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -570,7 +598,7 @@ const AdminDashboard: React.FC = () => {
             ),
           }}
         />
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+        <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 120 } }}>
           <InputLabel>Durum</InputLabel>
           <Select
             value={statusFilter}

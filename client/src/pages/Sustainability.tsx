@@ -60,27 +60,39 @@ const Sustainability: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f8f9fa", py: 4 }}>
-      <Container maxWidth="lg">
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f8f9fa", py: { xs: 2, md: 4 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, md: 3 } }}>
         {/* Hero Section */}
         <Paper
           elevation={0}
           sx={{
             background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             color: "white",
-            p: 6,
-            borderRadius: 4,
-            mb: 6,
+            p: { xs: 3, md: 6 },
+            borderRadius: { xs: 2, md: 4 },
+            mb: { xs: 3, md: 6 },
             textAlign: "center",
           }}
         >
-          <Nature sx={{ fontSize: 60, mb: 2 }} />
-          <Typography variant="h2" sx={{ fontWeight: 700, mb: 2 }}>
+          <Nature sx={{ fontSize: { xs: 40, md: 60 }, mb: 2 }} />
+          <Typography
+            variant="h2"
+            sx={{
+              fontWeight: 700,
+              mb: 2,
+              fontSize: { xs: "1.75rem", md: "3rem" },
+            }}
+          >
             Sürdürülebilirlik
           </Typography>
           <Typography
             variant="h5"
-            sx={{ opacity: 0.9, maxWidth: 600, mx: "auto" }}
+            sx={{
+              opacity: 0.9,
+              maxWidth: 600,
+              mx: "auto",
+              fontSize: { xs: "1rem", md: "1.5rem" },
+            }}
           >
             Gelecek nesillere daha iyi bir dünya bırakmak için
             sorumluluklarımızı yerine getiriyoruz

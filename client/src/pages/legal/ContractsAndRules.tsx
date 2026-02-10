@@ -22,8 +22,11 @@ const ContractsAndRules: React.FC = () => {
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
 
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, md: 3 }, flex: 1 }}
+      >
+        <Paper elevation={3} sx={{ p: { xs: 2, md: 4 }, borderRadius: 2 }}>
           <Typography
             variant="h3"
             component="h1"
@@ -33,6 +36,7 @@ const ContractsAndRules: React.FC = () => {
               fontWeight: "bold",
               textAlign: "center",
               mb: 4,
+              fontSize: { xs: "1.5rem", md: "2.5rem" },
             }}
           >
             Sözleşmeler ve Kurallar
@@ -41,7 +45,12 @@ const ContractsAndRules: React.FC = () => {
           <Typography
             variant="body1"
             paragraph
-            sx={{ mb: 3, color: "#666", textAlign: "center" }}
+            sx={{
+              mb: 3,
+              color: "#666",
+              textAlign: "center",
+              fontSize: { xs: "0.9rem", md: "1rem" },
+            }}
           >
             TrucksBus platformunu düzenleyen temel sözleşme ve kurallar
           </Typography>

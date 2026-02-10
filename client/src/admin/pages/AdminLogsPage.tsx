@@ -114,7 +114,7 @@ const AdminLogsPage: React.FC = () => {
           log.targetUserEmail
             .toLowerCase()
             .includes(searchTerm.toLowerCase())) ||
-        log.action.toLowerCase().includes(searchTerm.toLowerCase())
+        log.action.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [logs, searchTerm]);
 
@@ -142,7 +142,7 @@ const AdminLogsPage: React.FC = () => {
   };
 
   const getActionColor = (
-    action: string
+    action: string,
   ): "success" | "default" | "warning" | "primary" => {
     switch (action) {
       case "LOGIN":
@@ -175,8 +175,10 @@ const AdminLogsPage: React.FC = () => {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: 2,
           mb: 4,
         }}
       >
@@ -184,11 +186,19 @@ const AdminLogsPage: React.FC = () => {
           <Typography
             variant="h4"
             component="h1"
-            sx={{ fontWeight: "bold", mb: 1 }}
+            sx={{
+              fontWeight: "bold",
+              mb: 1,
+              fontSize: { xs: "1.5rem", md: "2.125rem" },
+            }}
           >
             Admin Activity Logs
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ fontSize: { xs: "0.875rem", md: "1rem" } }}
+          >
             Tüm admin eylemlerini izleyin ve güvenlik denetimi yapın
           </Typography>
         </Box>
@@ -254,8 +264,12 @@ const AdminLogsPage: React.FC = () => {
               <CircularProgress />
             </Box>
           ) : (
-            <TableContainer component={Paper} variant="outlined">
-              <Table>
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{ overflowX: "auto" }}
+            >
+              <Table sx={{ minWidth: 800 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Admin</TableCell>

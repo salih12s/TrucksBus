@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { formatPrice as formatPriceUtil } from "../utils/formatPrice";
 import {
   Box,
   Typography,
@@ -65,7 +66,7 @@ const MyAds: React.FC = () => {
   }, []);
 
   const getStatusColor = (
-    status: string
+    status: string,
   ):
     | "default"
     | "primary"
@@ -132,14 +133,9 @@ const MyAds: React.FC = () => {
     navigate(-1);
   };
 
-  const formatPrice = (price: number | undefined) => {
+  const formatPrice = (price: number | undefined, currency?: string) => {
     if (!price) return "Fiyat belirtilmemiş";
-    return new Intl.NumberFormat("tr-TR", {
-      style: "currency",
-      currency: "TRY",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price);
+    return formatPriceUtil(price, currency as any);
   };
 
   const getImageUrl = (images: AdImage[]) => {
@@ -275,7 +271,7 @@ const MyAds: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight="medium">
-                            {formatPrice(ad.price)}
+                            {formatPrice(ad.price, ad.currency)}
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -403,7 +399,7 @@ const MyAds: React.FC = () => {
                             fontWeight="medium"
                             sx={{ mt: 0.5 }}
                           >
-                            {formatPrice(ad.price)}
+                            {formatPrice(ad.price, ad.currency)}
                           </Typography>
                         </Box>
                         <Box>

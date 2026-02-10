@@ -8569,19 +8569,21 @@ const MainLayout: React.FC = () => {
         {isMobile && (
           <IconButton
             onClick={() => setMobileDrawerOpen(true)}
+            size="small"
             sx={{
               position: "fixed",
-              top: 70,
-              left: 16,
+              top: 72,
+              left: 8,
               zIndex: 1200,
               backgroundColor: "white",
-              boxShadow: 2,
+              boxShadow: 1,
+              padding: "6px",
               "&:hover": {
                 backgroundColor: "#f0f0f0",
               },
             }}
           >
-            <MenuIcon />
+            <MenuIcon sx={{ fontSize: 20 }} />
           </IconButton>
         )}
 
@@ -8638,7 +8640,8 @@ const MainLayout: React.FC = () => {
           sx={{
             flex: 1,
             p: isMobile ? 1 : isTablet ? 2 : 3,
-            pl: isMobile ? 7 : undefined, // Extra left padding on mobile for hamburger menu
+            pl: isMobile ? 5 : undefined, // Extra left padding on mobile for hamburger menu
+            pr: isMobile ? 1 : undefined,
             width: "100%",
             position: "relative",
           }}
@@ -8840,6 +8843,7 @@ const MainLayout: React.FC = () => {
                       backgroundColor: "white",
                       borderRadius: "8px 8px 0 0",
                       overflow: "hidden",
+                      overflowX: isMobile ? "auto" : "visible",
                     }}
                   >
                     {[
@@ -8853,9 +8857,11 @@ const MainLayout: React.FC = () => {
                         onClick={() => setSelectedSellerType(option.key)}
                         sx={{
                           flex: 1,
-                          py: 1.5,
-                          px: 2,
+                          py: isMobile ? 1 : 1.5,
+                          px: isMobile ? 1 : 2,
                           borderRadius: 0,
+                          fontSize: isMobile ? "12px" : "14px",
+                          minWidth: isMobile ? "auto" : undefined,
                           borderBottom:
                             selectedSellerType === option.key
                               ? "2px solid #D34237"
@@ -9144,7 +9150,7 @@ const MainLayout: React.FC = () => {
                       sx={{
                         display: "flex",
                         justifyContent: "center",
-                        mt: 4,
+                        mt: isMobile ? 2 : 4,
                         mb: 2,
                       }}
                     >
@@ -9154,7 +9160,7 @@ const MainLayout: React.FC = () => {
                         onChange={(_, page) => handlePageChange(page)}
                         variant="outlined"
                         shape="rounded"
-                        size="large"
+                        size={isMobile ? "small" : "large"}
                         sx={{
                           "& .MuiPaginationItem-root": {
                             borderColor: "#dc3545",
@@ -9188,10 +9194,10 @@ const MainLayout: React.FC = () => {
                       width: "100%",
                     }}
                   >
-                    {/* List Header */}
+                    {/* List Header - Hidden on mobile */}
                     <Box
                       sx={{
-                        display: "flex",
+                        display: { xs: "none", md: "flex" },
                         flexDirection: "row",
                         backgroundColor: "#f8f9fa",
                         border: "1px solid #e0e0e0",
@@ -9387,8 +9393,8 @@ const MainLayout: React.FC = () => {
                             backgroundColor: "white",
                             border: "1px solid #e0e0e0",
                             mb: 1,
-                            p: isMobile ? 1.5 : 2,
-                            alignItems: "center",
+                            p: { xs: 1.5, sm: 1.5, md: 2 },
+                            alignItems: { xs: "flex-start", sm: "center" },
                             position: "relative",
                             overflow: "hidden",
                           }}
@@ -9398,18 +9404,18 @@ const MainLayout: React.FC = () => {
                             <Box
                               sx={{
                                 position: "absolute",
-                                top: 8,
-                                right: -30,
+                                top: { xs: 4, sm: 8 },
+                                right: { xs: -28, sm: -30 },
                                 backgroundColor: "#ff5722",
                                 color: "white",
-                                padding: "2px 35px",
-                                fontSize: "9px",
+                                padding: { xs: "2px 30px", sm: "2px 35px" },
+                                fontSize: { xs: "7px", sm: "9px" },
                                 fontWeight: "bold",
                                 transform: "rotate(45deg)",
                                 zIndex: 10,
                                 boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
                                 textTransform: "uppercase",
-                                letterSpacing: "1px",
+                                letterSpacing: "0.5px",
                               }}
                             >
                               ÖRNEKTİR
@@ -9418,14 +9424,14 @@ const MainLayout: React.FC = () => {
                           {/* Vitrin Görseli */}
                           <Box
                             sx={{
-                              width: isMobile ? 100 : 120,
-                              height: isMobile ? 70 : 80,
+                              width: { xs: 90, sm: 100, md: 120 },
+                              height: { xs: 65, sm: 70, md: 80 },
                               backgroundColor: "#f8f9fa",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               borderRadius: 1,
-                              mr: isMobile ? 1.5 : 2,
+                              mr: { xs: 1.5, sm: 1.5, md: 2 },
                               flexShrink: 0,
                               overflow: "hidden",
                             }}
@@ -9458,19 +9464,73 @@ const MainLayout: React.FC = () => {
                             )}
                           </Box>
 
-                          {/* Model */}
+                          {/* Mobile: Stacked content / Desktop: Row content */}
                           <Box
                             sx={{
-                              width: isMobile ? 100 : 120,
-                              mr: isMobile ? 1.5 : 2,
+                              display: { xs: "flex", sm: "none" },
+                              flexDirection: "column",
+                              flex: 1,
+                              minWidth: 0,
+                            }}
+                          >
+                            {/* Başlık */}
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 600,
+                                fontSize: "12px",
+                                color: "#333",
+                                lineHeight: 1.3,
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                mb: 0.5,
+                              }}
+                            >
+                              {ad.title}
+                            </Typography>
+                            {/* Fiyat */}
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                fontWeight: 700,
+                                fontSize: "14px",
+                                color: "#dc3545",
+                                mb: 0.5,
+                              }}
+                            >
+                              {ad.price
+                                ? formatPriceDisplay(ad.price, ad.currency)
+                                : "Fiyat Sorunuz"}
+                            </Typography>
+                            {/* İl */}
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: "11px",
+                                color: "#666",
+                              }}
+                            >
+                              {ad.city?.name || ""}
+                            </Typography>
+                          </Box>
+
+                          {/* Desktop: Model - Hidden on xs */}
+                          <Box
+                            sx={{
+                              width: { sm: 100, md: 120 },
+                              mr: { sm: 1.5, md: 2 },
                               flexShrink: 0,
+                              display: { xs: "none", sm: "block" },
                             }}
                           >
                             <Typography
                               variant="body2"
                               sx={{
                                 fontWeight: 600,
-                                fontSize: isMobile ? "11px" : "13px",
+                                fontSize: { sm: "12px", md: "13px" },
                                 color: "#333",
                               }}
                             >
@@ -9478,13 +9538,19 @@ const MainLayout: React.FC = () => {
                             </Typography>
                           </Box>
 
-                          {/* İlan Başlığı */}
-                          <Box sx={{ flex: 1, mr: isMobile ? 1.5 : 2 }}>
+                          {/* Desktop: İlan Başlığı */}
+                          <Box
+                            sx={{
+                              flex: 1,
+                              mr: { sm: 1.5, md: 2 },
+                              display: { xs: "none", sm: "block" },
+                            }}
+                          >
                             <Typography
                               variant="body2"
                               sx={{
                                 fontWeight: 500,
-                                fontSize: isMobile ? "11px" : "13px",
+                                fontSize: { sm: "12px", md: "13px" },
                                 color: "#333",
                                 display: "-webkit-box",
                                 WebkitLineClamp: 2,
@@ -9497,40 +9563,42 @@ const MainLayout: React.FC = () => {
                             </Typography>
                           </Box>
 
-                          {/* Yıl */}
+                          {/* Yıl - Hidden on mobile */}
                           <Box
                             sx={{
-                              width: isMobile ? 50 : 60,
-                              mr: isMobile ? 1 : 2,
+                              width: 60,
+                              mr: 2,
                               flexShrink: 0,
                               textAlign: "center",
+                              display: { xs: "none", sm: "block" },
                             }}
                           >
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: isMobile ? "10px" : "13px",
+                                fontSize: "13px",
                                 color: "#333",
                                 fontWeight: 500,
                               }}
                             >
-                              {ad.year ? `Model Yılı: ${ad.year}` : "---"}
+                              {ad.year ? `${ad.year}` : "---"}
                             </Typography>
                           </Box>
 
-                          {/* Kilometre */}
+                          {/* Kilometre - Hidden on mobile */}
                           <Box
                             sx={{
-                              width: isMobile ? 60 : 80,
-                              mr: isMobile ? 1 : 2,
+                              width: 80,
+                              mr: 2,
                               flexShrink: 0,
                               textAlign: "center",
+                              display: { xs: "none", md: "block" },
                             }}
                           >
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: isMobile ? "10px" : "13px",
+                                fontSize: "13px",
                                 color: "#333",
                                 fontWeight: 500,
                               }}
@@ -9541,19 +9609,20 @@ const MainLayout: React.FC = () => {
                             </Typography>
                           </Box>
 
-                          {/* Kategori */}
+                          {/* Kategori - Hidden on mobile */}
                           <Box
                             sx={{
-                              width: isMobile ? 60 : 80,
-                              mr: isMobile ? 1 : 2,
+                              width: 80,
+                              mr: 2,
                               flexShrink: 0,
                               textAlign: "center",
+                              display: { xs: "none", md: "block" },
                             }}
                           >
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: isMobile ? "9px" : "12px",
+                                fontSize: "12px",
                                 color: "#666",
                                 fontWeight: 500,
                               }}
@@ -9562,42 +9631,44 @@ const MainLayout: React.FC = () => {
                             </Typography>
                           </Box>
 
-                          {/* Fiyat */}
+                          {/* Fiyat - Desktop only */}
                           <Box
                             sx={{
-                              width: isMobile ? 80 : 100,
-                              mr: isMobile ? 1 : 2,
+                              width: { sm: 80, md: 100 },
+                              mr: { sm: 1, md: 2 },
                               flexShrink: 0,
                               textAlign: "center",
+                              display: { xs: "none", sm: "block" },
                             }}
                           >
                             <Typography
                               variant="body1"
                               sx={{
                                 fontWeight: 700,
-                                fontSize: isMobile ? "11px" : "14px",
+                                fontSize: { sm: "12px", md: "14px" },
                                 color: "#dc3545",
                               }}
                             >
                               {ad.price
                                 ? formatPriceDisplay(ad.price, ad.currency)
-                                : "Fiyat Yok"}
+                                : "---"}
                             </Typography>
                           </Box>
 
-                          {/* Tarih */}
+                          {/* Tarih - Hidden on mobile */}
                           <Box
                             sx={{
-                              width: isMobile ? 60 : 80,
-                              mr: isMobile ? 1 : 2,
+                              width: 80,
+                              mr: 2,
                               flexShrink: 0,
                               textAlign: "center",
+                              display: { xs: "none", lg: "block" },
                             }}
                           >
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: isMobile ? "9px" : "11px",
+                                fontSize: "11px",
                                 color: "#666",
                               }}
                             >
@@ -9609,28 +9680,29 @@ const MainLayout: React.FC = () => {
                             </Typography>
                           </Box>
 
-                          {/* İl/İlçe */}
+                          {/* İl/İlçe - Desktop only */}
                           <Box
                             sx={{
-                              width: isMobile ? 80 : 120,
+                              width: { sm: 100, md: 120 },
                               flexShrink: 0,
                               textAlign: "center",
+                              display: { xs: "none", sm: "block" },
                             }}
                           >
                             <Typography
                               variant="body2"
                               sx={{
-                                fontSize: isMobile ? "9px" : "12px",
+                                fontSize: { sm: "11px", md: "12px" },
                                 color: "#666",
                                 fontWeight: 500,
                               }}
                             >
-                              {ad.city?.name || "Belirtilmemiş"}
+                              {ad.city?.name || "---"}
                             </Typography>
                             <Typography
                               variant="caption"
                               sx={{
-                                fontSize: isMobile ? "8px" : "10px",
+                                fontSize: "10px",
                                 color: "#999",
                               }}
                             >
@@ -9648,7 +9720,7 @@ const MainLayout: React.FC = () => {
                       sx={{
                         display: "flex",
                         justifyContent: "center",
-                        mt: 4,
+                        mt: isMobile ? 2 : 4,
                         mb: 2,
                       }}
                     >
@@ -9658,7 +9730,7 @@ const MainLayout: React.FC = () => {
                         onChange={(_, page) => handlePageChange(page)}
                         variant="outlined"
                         shape="rounded"
-                        size="large"
+                        size={isMobile ? "small" : "large"}
                         sx={{
                           "& .MuiPaginationItem-root": {
                             borderColor: "#dc3545",

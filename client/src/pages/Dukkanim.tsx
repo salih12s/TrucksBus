@@ -382,14 +382,20 @@ const Dukkanim: React.FC = () => {
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ py: 3 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ py: { xs: 2, md: 3 }, px: { xs: 2, md: 3 } }}
+      >
         <Alert severity="error">{error}</Alert>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Container
+      maxWidth="lg"
+      sx={{ py: { xs: 2, md: 3 }, px: { xs: 2, md: 3 } }}
+    >
       {/* Header Section */}
       <Paper
         elevation={2}
@@ -403,7 +409,7 @@ const Dukkanim: React.FC = () => {
         {/* Header Background */}
         <Box
           sx={{
-            height: 200,
+            height: { xs: 150, md: 200 },
             background: "linear-gradient(135deg, #313B4C 0%, #586575 100%)",
             display: "flex",
             alignItems: "center",
@@ -415,21 +421,22 @@ const Dukkanim: React.FC = () => {
           <Box
             sx={{
               position: "absolute",
-              left: 30,
+              left: { xs: 16, md: 30 },
               top: "50%",
               transform: "translateY(-50%)",
               display: "flex",
               alignItems: "center",
-              gap: 2,
+              gap: { xs: 1, md: 2 },
+              flexDirection: { xs: "column", sm: "row" },
             }}
           >
             <Box sx={{ position: "relative" }}>
               <Avatar
                 src={user?.profileImageUrl || undefined}
                 sx={{
-                  width: 80,
-                  height: 80,
-                  fontSize: "2rem",
+                  width: { xs: 60, md: 80 },
+                  height: { xs: 60, md: 80 },
+                  fontSize: { xs: "1.5rem", md: "2rem" },
                   fontWeight: "bold",
                   border: "3px solid white",
                   backgroundColor: "#fff",
@@ -599,16 +606,24 @@ const Dukkanim: React.FC = () => {
           sx={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: { xs: "flex-start", md: "center" },
+            flexDirection: { xs: "column", md: "row" },
+            gap: { xs: 2, md: 0 },
             mb: 3,
           }}
         >
-          <Typography variant="h5" fontWeight="bold">
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            sx={{ fontSize: { xs: "1.25rem", md: "1.5rem" } }}
+          >
             İlanlarım ({userAds.length})
           </Typography>
 
           {/* İstatistik kartları */}
-          <Box sx={{ display: "flex", gap: 2 }}>
+          <Box
+            sx={{ display: "flex", gap: { xs: 1, md: 2 }, flexWrap: "wrap" }}
+          >
             <Chip
               label={`${
                 userAds.filter((ad) => ad.status === "APPROVED").length

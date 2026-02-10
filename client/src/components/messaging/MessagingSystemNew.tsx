@@ -75,7 +75,10 @@ const MessagingSystem: React.FC = () => {
     if (currentMessagesCount > 0) {
       // Küçük bir gecikme ile scroll yap (DOM güncellemesini bekle)
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop =
+            messagesContainerRef.current.scrollHeight;
+        }
       }, 100);
     }
 
@@ -86,7 +89,10 @@ const MessagingSystem: React.FC = () => {
   useEffect(() => {
     if (selectedConversation && currentConversation.messages.length > 0) {
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop =
+            messagesContainerRef.current.scrollHeight;
+        }
       }, 150);
     }
   }, [selectedConversation?.otherUser.id, selectedConversation?.ad?.id]);
@@ -280,7 +286,13 @@ const MessagingSystem: React.FC = () => {
   };
 
   const renderConversationsList = () => (
-    <Card sx={{ height: "70vh", display: "flex", flexDirection: "column" }}>
+    <Card
+      sx={{
+        height: { xs: "60vh", md: "70vh" },
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <CardContent sx={{ pb: 1 }}>
         <Typography variant="h6" gutterBottom>
           Mesajlar
@@ -426,7 +438,13 @@ const MessagingSystem: React.FC = () => {
     const displayAd = selectedConversation?.ad || newConversationAd;
 
     return (
-      <Card sx={{ height: "70vh", display: "flex", flexDirection: "column" }}>
+      <Card
+        sx={{
+          height: { xs: "75vh", md: "70vh" },
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <CardContent sx={{ pb: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
             <IconButton onClick={handleBackToConversations} sx={{ mr: 1 }}>
@@ -560,7 +578,10 @@ const MessagingSystem: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container
+      maxWidth="lg"
+      sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, md: 3 } }}
+    >
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}

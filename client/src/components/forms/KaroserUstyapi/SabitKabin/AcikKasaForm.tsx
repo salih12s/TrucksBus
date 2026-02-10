@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -647,9 +647,9 @@ const AcikKasaForm: React.FC = () => {
                       size="small"
                       sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
                     >
-                      <ToggleButton value="TRY">₺ TL</ToggleButton>
-                      <ToggleButton value="USD">$ USD</ToggleButton>
-                      <ToggleButton value="EUR">€ EUR</ToggleButton>
+                      <ToggleButton value="TRY">₺</ToggleButton>
+                      <ToggleButton value="USD">$</ToggleButton>
+                      <ToggleButton value="EUR">€</ToggleButton>
                     </ToggleButtonGroup>
                   </InputAdornment>
                 ),

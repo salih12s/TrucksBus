@@ -45,12 +45,12 @@ const ComplaintManagement: React.FC = () => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(
-    null
+    null,
   );
   const [responseModalOpen, setResponseModalOpen] = useState(false);
   const [response, setResponse] = useState("");
   const [responseStatus, setResponseStatus] = useState<"RESOLVED" | "CLOSED">(
-    "RESOLVED"
+    "RESOLVED",
   );
   const [submitting, setSubmitting] = useState(false);
 
@@ -71,7 +71,7 @@ const ComplaintManagement: React.FC = () => {
   }, []);
 
   const getStatusColor = (
-    status: string
+    status: string,
   ): "warning" | "info" | "success" | "error" | "default" => {
     switch (status) {
       case "PENDING":
@@ -156,18 +156,25 @@ const ComplaintManagement: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: { xs: "flex-start", sm: "center" },
+          gap: 2,
           mb: 3,
         }}
       >
         <Typography
           variant="h4"
-          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            fontSize: { xs: "1.5rem", md: "2.125rem" },
+          }}
         >
           <Report color="error" />
           Şikayet Yönetimi
@@ -177,6 +184,7 @@ const ComplaintManagement: React.FC = () => {
           startIcon={<Refresh />}
           onClick={fetchComplaints}
           disabled={loading}
+          size="small"
         >
           Yenile
         </Button>
@@ -184,8 +192,12 @@ const ComplaintManagement: React.FC = () => {
 
       <Card>
         <CardContent>
-          <TableContainer component={Paper} elevation={0}>
-            <Table>
+          <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{ overflowX: "auto" }}
+          >
+            <Table sx={{ minWidth: 800 }}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                   <TableCell>
@@ -252,7 +264,7 @@ const ComplaintManagement: React.FC = () => {
                     <TableCell>
                       <Typography variant="body2">
                         {new Date(complaint.createdAt).toLocaleDateString(
-                          "tr-TR"
+                          "tr-TR",
                         )}
                       </Typography>
                     </TableCell>
@@ -398,7 +410,7 @@ const ComplaintManagement: React.FC = () => {
                     <Typography variant="caption" color="text.secondary">
                       Cevap Tarihi:{" "}
                       {new Date(selectedComplaint.updatedAt).toLocaleString(
-                        "tr-TR"
+                        "tr-TR",
                       )}
                     </Typography>
                   </>
