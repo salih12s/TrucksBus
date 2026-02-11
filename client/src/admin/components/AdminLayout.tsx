@@ -25,6 +25,7 @@ import {
   Feedback as FeedbackIcon,
   People as PeopleIcon,
   Security as SecurityIcon,
+  Home as HomeManageIcon,
   AccountCircle,
   ExitToApp,
   Refresh,
@@ -38,6 +39,11 @@ const drawerWidth = 280;
 
 const menuItems = [
   { text: "Dashboard", icon: <DashboardIcon />, path: "/admin" },
+  {
+    text: "Anasayfa Yönetimi",
+    icon: <HomeManageIcon />,
+    path: "/admin/homepage",
+  },
   { text: "Tüm İlanlar", icon: <AssignmentIcon />, path: "/admin/all-ads" },
   {
     text: "Onay Bekleyen İlanlar",

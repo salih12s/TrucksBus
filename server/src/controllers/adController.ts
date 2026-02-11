@@ -2433,6 +2433,147 @@ export const rejectAd = async (req: Request, res: Response) => {
   }
 };
 
+// Admin: İlanı düzenle ve kullanıcıya bildirim gönder
+export const adminUpdateAd = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const adminId = (req as any).user?.id;
+
+    // Mevcut ilanı al
+    const existingAd = await prisma.ad.findUnique({
+      where: { id: parseIntParam(id) },
+      include: { user: true },
+    });
+
+    if (!existingAd) {
+      res.status(404).json({ error: "İlan bulunamadı" });
+      return;
+    }
+
+    const {
+      title,
+      description,
+      price,
+      currency,
+      year,
+      mileage,
+      status,
+      cityId,
+      districtId,
+      customFields,
+      editNote,
+    } = req.body;
+
+    // Değişiklikleri hazırla
+    const updateData: any = {};
+    const changes: string[] = [];
+
+    if (title !== undefined && title !== existingAd.title) {
+      updateData.title = title;
+      changes.push("başlık");
+    }
+    if (description !== undefined && description !== existingAd.description) {
+      updateData.description = description;
+      changes.push("açıklama");
+    }
+    if (price !== undefined && parseFloat(price) !== Number(existingAd.price)) {
+      updateData.price = price ? parseFloat(price) : null;
+      changes.push("fiyat");
+    }
+    if (currency !== undefined && currency !== existingAd.currency) {
+      updateData.currency = currency;
+      changes.push("para birimi");
+    }
+    if (year !== undefined && parseInt(year) !== existingAd.year) {
+      updateData.year = year ? parseInt(year) : null;
+      changes.push("model yılı");
+    }
+    if (mileage !== undefined && parseInt(mileage) !== existingAd.mileage) {
+      updateData.mileage = mileage ? parseInt(mileage) : null;
+      changes.push("kilometre");
+    }
+    if (status !== undefined && status !== existingAd.status) {
+      updateData.status = status;
+      changes.push("durum");
+    }
+    if (cityId !== undefined && parseInt(cityId) !== existingAd.cityId) {
+      updateData.cityId = cityId ? parseInt(cityId) : null;
+      changes.push("şehir");
+    }
+    if (
+      districtId !== undefined &&
+      parseInt(districtId) !== existingAd.districtId
+    ) {
+      updateData.districtId = districtId ? parseInt(districtId) : null;
+      changes.push("ilçe");
+    }
+    if (customFields !== undefined) {
+      updateData.customFields = customFields;
+      changes.push("ilan detayları");
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      res.status(400).json({ error: "Değişiklik yapılmadı" });
+      return;
+    }
+
+    // İlanı güncelle
+    const updatedAd = await prisma.ad.update({
+      where: { id: parseIntParam(id) },
+      data: updateData,
+      include: {
+        category: true,
+        brand: true,
+        model: true,
+        city: true,
+        district: true,
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+      },
+    });
+
+    // Kullanıcıya bildirim gönder
+    const changesList = changes.join(", ");
+    const notificationMessage = editNote
+      ? `"${updatedAd.title}" başlıklı ilanınızda admin tarafından düzenleme yapıldı. Değişen alanlar: ${changesList}. Not: ${editNote}`
+      : `"${updatedAd.title}" başlıklı ilanınızda admin tarafından düzenleme yapıldı. Değişen alanlar: ${changesList}`;
+
+    await prisma.notification.create({
+      data: {
+        userId: existingAd.userId,
+        title: "İlanınız Düzenlendi ✏️",
+        message: notificationMessage,
+        type: "INFO",
+        relatedId: updatedAd.id,
+      },
+    });
+
+    // Socket.io ile anlık bildirim
+    io.to(`user_${existingAd.userId}`).emit("notification", {
+      title: "İlanınız Düzenlendi ✏️",
+      message: notificationMessage,
+      type: "INFO",
+    });
+
+    console.log(
+      `✏️ Admin (${adminId}) ilanı düzenledi: ${updatedAd.title} - Kullanıcı: ${existingAd.user.email} - Değişiklikler: ${changesList}`,
+    );
+
+    res.json({
+      message: "İlan başarıyla güncellendi",
+      ad: updatedAd,
+      changes: changes,
+    });
+  } catch (error) {
+    console.error("Admin ilan düzenleme hatası:", error);
+    res.status(500).json({ error: "İlan düzenlenirken hata oluştu" });
+  }
+};
+
 // İlan oluştur (Kamyon)
 export const createKamyonAd = async (req: Request, res: Response) => {
   try {

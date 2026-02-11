@@ -28,6 +28,7 @@ import {
   Store as StoreIcon,
 } from "@mui/icons-material";
 import { useAppSelector, useAppDispatch } from "../../hooks/redux";
+import { useSiteSettings } from "../../hooks/useSiteSettings";
 import { logoutUser } from "../../store/authSlice";
 import FeedbackModal from "../modals/FeedbackModal";
 import NotificationDropdown from "../NotificationDropdown";
@@ -46,6 +47,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const { t } = useTranslation(); // i18n hook
+  const { settings } = useSiteSettings();
 
   // Responsive hooks
   const theme = useTheme();
@@ -82,7 +84,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
     <AppBar
       position="static"
       sx={{
-        backgroundColor: "#D7D7D5",
+        backgroundColor: settings.headerBgColor || "#D7D7D5",
         boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
         borderBottom: "1px solid #e0e0e0",
       }}
@@ -124,10 +126,10 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
               display: isMobile ? "none" : "block",
             }}
           >
-            Alın Satın
+            {settings.sloganLeft || "Alın Satın"}
           </Typography>
           <img
-            src="/LogoNew.jpeg"
+            src={settings.logoUrl || "/LogoNew.jpeg"}
             alt="TrucksBus"
             style={{
               height: isMobile ? 42 : isTablet ? 52 : 62,
@@ -149,7 +151,7 @@ const Header: React.FC<HeaderProps> = ({ favoritesCount = 0 }) => {
               display: isMobile ? "none" : "block",
             }}
           >
-            ile Mutlu Kalın
+            {settings.sloganRight || "ile Mutlu Kalın"}
           </Typography>
         </Box>
 

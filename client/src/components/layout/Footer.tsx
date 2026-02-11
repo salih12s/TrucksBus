@@ -4,17 +4,25 @@ import { Box, Container, Typography, Link } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { Email } from "@mui/icons-material";
 import FeedbackModal from "../modals/FeedbackModal";
+import { useSiteSettings } from "../../hooks/useSiteSettings";
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const { settings } = useSiteSettings();
 
   const handleLinkClick = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
-    <Box sx={{ backgroundColor: "#E8E8E8", color: "#666", mt: "auto" }}>
+    <Box
+      sx={{
+        backgroundColor: settings.footerBgColor || "#E8E8E8",
+        color: "#666",
+        mt: "auto",
+      }}
+    >
       <Container maxWidth="lg" sx={{ py: 1.5, px: { xs: 2, md: 4 } }}>
         <Box
           sx={{
@@ -268,7 +276,7 @@ const Footer: React.FC = () => {
                     {t("footer.helpCenter")}
                   </Typography>
                   <Typography sx={{ color: "#333", fontSize: "12px" }}>
-                    iletisim@trucksbus.com.tr
+                    {settings.contactEmail || "info@trucksbus.com.tr"}
                   </Typography>
                 </Box>
               </Box>

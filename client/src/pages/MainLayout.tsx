@@ -34,6 +34,7 @@ import {
 } from "@mui/icons-material";
 import { Header, Footer } from "../components/layout";
 import { useAppSelector } from "../hooks/redux";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 import socketService from "../services/socketService";
 import AdDetail from "./AdDetail";
 import apiClient from "../api/client";
@@ -189,6 +190,7 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const params = useParams();
+  const { settings } = useSiteSettings();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -8744,13 +8746,16 @@ const MainLayout: React.FC = () => {
                             ? categories.find(
                                 (cat) => cat.slug === selectedCategory,
                               )?.name || selectedCategory
-                            : t("homePage.showcase")}
+                            : settings.showcaseTitle || t("homePage.showcase")}
                     </Typography>{" "}
                     {/* Universal Search Box */}
                     <TextField
                       fullWidth
                       size="small"
-                      placeholder={t("homePage.searchBarPlaceholder")}
+                      placeholder={
+                        settings.searchPlaceholder ||
+                        t("homePage.searchBarPlaceholder")
+                      }
                       value={searchTerm}
                       onChange={(e) => {
                         const newValue = e.target.value;
@@ -8997,13 +9002,14 @@ const MainLayout: React.FC = () => {
                           }}
                         >
                           {/* ÖRNEKTİR Badge - Örnek ilanlar için */}
-                          {ad.isExample && (
+                          {ad.isExample && settings.showExampleBadge && (
                             <Box
                               sx={{
                                 position: "absolute",
                                 top: 12,
                                 right: -35,
-                                backgroundColor: "#ff5722",
+                                backgroundColor:
+                                  settings.exampleBadgeColor || "#ff5722",
                                 color: "white",
                                 padding: "4px 40px",
                                 fontSize: "10px",
@@ -9015,7 +9021,7 @@ const MainLayout: React.FC = () => {
                                 letterSpacing: "1px",
                               }}
                             >
-                              ÖRNEKTİR
+                              {settings.exampleBadgeText || "ÖRNEKTİR"}
                             </Box>
                           )}
                           {/* Vitrin Görseli */}
@@ -9130,7 +9136,7 @@ const MainLayout: React.FC = () => {
                                 sx={{
                                   fontWeight: 600,
                                   fontSize: isMobile ? "12px" : "14px",
-                                  color: "#dc3545",
+                                  color: settings.cardPriceColor || "#dc3545",
                                 }}
                               >
                                 {ad.price
@@ -9400,13 +9406,14 @@ const MainLayout: React.FC = () => {
                           }}
                         >
                           {/* ÖRNEKTİR Badge - Örnek ilanlar için */}
-                          {ad.isExample && (
+                          {ad.isExample && settings.showExampleBadge && (
                             <Box
                               sx={{
                                 position: "absolute",
                                 top: { xs: 4, sm: 8 },
                                 right: { xs: -28, sm: -30 },
-                                backgroundColor: "#ff5722",
+                                backgroundColor:
+                                  settings.exampleBadgeColor || "#ff5722",
                                 color: "white",
                                 padding: { xs: "2px 30px", sm: "2px 35px" },
                                 fontSize: { xs: "7px", sm: "9px" },
@@ -9418,7 +9425,7 @@ const MainLayout: React.FC = () => {
                                 letterSpacing: "0.5px",
                               }}
                             >
-                              ÖRNEKTİR
+                              {settings.exampleBadgeText || "ÖRNEKTİR"}
                             </Box>
                           )}
                           {/* Vitrin Görseli */}
@@ -9497,7 +9504,7 @@ const MainLayout: React.FC = () => {
                               sx={{
                                 fontWeight: 700,
                                 fontSize: "14px",
-                                color: "#dc3545",
+                                color: settings.cardPriceColor || "#dc3545",
                                 mb: 0.5,
                               }}
                             >

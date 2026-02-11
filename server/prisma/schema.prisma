@@ -488,3 +488,58 @@ enum FeedbackStatus {
   APPROVED
   REJECTED
 }
+
+// ============================================
+// Site Settings - Admin tarafından yönetilen
+// ============================================
+model SiteSettings {
+  id        Int      @id @default(1)
+  
+  // Header / Slogan
+  sloganLeft    String  @default("Alın Satın") @map("slogan_left")
+  sloganRight   String  @default("ile Mutlu Kalın") @map("slogan_right")
+  logoUrl       String? @map("logo_url")
+  
+  // Ana Sayfa
+  showcaseTitle     String  @default("Vitrin") @map("showcase_title")
+  searchPlaceholder String  @default("Araç, marka, model, konum, ilan no ara...") @map("search_placeholder")
+  
+  // İlan Kartları
+  showExampleBadge  Boolean @default(true) @map("show_example_badge")
+  exampleBadgeText  String  @default("ÖRNEKTİR") @map("example_badge_text")
+  exampleBadgeColor String  @default("#ff5722") @map("example_badge_color")
+  cardPriceColor    String  @default("#dc3545") @map("card_price_color")
+  adsPerPage        Int     @default(1000) @map("ads_per_page")
+  
+  // Renk Teması
+  primaryColor      String  @default("#D34237") @map("primary_color")
+  headerBgColor     String  @default("#D7D7D5") @map("header_bg_color")
+  footerBgColor     String  @default("#E8E8E8") @map("footer_bg_color")
+  
+  // İletişim Bilgileri
+  contactEmail      String  @default("info@trucksbus.com.tr") @map("contact_email")
+  contactPhone      String? @map("contact_phone")
+  contactAddress    String  @default("İçerenköy Mahallesi, Ataşehir, İstanbul") @map("contact_address")
+  
+  // Footer
+  footerText        String  @default("Tüm hakları saklıdır.") @map("footer_text")
+  facebookUrl       String? @map("facebook_url")
+  twitterUrl        String? @map("twitter_url")
+  instagramUrl      String? @map("instagram_url")
+  linkedinUrl       String? @map("linkedin_url")
+  
+  // SEO
+  siteTitle         String  @default("TrucksBus - Ağır Ticari Araç Alım Satım") @map("site_title")
+  siteDescription   String  @default("Kamyon, çekici, otobüs, minibüs, dorse alım satım platformu") @map("site_description")
+  
+  // Genel Ayarlar
+  maintenanceMode   Boolean @default(false) @map("maintenance_mode")
+  maintenanceMsg    String  @default("Site bakım modundadır. Lütfen daha sonra tekrar deneyiniz.") @map("maintenance_msg")
+  announcementText  String? @map("announcement_text")
+  announcementColor String  @default("#1976d2") @map("announcement_color")
+  showAnnouncement  Boolean @default(false) @map("show_announcement")
+  
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@map("site_settings")
+}

@@ -30,158 +30,159 @@ const MainLayout = React.lazy(() => import("./pages/MainLayout"));
 const LoginNew = React.lazy(() => import("./components/auth/LoginNew"));
 const RegisterNew = React.lazy(() => import("./components/auth/RegisterNew"));
 const MembershipSelection = React.lazy(
-  () => import("./pages/auth/MembershipSelection")
+  () => import("./pages/auth/MembershipSelection"),
 );
 const LoginSelection = React.lazy(() => import("./pages/auth/LoginSelection"));
 
 // ❗ Secondary pages - Daha sonra yüklenebilir
 const Notifications = React.lazy(() => import("./pages/Notifications"));
 const RegisterCorporate = React.lazy(
-  () => import("./components/auth/RegisterCorporate")
+  () => import("./components/auth/RegisterCorporate"),
 );
 const ForgotPassword = React.lazy(
-  () => import("./components/auth/ForgotPassword")
+  () => import("./components/auth/ForgotPassword"),
 );
 const ResetPassword = React.lazy(
-  () => import("./components/auth/ResetPassword")
+  () => import("./components/auth/ResetPassword"),
 );
 
 // ❗ Form components - Ad creation'da lazy load
 const CreateAdForm = React.lazy(() => import("./components/ads/CreateAdForm"));
 const CreateMinibusAdForm = React.lazy(
-  () => import("./components/ads/CreateMinibusAdForm")
+  () => import("./components/ads/CreateMinibusAdForm"),
 );
 const CreateMinivanPanelvanForm = React.lazy(
-  () => import("./components/forms/MinivanPanelvan/CreateMinivanPanelvanForm")
+  () => import("./components/forms/MinivanPanelvan/CreateMinivanPanelvanForm"),
 );
 const OtobusAdForm = React.lazy(
-  () => import("./components/forms/OtobusAdForm")
+  () => import("./components/forms/OtobusAdForm"),
 );
 const KamyonAdForm = React.lazy(
-  () => import("./components/forms/KamyonAdForm")
+  () => import("./components/forms/KamyonAdForm"),
 );
 const CekiciAdForm = React.lazy(
-  () => import("./components/forms/CekiciAdForm")
+  () => import("./components/forms/CekiciAdForm"),
 );
 const VehicleFormSelector = React.lazy(
-  () => import("./components/VehicleFormSelector")
+  () => import("./components/VehicleFormSelector"),
 );
 
 // Dorse Forms
 const HafriyatTipiForm = React.lazy(
-  () => import("./components/forms/Damperli/HafriyatTipiForm")
+  () => import("./components/forms/Damperli/HafriyatTipiForm"),
 );
 const HavuzHardoxTipiForm = React.lazy(
-  () => import("./components/forms/Damperli/HavuzHardoxTipiForm")
+  () => import("./components/forms/Damperli/HavuzHardoxTipiForm"),
 );
 const KapakliTipForm = React.lazy(
-  () => import("./components/forms/Damperli/KapakliTipForm")
+  () => import("./components/forms/Damperli/KapakliTipForm"),
 );
 const KayaTipiForm = React.lazy(
-  () => import("./components/forms/Damperli/KayaTipiForm")
+  () => import("./components/forms/Damperli/KayaTipiForm"),
 );
 
 // Karoser UstYapi Forms
 const KamyonRomorkForm = React.lazy(
-  () => import("./components/forms/KamyonRomorkForm")
+  () => import("./components/forms/KamyonRomorkForm"),
 );
 
 // Karoser UstYapi - Damperli Forms
 const KaroserKayaTipiForm = React.lazy(
-  () => import("./components/forms/KaroserUstyapi/Damperli/KayaTipiForm")
+  () => import("./components/forms/KaroserUstyapi/Damperli/KayaTipiForm"),
 );
 const KaroserHavuzHardoxTipiForm = React.lazy(
-  () => import("./components/forms/KaroserUstyapi/Damperli/HavuzHardoxTipiForm")
+  () =>
+    import("./components/forms/KaroserUstyapi/Damperli/HavuzHardoxTipiForm"),
 );
 const KaroserKapakliTipForm = React.lazy(
-  () => import("./components/forms/KaroserUstyapi/Damperli/KapakliTipForm")
+  () => import("./components/forms/KaroserUstyapi/Damperli/KapakliTipForm"),
 );
 const KaroserAhsapKasaForm = React.lazy(
-  () => import("./components/forms/KaroserUstyapi/Damperli/AhsapKasaForm")
+  () => import("./components/forms/KaroserUstyapi/Damperli/AhsapKasaForm"),
 );
 
 // Karoser UstYapi - Sabit Kabin Forms
 const AcikKasaForm = React.lazy(
-  () => import("./components/forms/KaroserUstyapi/SabitKabin/AcikKasaForm")
+  () => import("./components/forms/KaroserUstyapi/SabitKabin/AcikKasaForm"),
 );
 const KapaliKasaForm = React.lazy(
-  () => import("./components/forms/KaroserUstyapi/SabitKabin/KapaliKasaForm")
+  () => import("./components/forms/KaroserUstyapi/SabitKabin/KapaliKasaForm"),
 );
 const OzelKasaForm = React.lazy(
-  () => import("./components/forms/KaroserUstyapi/SabitKabin/OzelKasaForm")
+  () => import("./components/forms/KaroserUstyapi/SabitKabin/OzelKasaForm"),
 );
 
 // Tarım Römorku Forms
 const TarimRomorkAcikKasaForm = React.lazy(
-  () => import("./components/forms/TarimRomork/AcikKasa/AcikKasaForm")
+  () => import("./components/forms/TarimRomork/AcikKasa/AcikKasaForm"),
 );
 const TarimRomorkKapaliKasaForm = React.lazy(
-  () => import("./components/forms/TarimRomork/KapaliKasa/KapaliKasaForm")
+  () => import("./components/forms/TarimRomork/KapaliKasa/KapaliKasaForm"),
 );
 const SulamaForm = React.lazy(
-  () => import("./components/forms/TarimRomork/SulamaForm")
+  () => import("./components/forms/TarimRomork/SulamaForm"),
 );
 const TarimTankerForm = React.lazy(
-  () => import("./components/forms/TarimRomork/TarimTankerForm")
+  () => import("./components/forms/TarimRomork/TarimTankerForm"),
 );
 
 // Oto Kurtarıcı ve Taşıyıcı Forms
 const TekliAracForm = React.lazy(
-  () => import("./components/forms/OtoKurtariciTasiyici/TekliAracForm")
+  () => import("./components/forms/OtoKurtariciTasiyici/TekliAracForm"),
 );
 const CokluAracForm = React.lazy(
-  () => import("./components/forms/OtoKurtariciTasiyici/CokluAracForm")
+  () => import("./components/forms/OtoKurtariciTasiyici/CokluAracForm"),
 );
 
 // Dorse Alt Kategoriler
 const SilobasForm = React.lazy(
-  () => import("./components/forms/Silobas/SilobasForm")
+  () => import("./components/forms/Silobas/SilobasForm"),
 );
 const TankerForm = React.lazy(
-  () => import("./components/forms/Tanker/TankerForm")
+  () => import("./components/forms/Tanker/TankerForm"),
 );
 const TekstilForm = React.lazy(
-  () => import("./components/forms/Tekstil/TekstilForm")
+  () => import("./components/forms/Tekstil/TekstilForm"),
 );
 
 const CategorySelection = React.lazy(
-  () => import("./components/ads/CategorySelection")
+  () => import("./components/ads/CategorySelection"),
 );
 const BrandSelection = React.lazy(
-  () => import("./components/ads/BrandSelection")
+  () => import("./components/ads/BrandSelection"),
 );
 const ModelSelection = React.lazy(
-  () => import("./components/ads/ModelSelection")
+  () => import("./components/ads/ModelSelection"),
 );
 const VariantSelection = React.lazy(
-  () => import("./components/ads/VariantSelection")
+  () => import("./components/ads/VariantSelection"),
 );
 const MessagingSystem = React.lazy(
-  () => import("./components/messaging/MessagingSystemNew")
+  () => import("./components/messaging/MessagingSystemNew"),
 );
 const AnalyticsDashboard = React.lazy(
-  () => import("./components/analytics/AnalyticsDashboard")
+  () => import("./components/analytics/AnalyticsDashboard"),
 );
 
 // Legal Pages
 const PrivacyPolicy = React.lazy(
-  () => import("./pages/legal/PrivacyPolicyNew")
+  () => import("./pages/legal/PrivacyPolicyNew"),
 );
 const TermsOfService = React.lazy(
-  () => import("./pages/legal/TermsOfServiceNew")
+  () => import("./pages/legal/TermsOfServiceNew"),
 );
 const KVKK = React.lazy(() => import("./pages/legal/KVKK"));
 const ContractsAndRules = React.lazy(
-  () => import("./pages/legal/ContractsAndRules")
+  () => import("./pages/legal/ContractsAndRules"),
 );
 const AccountAgreement = React.lazy(
-  () => import("./pages/legal/AccountAgreement")
+  () => import("./pages/legal/AccountAgreement"),
 );
 const UsageConditions = React.lazy(
-  () => import("./pages/legal/UsageConditions")
+  () => import("./pages/legal/UsageConditions"),
 );
 const PersonalDataProtection = React.lazy(
-  () => import("./pages/legal/PersonalDataProtection")
+  () => import("./pages/legal/PersonalDataProtection"),
 );
 const CookiePolicy = React.lazy(() => import("./pages/legal/CookiePolicy"));
 const HelpGuide = React.lazy(() => import("./pages/legal/HelpGuide"));
@@ -195,11 +196,14 @@ const AllAds = React.lazy(() => import("./admin/pages/AllAds"));
 const PendingAds = React.lazy(() => import("./admin/pages/PendingAds"));
 const UsersPage = React.lazy(() => import("./admin/pages/UsersPage"));
 const AdminLogsPage = React.lazy(() => import("./admin/pages/AdminLogsPage"));
+const HomepageManagement = React.lazy(
+  () => import("./admin/pages/HomepageManagement"),
+);
 const FeedbackManagement = React.lazy(
-  () => import("./admin/pages/FeedbackManagement")
+  () => import("./admin/pages/FeedbackManagement"),
 );
 const ComplaintManagement = React.lazy(
-  () => import("./admin/pages/ComplaintManagement")
+  () => import("./admin/pages/ComplaintManagement"),
 );
 
 import "./App.css";
@@ -258,7 +262,7 @@ const LoadingFallback = ({
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
   const { token, user, isAuthenticated } = useSelector(
-    (state: RootState) => state.auth
+    (state: RootState) => state.auth,
   );
   const [isInitialized, setIsInitialized] = React.useState(false);
 
@@ -327,7 +331,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
               badge: "/logo.svg",
             });
           }
-        }
+        },
       );
 
       return () => {
@@ -562,7 +566,7 @@ function App() {
                               <ProtectedRoute>
                                 {(() => {
                                   console.log(
-                                    "CreateMinibusAdForm route matched!"
+                                    "CreateMinibusAdForm route matched!",
                                   );
                                   return <CreateMinibusAdForm />;
                                 })()}
@@ -1259,6 +1263,10 @@ function App() {
                           {/* Admin Routes */}
                           <Route path="/admin" element={<AdminLayout />}>
                             <Route index element={<AdminDashboard />} />
+                            <Route
+                              path="homepage"
+                              element={<HomepageManagement />}
+                            />
                             <Route path="all-ads" element={<AllAds />} />
                             <Route
                               path="pending-ads"

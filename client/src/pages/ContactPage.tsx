@@ -9,11 +9,13 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { LocationOn, Phone, Email, Schedule } from "@mui/icons-material";
+import { LocationOn, Email, Schedule } from "@mui/icons-material";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 
 const ContactPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { settings } = useSiteSettings();
 
   return (
     <Container
@@ -91,48 +93,8 @@ const ContactPage: React.FC = () => {
               Adres
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              TrucksBus Merkez Ofis
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Maslak Mahallesi, Büyükdere Cd.
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Sarıyer, İstanbul 34398
-            </Typography>
-          </CardContent>
-        </Card>
-
-        {/* Telefon */}
-        <Card
-          sx={{
-            height: "100%",
-            textAlign: "center",
-            p: { xs: 1, md: 2 },
-            border: "1px solid #e0e0e0",
-            borderRadius: 2,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          }}
-        >
-          <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-            <Phone
-              sx={{
-                fontSize: { xs: 40, md: 48 },
-                color: "#e74c3c",
-                mb: 2,
-              }}
-            />
-            <Typography
-              variant={isMobile ? "subtitle1" : "h6"}
-              gutterBottom
-              sx={{ color: "#313B4C", fontWeight: "bold" }}
-            >
-              Telefon
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              +90 (212) 555 0123
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              +90 (542) 555 0124
+              {settings.contactAddress ||
+                "İçerenköy Mahallesi, Ataşehir, İstanbul"}
             </Typography>
           </CardContent>
         </Card>
@@ -164,7 +126,7 @@ const ContactPage: React.FC = () => {
               E-posta
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              iletisim@trucksbus.com.tr
+              {settings.contactEmail || "info@trucksbus.com.tr"}
             </Typography>
           </CardContent>
         </Card>

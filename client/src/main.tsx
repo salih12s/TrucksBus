@@ -6,6 +6,7 @@ import { onCLS, onINP, onFCP, onLCP, onTTFB } from "web-vitals";
 import "./index.css";
 import "./i18n/config"; // i18n yapılandırması
 import App from "./App.tsx";
+import { SiteSettingsProvider } from "./hooks/useSiteSettings";
 import { setupChunkErrorHandler } from "./utils/chunkErrorHandler";
 
 // Web Vitals reporting
@@ -79,7 +80,9 @@ createRoot(document.getElementById("root")!).render(
   // <StrictMode> {/* ❌ DISABLED - Causes double network requests */}
   <ThemeProvider theme={theme}>
     <CssBaseline />
-    <App />
+    <SiteSettingsProvider>
+      <App />
+    </SiteSettingsProvider>
   </ThemeProvider>,
   // </StrictMode>
 );

@@ -31,7 +31,7 @@ router.get(
     console.log("🎯 ADS Route /:id yakalandı - ID:", req.params.id);
     next();
   },
-  adController.getAdById
+  adController.getAdById,
 );
 router.post("/", authenticateToken, upload.any(), adController.createAd);
 router.put("/:id", authenticateToken, adController.updateAd);
@@ -42,13 +42,13 @@ router.post(
   "/:id/videos",
   authenticateToken,
   upload.single("video"),
-  adController.uploadVideo
+  adController.uploadVideo,
 );
 router.get("/:id/videos", adController.getAdVideos);
 router.delete(
   "/:id/videos/:videoId",
   authenticateToken,
-  adController.deleteVideo
+  adController.deleteVideo,
 );
 
 // Minibüs ilan oluşturma (multipart/form-data desteği ile)
@@ -56,7 +56,7 @@ router.post(
   "/minibus",
   authenticateToken,
   upload.any(),
-  adController.createMinibusAd
+  adController.createMinibusAd,
 );
 
 // Minivan & Panelvan ilan oluşturma (multipart/form-data desteği ile)
@@ -64,7 +64,7 @@ router.post(
   "/minivan-panelvan",
   authenticateToken,
   upload.any(),
-  adController.createMinivanPanelvanAd
+  adController.createMinivanPanelvanAd,
 );
 
 // Çekici ilan oluşturma (multipart/form-data desteği ile)
@@ -72,7 +72,7 @@ router.post(
   "/cekici",
   authenticateToken,
   upload.any(),
-  adController.createCekiciAd
+  adController.createCekiciAd,
 );
 
 // Kamyon ilan oluşturma (multipart/form-data desteği ile)
@@ -80,7 +80,7 @@ router.post(
   "/kamyon",
   authenticateToken,
   upload.any(),
-  adController.createKamyonAd
+  adController.createKamyonAd,
 );
 
 // Otobüs ilan oluşturma (multipart/form-data desteği ile)
@@ -88,7 +88,7 @@ router.post(
   "/otobus",
   authenticateToken,
   upload.any(),
-  adController.createOtobusAd
+  adController.createOtobusAd,
 );
 
 // Dorse ilan oluşturma (multipart/form-data desteği ile)
@@ -96,7 +96,7 @@ router.post(
   "/dorse",
   authenticateToken,
   upload.any(),
-  adController.createDorseAd
+  adController.createDorseAd,
 );
 
 // Karoser üst yapı ilan oluşturma (multipart/form-data desteği ile)
@@ -104,7 +104,7 @@ router.post(
   "/karoser",
   authenticateToken,
   upload.any(),
-  adController.createKaroserAd
+  adController.createKaroserAd,
 );
 
 // Oto Kurtarıcı Tekli ilan oluşturma (multipart/form-data desteği ile)
@@ -112,7 +112,7 @@ router.post(
   "/oto-kurtarici-tekli",
   authenticateToken,
   upload.any(),
-  adController.createOtoKurtariciTekliAd
+  adController.createOtoKurtariciTekliAd,
 );
 
 // Oto Kurtarıcı Çoklu ilan oluşturma (multipart/form-data desteği ile)
@@ -120,7 +120,7 @@ router.post(
   "/oto-kurtarici-coklu",
   authenticateToken,
   upload.any(),
-  adController.createOtoKurtariciCokluAd
+  adController.createOtoKurtariciCokluAd,
 );
 
 // Uzayabilir Şasi ilan oluşturma (multipart/form-data desteği ile)
@@ -128,7 +128,7 @@ router.post(
   "/uzayabilir-sasi",
   authenticateToken,
   upload.any(),
-  adController.createUzayabilirSasiAd
+  adController.createUzayabilirSasiAd,
 );
 
 // Kamyon Römork ilan oluşturma (multipart/form-data desteği ile)
@@ -136,7 +136,7 @@ router.post(
   "/kamyon-romork",
   authenticateToken,
   upload.any(),
-  adController.createKamyonRomorkAd
+  adController.createKamyonRomorkAd,
 );
 
 // Tarım Römork ilan oluşturma (multipart/form-data desteği ile)
@@ -144,7 +144,7 @@ router.post(
   "/tarim-romork",
   authenticateToken,
   upload.any(),
-  adController.createKamyonRomorkAd // Aynı controller'ı kullanabilir
+  adController.createKamyonRomorkAd, // Aynı controller'ı kullanabilir
 );
 
 // Taşıma Römorkları ilan oluşturma (multipart/form-data desteği ile)
@@ -152,7 +152,7 @@ router.post(
   "/tasima-romork",
   authenticateToken,
   upload.any(),
-  adController.createKamyonRomorkAd // Aynı controller'ı kullanabilir
+  adController.createKamyonRomorkAd, // Aynı controller'ı kullanabilir
 );
 
 // Kullanıcının ilanları
@@ -163,37 +163,43 @@ router.get(
   "/admin/pending",
   authenticateToken,
   requireAdmin,
-  adController.getPendingAds
+  adController.getPendingAds,
 );
 router.get(
   "/admin/all",
   authenticateToken,
   requireAdmin,
-  adController.getAllAdsForAdmin
+  adController.getAllAdsForAdmin,
 );
 router.get(
   "/admin/stats",
   authenticateToken,
   requireAdmin,
-  adController.getAdminStats
+  adController.getAdminStats,
 );
 router.put(
   "/admin/:id/approve",
   authenticateToken,
   requireAdmin,
-  adController.approveAd
+  adController.approveAd,
 );
 router.put(
   "/admin/:id/reject",
   authenticateToken,
   requireAdmin,
-  adController.rejectAd
+  adController.rejectAd,
+);
+router.put(
+  "/admin/:id/update",
+  authenticateToken,
+  requireAdmin,
+  adController.adminUpdateAd,
 );
 router.delete(
   "/admin/:id/force-delete",
   authenticateToken,
   requireAdmin,
-  adController.forceDeleteAd
+  adController.forceDeleteAd,
 );
 
 export default router;
