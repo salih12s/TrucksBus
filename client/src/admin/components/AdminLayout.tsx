@@ -30,6 +30,7 @@ import {
   ExitToApp,
   Refresh,
   Menu as MenuIcon,
+  Gavel as ModerationIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../hooks/redux";
@@ -49,6 +50,11 @@ const menuItems = [
     text: "Onay Bekleyen İlanlar",
     icon: <HourglassIcon />,
     path: "/admin/pending-ads",
+  },
+  {
+    text: "Fiyat Moderasyonu",
+    icon: <ModerationIcon />,
+    path: "/admin/moderation",
   },
   { text: "Şikayet Yönetimi", icon: <ReportIcon />, path: "/admin/complaints" },
   {

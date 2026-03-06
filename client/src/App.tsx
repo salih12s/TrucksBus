@@ -205,6 +205,9 @@ const FeedbackManagement = React.lazy(
 const ComplaintManagement = React.lazy(
   () => import("./admin/pages/ComplaintManagement"),
 );
+const ModerationPanel = React.lazy(
+  () => import("./admin/pages/ModerationPanel"),
+);
 
 import "./App.css";
 
@@ -1281,6 +1284,10 @@ function App() {
                             <Route
                               path="complaints"
                               element={<ComplaintManagement />}
+                            />
+                            <Route
+                              path="moderation"
+                              element={<ModerationPanel />}
                             />
                             {/* Diğer admin sayfaları buraya eklenecek */}
                           </Route>

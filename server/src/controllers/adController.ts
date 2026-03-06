@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { io } from "../app";
+import { applyPriceModeration } from "../services/moderationService";
 
 // Helper function to safely parse query/params that can be string or string[]
 const parseStringParam = (param: string | string[] | undefined): string => {
@@ -1182,11 +1183,21 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
     }
 
     console.log(`✅ İlan oluşturuldu: ${ad.id}`);
+
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(ad.id);
+
     res.status(201).json({
       success: true,
-      message: "İlan başarıyla oluşturuldu",
+      message:
+        moderationResult.decision === "APPROVED"
+          ? "İlan başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "İlan oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "İlan başarıyla oluşturuldu ve onay bekliyor",
       listing: { id: ad.id },
       ad, // Legacy compatibility
+      moderation: moderationResult,
     });
   } catch (error) {
     console.error("İlan oluşturulurken hata:", error);
@@ -1770,9 +1781,18 @@ export const createMinibusAd = async (req: Request, res: Response) => {
       },
     });
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(createdAd?.id || 0);
+
     return res.status(201).json({
-      message: "Minibüs ilanı başarıyla oluşturuldu ve onay bekliyor",
+      message:
+        moderationResult.decision === "APPROVED"
+          ? "Minibüs ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Minibüs ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Minibüs ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad: createdAd,
+      moderation: moderationResult,
     });
   } catch (error: any) {
     console.error("İlan oluşturma hatası detayı:", {
@@ -2110,9 +2130,18 @@ export const createCekiciAd = async (req: Request, res: Response) => {
       },
     });
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(createdAd?.id || 0);
+
     return res.status(201).json({
-      message: "Çekici ilanı başarıyla oluşturuldu ve onay bekliyor",
+      message:
+        moderationResult.decision === "APPROVED"
+          ? "Çekici ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Çekici ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Çekici ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad: createdAd,
+      moderation: moderationResult,
     });
   } catch (error: any) {
     console.error("🚨 Çekici ilanı oluşturma hatası detayı:", {
@@ -2888,9 +2917,18 @@ export const createKamyonAd = async (req: Request, res: Response) => {
       },
     });
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(createdAd?.id || 0);
+
     return res.status(201).json({
-      message: "Kamyon ilanı başarıyla oluşturuldu ve onay bekliyor",
+      message:
+        moderationResult.decision === "APPROVED"
+          ? "Kamyon ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Kamyon ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Kamyon ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad: createdAd,
+      moderation: moderationResult,
     });
   } catch (error: any) {
     console.error("Kamyon ilanı oluşturma hatası detayı:", {
@@ -3262,9 +3300,18 @@ export const createOtobusAd = async (req: Request, res: Response) => {
     console.log(`📸 Saved images count: ${createdAd?.images?.length || 0}`);
     console.log(`🎥 Saved videos count: ${createdAd?.videos?.length || 0}`);
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(createdAd?.id || 0);
+
     return res.status(201).json({
-      message: "Otobüs ilanı başarıyla oluşturuldu ve onay bekliyor",
+      message:
+        moderationResult.decision === "APPROVED"
+          ? "Otobüs ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Otobüs ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Otobüs ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad: createdAd,
+      moderation: moderationResult,
     });
   } catch (error: any) {
     console.error("🚌 Otobüs ilanı oluşturma hatası detayı:", {
@@ -3587,9 +3634,18 @@ export const createDorseAd = async (req: Request, res: Response) => {
       );
     }
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(ad.id);
+
     return res.status(201).json({
-      message: "Dorse ilanı başarıyla oluşturuldu ve onay bekliyor",
+      message:
+        moderationResult.decision === "APPROVED"
+          ? "Dorse ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Dorse ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Dorse ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad,
+      moderation: moderationResult,
     });
   } catch (error: any) {
     console.error("Dorse ilanı oluşturma hatası detayı:", {
@@ -3874,9 +3930,18 @@ export const createKaroserAd = async (req: Request, res: Response) => {
       console.log("⚠️ Karoser ilanı için resim bulunamadı");
     }
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(ad.id);
+
     return res.status(201).json({
-      message: "Karoser üst yapı ilanı başarıyla oluşturuldu ve onay bekliyor",
+      message:
+        moderationResult.decision === "APPROVED"
+          ? "Karoser üst yapı ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Karoser ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Karoser üst yapı ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad,
+      moderation: moderationResult,
     });
   } catch (error: any) {
     console.error("Karoser ilanı oluşturma hatası detayı:", {
@@ -4255,10 +4320,18 @@ export const createOtoKurtariciTekliAd = async (
       },
     });
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(createdAd?.id || 0);
+
     return res.status(201).json({
       message:
-        "Oto Kurtarıcı Tekli ilanı başarıyla oluşturuldu ve onay bekliyor",
+        moderationResult.decision === "APPROVED"
+          ? "Oto Kurtarıcı Tekli ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Oto Kurtarıcı Tekli ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Oto Kurtarıcı Tekli ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad: createdAd,
+      moderation: moderationResult,
     });
   } catch (error: any) {
     console.error("Oto Kurtarıcı Tekli ilanı oluşturma hatası detayı:", {
@@ -4522,10 +4595,18 @@ export const createOtoKurtariciCokluAd = async (
       },
     });
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(createdAd?.id || 0);
+
     return res.status(201).json({
       message:
-        "Oto Kurtarıcı Çoklu ilanı başarıyla oluşturuldu ve onay bekliyor",
+        moderationResult.decision === "APPROVED"
+          ? "Oto Kurtarıcı Çoklu ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Oto Kurtarıcı Çoklu ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Oto Kurtarıcı Çoklu ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad: createdAd,
+      moderation: moderationResult,
     });
   } catch (error: any) {
     console.error("Oto Kurtarıcı Çoklu ilanı oluşturma hatası detayı:", {
@@ -4644,6 +4725,215 @@ export const getAllAdsForAdmin = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Admin tüm ilanları getirme hatası:", error);
     res.status(500).json({ error: "İlanlar alınırken hata oluştu" });
+  }
+};
+
+// =============================================================
+// OTOMATİK MODERASYON - Admin Endpoints
+// =============================================================
+
+/**
+ * Admin: Fiyat aralığı dışı (otomatik reddedilen) ilanları getir
+ */
+export const getPriceRejectedAds = async (req: Request, res: Response) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+
+    // PendingAd tablosunda "[OTOMATİK RED]" notu olan ilanları bul
+    const pendingAds = await prisma.pendingAd.findMany({
+      where: {
+        adminNotes: {
+          contains: "[OTOMATİK RED]",
+        },
+      },
+      include: {
+        ad: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                companyName: true,
+              },
+            },
+            category: true,
+            brand: true,
+            model: true,
+            variant: true,
+            city: { select: { id: true, name: true } },
+            district: { select: { id: true, name: true } },
+            images: { orderBy: { displayOrder: "asc" }, take: 1 },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: parseInt(limit as string),
+    });
+
+    const total = await prisma.pendingAd.count({
+      where: {
+        adminNotes: {
+          contains: "[OTOMATİK RED]",
+        },
+      },
+    });
+
+    const ads = pendingAds
+      .filter((p) => p.ad) // Ad silinmemiş olanları filtrele
+      .map((p) => ({
+        ...p.ad,
+        moderationNote: p.adminNotes,
+        pendingAdId: p.id,
+      }));
+
+    res.json({
+      ads,
+      pagination: {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        total,
+        pages: Math.ceil(total / parseInt(limit as string)),
+      },
+    });
+  } catch (error) {
+    console.error("Fiyat aralığı dışı ilanları getirme hatası:", error);
+    res
+      .status(500)
+      .json({ error: "Fiyat aralığı dışı ilanlar alınırken hata oluştu" });
+  }
+};
+
+/**
+ * Admin: Otomatik reddedilen ilanı manuel olarak onayla
+ */
+export const manualApproveRejectedAd = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const adminId = (req as any).user?.id;
+    const adId = parseIntParam(id);
+
+    // İlanın var olup olmadığını kontrol et
+    const ad = await prisma.ad.findUnique({
+      where: { id: adId },
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+        category: true,
+      },
+    });
+
+    if (!ad) {
+      res.status(404).json({ error: "İlan bulunamadı" });
+      return;
+    }
+
+    // İlanı onayla
+    await prisma.ad.update({
+      where: { id: adId },
+      data: { status: "APPROVED" },
+    });
+
+    // PendingAd kaydını güncelle
+    try {
+      await prisma.pendingAd.update({
+        where: { adId },
+        data: {
+          adminNotes: `[MANUEL ONAY] Admin tarafından onaylandı (önceki: otomatik red)`,
+          reviewedBy: adminId,
+          reviewedAt: new Date(),
+        },
+      });
+    } catch {
+      // PendingAd kaydı yoksa sorun değil
+    }
+
+    // Kullanıcıya bildirim gönder
+    await prisma.notification.create({
+      data: {
+        userId: ad.userId,
+        title: "İlanınız Onaylandı! 🎉",
+        message: `"${ad.title}" başlıklı ilanınız admin tarafından onaylandı ve yayına alındı.`,
+        type: "SUCCESS",
+        relatedId: ad.id,
+      },
+    });
+
+    // Socket.io bildirimi
+    io.emit("adApproved", {
+      adId: ad.id,
+      title: ad.title,
+      message: "Reddedilen ilan admin tarafından onaylandı!",
+    });
+
+    io.to(`user_${ad.userId}`).emit("notification", {
+      title: "İlanınız Onaylandı! 🎉",
+      message: `"${ad.title}" başlıklı ilanınız admin tarafından onaylandı.`,
+      type: "SUCCESS",
+    });
+
+    console.log(`✅ İlan #${adId} admin tarafından manuel onaylandı`);
+
+    res.json({
+      message: "İlan başarıyla onaylandı",
+      ad: { id: adId, status: "APPROVED" },
+    });
+  } catch (error) {
+    console.error("Manuel onay hatası:", error);
+    res.status(500).json({ error: "İlan onaylanırken hata oluştu" });
+  }
+};
+
+/**
+ * Admin: Moderasyon istatistiklerini getir
+ */
+export const getModerationStats = async (req: Request, res: Response) => {
+  try {
+    const autoRejected = await prisma.pendingAd.count({
+      where: {
+        adminNotes: { contains: "[OTOMATİK RED]" },
+      },
+    });
+
+    const manuallyApproved = await prisma.pendingAd.count({
+      where: {
+        adminNotes: { contains: "[MANUEL ONAY]" },
+      },
+    });
+
+    const pendingAds = await prisma.ad.count({ where: { status: "PENDING" } });
+    const approvedAds = await prisma.ad.count({
+      where: { status: "APPROVED" },
+    });
+    const rejectedAds = await prisma.ad.count({
+      where: { status: "REJECTED" },
+    });
+
+    res.json({
+      moderation: {
+        autoRejected,
+        manuallyApproved,
+        pendingReview: pendingAds,
+      },
+      totals: {
+        pending: pendingAds,
+        approved: approvedAds,
+        rejected: rejectedAds,
+      },
+    });
+  } catch (error) {
+    console.error("Moderasyon istatistikleri hatası:", error);
+    res
+      .status(500)
+      .json({ error: "Moderasyon istatistikleri alınırken hata oluştu" });
   }
 };
 
@@ -5013,9 +5303,18 @@ export const createUzayabilirSasiAd = async (req: Request, res: Response) => {
       });
     }
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(ad.id);
+
     return res.status(201).json({
-      message: "Uzayabilir şasi ilanı başarıyla oluşturuldu",
+      message:
+        moderationResult.decision === "APPROVED"
+          ? "Uzayabilir şasi ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Uzayabilir şasi ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Uzayabilir şasi ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad,
+      moderation: moderationResult,
     });
   } catch (error) {
     console.error("Uzayabilir şasi ilan oluşturma hatası:", error);
@@ -5188,9 +5487,19 @@ export const createKamyonRomorkAd = async (req: Request, res: Response) => {
     }
 
     console.log(`✅ Kamyon Römork ilanı oluşturuldu: ${ad.id}`);
+
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(ad.id);
+
     res.status(201).json({
-      message: "Kamyon Römork ilanı başarıyla oluşturuldu",
+      message:
+        moderationResult.decision === "APPROVED"
+          ? "Kamyon Römork ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Kamyon Römork ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Kamyon Römork ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad,
+      moderation: moderationResult,
     });
   } catch (error) {
     console.error("Kamyon Römork ilanı oluşturulurken hata:", error);
@@ -5599,11 +5908,19 @@ export const createMinivanPanelvanAd = async (req: Request, res: Response) => {
       },
     });
 
+    // 🔍 Otomatik fiyat moderasyonu
+    const moderationResult = await applyPriceModeration(createdAd?.id || 0);
+
     return res.status(201).json({
       message:
-        "Minivan & Panelvan ilanı başarıyla oluşturuldu ve onay bekliyor",
+        moderationResult.decision === "APPROVED"
+          ? "Minivan & Panelvan ilanı başarıyla oluşturuldu ve otomatik onaylandı"
+          : moderationResult.decision === "REJECTED"
+            ? "Minivan & Panelvan ilanı oluşturuldu ancak fiyat aralığı dışında olduğu için reddedildi"
+            : "Minivan & Panelvan ilanı başarıyla oluşturuldu ve onay bekliyor",
       ad: createdAd,
       id: createdAd?.id,
+      moderation: moderationResult,
     });
   } catch (error: any) {
     console.error("İlan oluşturma hatası detayı:", {

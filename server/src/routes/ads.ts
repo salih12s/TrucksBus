@@ -202,4 +202,24 @@ router.delete(
   adController.forceDeleteAd,
 );
 
+// Otomatik Moderasyon routes
+router.get(
+  "/admin/moderation/price-rejected",
+  authenticateToken,
+  requireAdmin,
+  adController.getPriceRejectedAds,
+);
+router.get(
+  "/admin/moderation/stats",
+  authenticateToken,
+  requireAdmin,
+  adController.getModerationStats,
+);
+router.put(
+  "/admin/moderation/:id/manual-approve",
+  authenticateToken,
+  requireAdmin,
+  adController.manualApproveRejectedAd,
+);
+
 export default router;

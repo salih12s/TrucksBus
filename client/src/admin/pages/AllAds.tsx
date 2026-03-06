@@ -48,6 +48,7 @@ import {
   GridView as GridIcon,
   Close as CloseIcon,
   Save as SaveIcon,
+  MonetizationOn as PriceRejectedIcon,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
 import { getTokenFromStorage } from "../../utils/tokenUtils";
@@ -158,23 +159,39 @@ const AllAds: React.FC = () => {
         return;
       }
 
-      const params = new URLSearchParams();
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (categoryFilter !== "all") params.append("categoryId", categoryFilter);
-      if (searchTerm) params.append("search", searchTerm);
-      params.append("page", page.toString());
-      params.append("limit", "12");
+      // Fiyat aralığı dışı filtresi özel endpoint kullanır
+      if (statusFilter === "PRICE_REJECTED") {
+        const response = await apiClient.get(
+          `/ads/admin/moderation/price-rejected?page=${page}&limit=12`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        const data = response.data as {
+          ads: Ad[];
+          pagination: { pages: number; total: number };
+        };
+        setAds(data.ads);
+        setTotalPages(data.pagination.pages);
+        setTotalAds(data.pagination.total || data.ads.length);
+      } else {
+        const params = new URLSearchParams();
+        if (statusFilter !== "all") params.append("status", statusFilter);
+        if (categoryFilter !== "all")
+          params.append("categoryId", categoryFilter);
+        if (searchTerm) params.append("search", searchTerm);
+        params.append("page", page.toString());
+        params.append("limit", "12");
 
-      const response = await apiClient.get(`/ads/admin/all?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = response.data as {
-        ads: Ad[];
-        pagination: { pages: number; total: number };
-      };
-      setAds(data.ads);
-      setTotalPages(data.pagination.pages);
-      setTotalAds(data.pagination.total || data.ads.length);
+        const response = await apiClient.get(`/ads/admin/all?${params}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = response.data as {
+          ads: Ad[];
+          pagination: { pages: number; total: number };
+        };
+        setAds(data.ads);
+        setTotalPages(data.pagination.pages);
+        setTotalAds(data.pagination.total || data.ads.length);
+      }
     } catch (error) {
       console.error("İlanlar yüklenirken hata:", error);
       setSnackbar({
@@ -439,6 +456,7 @@ const AllAds: React.FC = () => {
               <MenuItem value="APPROVED">✅ Onaylı</MenuItem>
               <MenuItem value="PENDING">⏳ Bekliyor</MenuItem>
               <MenuItem value="REJECTED">❌ Reddedildi</MenuItem>
+              <MenuItem value="PRICE_REJECTED">💰 Fiyat Aralığı Dışı</MenuItem>
               <MenuItem value="EXPIRED">⌛ Süresi Doldu</MenuItem>
             </Select>
           </FormControl>
@@ -506,6 +524,15 @@ const AllAds: React.FC = () => {
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <RejectedIcon sx={{ color: "#f44336", fontSize: 18 }} />
               Reddedildi
+            </Box>
+          }
+        />
+        <Tab
+          value="PRICE_REJECTED"
+          label={
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <PriceRejectedIcon sx={{ color: "#e91e63", fontSize: 18 }} />
+              Fiyat Aralığı Dışı
             </Box>
           }
         />
@@ -899,7 +926,9 @@ const AllAds: React.FC = () => {
                   {ad.user.companyName ||
                     `${ad.user.firstName} ${ad.user.lastName}`}
                 </Typography>
-                <Typography sx={{ fontSize: "10px", color: "#1976d2", cursor: "pointer" }} noWrap
+                <Typography
+                  sx={{ fontSize: "10px", color: "#1976d2", cursor: "pointer" }}
+                  noWrap
                   onClick={() => window.open(`mailto:${ad.user.email}`)}
                   title={ad.user.email}
                 >
