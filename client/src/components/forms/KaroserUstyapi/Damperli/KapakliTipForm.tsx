@@ -176,7 +176,7 @@ const KapakliTipForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -227,11 +227,16 @@ const KapakliTipForm: React.FC = () => {
 
       // Temel bilgileri ekle
       Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "photos" && key !== "showcasePhoto" && value) {
+        if (
+          key !== "photos" &&
+          key !== "showcasePhoto" &&
+          key !== "currency" &&
+          value
+        ) {
           submitData.append(key, value.toString());
         }
       });
-    submitData.append("currency", formData.currency || "TRY");
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("categoryId", formData.categoryId);
@@ -258,7 +263,7 @@ const KapakliTipForm: React.FC = () => {
 
       console.log(
         "Kapaklı Tip Karoser ilanı başarıyla oluşturuldu:",
-        response.data
+        response.data,
       );
       setSubmitSuccess(true);
     } catch (error) {
@@ -362,25 +367,40 @@ const KapakliTipForm: React.FC = () => {
                   value={formData.price}
                   onChange={(e) => handleInputChange("price", e.target.value)}
                   required
-                
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <ToggleButtonGroup
-                      value={formData.currency || "TRY"}
-                      exclusive
-                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
-                      size="small"
-                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
-                    >
-                      <ToggleButton value="TRY">₺</ToggleButton>
-                      <ToggleButton value="USD">$</ToggleButton>
-                      <ToggleButton value="EUR">€</ToggleButton>
-                    </ToggleButtonGroup>
-                  </InputAdornment>
-                ),
-              }}
-              />
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ToggleButtonGroup
+                          value={formData.currency || "TRY"}
+                          exclusive
+                          onChange={(_, v) =>
+                            v &&
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              currency: v,
+                            }))
+                          }
+                          size="small"
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              py: 0.5,
+                              px: 1,
+                              fontSize: "0.75rem",
+                              "&.Mui-selected": {
+                                bgcolor: "#D34237",
+                                color: "#fff",
+                              },
+                            },
+                          }}
+                        >
+                          <ToggleButton value="TRY">₺</ToggleButton>
+                          <ToggleButton value="USD">$</ToggleButton>
+                          <ToggleButton value="EUR">€</ToggleButton>
+                        </ToggleButtonGroup>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </Box>
             </Box>
 

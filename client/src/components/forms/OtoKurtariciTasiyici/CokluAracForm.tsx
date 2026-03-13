@@ -174,7 +174,7 @@ const CokluAracForm: React.FC = () => {
   // Seçenekler
   const uretimYillari = Array.from(
     { length: 2025 - 1990 + 1 },
-    (_, i) => 2025 - i
+    (_, i) => 2025 - i,
   );
 
   const yakitTipleri = [
@@ -207,7 +207,7 @@ const CokluAracForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -223,7 +223,7 @@ const CokluAracForm: React.FC = () => {
 
   // Form işlevleri
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -254,7 +254,7 @@ const CokluAracForm: React.FC = () => {
   // Fotoğraf işlevleri
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    isShowcase = false
+    isShowcase = false,
   ) => {
     const files = event.target.files;
     if (files) {
@@ -318,7 +318,7 @@ const CokluAracForm: React.FC = () => {
   };
 
   const handleNumberChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     const formatted = formatNumber(value);
@@ -336,7 +336,7 @@ const CokluAracForm: React.FC = () => {
     try {
       console.log(
         "📝 Form Data - vehicleBrandName:",
-        formData.vehicleBrandName
+        formData.vehicleBrandName,
       );
 
       const submitData = new FormData();
@@ -347,6 +347,7 @@ const CokluAracForm: React.FC = () => {
           key !== "photos" &&
           key !== "showcasePhoto" &&
           key !== "detailFeatures" &&
+          key !== "currency" &&
           value
         ) {
           // Price ve mileage değerlerini parse et
@@ -360,7 +361,7 @@ const CokluAracForm: React.FC = () => {
           }
         }
       });
-    submitData.append("currency", formData.currency || "TRY");
+      submitData.append("currency", formData.currency || "TRY");
 
       // Detay özelliklerini JSON olarak ekle (backend "features" bekliyor)
       submitData.append("features", JSON.stringify(formData.detailFeatures));
@@ -381,7 +382,7 @@ const CokluAracForm: React.FC = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       console.log("İlan başarıyla oluşturuldu:", response.data);
@@ -513,25 +514,40 @@ const CokluAracForm: React.FC = () => {
                       onChange={handleNumberChange}
                       placeholder="Örn: 2.500.000"
                       required
-                    
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <ToggleButtonGroup
-                      value={formData.currency || "TRY"}
-                      exclusive
-                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
-                      size="small"
-                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
-                    >
-                      <ToggleButton value="TRY">₺</ToggleButton>
-                      <ToggleButton value="USD">$</ToggleButton>
-                      <ToggleButton value="EUR">€</ToggleButton>
-                    </ToggleButtonGroup>
-                  </InputAdornment>
-                ),
-              }}
-              />
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <ToggleButtonGroup
+                              value={formData.currency || "TRY"}
+                              exclusive
+                              onChange={(_, v) =>
+                                v &&
+                                setFormData((prev: any) => ({
+                                  ...prev,
+                                  currency: v,
+                                }))
+                              }
+                              size="small"
+                              sx={{
+                                "& .MuiToggleButton-root": {
+                                  py: 0.5,
+                                  px: 1,
+                                  fontSize: "0.75rem",
+                                  "&.Mui-selected": {
+                                    bgcolor: "#D34237",
+                                    color: "#fff",
+                                  },
+                                },
+                              }}
+                            >
+                              <ToggleButton value="TRY">₺</ToggleButton>
+                              <ToggleButton value="USD">$</ToggleButton>
+                              <ToggleButton value="EUR">€</ToggleButton>
+                            </ToggleButtonGroup>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
                   </Box>
                 </Box>
               </CardContent>

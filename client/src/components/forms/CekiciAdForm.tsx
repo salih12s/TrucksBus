@@ -347,7 +347,7 @@ const CekiciAdForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -370,7 +370,7 @@ const CekiciAdForm: React.FC = () => {
         if (selectedBrandSlug) {
           console.log("Brand yükleniyor:", selectedBrandSlug);
           const brandResponse = await apiClient.get(
-            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}`
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}`,
           );
           const brandData = brandResponse.data as Brand;
           setFormData((prev) => ({
@@ -384,7 +384,7 @@ const CekiciAdForm: React.FC = () => {
         if (selectedModelSlug && selectedBrandSlug) {
           console.log("Model yükleniyor:", selectedModelSlug);
           const modelResponse = await apiClient.get(
-            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}`
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}`,
           );
           const modelData = modelResponse.data as Model;
           setFormData((prev) => ({
@@ -398,7 +398,7 @@ const CekiciAdForm: React.FC = () => {
         if (selectedVariantSlug && selectedModelSlug && selectedBrandSlug) {
           console.log("Variant yükleniyor:", selectedVariantSlug);
           const variantResponse = await apiClient.get(
-            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`,
           );
           const variantData = variantResponse.data as Variant;
           setFormData((prev) => ({
@@ -471,7 +471,7 @@ const CekiciAdForm: React.FC = () => {
   const loadBrands = async (categorySlug: string) => {
     try {
       const response = await apiClient.get(
-        `/categories/${categorySlug}/brands`
+        `/categories/${categorySlug}/brands`,
       );
       const brandsData = response.data as Brand[];
 
@@ -499,7 +499,7 @@ const CekiciAdForm: React.FC = () => {
 
     try {
       const response = await apiClient.get(
-        `/categories/cekici/brands/${brandId}/models`
+        `/categories/cekici/brands/${brandId}/models`,
       );
       const modelsData = response.data as Model[];
 
@@ -540,7 +540,7 @@ const CekiciAdForm: React.FC = () => {
 
     try {
       const response = await apiClient.get(
-        `/categories/cekici/brands/${formData.brandId}/models/${modelId}/variants`
+        `/categories/cekici/brands/${formData.brandId}/models/${modelId}/variants`,
       );
       const variantsData = response.data as Variant[];
 
@@ -594,7 +594,7 @@ const CekiciAdForm: React.FC = () => {
 
   const handleFeatureChange = (
     feature: keyof FormData["features"],
-    checked: boolean
+    checked: boolean,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -607,7 +607,7 @@ const CekiciAdForm: React.FC = () => {
 
   const handlePhotoUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
-    isShowcase: boolean
+    isShowcase: boolean,
   ) => {
     const files = e.target.files;
     if (!files) return;
@@ -644,26 +644,26 @@ const CekiciAdForm: React.FC = () => {
       if (totalVideos <= 3) {
         // Video dosya boyutu kontrolü (50MB limit)
         const oversizedFiles = newVideos.filter(
-          (file) => file.size > 50 * 1024 * 1024
+          (file) => file.size > 50 * 1024 * 1024,
         );
         if (oversizedFiles.length > 0) {
           alert(
             `⚠️ Video dosyası 50MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
               .map((f) => f.name)
-              .join(", ")}`
+              .join(", ")}`,
           );
           return;
         }
 
         // Video format kontrolü
         const invalidFiles = newVideos.filter(
-          (file) => !file.type.startsWith("video/")
+          (file) => !file.type.startsWith("video/"),
         );
         if (invalidFiles.length > 0) {
           alert(
             `⚠️ Sadece video dosyaları yükleyebilirsiniz. Geçersiz dosyalar: ${invalidFiles
               .map((f) => f.name)
-              .join(", ")}`
+              .join(", ")}`,
           );
           return;
         }
@@ -723,7 +723,7 @@ const CekiciAdForm: React.FC = () => {
         setSelectedVideoIndex(selectedVideoIndex + 1);
       }
     },
-    [selectedVideoIndex, formData.videos.length]
+    [selectedVideoIndex, formData.videos.length],
   );
 
   // Klavye navigation
@@ -764,6 +764,7 @@ const CekiciAdForm: React.FC = () => {
           key !== "videos" &&
           key !== "showcasePhoto" &&
           key !== "features" &&
+          key !== "currency" &&
           value
         ) {
           // Price ve mileage değerlerini parse et
@@ -777,7 +778,7 @@ const CekiciAdForm: React.FC = () => {
           }
         }
       });
-    submitData.append("currency", formData.currency || "TRY");
+      submitData.append("currency", formData.currency || "TRY");
 
       // Category/Brand/Model/Variant ID'lerini ekle
       submitData.append("categoryId", formData.categoryId);
@@ -810,7 +811,7 @@ const CekiciAdForm: React.FC = () => {
           `🎥 Video ${index} ekleniyor:`,
           video.name,
           video.size,
-          "bytes"
+          "bytes",
         );
         submitData.append(`video_${index}`, video);
       });
@@ -949,25 +950,40 @@ const CekiciAdForm: React.FC = () => {
                       borderRadius: 3,
                     },
                   }}
-                
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <ToggleButtonGroup
-                      value={formData.currency || "TRY"}
-                      exclusive
-                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
-                      size="small"
-                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
-                    >
-                      <ToggleButton value="TRY">₺</ToggleButton>
-                      <ToggleButton value="USD">$</ToggleButton>
-                      <ToggleButton value="EUR">€</ToggleButton>
-                    </ToggleButtonGroup>
-                  </InputAdornment>
-                ),
-              }}
-              />
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ToggleButtonGroup
+                          value={formData.currency || "TRY"}
+                          exclusive
+                          onChange={(_, v) =>
+                            v &&
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              currency: v,
+                            }))
+                          }
+                          size="small"
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              py: 0.5,
+                              px: 1,
+                              fontSize: "0.75rem",
+                              "&.Mui-selected": {
+                                bgcolor: "#D34237",
+                                color: "#fff",
+                              },
+                            },
+                          }}
+                        >
+                          <ToggleButton value="TRY">₺</ToggleButton>
+                          <ToggleButton value="USD">$</ToggleButton>
+                          <ToggleButton value="EUR">€</ToggleButton>
+                        </ToggleButtonGroup>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
                 <TextField
                   label="Kilometre"
                   value={formatNumber(formData.mileage)}
@@ -2372,7 +2388,7 @@ const CekiciAdForm: React.FC = () => {
                       onChange={(e) =>
                         handleFeatureChange(
                           "flexibleReadingLight",
-                          e.target.checked
+                          e.target.checked,
                         )
                       }
                       sx={{

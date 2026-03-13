@@ -242,14 +242,14 @@ const SulamaForm: React.FC = () => {
 
   const handleInputChange = (
     field: keyof SulamaFormData,
-    value: string | boolean | File[]
+    value: string | boolean | File[],
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    isShowcase = false
+    isShowcase = false,
   ) => {
     const files = event.target.files;
     if (files) {
@@ -318,7 +318,12 @@ const SulamaForm: React.FC = () => {
 
       // Temel bilgileri ekle
       Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "photos" && key !== "showcasePhoto" && value) {
+        if (
+          key !== "photos" &&
+          key !== "showcasePhoto" &&
+          key !== "currency" &&
+          value
+        ) {
           // Price değerini parse et
           if (key === "price") {
             const parsedPrice = parseFormattedNumber(value.toString());
@@ -330,7 +335,7 @@ const SulamaForm: React.FC = () => {
           }
         }
       });
-    submitData.append("currency", formData.currency || "TRY");
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("categorySlug", categorySlug || "");
@@ -452,31 +457,46 @@ const SulamaForm: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange(
                           "price",
-                          parseFormattedNumber(e.target.value)
+                          parseFormattedNumber(e.target.value),
                         )
                       }
                       placeholder="Örn: 150.000"
                       sx={{ maxWidth: 200 }}
                       required
-                    
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <ToggleButtonGroup
-                      value={formData.currency || "TRY"}
-                      exclusive
-                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
-                      size="small"
-                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
-                    >
-                      <ToggleButton value="TRY">₺</ToggleButton>
-                      <ToggleButton value="USD">$</ToggleButton>
-                      <ToggleButton value="EUR">€</ToggleButton>
-                    </ToggleButtonGroup>
-                  </InputAdornment>
-                ),
-              }}
-              />
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <ToggleButtonGroup
+                              value={formData.currency || "TRY"}
+                              exclusive
+                              onChange={(_, v) =>
+                                v &&
+                                setFormData((prev: any) => ({
+                                  ...prev,
+                                  currency: v,
+                                }))
+                              }
+                              size="small"
+                              sx={{
+                                "& .MuiToggleButton-root": {
+                                  py: 0.5,
+                                  px: 1,
+                                  fontSize: "0.75rem",
+                                  "&.Mui-selected": {
+                                    bgcolor: "#D34237",
+                                    color: "#fff",
+                                  },
+                                },
+                              }}
+                            >
+                              <ToggleButton value="TRY">₺</ToggleButton>
+                              <ToggleButton value="USD">$</ToggleButton>
+                              <ToggleButton value="EUR">€</ToggleButton>
+                            </ToggleButtonGroup>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
 
                     {/* Hacim */}
                     <TextField

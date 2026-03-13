@@ -263,6 +263,7 @@ const KamyonRomorkForm: React.FC = () => {
         if (
           key !== "photos" &&
           key !== "showcasePhoto" &&
+          key !== "currency" &&
           value !== null &&
           value !== undefined
         ) {

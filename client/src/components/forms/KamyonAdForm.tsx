@@ -318,7 +318,7 @@ const KamyonAdForm: React.FC = () => {
     const fetchCategory = async () => {
       try {
         const response = await apiClient.get(
-          `/categories/${selectedCategorySlug}`
+          `/categories/${selectedCategorySlug}`,
         );
         const categoryData = response.data as {
           id: number;
@@ -359,7 +359,7 @@ const KamyonAdForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -382,7 +382,7 @@ const KamyonAdForm: React.FC = () => {
         if (selectedBrandSlug) {
           console.log("Brand yükleniyor:", selectedBrandSlug);
           const brandResponse = await apiClient.get(
-            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}`
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}`,
           );
           const brandData = brandResponse.data as Brand;
           setFormData((prev) => ({
@@ -396,7 +396,7 @@ const KamyonAdForm: React.FC = () => {
         if (selectedModelSlug && selectedBrandSlug) {
           console.log("Model yükleniyor:", selectedModelSlug);
           const modelResponse = await apiClient.get(
-            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}`
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}`,
           );
           const modelData = modelResponse.data as Model;
           setFormData((prev) => ({
@@ -410,7 +410,7 @@ const KamyonAdForm: React.FC = () => {
         if (selectedVariantSlug && selectedModelSlug && selectedBrandSlug) {
           console.log("Variant yükleniyor:", selectedVariantSlug);
           const variantResponse = await apiClient.get(
-            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`
+            `/categories/${selectedCategorySlug}/brands/${selectedBrandSlug}/models/${selectedModelSlug}/variants/${selectedVariantSlug}`,
           );
           const variantData = variantResponse.data as Variant;
           setFormData((prev) => ({
@@ -483,7 +483,7 @@ const KamyonAdForm: React.FC = () => {
   const loadBrands = async (categorySlug: string) => {
     try {
       const response = await apiClient.get(
-        `/categories/${categorySlug}/brands`
+        `/categories/${categorySlug}/brands`,
       );
       const brandsData = response.data as Brand[];
       setBrands(brandsData);
@@ -519,7 +519,7 @@ const KamyonAdForm: React.FC = () => {
           "Brand bulunamadı:",
           brandId,
           "Mevcut brands:",
-          brands.map((b) => `${b.id}:${b.name}`)
+          brands.map((b) => `${b.id}:${b.name}`),
         );
         setModels([]);
         setFormData((prev) => ({
@@ -537,17 +537,17 @@ const KamyonAdForm: React.FC = () => {
         brandId,
         "Slug:",
         brand.slug,
-        ")"
+        ")",
       );
       const response = await apiClient.get(
-        `/categories/kamyon-kamyonet/brands/${brand.slug}/models`
+        `/categories/kamyon-kamyonet/brands/${brand.slug}/models`,
       );
       const modelsData = response.data as Model[];
       console.log(
         "✅ Models loaded:",
         modelsData.length,
         "models for brand",
-        brand.name
+        brand.name,
       );
       setModels(modelsData);
 
@@ -597,7 +597,7 @@ const KamyonAdForm: React.FC = () => {
           "Model bulunamadı:",
           modelId,
           "Mevcut models:",
-          models.map((m) => `${m.id}:${m.name}`)
+          models.map((m) => `${m.id}:${m.name}`),
         );
         setFormData((prev) => ({
           ...prev,
@@ -611,7 +611,7 @@ const KamyonAdForm: React.FC = () => {
           "Brand bulunamadı:",
           formData.brandId,
           "Mevcut brands:",
-          brands.map((b) => `${b.id}:${b.name}`)
+          brands.map((b) => `${b.id}:${b.name}`),
         );
         setFormData((prev) => ({
           ...prev,
@@ -628,17 +628,17 @@ const KamyonAdForm: React.FC = () => {
         "Slug:",
         model.slug,
         ") of brand:",
-        brand.name
+        brand.name,
       );
       const response = await apiClient.get(
-        `/categories/kamyon-kamyonet/brands/${brand.slug}/models/${model.slug}/variants`
+        `/categories/kamyon-kamyonet/brands/${brand.slug}/models/${model.slug}/variants`,
       );
       const variantsData = response.data as Variant[];
       console.log(
         "✅ Variants loaded:",
         variantsData.length,
         "variants for model",
-        model.name
+        model.name,
       );
 
       // İlk variant'ı otomatik seç (eğer seçili değilse)
@@ -688,7 +688,7 @@ const KamyonAdForm: React.FC = () => {
 
   const handlePhotoUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
-    isShowcase = false
+    isShowcase = false,
   ) => {
     const files = event.target.files;
     if (files) {
@@ -751,35 +751,35 @@ const KamyonAdForm: React.FC = () => {
       if (totalVideos <= 3) {
         // Video dosya boyutu kontrolü (50MB limit)
         const oversizedFiles = newVideos.filter(
-          (file) => file.size > 50 * 1024 * 1024
+          (file) => file.size > 50 * 1024 * 1024,
         );
         if (oversizedFiles.length > 0) {
           console.error("Video dosyası çok büyük:", oversizedFiles);
           alert(
             `⚠️ Video dosyası 50MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
               .map((f) => f.name)
-              .join(", ")}`
+              .join(", ")}`,
           );
           return;
         }
 
         // Video format kontrolü
         const invalidFiles = newVideos.filter(
-          (file) => !file.type.startsWith("video/")
+          (file) => !file.type.startsWith("video/"),
         );
         if (invalidFiles.length > 0) {
           console.error("Geçersiz video formatı:", invalidFiles);
           alert(
             `⚠️ Sadece video dosyaları yükleyebilirsiniz. Geçersiz dosyalar: ${invalidFiles
               .map((f) => f.name)
-              .join(", ")}`
+              .join(", ")}`,
           );
           return;
         }
 
         console.log(
           `✅ ${newVideos.length} video başarıyla yüklendi:`,
-          newVideos.map((f) => f.name)
+          newVideos.map((f) => f.name),
         );
 
         setFormData((prev) => ({
@@ -838,7 +838,7 @@ const KamyonAdForm: React.FC = () => {
         setSelectedVideoIndex(selectedVideoIndex + 1);
       }
     },
-    [selectedVideoIndex, formData.videos.length]
+    [selectedVideoIndex, formData.videos.length],
   );
 
   // Klavye navigation
@@ -877,11 +877,11 @@ const KamyonAdForm: React.FC = () => {
       // Kamyon form debug
       console.log(
         "Kamyon Form Data hasAccidentRecord:",
-        formData.hasAccidentRecord
+        formData.hasAccidentRecord,
       );
       console.log(
         "Kamyon Form Data hasTramerRecord:",
-        formData.hasTramerRecord
+        formData.hasTramerRecord,
       );
       console.log("Kamyon Form Data motorPower:", formData.motorPower);
 
@@ -894,6 +894,7 @@ const KamyonAdForm: React.FC = () => {
           key !== "videos" &&
           key !== "showcasePhoto" &&
           key !== "detailFeatures" &&
+          key !== "currency" &&
           value
         ) {
           // Price ve mileage değerlerini parse et
@@ -907,7 +908,7 @@ const KamyonAdForm: React.FC = () => {
           }
         }
       });
-    submitData.append("currency", formData.currency || "TRY");
+      submitData.append("currency", formData.currency || "TRY");
 
       // Category/Brand/Model/Variant ID'lerini ekle
       submitData.append("categoryId", formData.categoryId);
@@ -939,7 +940,7 @@ const KamyonAdForm: React.FC = () => {
         console.log(
           `🎥 Video ${index} append ediliyor:`,
           video.name,
-          video.size
+          video.size,
         );
         submitData.append(`video_${index}`, video);
       });
@@ -968,7 +969,7 @@ const KamyonAdForm: React.FC = () => {
 
       if (totalFiles > 25) {
         alert(
-          `❌ Çok fazla dosya! Toplam: ${totalFiles}, Limit: 25. Lütfen bazı fotoğraf/videoları kaldırın.`
+          `❌ Çok fazla dosya! Toplam: ${totalFiles}, Limit: 25. Lütfen bazı fotoğraf/videoları kaldırın.`,
         );
         return;
       }
@@ -979,7 +980,7 @@ const KamyonAdForm: React.FC = () => {
       for (const [key, value] of submitData.entries()) {
         console.log(
           `  - ${key}:`,
-          typeof value === "object" ? "File object" : value
+          typeof value === "object" ? "File object" : value,
         );
       }
       console.log("🎯 About to call API...");
@@ -1149,7 +1150,7 @@ const KamyonAdForm: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange(
                         "price",
-                        parseFormattedNumber(e.target.value)
+                        parseFormattedNumber(e.target.value),
                       )
                     }
                     required
@@ -1161,25 +1162,40 @@ const KamyonAdForm: React.FC = () => {
                         "&:hover fieldset": { borderColor: "primary.main" },
                       },
                     }}
-                  
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <ToggleButtonGroup
-                      value={formData.currency || "TRY"}
-                      exclusive
-                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
-                      size="small"
-                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
-                    >
-                      <ToggleButton value="TRY">₺</ToggleButton>
-                      <ToggleButton value="USD">$</ToggleButton>
-                      <ToggleButton value="EUR">€</ToggleButton>
-                    </ToggleButtonGroup>
-                  </InputAdornment>
-                ),
-              }}
-              />
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <ToggleButtonGroup
+                            value={formData.currency || "TRY"}
+                            exclusive
+                            onChange={(_, v) =>
+                              v &&
+                              setFormData((prev: any) => ({
+                                ...prev,
+                                currency: v,
+                              }))
+                            }
+                            size="small"
+                            sx={{
+                              "& .MuiToggleButton-root": {
+                                py: 0.5,
+                                px: 1,
+                                fontSize: "0.75rem",
+                                "&.Mui-selected": {
+                                  bgcolor: "#D34237",
+                                  color: "#fff",
+                                },
+                              },
+                            }}
+                          >
+                            <ToggleButton value="TRY">₺</ToggleButton>
+                            <ToggleButton value="USD">$</ToggleButton>
+                            <ToggleButton value="EUR">€</ToggleButton>
+                          </ToggleButtonGroup>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
 
                   <TextField
                     fullWidth
@@ -1189,7 +1205,7 @@ const KamyonAdForm: React.FC = () => {
                     onChange={(e) =>
                       handleInputChange(
                         "mileage",
-                        parseFormattedNumber(e.target.value)
+                        parseFormattedNumber(e.target.value),
                       )
                     }
                     required

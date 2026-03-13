@@ -173,7 +173,7 @@ const AcikKasaForm: React.FC = () => {
       setLoadingBrands(true);
       try {
         const response = await apiClient.get(
-          `/brands?categoryId=${formData.categoryId}`
+          `/brands?categoryId=${formData.categoryId}`,
         );
         setBrands(response.data as Brand[]);
       } catch (error) {
@@ -197,7 +197,7 @@ const AcikKasaForm: React.FC = () => {
       setLoadingModels(true);
       try {
         const response = await apiClient.get(
-          `/brands/${formData.brandId}/models`
+          `/brands/${formData.brandId}/models`,
         );
         setModels(response.data as Model[]);
       } catch (error) {
@@ -221,7 +221,7 @@ const AcikKasaForm: React.FC = () => {
       setLoadingVariants(true);
       try {
         const response = await apiClient.get(
-          `/models/${formData.modelId}/variants`
+          `/models/${formData.modelId}/variants`,
         );
         setVariants(response.data as Variant[]);
       } catch (error) {
@@ -289,7 +289,7 @@ const AcikKasaForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -343,27 +343,27 @@ const AcikKasaForm: React.FC = () => {
       if (totalVideos <= 3) {
         // Video dosya boyutu kontrolü (50MB limit)
         const oversizedFiles = newVideos.filter(
-          (file) => file.size > 50 * 1024 * 1024
+          (file) => file.size > 50 * 1024 * 1024,
         );
         if (oversizedFiles.length > 0) {
           console.error("Video dosyası çok büyük:", oversizedFiles);
           alert(
             `⚠️ Video dosyası 50MB'dan büyük olamaz. Büyük dosyalar: ${oversizedFiles
               .map((f) => f.name)
-              .join(", ")}`
+              .join(", ")}`,
           );
           return;
         }
 
         // Video türü kontrolü
         const invalidFiles = newVideos.filter(
-          (file) => !file.type.startsWith("video/")
+          (file) => !file.type.startsWith("video/"),
         );
         if (invalidFiles.length > 0) {
           alert(
             `⚠️ Sadece video dosyaları yükleyebilirsiniz. Geçersiz dosyalar: ${invalidFiles
               .map((f) => f.name)
-              .join(", ")}`
+              .join(", ")}`,
           );
           return;
         }
@@ -375,7 +375,7 @@ const AcikKasaForm: React.FC = () => {
 
         console.log(
           `✅ ${newVideos.length} video başarıyla yüklendi:`,
-          newVideos.map((v) => v.name)
+          newVideos.map((v) => v.name),
         );
 
         // Video önizlemeleri oluştur (URL.createObjectURL direct kullanılacak)
@@ -405,12 +405,13 @@ const AcikKasaForm: React.FC = () => {
           key !== "photos" &&
           key !== "showcasePhoto" &&
           key !== "videos" &&
+          key !== "currency" &&
           value
         ) {
           if (key === "price") {
             // Price değerini number olarak parse et
             const parsedPrice = parseFloat(
-              parseFormattedNumber(value.toString())
+              parseFormattedNumber(value.toString()),
             );
             if (!isNaN(parsedPrice)) {
               submitData.append(key, parsedPrice.toString());
@@ -420,7 +421,7 @@ const AcikKasaForm: React.FC = () => {
           }
         }
       });
-    submitData.append("currency", formData.currency || "TRY");
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("categorySlug", categorySlug || "");
@@ -449,7 +450,7 @@ const AcikKasaForm: React.FC = () => {
         console.log(
           `🎥 Video ${index} append ediliyor:`,
           video.name,
-          video.size
+          video.size,
         );
         submitData.append(`video_${index}`, video);
       });
@@ -463,7 +464,7 @@ const AcikKasaForm: React.FC = () => {
 
       console.log(
         "Açık Kasa Karoser ilanı başarıyla oluşturuldu:",
-        response.data
+        response.data,
       );
       setSubmitSuccess(true);
     } catch (error) {
@@ -631,30 +632,45 @@ const AcikKasaForm: React.FC = () => {
                   onChange={(e) =>
                     handleInputChange(
                       "price",
-                      parseFormattedNumber(e.target.value)
+                      parseFormattedNumber(e.target.value),
                     )
                   }
                   placeholder="Örn: 150.000"
                   required
-                
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <ToggleButtonGroup
-                      value={formData.currency || "TRY"}
-                      exclusive
-                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
-                      size="small"
-                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
-                    >
-                      <ToggleButton value="TRY">₺</ToggleButton>
-                      <ToggleButton value="USD">$</ToggleButton>
-                      <ToggleButton value="EUR">€</ToggleButton>
-                    </ToggleButtonGroup>
-                  </InputAdornment>
-                ),
-              }}
-              />
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ToggleButtonGroup
+                          value={formData.currency || "TRY"}
+                          exclusive
+                          onChange={(_, v) =>
+                            v &&
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              currency: v,
+                            }))
+                          }
+                          size="small"
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              py: 0.5,
+                              px: 1,
+                              fontSize: "0.75rem",
+                              "&.Mui-selected": {
+                                bgcolor: "#D34237",
+                                color: "#fff",
+                              },
+                            },
+                          }}
+                        >
+                          <ToggleButton value="TRY">₺</ToggleButton>
+                          <ToggleButton value="USD">$</ToggleButton>
+                          <ToggleButton value="EUR">€</ToggleButton>
+                        </ToggleButtonGroup>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </Box>
             </Box>
 

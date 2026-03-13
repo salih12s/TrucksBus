@@ -815,7 +815,7 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       title,
       description,
       price,
-      currency,
+      currency: rawCurrency,
       year,
       productionYear,
       category,
@@ -872,6 +872,9 @@ export const createAd = async (req: Request, res: Response): Promise<void> => {
       longitude,
       customFields,
     } = req.body;
+
+    // Normalize currency - FormData may send it as array if appended twice
+    const currency = Array.isArray(rawCurrency) ? rawCurrency[0] : rawCurrency;
 
     // Support both new and legacy formats
     const adData: any = {

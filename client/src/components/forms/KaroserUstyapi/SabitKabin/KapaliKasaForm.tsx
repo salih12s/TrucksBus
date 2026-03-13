@@ -260,7 +260,7 @@ const KapaliKasaForm: React.FC = () => {
       setLoadingModels(true);
       try {
         const response = await apiClient.get(
-          `/brands/${formData.brandId}/models`
+          `/brands/${formData.brandId}/models`,
         );
         setModels(response.data as Model[]);
       } catch (error) {
@@ -284,7 +284,7 @@ const KapaliKasaForm: React.FC = () => {
       setLoadingVariants(true);
       try {
         const response = await apiClient.get(
-          `/models/${formData.modelId}/variants`
+          `/models/${formData.modelId}/variants`,
         );
         setVariants(response.data as Variant[]);
       } catch (error) {
@@ -316,7 +316,7 @@ const KapaliKasaForm: React.FC = () => {
       const fetchDistricts = async () => {
         try {
           const response = await apiClient.get(
-            `/ads/cities/${formData.cityId}/districts`
+            `/ads/cities/${formData.cityId}/districts`,
           );
           setDistricts(response.data as District[]);
         } catch (error) {
@@ -367,7 +367,12 @@ const KapaliKasaForm: React.FC = () => {
 
       // Temel bilgileri ekle
       Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "photos" && key !== "showcasePhoto" && value) {
+        if (
+          key !== "photos" &&
+          key !== "showcasePhoto" &&
+          key !== "currency" &&
+          value
+        ) {
           // Fiyat için özel işlem
           if (key === "price") {
             const numericPrice = parseFormattedNumber(value.toString());
@@ -377,7 +382,7 @@ const KapaliKasaForm: React.FC = () => {
           }
         }
       });
-    submitData.append("currency", formData.currency || "TRY");
+      submitData.append("currency", formData.currency || "TRY");
 
       // Kategori bilgilerini ekle
       submitData.append("categorySlug", categorySlug || "");
@@ -408,7 +413,7 @@ const KapaliKasaForm: React.FC = () => {
 
       console.log(
         "Kapalı Kasa Karoser ilanı başarıyla oluşturuldu:",
-        response.data
+        response.data,
       );
       setSubmitSuccess(true);
     } catch (error) {
@@ -579,25 +584,40 @@ const KapaliKasaForm: React.FC = () => {
                   }}
                   placeholder="100.000"
                   required
-                
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <ToggleButtonGroup
-                      value={formData.currency || "TRY"}
-                      exclusive
-                      onChange={(_, v) => v && setFormData((prev: any) => ({ ...prev, currency: v }))}
-                      size="small"
-                      sx={{ "& .MuiToggleButton-root": { py: 0.5, px: 1, fontSize: "0.75rem", "&.Mui-selected": { bgcolor: "#D34237", color: "#fff" } } }}
-                    >
-                      <ToggleButton value="TRY">₺</ToggleButton>
-                      <ToggleButton value="USD">$</ToggleButton>
-                      <ToggleButton value="EUR">€</ToggleButton>
-                    </ToggleButtonGroup>
-                  </InputAdornment>
-                ),
-              }}
-              />
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <ToggleButtonGroup
+                          value={formData.currency || "TRY"}
+                          exclusive
+                          onChange={(_, v) =>
+                            v &&
+                            setFormData((prev: any) => ({
+                              ...prev,
+                              currency: v,
+                            }))
+                          }
+                          size="small"
+                          sx={{
+                            "& .MuiToggleButton-root": {
+                              py: 0.5,
+                              px: 1,
+                              fontSize: "0.75rem",
+                              "&.Mui-selected": {
+                                bgcolor: "#D34237",
+                                color: "#fff",
+                              },
+                            },
+                          }}
+                        >
+                          <ToggleButton value="TRY">₺</ToggleButton>
+                          <ToggleButton value="USD">$</ToggleButton>
+                          <ToggleButton value="EUR">€</ToggleButton>
+                        </ToggleButtonGroup>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </Box>
             </Box>
 

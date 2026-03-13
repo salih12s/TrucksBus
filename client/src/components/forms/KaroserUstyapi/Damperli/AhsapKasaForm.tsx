@@ -278,7 +278,12 @@ const AhsapKasaForm: React.FC = () => {
 
       // Temel bilgileri ekle
       Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "photos" && key !== "showcasePhoto" && value) {
+        if (
+          key !== "photos" &&
+          key !== "showcasePhoto" &&
+          key !== "currency" &&
+          value
+        ) {
           submitData.append(key, value.toString());
         }
       });

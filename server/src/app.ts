@@ -32,7 +32,7 @@ app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
     contentSecurityPolicy: false, // Video upload için devre dışı
-  })
+  }),
 );
 
 // ✅ KESIN CORS ÇÖZÜMÜ - Frontend 5174 + Production
@@ -53,7 +53,7 @@ app.use(
       console.log(
         `🔍 CORS Check: "${origin}" -> ${
           allowedOrigins.includes(origin || "") ? "✅ ALLOWED" : "❌ BLOCKED"
-        }`
+        }`,
       );
 
       // Postman/cURL gibi origin'siz istekler için izin ver
@@ -73,7 +73,7 @@ app.use(
       "X-XSRF-TOKEN",
     ],
     exposedHeaders: ["Content-Disposition"],
-  })
+  }),
 );
 
 const server = createServer(app);
@@ -122,7 +122,7 @@ app.use(
     res.header("Cross-Origin-Resource-Policy", "cross-origin");
     next();
   },
-  express.static(path.join(__dirname, "../uploads"))
+  express.static(path.join(__dirname, "../uploads")),
 );
 
 // Health check endpoint
@@ -145,12 +145,16 @@ app.get("/test", (req, res) => {
 
 // Request logging middleware
 app.use("/api", (req, res, next) => {
+  // Normalize currency field - FormData may send it as array if appended twice
+  if (req.body && Array.isArray(req.body.currency)) {
+    req.body.currency = req.body.currency[0];
+  }
   console.log(
     `📡 ${req.method} ${req.originalUrl} - IP: ${req.ip} - Headers:`,
     {
       origin: req.headers.origin,
       "user-agent": req.headers["user-agent"]?.substring(0, 50) + "...",
-    }
+    },
   );
   next();
 });
@@ -188,7 +192,7 @@ app.use(
     err: any,
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) => {
     console.error("Global error handler:", err);
 
@@ -204,7 +208,7 @@ app.use(
       message,
       ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
     });
-  }
+  },
 );
 
 // Graceful shutdown

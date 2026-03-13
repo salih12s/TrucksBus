@@ -242,6 +242,7 @@ const OzelAmacliRomorkForm: React.FC = () => {
           key !== "photos" &&
           key !== "showcasePhoto" &&
           key !== "images" &&
+          key !== "currency" &&
           value !== null &&
           value !== undefined
         ) {
