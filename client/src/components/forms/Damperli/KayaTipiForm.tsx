@@ -776,9 +776,6 @@ const KayaTipiForm: React.FC = () => {
       if (formData.sellerEmail)
         submitData.append("email", formData.sellerEmail);
 
-      // Yıl bilgisi
-      submitData.append("year", formData.year.toString());
-
       // Kaya dorse özel bilgileri
       submitData.append("genislik", formData.genislik);
       submitData.append("uzunluk", formData.uzunluk);

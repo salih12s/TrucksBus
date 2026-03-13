@@ -245,6 +245,7 @@ const KayaTipiForm: React.FC = () => {
           key !== "photos" &&
           key !== "showcasePhoto" &&
           key !== "currency" &&
+          key !== "categoryId" &&
           value
         ) {
           // Price değerini parse et

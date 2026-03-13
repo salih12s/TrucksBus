@@ -791,7 +791,6 @@ const MidilliForm: React.FC = () => {
 
       // Temel bilgiler
       submitData.append("title", formData.title);
-      submitData.append("description", formData.description);
       submitData.append("productionYear", formData.year.toString());
 
       // Dorse Brand (dorseBrand olarak customFields'a eklenecek)

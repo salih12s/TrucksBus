@@ -765,6 +765,10 @@ const CekiciAdForm: React.FC = () => {
           key !== "showcasePhoto" &&
           key !== "features" &&
           key !== "currency" &&
+          key !== "categoryId" &&
+          key !== "brandId" &&
+          key !== "modelId" &&
+          key !== "variantId" &&
           value
         ) {
           // Price ve mileage değerlerini parse et

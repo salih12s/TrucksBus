@@ -371,6 +371,10 @@ const KapaliKasaForm: React.FC = () => {
           key !== "photos" &&
           key !== "showcasePhoto" &&
           key !== "currency" &&
+          key !== "categoryId" &&
+          key !== "brandId" &&
+          key !== "modelId" &&
+          key !== "variantId" &&
           value
         ) {
           // Fiyat için özel işlem

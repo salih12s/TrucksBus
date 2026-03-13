@@ -782,7 +782,6 @@ const YariMidilliForm: React.FC = () => {
 
       // Temel bilgiler
       submitData.append("title", formData.title);
-      submitData.append("description", formData.description);
       submitData.append("productionYear", formData.year.toString());
 
       // Category/Brand/Model/Variant ID'lerini ekle

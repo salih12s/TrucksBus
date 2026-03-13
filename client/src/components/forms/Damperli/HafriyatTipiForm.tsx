@@ -714,9 +714,6 @@ const HafriyatTipiForm: React.FC = () => {
       if (formData.sellerEmail)
         submitData.append("email", formData.sellerEmail);
 
-      // Yıl bilgisi
-      submitData.append("year", formData.year.toString());
-
       // Dorse Markası
       submitData.append("dorseBrand", formData.dorseBrand);
 

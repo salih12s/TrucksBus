@@ -644,7 +644,6 @@ const TankerForm: React.FC = () => {
 
       // Temel bilgiler
       submitData.append("title", formData.title);
-      submitData.append("description", formData.description);
       submitData.append("year", formData.year.toString());
       submitData.append("price", formData.price);
       submitData.append("currency", formData.currency || "TRY");
@@ -694,15 +693,6 @@ const TankerForm: React.FC = () => {
       submitData.append("warranty", formData.warranty ? "evet" : "hayir");
       submitData.append("negotiable", formData.negotiable ? "evet" : "hayir");
       submitData.append("exchange", formData.exchange ? "evet" : "hayir");
-
-      // Tanker özel alanlarını ekle
-      if (formData.hacim) submitData.append("hacim", formData.hacim);
-      if (formData.gozSayisi)
-        submitData.append("gozSayisi", formData.gozSayisi);
-      if (formData.lastikDurumu)
-        submitData.append("lastikDurumu", formData.lastikDurumu);
-      if (formData.renk) submitData.append("renk", formData.renk);
-      if (formData.takasli) submitData.append("takasli", formData.takasli);
 
       // Detaylı bilgiyi teknik özelliklerle birleştir
       let detailedDescription = formData.detailedInfo;

@@ -145,9 +145,13 @@ app.get("/test", (req, res) => {
 
 // Request logging middleware
 app.use("/api", (req, res, next) => {
-  // Normalize currency field - FormData may send it as array if appended twice
-  if (req.body && Array.isArray(req.body.currency)) {
-    req.body.currency = req.body.currency[0];
+  // Normalize FormData fields - multipart/form-data may send duplicate values as arrays
+  if (req.body) {
+    for (const field of Object.keys(req.body)) {
+      if (Array.isArray(req.body[field])) {
+        req.body[field] = req.body[field][0];
+      }
+    }
   }
   console.log(
     `📡 ${req.method} ${req.originalUrl} - IP: ${req.ip} - Headers:`,

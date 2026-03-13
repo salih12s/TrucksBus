@@ -406,6 +406,10 @@ const AcikKasaForm: React.FC = () => {
           key !== "showcasePhoto" &&
           key !== "videos" &&
           key !== "currency" &&
+          key !== "categoryId" &&
+          key !== "brandId" &&
+          key !== "modelId" &&
+          key !== "variantId" &&
           value
         ) {
           if (key === "price") {

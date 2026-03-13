@@ -282,6 +282,7 @@ const AhsapKasaForm: React.FC = () => {
           key !== "photos" &&
           key !== "showcasePhoto" &&
           key !== "currency" &&
+          key !== "categoryId" &&
           value
         ) {
           submitData.append(key, value.toString());

@@ -895,6 +895,10 @@ const KamyonAdForm: React.FC = () => {
           key !== "showcasePhoto" &&
           key !== "detailFeatures" &&
           key !== "currency" &&
+          key !== "categoryId" &&
+          key !== "brandId" &&
+          key !== "modelId" &&
+          key !== "variantId" &&
           value
         ) {
           // Price ve mileage değerlerini parse et
