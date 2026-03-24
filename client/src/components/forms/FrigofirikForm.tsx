@@ -40,6 +40,7 @@ import {
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
 import SuccessModal from "../common/SuccessModal";
+import { validateMultipleImages } from "../../utils/imageValidation";
 
 // Frigofirik Dorse Markaları (MainLayout'tan alındı)
 const FRIGOFIRIK_BRANDS = [
@@ -318,7 +319,20 @@ const FrigofirikForm: React.FC = () => {
       return;
     }
 
-    setImages((prev) => [...prev, ...files]);
+    // ✅ Dosya boyutu kontrolü (max 5MB)
+    const validation = validateMultipleImages(files);
+
+    if (validation.errors.length > 0) {
+      setError(validation.errors.join("\n"));
+      return;
+    }
+
+    // Uyarıları konsola yazdır (opsiyonel)
+    if (validation.warnings.length > 0) {
+      console.warn("Image upload warnings:", validation.warnings);
+    }
+
+    setImages((prev) => [...prev, ...validation.validFiles]);
     setError(null);
   };
 
@@ -495,8 +509,7 @@ const FrigofirikForm: React.FC = () => {
         });
 
         console.log(
-          `📷 ${images.length} fotoğraf gönderiliyor (${
-            showcaseImageIndex + 1
+          `📷 ${images.length} fotoğraf gönderiliyor (${showcaseImageIndex + 1
           }. vitrin)`,
         );
       }
@@ -532,8 +545,8 @@ const FrigofirikForm: React.FC = () => {
       };
       setError(
         error.response?.data?.message ||
-          error.message ||
-          "İlan oluşturulurken bir hata oluştu",
+        error.message ||
+        "İlan oluşturulurken bir hata oluştu",
       );
     } finally {
       setLoading(false);

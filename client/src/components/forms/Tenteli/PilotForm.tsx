@@ -46,6 +46,7 @@ import {
   PlayArrow,
 } from "@mui/icons-material";
 import SuccessModal from "../../common/SuccessModal";
+import { validateMultipleImages } from "../../../utils/imageValidation";
 
 // Çatı Perde Sistemi Türleri
 const CATI_PERDE_SISTEMLERI = [
@@ -656,7 +657,19 @@ const PilotForm: React.FC = () => {
       return;
     }
 
-    setImages((prev) => [...prev, ...files]);
+    // ✅ Dosya boyutu kontrolü (max 5MB)
+    const validation = validateMultipleImages(files);
+
+    if (validation.errors.length > 0) {
+      setError(validation.errors.join("\n"));
+      return;
+    }
+
+    if (validation.warnings.length > 0) {
+      console.warn("Image upload warnings:", validation.warnings);
+    }
+
+    setImages((prev) => [...prev, ...validation.validFiles]);
     setError(null);
   };
 
@@ -901,8 +914,8 @@ const PilotForm: React.FC = () => {
       };
       setError(
         error.response?.data?.message ||
-          error.message ||
-          "İlan oluşturulurken bir hata oluştu",
+        error.message ||
+        "İlan oluşturulurken bir hata oluştu",
       );
     } finally {
       setLoading(false);

@@ -46,6 +46,7 @@ import {
 } from "@mui/icons-material";
 import apiClient from "../../../api/client";
 import SuccessModal from "../../common/SuccessModal";
+import { validateMultipleImages } from "../../../utils/imageValidation";
 
 // Çatı Perde Sistemi Türleri
 const CATI_PERDE_SISTEMLERI = [
@@ -673,7 +674,20 @@ const YariMidilliForm: React.FC = () => {
       return;
     }
 
-    setImages((prev) => [...prev, ...files]);
+    // ✅ Dosya boyutu kontrolü (max 5MB)
+    const validation = validateMultipleImages(files);
+
+    if (validation.errors.length > 0) {
+      setError(validation.errors.join("\n"));
+      return;
+    }
+
+    // Uyarıları konsola yazdır (opsiyonel)
+    if (validation.warnings.length > 0) {
+      console.warn("Image upload warnings:", validation.warnings);
+    }
+
+    setImages((prev) => [...prev, ...validation.validFiles]);
     setError(null);
   };
 
@@ -940,8 +954,8 @@ const YariMidilliForm: React.FC = () => {
       };
       setError(
         error.response?.data?.message ||
-          error.message ||
-          "İlan oluşturulurken bir hata oluştu",
+        error.message ||
+        "İlan oluşturulurken bir hata oluştu",
       );
     } finally {
       setLoading(false);

@@ -48,6 +48,17 @@ coverage/
 tmp/
 temp/
 
+# Large image files and optimization artifacts
+uploads/
+*.tmp
+*_tmp
+*_tmp.*
+
+# Image optimization - prevent large images from being committed
+# If you have specific large image files causing issues, add them here
+# client/public/**/*.jpg
+# client/public/**/*.png
+
 # Deleted components - prevent VS Code from restoring
 client/src/routes/
 client/src/components/auth/Login.tsx
