@@ -22,7 +22,7 @@ function slugify(text: string): string {
 // GET /api/store/:slug — Public store page
 export async function getStoreBySlug(req: AuthenticatedRequest, res: Response) {
     try {
-        const { slug } = req.params;
+        const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
 
         const store = await prisma.store.findUnique({
             where: { slug },
@@ -60,7 +60,8 @@ export async function getStoreByUserId(
     res: Response,
 ) {
     try {
-        const userId = parseInt(req.params.userId);
+        const userIdParam = Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId;
+        const userId = parseInt(userIdParam);
         if (isNaN(userId)) {
             res.status(400).json({ error: "Geçersiz kullanıcı ID" });
             return;
@@ -99,7 +100,7 @@ export async function getStoreByUserId(
 // GET /api/store/:slug/ads — Store ads with pagination & filters
 export async function getStoreAds(req: AuthenticatedRequest, res: Response) {
     try {
-        const { slug } = req.params;
+        const slug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
         const page = parseInt(req.query.page as string) || 1;
         const limit = Math.min(parseInt(req.query.limit as string) || 20, 50);
         const sort = (req.query.sort as string) || "newest";
