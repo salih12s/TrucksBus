@@ -1,0 +1,618 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id               Int            @id @default(autoincrement())
+  email            String         @unique
+  passwordHash     String         @map("password_hash")
+  firstName        String?        @map("first_name")
+  lastName         String?        @map("last_name")
+  phone            String?
+  role             UserRole       @default(USER)
+  isVerified       Boolean        @default(false) @map("is_verified")
+  isActive         Boolean        @default(true) @map("is_active")
+  companyName      String?        @map("company_name")
+  taxId            String?        @map("tax_id")
+  tradeRegistryNo  String?        @map("trade_registry_no")
+  address          String?
+  city             String?
+  country          String?
+  profileImageUrl  String?        @map("profile_image_url")
+  kvkkAccepted     Boolean        @default(false) @map("kvkk_accepted")
+  kvkkAcceptedAt   DateTime?      @map("kvkk_accepted_at")
+  lastLoginAt      DateTime?      @map("last_login_at")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  userType         String?        @default("individual") @map("user_type")
+  adminLogs        AdminLog[]     @relation("AdminLogs")
+  ads              Ad[]
+  complaints       Complaint[]
+  favorites        Favorite[]
+  feedback         Feedback[]
+  receivedMessages Message[]      @relation("ReceivedMessages")
+  sentMessages     Message[]      @relation("SentMessages")
+  notifications    Notification[] @relation("UserNotifications")
+  reviewedAds      PendingAd[]    @relation("ReviewedByAdmin")
+  userDopings      UserDoping[]   @relation("UserDopings")
+  subscriptions    Subscription[] @relation("UserSubscriptions")
+  store            Store?
+
+  @@map("users")
+}
+
+model Subscription {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  packageType    String   @map("package_type") // "trucks", "trucks_plus", "trucksbus"
+  adLimit        Int      @map("ad_limit") // 3, 5, 10
+  adsUsed        Int      @default(0) @map("ads_used")
+  price          Float
+  isActive       Boolean  @default(true) @map("is_active")
+  startDate      DateTime @default(now()) @map("start_date")
+  endDate        DateTime @map("end_date")
+  isTrial        Boolean  @default(true) @map("is_trial") // İlk 6 ay ücretsiz, sonra %50 indirimli
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  user           User     @relation("UserSubscriptions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model Category {
+  id           Int             @id @default(autoincrement())
+  name         String
+  slug         String          @unique
+  iconUrl      String?         @map("icon_url")
+  displayOrder Int             @map("display_order")
+  isActive     Boolean         @default(true) @map("is_active")
+  description  String?
+  formFields   AdFormField[]
+  ads          Ad[]
+  brands       CategoryBrand[]
+  models       Model[]
+
+  @@map("categories")
+}
+
+model Brand {
+  id         Int             @id @default(autoincrement())
+  name       String
+  slug       String          @unique
+  logoUrl    String?         @map("logo_url")
+  isActive   Boolean         @default(true) @map("is_active")
+  ads        Ad[]
+  categories CategoryBrand[]
+  models     Model[]
+
+  @@map("brands")
+}
+
+model CategoryBrand {
+  categoryId Int      @map("category_id")
+  brandId    Int      @map("brand_id")
+  brand      Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([categoryId, brandId])
+  @@map("category_brands")
+}
+
+model Model {
+  id         Int       @id @default(autoincrement())
+  brandId    Int       @map("brand_id")
+  categoryId Int       @map("category_id")
+  name       String
+  slug       String
+  isActive   Boolean   @default(true) @map("is_active")
+  ads        Ad[]
+  brand      Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  variants   Variant[]
+
+  @@unique([brandId, categoryId, slug])
+  @@map("models")
+}
+
+model Variant {
+  id             Int     @id @default(autoincrement())
+  modelId        Int     @map("model_id")
+  name           String
+  slug           String
+  specifications Json?
+  isActive       Boolean @default(true) @map("is_active")
+  ads            Ad[]
+  model          Model   @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, slug])
+  @@map("variants")
+}
+
+model Ad {
+  id                 Int               @id @default(autoincrement())
+  userId             Int               @map("user_id")
+  categoryId         Int               @map("category_id")
+  brandId            Int?              @map("brand_id")
+  modelId            Int?              @map("model_id")
+  variantId          Int?              @map("variant_id")
+  title              String
+  description        String?
+  price              Decimal?          @db.Decimal(12, 2)
+  currency           String            @default("TRY")
+  year               Int?
+  mileage            Int?
+  location           String?
+  latitude           Float?
+  longitude          Float?
+  status             AdStatus          @default(PENDING)
+  viewCount          Int               @default(0) @map("view_count")
+  isPromoted         Boolean           @default(false) @map("is_promoted")
+  isExample          Boolean           @default(false) @map("is_example") // Örnek ilan işareti - mevcut ilanlar için true
+  promotedUntil      DateTime?         @map("promoted_until")
+  customFields       Json?             @map("custom_fields")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  chassisType        ChassisType?      @map("chassis_type")
+  cityId             Int?              @map("city_id")
+  color              String?
+  detailFeatures     Json?             @map("detail_features")
+  districtId         Int?              @map("district_id")
+  driveType          DriveType?        @map("drive_type")
+  engineCapacity     String?           @map("engine_capacity")
+  fuelType           FuelType?         @map("fuel_type")
+  isExchangeable     Boolean?          @map("is_exchangeable")
+  plateNumber        String?           @map("plate_number")
+  plateType          PlateType?        @map("plate_type")
+  roofType           RoofType?         @map("roof_type")
+  seatCount          String?           @map("seat_count")
+  transmissionType   TransmissionType? @map("transmission_type")
+  vehicleCondition   VehicleCondition? @map("vehicle_condition")
+  address            String?
+  detailedInfo       String?           @map("detailed_info")
+  engineVolume       Int?              @map("engine_volume")
+  loadCapacity       String?           @map("load_capacity")
+  maxPower           Int?              @map("max_power")
+  maxTorque          String?           @map("max_torque")
+  maxVehicleCapacity String?           @map("max_vehicle_capacity")
+  platformLength     String?           @map("platform_length")
+  platformWidth      String?           @map("platform_width")
+  hasAccidentRecord  Boolean?          @map("has_accident_record")
+  hasTramerRecord    Boolean?          @map("has_tramer_record")
+  images             AdImage[]
+  videos             AdVideo[]
+  brand              Brand?            @relation(fields: [brandId], references: [id])
+  category           Category          @relation(fields: [categoryId], references: [id])
+  city               City?             @relation(fields: [cityId], references: [id])
+  district           District?         @relation(fields: [districtId], references: [id])
+  model              Model?            @relation(fields: [modelId], references: [id])
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variant            Variant?          @relation(fields: [variantId], references: [id])
+  complaints         Complaint[]
+  favorites          Favorite[]
+  messages           Message[]
+  pendingAd          PendingAd?
+
+  @@index([status, createdAt])
+  @@index([status, isPromoted, createdAt])
+  @@index([status])
+  @@index([createdAt])
+  @@index([categoryId, status])
+  @@index([brandId, status])
+  @@index([cityId, status])
+  @@map("ads")
+}
+
+model AdImage {
+  id           Int     @id @default(autoincrement())
+  adId         Int     @map("ad_id")
+  imageUrl     String  @map("image_url")
+  isPrimary    Boolean @default(false) @map("is_primary")
+  displayOrder Int     @map("display_order")
+  altText      String? @map("alt_text")
+  isShowcase   Boolean @default(false) @map("is_showcase")
+  ad           Ad      @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId, isPrimary])
+  @@map("ad_images")
+}
+
+model AdVideo {
+  id           Int      @id @default(autoincrement())
+  adId         Int      @map("ad_id")
+  videoUrl     String   @map("video_url")
+  thumbnailUrl String?  @map("thumbnail_url")
+  duration     Int?     @map("duration")
+  fileSize     Int?     @map("file_size")
+  mimeType     String?  @map("mime_type")
+  displayOrder Int      @default(1) @map("display_order")
+  description  String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  ad           Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId])
+  @@map("ad_videos")
+}
+
+model AdFormField {
+  id           Int      @id @default(autoincrement())
+  categoryId   Int      @map("category_id")
+  fieldName    String   @map("field_name")
+  fieldType    String   @map("field_type")
+  fieldLabel   String   @map("field_label")
+  isRequired   Boolean  @default(false) @map("is_required")
+  options      Json?
+  validation   Json?
+  displayOrder Int      @map("display_order")
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("ad_form_fields")
+}
+
+model PendingAd {
+  id         Int       @id @default(autoincrement())
+  adId       Int       @unique @map("ad_id")
+  adminNotes String?   @map("admin_notes")
+  reviewedBy Int?      @map("reviewed_by")
+  reviewedAt DateTime? @map("reviewed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  ad         Ad        @relation(fields: [adId], references: [id], onDelete: Cascade)
+  reviewer   User?     @relation("ReviewedByAdmin", fields: [reviewedBy], references: [id])
+
+  @@map("pending_ads")
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  senderId   Int      @map("sender_id")
+  receiverId Int      @map("receiver_id")
+  adId       Int?     @map("ad_id")
+  content    String
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
+  ad         Ad?      @relation(fields: [adId], references: [id])
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  adId      Int      @map("ad_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  ad        Ad       @relation(fields: [adId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, adId])
+  @@map("favorites")
+}
+
+model Complaint {
+  id            Int             @id @default(autoincrement())
+  adId          Int             @map("ad_id")
+  userId        Int             @map("user_id")
+  reason        String
+  description   String?
+  status        ComplaintStatus @default(OPEN)
+  adminResponse String?         @map("admin_response")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  ad            Ad              @relation(fields: [adId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("complaints")
+}
+
+model Feedback {
+  id            Int            @id @default(autoincrement())
+  userId        Int            @map("user_id")
+  subject       String
+  content       String
+  category      String         @default("OTHER")
+  priority      String         @default("MEDIUM")
+  status        FeedbackStatus @default(OPEN)
+  adminResponse String?        @map("admin_response")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
+}
+
+model AdminLog {
+  id              Int      @id @default(autoincrement())
+  adminId         Int      @map("admin_id")
+  adminEmail      String   @map("admin_email")
+  action          String
+  targetUserId    Int?     @map("target_user_id")
+  targetUserEmail String?  @map("target_user_email")
+  details         String?
+  ipAddress       String?  @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  createdAt       DateTime @default(now()) @map("created_at")
+  admin           User     @relation("AdminLogs", fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("admin_logs")
+}
+
+model City {
+  id        Int        @id @default(autoincrement())
+  name      String
+  plateCode String     @unique @map("plate_code")
+  isActive  Boolean    @default(true) @map("is_active")
+  ads       Ad[]
+  districts District[]
+
+  @@map("cities")
+}
+
+model District {
+  id       Int     @id @default(autoincrement())
+  cityId   Int     @map("city_id")
+  name     String
+  isActive Boolean @default(true) @map("is_active")
+  ads      Ad[]
+  city     City    @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@map("districts")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false) @map("is_read")
+  relatedId Int?     @map("related_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model DopingPackage {
+  id            String       @id @default(cuid())
+  name          String       @unique
+  description   String
+  features      String[]
+  price         Float
+  originalPrice Float?
+  duration      Int
+  isActive      Boolean      @default(true)
+  icon          String
+  color         String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  userDopings   UserDoping[] @relation("PackageDopings")
+
+  @@map("doping_packages")
+}
+
+model UserDoping {
+  id          String        @id @default(cuid())
+  userId      Int
+  packageId   String
+  activatedAt DateTime      @default(now())
+  expiresAt   DateTime
+  isActive    Boolean       @default(true)
+  package     DopingPackage @relation("PackageDopings", fields: [packageId], references: [id], onDelete: Cascade)
+  user        User          @relation("UserDopings", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, packageId])
+  @@map("user_dopings")
+}
+
+enum UserRole {
+  GUEST
+  USER
+  CORPORATE
+  ADMIN
+  MODERATOR
+}
+
+enum AdStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SOLD
+  EXPIRED
+}
+
+enum VehicleCondition {
+  NEW
+  USED
+  IMPORTED
+  DAMAGED
+}
+
+enum DriveType {
+  FRONT_WHEEL_DRIVE
+  REAR_WHEEL_DRIVE
+  ALL_WHEEL_DRIVE
+  REAR_WHEEL_ELECTRONIC
+}
+
+enum TransmissionType {
+  MANUAL
+  AUTOMATIC
+  SEMI_AUTOMATIC
+}
+
+enum FuelType {
+  GASOLINE
+  GASOLINE_LPG
+  DIESEL
+  ELECTRIC
+  HYBRID
+  DIESEL_LPG
+}
+
+enum RoofType {
+  NORMAL
+  HIGH
+}
+
+enum ChassisType {
+  SHORT
+  MEDIUM
+  LONG
+  EXTRA_LONG
+}
+
+enum PlateType {
+  TR_PLATE
+  BLUE_PLATE
+  MA_PLATE
+}
+
+enum ComplaintStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+enum FeedbackStatus {
+  OPEN
+  REVIEWED
+  RESPONDED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ============================================
+// Site Settings - Admin tarafından yönetilen
+// ============================================
+model SiteSettings {
+  id        Int      @id @default(1)
+  
+  // Header / Slogan
+  sloganLeft    String  @default("Alın Satın") @map("slogan_left")
+  sloganRight   String  @default("ile Mutlu Kalın") @map("slogan_right")
+  logoUrl       String? @map("logo_url")
+  
+  // Ana Sayfa
+  showcaseTitle     String  @default("Vitrin") @map("showcase_title")
+  searchPlaceholder String  @default("Araç, marka, model, konum, ilan no ara...") @map("search_placeholder")
+  
+  // İlan Kartları
+  showExampleBadge  Boolean @default(true) @map("show_example_badge")
+  exampleBadgeText  String  @default("ÖRNEKTİR") @map("example_badge_text")
+  exampleBadgeColor String  @default("#ff5722") @map("example_badge_color")
+  cardPriceColor    String  @default("#dc3545") @map("card_price_color")
+  adsPerPage        Int     @default(1000) @map("ads_per_page")
+  
+  // Renk Teması
+  primaryColor      String  @default("#D34237") @map("primary_color")
+  headerBgColor     String  @default("#D7D7D5") @map("header_bg_color")
+  footerBgColor     String  @default("#E8E8E8") @map("footer_bg_color")
+  
+  // İletişim Bilgileri
+  contactEmail      String  @default("info@trucksbus.com.tr") @map("contact_email")
+  contactPhone      String? @map("contact_phone")
+  contactAddress    String  @default("İçerenköy Mahallesi, Ataşehir, İstanbul") @map("contact_address")
+  
+  // Footer
+  footerText        String  @default("Tüm hakları saklıdır.") @map("footer_text")
+  facebookUrl       String? @map("facebook_url")
+  twitterUrl        String? @map("twitter_url")
+  instagramUrl      String? @map("instagram_url")
+  linkedinUrl       String? @map("linkedin_url")
+  
+  // SEO
+  siteTitle         String  @default("TrucksBus - Ağır Ticari Araç Alım Satım") @map("site_title")
+  siteDescription   String  @default("Kamyon, çekici, otobüs, minibüs, dorse alım satım platformu") @map("site_description")
+  
+  // Genel Ayarlar
+  maintenanceMode   Boolean @default(false) @map("maintenance_mode")
+  maintenanceMsg    String  @default("Site bakım modundadır. Lütfen daha sonra tekrar deneyiniz.") @map("maintenance_msg")
+  announcementText  String? @map("announcement_text")
+  announcementColor String  @default("#1976d2") @map("announcement_color")
+  showAnnouncement  Boolean @default(false) @map("show_announcement")
+  
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@map("site_settings")
+}
+
+// ============================================
+// Fiyat Analitik Logu (opsiyonel, log amaçlı)
+// Mevcut tablolara DOKUNMAZ
+// ============================================
+model PriceAnalytics {
+  id        String   @id @default(cuid())
+  adId      Int      @map("ad_id")
+  median    Float?
+  avg       Float?
+  min       Float?
+  max       Float?
+  deviation Float?
+  trustScore Float?  @map("trust_score")
+  decision  String?
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([adId])
+  @@index([createdAt])
+  @@map("price_analytics")
+}
+
+// ============================================
+// Model Bazlı Piyasa Fiyat Seed Tablosu
+// DB'de yeterli ilan yoksa kullanılacak referans fiyatlar
+// Mevcut tablolara DOKUNMAZ
+// ============================================
+model MarketPriceSeed {
+  id         String   @id @default(cuid())
+  categoryId String   @map("category_id")
+  brandId    String?  @map("brand_id")
+  modelId    String?  @map("model_id")
+  yearFrom   Int      @map("year_from")
+  yearTo     Int      @map("year_to")
+  minPrice   Float    @map("min_price")
+  maxPrice   Float    @map("max_price")
+  avgPrice   Float    @map("avg_price")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([categoryId, brandId, modelId])
+  @@index([yearFrom, yearTo])
+  @@map("market_price_seeds")
+}
+
+model Store {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @unique @map("user_id")
+  name          String
+  slug          String   @unique
+  description   String?  @db.Text
+  logoUrl       String?  @map("logo_url") @db.Text
+  bannerUrl     String?  @map("banner_url") @db.Text
+  phone         String?
+  whatsapp      String?
+  email         String?
+  website       String?
+  address       String?
+  city          String?
+  district      String?
+  latitude      Float?
+  longitude     Float?
+  workingHours  Json?    @map("working_hours")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([slug])
+  @@index([city])
+  @@map("stores")
+}

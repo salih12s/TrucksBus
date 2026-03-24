@@ -1,0 +1,10 @@
+<!-- TrucksBus Logo SVG -->
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="10" y="15" width="25" height="15" rx="2" fill="#D34237"/>
+  <rect x="40" y="12" width="30" height="18" rx="3" fill="#D34237"/>
+  <circle cx="20" r="3" cy="32" fill="#333"/>
+  <circle cx="30" r="3" cy="32" fill="#333"/>
+  <circle cx="50" r="3" cy="32" fill="#333"/>
+  <circle cx="65" r="3" cy="32" fill="#333"/>
+  <text x="80" y="25" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">TrucksBus</text>
+</svg>

@@ -1,0 +1,47 @@
+{
+  "name": "trucksbus-platform",
+  "version": "1.0.0",
+  "description": "TrucksBus - Commercial Vehicle Listing and E-Commerce Platform",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:local": "concurrently --kill-others-on-fail \"npm run dev:server:local\" \"npm run dev:client:local\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev:prod",
+    "dev:client:local": "cd client && npm run dev",
+    "dev:server:local": "cd server && npm run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "start": "cd server && npm start",
+    "test": "npm run test:client && npm run test:server",
+    "test:client": "cd client && npm test",
+    "test:server": "cd server && npm test",
+    "lint": "npm run lint:client && npm run lint:server",
+    "lint:client": "cd client && npm run lint",
+    "lint:server": "cd server && npm run lint",
+    "backup": "node -e \"require('child_process').execSync('backup.bat', {stdio:'inherit'})\"",
+    "safe-commit": "npm run lint && npm run build && git add . && git commit",
+    "reset-db": "cd server && npx prisma db push && npx ts-node prisma/seed.ts",
+    "reset-db:local": "cd server && npm run db:reset:local",
+    "setup:local": "npm install && cd client && npm install && cd ../server && npm install && npm run db:setup:local",
+    "full-reset": "npm run reset-db && npm run build",
+    "guard": "powershell -ExecutionPolicy Bypass -File code-guard.ps1",
+    "chat-backup": "powershell -ExecutionPolicy Bypass -File chat-backup.ps1",
+    "save-state": "npm run chat-backup && npm run backup && git add . && git commit -m \"Auto-save: Project state backup\"",
+    "save-github": "git add . && git commit -m \"GitHub auto-save: $(date)\" && git push origin master",
+    "safe-push": "npm run lint && npm run build && git add . && git commit && git push origin master",
+    "restore-help": "echo \"RESTORE HELP: 1) Check chat-backups/ folder 2) Run 'npm run guard' 3) Use git log to find commits\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
