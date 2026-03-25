@@ -15,7 +15,10 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:reset:local": "prisma db push && npx ts-node prisma/seed.ts",
-    "db:setup:local": "prisma generate && prisma db push && npx ts-node prisma/seed.ts"
+    "db:setup:local": "prisma generate && prisma db push && npx ts-node prisma/seed.ts",
+    "db:sync-to-railway": "npx ts-node prisma/sync-to-railway.ts",
+    "db:export-seeds": "npx ts-node prisma/export-seed-models.ts",
+    "db:sync-from-railway": "npx ts-node prisma/sync-from-railway.ts"
   },
   "keywords": [
     "trucksbus",
