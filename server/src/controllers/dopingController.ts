@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database";
 
 // Helper function to safely parse query/params that can be string or string[]
 const parseStringParam = (param: string | string[] | undefined): string => {
@@ -11,8 +11,6 @@ const parseIntParam = (param: string | string[] | undefined): number => {
   const str = parseStringParam(param);
   return parseInt(str) || 0;
 };
-
-const prisma = new PrismaClient();
 
 // Get all doping packages
 export const getDopingPackages = async (req: Request, res: Response) => {

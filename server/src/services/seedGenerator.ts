@@ -7,10 +7,8 @@
  * Kullanım: npx ts-node src/services/seedGenerator.ts
  */
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database";
 import { PRICE_RULES } from "../config/priceRules";
-
-const prisma = new PrismaClient();
 
 /**
  * Slug → DB kategori ID eşleştirmesi yap, seed kayıtlarını üret

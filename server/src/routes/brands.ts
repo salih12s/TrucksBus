@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { PrismaClient, AdStatus } from "@prisma/client";
+import { AdStatus } from "@prisma/client";
+import { prisma } from "../config/database";
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Slug ile brand bul, exact match yoksa startsWith fallback, numeric ID de dene
 async function findBrandBySlug(slug: string) {

@@ -1,5 +1,5 @@
-﻿import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Request, Response } from "express";
+import { prisma } from "../config/database";
 import { io } from "../app";
 import { applyPriceModeration, applyAdvancedPriceModeration } from "../services/moderationService";
 import { getMarketStats } from "../services/marketPriceService";
@@ -17,16 +17,6 @@ const parseIntParam = (param: string | string[] | undefined): number => {
   const str = parseStringParam(param);
   return parseInt(str) || 0;
 };
-
-// â— ULTRA PERFORMANCE: Connection pool optimize
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-  log: [], // Log'larÄ± kapat performance iÃ§in
-});
 
 // Helper function for automatic brand/model/variant creation
 const ensureBrandModelVariant = async (

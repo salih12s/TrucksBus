@@ -1,9 +1,7 @@
 import { Response, Request } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database";
 import { AuthenticatedRequest } from "../types/auth";
 import { createNotification } from "./notificationController";
-
-const prisma = new PrismaClient();
 
 export const createFeedback = async (
   req: AuthenticatedRequest,

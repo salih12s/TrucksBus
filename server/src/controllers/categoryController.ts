@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database";
 
 // Slug ile brand bul, exact match yoksa startsWith fallback, numeric ID de dene
 async function findBrandBySlug(slug: string) {
@@ -50,8 +50,6 @@ const parseIntParam = (param: string | string[] | undefined): number => {
   const str = parseStringParam(param);
   return parseInt(str) || 0;
 };
-
-const prisma = new PrismaClient();
 
 // Get all categories - OPTIMIZED for fast loading
 export const getCategories = async (req: Request, res: Response) => {

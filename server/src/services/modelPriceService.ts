@@ -8,9 +8,7 @@
  * Hata durumunda null döner — mevcut sistemi BOZMAZ.
  */
 
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../config/database";
 
 export interface ModelPriceQuery {
     categoryId: number;

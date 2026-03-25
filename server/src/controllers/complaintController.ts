@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database";
 import { AuthenticatedRequest } from "../middleware/auth";
 
 // Helper function to safely parse query/params that can be string or string[]
@@ -12,8 +12,6 @@ const parseIntParam = (param: string | string[] | undefined): number => {
   const str = parseStringParam(param);
   return parseInt(str) || 0;
 };
-
-const prisma = new PrismaClient();
 
 export const createComplaint = async (
   req: AuthenticatedRequest,

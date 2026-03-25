@@ -1,5 +1,5 @@
 import { Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database";
 import { io } from "../app";
 import { AuthenticatedRequest } from "../middleware/auth";
 
@@ -13,8 +13,6 @@ const parseIntParam = (param: string | string[] | undefined): number => {
   const str = parseStringParam(param);
   return parseInt(str) || 0;
 };
-
-const prisma = new PrismaClient();
 
 // Get conversations for a user
 export const getConversations = async (

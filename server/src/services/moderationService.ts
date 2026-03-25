@@ -8,7 +8,7 @@
  * Ad create edildikten sonra çağrılır ve status günceller.
  */
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database";
 import {
   PRICE_RULES,
   CategoryPriceRule,
@@ -26,8 +26,6 @@ import {
   getModelMarketPrice,
   ModelPriceResult,
 } from "./modelPriceService";
-
-const prisma = new PrismaClient();
 
 export interface ModerationResult {
   decision: "APPROVED" | "REJECTED" | "PENDING";

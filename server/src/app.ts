@@ -4,7 +4,7 @@ import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
 import path from "path";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "./config/database";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
@@ -87,7 +87,6 @@ const io = new SocketIOServer(server, {
   },
 });
 
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
 // Trust proxy for accurate IP addresses

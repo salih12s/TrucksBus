@@ -1,10 +1,7 @@
 import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database";
 import { AuthenticatedRequest } from "../types/auth";
 import { io } from "../app";
-
-// Initialize Prisma Client with subscription model
-const prisma = new PrismaClient();
 
 // Paket fiyatları ve detayları
 export const PACKAGE_DETAILS = {

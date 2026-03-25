@@ -7,9 +7,7 @@
  * Hata durumunda default 50 döner — mevcut sistemi BOZMAZ.
  */
 
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../config/database";
 
 export interface TrustScoreResult {
     score: number; // 0 - 100
