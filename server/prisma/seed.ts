@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
+import * as fs from "fs";
+import * as path from "path";
 
 const prisma = new PrismaClient();
 
@@ -232,6 +234,79 @@ async function main() {
         }
     }
     console.log(`  ✅ ${cbCount} category-brand mappings created`);
+
+    // ==========================================
+    // 3.5. MODELS & VARIANTS (seed-models.json)
+    // ==========================================
+    console.log("🚗 Creating models & variants...");
+
+    const seedModelsPath = path.join(__dirname, "seed-models.json");
+    if (fs.existsSync(seedModelsPath)) {
+        const seedModelsData: {
+            brandSlug: string;
+            categorySlug: string;
+            models: {
+                name: string;
+                slug: string;
+                variants: { name: string; slug: string }[];
+            }[];
+        }[] = JSON.parse(fs.readFileSync(seedModelsPath, "utf-8"));
+
+        let modelCount = 0;
+        let variantCount = 0;
+
+        for (const entry of seedModelsData) {
+            const bId = brandMap[entry.brandSlug];
+            const cId = catMap[entry.categorySlug];
+            if (!bId || !cId) {
+                continue;
+            }
+
+            for (const m of entry.models) {
+                const model = await prisma.model.upsert({
+                    where: {
+                        brandId_categoryId_slug: {
+                            brandId: bId,
+                            categoryId: cId,
+                            slug: m.slug,
+                        },
+                    },
+                    update: {},
+                    create: {
+                        brandId: bId,
+                        categoryId: cId,
+                        name: m.name,
+                        slug: m.slug,
+                    },
+                });
+                modelCount++;
+
+                if (m.variants && m.variants.length > 0) {
+                    for (const v of m.variants) {
+                        await prisma.variant.upsert({
+                            where: {
+                                modelId_slug: {
+                                    modelId: model.id,
+                                    slug: v.slug,
+                                },
+                            },
+                            update: {},
+                            create: {
+                                modelId: model.id,
+                                name: v.name,
+                                slug: v.slug,
+                            },
+                        });
+                        variantCount++;
+                    }
+                }
+            }
+        }
+        console.log(`  ✅ ${modelCount} models created`);
+        console.log(`  ✅ ${variantCount} variants created`);
+    } else {
+        console.log("  ⚠️ seed-models.json not found, skipping models...");
+    }
 
     // ==========================================
     // 4. CITIES (81 il)
