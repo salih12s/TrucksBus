@@ -145,6 +145,9 @@ const TekstilForm = React.lazy(
   () => import("./components/forms/Tekstil/TekstilForm"),
 );
 
+const CategorySelection = React.lazy(
+  () => import("./pages/CategorySelection"),
+);
 const BrandSelection = React.lazy(
   () => import("./components/ads/BrandSelection"),
 );
@@ -490,6 +493,16 @@ function App() {
                           />
                           <Route path="/ad/:id" element={<MainLayout />} />
                           <Route path="/magaza/:slug" element={<StorePage />} />
+
+                          {/* Category Selection */}
+                          <Route
+                            path="/category-selection"
+                            element={
+                              <ProtectedRoute>
+                                <CategorySelection />
+                              </ProtectedRoute>
+                            }
+                          />
 
                           {/* Brand/Model/Variant Selection Routes */}
                           <Route
